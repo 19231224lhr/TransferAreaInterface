@@ -5,6 +5,7 @@
 
 其中，`NewAccount.go`、`GetAddressMsg.go`、`JoinGroup.go`、`SendTX.go`四个文件中实现了四个功能，其余文件是一些会被调用的底层结构体和方法。
 
+更多详细信息参考飞书文档：https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc
 
 ### 第一步
 > **新建用户**
