@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>简洁钱包前端 - 新建用户</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div class="container">
+        <h1>UTXO快速转账钱包</h1>
+      </div>
+    </header>
+
+    <main class="container">
+      <section class="card">
+        <div class="card-header">
+          <h2>新建用户</h2>
+          <button id="createBtn" class="btn primary">新建用户</button>
+        </div>
+        <div id="result" class="result hidden">
+          <div class="grid">
+            <div>
+              <h3>Account ID</h3>
+              <code id="accountId"></code>
+            </div>
+            <div>
+              <h3>主地址</h3>
+              <code id="address"></code>
+            </div>
+          </div>
+          <div class="grid">
+            <div>
+              <h3>私钥（Hex）</h3>
+              <code id="privHex" class="break"></code>
+              <p class="tip">勿泄露！仅演示用途，生产环境请安全存储。</p>
+            </div>
+            <div>
+              <h3>公钥（X / Y Hex）</h3>
+              <code id="pubX" class="break"></code>
+              <code id="pubY" class="break"></code>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="container">
+        <small>前端使用 WebCrypto 生成 P-256 ECDSA 密钥并按 Go 逻辑派生地址与用户ID。</small>
+      </div>
+    </footer>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>

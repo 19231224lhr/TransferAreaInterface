@@ -1,0 +1,28 @@
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Microsoft Yahei', sans-serif; color: #1f2937; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
+.container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
+.header { background: #0ea5e9; color: #fff; padding: 28px 0; box-shadow: 0 2px 8px rgba(0,0,0,.08); animation: fadeInDown .6s ease-out both; }
+.header h1 { margin: 0 0 6px; font-size: 24px; }
+.card { background: #fff; margin: 24px auto; padding: 16px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.06); animation: fadeInUp .6s ease-out both; }
+.card-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.card h2 { margin: 0; font-size: 20px; }
+.btn { appearance: none; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; cursor: pointer; transition: all .18s ease; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(14,165,233,.25); }
+.btn.primary { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #fff; }
+.btn.primary:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(14,165,233,.3); }
+.btn.primary:active { transform: translateY(0) scale(.98); box-shadow: 0 6px 16px rgba(14,165,233,.28); }
+.btn:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
+.ripple { position: absolute; border-radius: 50%; transform: scale(0); animation: ripple .6s ease-out; background: rgba(255,255,255,.5); pointer-events: none; }
+.result { margin-top: 16px; }
+.hidden { display: none; }
+.result.fade-in { animation: fadeInUp .38s ease-out both; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+.grid h3 { margin: 0 0 6px; font-size: 14px; color: #374151; }
+code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; font-size: 12px; color: #111827; }
+.break { word-break: break-all; }
+.tip { margin-top: 6px; font-size: 12px; color: #6b7280; }
+.footer { margin: 28px 0; text-align: center; color: #6b7280; }
+
+@keyframes fadeInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes ripple { to { transform: scale(12); opacity: 0; } }
