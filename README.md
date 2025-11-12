@@ -7,12 +7,13 @@
 
 更多详细信息参考飞书文档：https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc
 
-## 前端纯静态演示（根目录）
+## 前端纯静态演示（web/）
 
-项目已转型为前端优先：`index.html`、`app.js`、`style.css` 均位于项目根目录，无需后端即可在浏览器侧生成账户信息。
+本项目新增了一个“纯前端钱包演示”，无需后端即可在浏览器侧生成账户信息。
 
+- 目录结构：`web/index.html`、`web/app.js`、`web/style.css`
 - 运行预览：
-  - 启动本地静态服务器：`go run ./backend/cmd/webserver`
+  - 启动本地静态服务器：`go run ./backend/cmd/webserver/main.go`
   - 打开页面：`http://localhost:8080/`
 - 页面文案与动效：标题更新为“UTXO快速转账钱包”，新增按钮点击涟漪与入场动画，整体更灵动。
 - 功能说明：
@@ -28,7 +29,7 @@
 
 - 修复示例程序 panic：补齐 `BuildTXInfo` 的利息分配与必填项，注入演示 UTXO，确保交易构建与校验通过。
 - 模拟 RPC 返回：为“加入担保组织”与“查询地址信息”构造示例数据，以便离线演示。
-- 静态服务器入口整理：将静态服务器移至 `backend/cmd/webserver/main.go`，统一服务项目根目录；使用 `go run ./backend/cmd/webserver` 运行前端预览。
+- 静态服务器入口整理：将根目录的 `webserver.go` 移至 `cmd/webserver/main.go`，解决 `main` 重复声明问题；使用 `go run ./cmd/webserver` 运行前端预览。
 
 
 ### 第一步

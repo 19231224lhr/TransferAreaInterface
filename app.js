@@ -19,6 +19,7 @@ const hexToBytes = (hex) => {
   for (let i = 0; i < out.length; i++) out[i] = parseInt(hex.substr(i * 2, 2), 16);
   return out;
 };
+const wait = (ms) => new Promise(r => setTimeout(r, ms));
 
 // CRC32（IEEE）
 const crc32Table = (() => {
@@ -96,6 +97,33 @@ function saveUser(user) {
   updateHeaderUser(user);
 }
 
+function clearUIState() {
+  const newResult = document.getElementById('result');
+  if (newResult) {
+    newResult.classList.add('hidden');
+  }
+  const ids1 = ['accountId', 'address', 'privHex', 'pubX', 'pubY'];
+  ids1.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  const newLoader = document.getElementById('newLoader');
+  if (newLoader) newLoader.classList.add('hidden');
+  const importInput = document.getElementById('importPrivHex');
+  if (importInput) importInput.value = '';
+  const importResult = document.getElementById('importResult');
+  if (importResult) importResult.classList.add('hidden');
+  const ids2 = ['importAccountId', 'importAddress', 'importPrivHexOut', 'importPubX', 'importPubY'];
+  ids2.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  const importLoader = document.getElementById('importLoader');
+  if (importLoader) importLoader.classList.add('hidden');
+  const importNextBtn2 = document.getElementById('importNextBtn');
+  if (importNextBtn2) importNextBtn2.classList.add('hidden');
+}
+
 async function newUser() {
   // 生成密钥对
   const keyPair = await crypto.subtle.generateKey(
@@ -136,24 +164,32 @@ async function handleCreate() {
   const btn = document.getElementById('createBtn');
   btn.disabled = true;
   try {
-    const { accountId, address, privHex, pubXHex, pubYHex } = await newUser();
+    const loader = document.getElementById('newLoader');
     const resultEl = document.getElementById('result');
+    if (resultEl) resultEl.classList.add('hidden');
+    if (loader) loader.classList.remove('hidden');
+    const t0 = Date.now();
+    const data = await newUser();
+    const elapsed = Date.now() - t0;
+    if (elapsed < 1000) await wait(1000 - elapsed);
+    if (loader) loader.classList.add('hidden');
     resultEl.classList.remove('hidden');
-    // retrigger subtle entrance animation
     resultEl.classList.remove('fade-in');
-    requestAnimationFrame(() => resultEl.classList.add('fade-in'));
-    document.getElementById('accountId').textContent = accountId;
-    document.getElementById('address').textContent = address;
-    document.getElementById('privHex').textContent = privHex;
-    document.getElementById('pubX').textContent = pubXHex;
-    document.getElementById('pubY').textContent = pubYHex;
-    // 保存并刷新右上角用户栏
-    saveUser({ accountId, address, privHex, pubXHex, pubYHex });
+    resultEl.classList.remove('reveal');
+    requestAnimationFrame(() => resultEl.classList.add('reveal'));
+    document.getElementById('accountId').textContent = data.accountId;
+    document.getElementById('address').textContent = data.address;
+    document.getElementById('privHex').textContent = data.privHex;
+    document.getElementById('pubX').textContent = data.pubXHex;
+    document.getElementById('pubY').textContent = data.pubYHex;
+    saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
   } catch (err) {
     alert('创建用户失败：' + err);
     console.error(err);
   } finally {
     btn.disabled = false;
+    const loader = document.getElementById('newLoader');
+    if (loader) loader.classList.add('hidden');
   }
 }
 
@@ -187,6 +223,12 @@ function showCard(card) {
   if (entryCard) entryCard.classList.add('hidden');
   if (newUserCard) newUserCard.classList.add('hidden');
   if (importCard) importCard.classList.add('hidden');
+  const nextCard = document.getElementById('nextCard');
+  if (nextCard) nextCard.classList.add('hidden');
+  const newLoader = document.getElementById('newLoader');
+  if (newLoader) newLoader.classList.add('hidden');
+  const importLoader = document.getElementById('importLoader');
+  if (importLoader) importLoader.classList.add('hidden');
   // 显示指定卡片
   card.classList.remove('hidden');
   // 轻微过渡动画
@@ -207,11 +249,9 @@ function routeTo(hash) {
 function router() {
   const h = (location.hash || '#/entry').replace(/^#/, '');
   const u = loadUser();
-  // 已登录时，进入入口页视图则隐藏所有卡片，仅保留顶部用户信息
-  if (u && h === '/entry') {
-    if (entryCard) entryCard.classList.add('hidden');
-    if (newUserCard) newUserCard.classList.add('hidden');
-    if (importCard) importCard.classList.add('hidden');
+  const allowNoUser = ['/entry', '/new', '/import'];
+  if (!u && allowNoUser.indexOf(h) === -1) {
+    routeTo('#/entry');
     return;
   }
   switch (h) {
@@ -228,6 +268,13 @@ function router() {
       break;
     case '/import':
       showCard(importCard);
+      {
+        const importNextBtn = document.getElementById('importNextBtn');
+        if (importNextBtn) importNextBtn.classList.add('hidden');
+      }
+      break;
+    case '/next':
+      showCard(document.getElementById('nextCard'));
       break;
     default:
       // 未知路由回到入口
@@ -235,45 +282,60 @@ function router() {
       break;
   }
 }
-// 返回时退出确认：从新建/导入返回入口页时进行确认
-window.addEventListener('hashchange', (e) => {
+window.__lastHash = location.hash || '#/entry';
+window.addEventListener('hashchange', () => {
   const newHash = location.hash || '#/entry';
-  let oldHash = '#/entry';
-  try { oldHash = new URL(e.oldURL).hash || '#/entry'; } catch {}
+  const oldHash = window.__lastHash || '#/entry';
   const u = loadUser();
   const goingBackToEntry = (oldHash === '#/new' || oldHash === '#/import') && newHash === '#/entry';
   if (u && goingBackToEntry) {
-    const ok = confirm('是否退出钱包并返回首页？');
-    if (ok) {
-      try { localStorage.removeItem(STORAGE_KEY); } catch {}
-      updateHeaderUser(null);
-      // 强制回到首页
-      location.replace('#/entry');
-      router();
-    } else {
-      // 取消返回，恢复原页面
-      location.replace(oldHash);
-      router();
-    }
-  } else {
-    router();
+    if (window.__confirmingBack) return;
+    window.__confirmingBack = true;
+    // 恢复旧页面，避免浏览器先跳走
+    location.replace(oldHash);
+    setTimeout(() => {
+      const ok = confirm('是否退出钱包并返回首页？');
+      if (ok) {
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        updateHeaderUser(null);
+        clearUIState();
+        window.__lastHash = '#/entry';
+        location.replace('#/entry');
+        router();
+      } else {
+        window.__lastHash = oldHash;
+        router();
+      }
+      window.__confirmingBack = false;
+    }, 0);
+    return;
   }
+  window.__lastHash = newHash;
+  router();
 });
 // 初始路由：无 hash 时设为入口
 const initialUser = loadUser();
 if (!location.hash) {
-  if (initialUser) {
-    // 跳过欢迎页，仅显示顶部用户信息
-    if (entryCard) entryCard.classList.add('hidden');
-    if (newUserCard) newUserCard.classList.add('hidden');
-    if (importCard) importCard.classList.add('hidden');
-  } else {
-    // 使用 replace 避免多一个历史记录层级
-    location.replace('#/entry');
-  }
+  // 使用 replace 避免多一个历史记录层级
+  location.replace('#/entry');
 }
 // 执行一次路由以同步初始视图
 router();
+
+// 使用 popstate 拦截浏览器返回，先确认再跳转
+window.addEventListener('popstate', (e) => {
+  const state = e.state || {};
+  if (state.guard && (state.from === '/new' || state.from === '/import')) {
+    try { history.pushState(state, '', location.href); } catch {}
+    const ok = confirm('是否退出钱包并返回首页？');
+    if (ok) {
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      updateHeaderUser(null);
+      clearUIState();
+      routeTo('#/entry');
+    }
+  }
+});
 
 // 点击“新建钱包”：切换到路由并自动生成
 if (createWalletBtn) {
@@ -283,6 +345,16 @@ if (createWalletBtn) {
 // 点击“导入钱包”：切换到路由显示导入界面
 if (importWalletBtn) {
   importWalletBtn.addEventListener('click', () => routeTo('#/import'));
+}
+
+// 结果页“下一步”按钮：跳转到占位页
+const newNextBtn = document.getElementById('newNextBtn');
+if (newNextBtn) {
+  newNextBtn.addEventListener('click', () => routeTo('#/next'));
+}
+const importNextBtn = document.getElementById('importNextBtn');
+if (importNextBtn) {
+  importNextBtn.addEventListener('click', () => routeTo('#/next'));
 }
 
 async function importLocallyFromPrivHex(privHex) {
@@ -345,11 +417,22 @@ if (importBtn) {
     }
     importBtn.disabled = true;
     try {
-      const data = await importFromPrivHex(priv);
+      const loader = document.getElementById('importLoader');
       const resultEl = document.getElementById('importResult');
+      const importNextBtn = document.getElementById('importNextBtn');
+      if (importNextBtn) importNextBtn.classList.add('hidden');
+      if (resultEl) resultEl.classList.add('hidden');
+      if (loader) loader.classList.remove('hidden');
+      const t0 = Date.now();
+      const data = await importFromPrivHex(priv);
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1000) await wait(1000 - elapsed);
+      if (loader) loader.classList.add('hidden');
+      // 显示导入结果并淡入
       resultEl.classList.remove('hidden');
       resultEl.classList.remove('fade-in');
-      requestAnimationFrame(() => resultEl.classList.add('fade-in'));
+      resultEl.classList.remove('reveal');
+      requestAnimationFrame(() => resultEl.classList.add('reveal'));
       document.getElementById('importAccountId').textContent = data.accountId || '';
       document.getElementById('importAddress').textContent = data.address || '';
       document.getElementById('importPrivHexOut').textContent = data.privHex || normalized;
@@ -363,11 +446,14 @@ if (importBtn) {
         pubXHex: data.pubXHex,
         pubYHex: data.pubYHex,
       });
+      if (importNextBtn) importNextBtn.classList.remove('hidden');
     } catch (err) {
       alert('导入失败：' + err.message);
       console.error(err);
     } finally {
       importBtn.disabled = false;
+      const loader = document.getElementById('importLoader');
+      if (loader) loader.classList.add('hidden');
     }
   });
 }
@@ -396,6 +482,7 @@ if (logoutBtn) {
     if (logoutBtn.disabled) return;
     try { localStorage.removeItem(STORAGE_KEY); } catch {}
     updateHeaderUser(null);
+    clearUIState();
     const menu = document.getElementById('userMenu');
     if (menu) menu.classList.add('hidden');
     routeTo('#/entry');
