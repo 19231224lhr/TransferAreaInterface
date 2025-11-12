@@ -4,11 +4,13 @@ body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helve
 .container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 .header { background: #0ea5e9; color: #fff; padding: 28px 0; box-shadow: 0 2px 8px rgba(0,0,0,.08); animation: fadeInDown .6s ease-out both; }
 .header h1 { margin: 0 0 6px; font-size: 24px; }
-.card { background: #fff; margin: 24px auto; padding: 16px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.06); animation: fadeInUp .6s ease-out both; }
-.card-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.card { background: #fff; margin: 24px auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.06); animation: fadeInUp .6s ease-out both; }
+.card-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
 .card h2 { margin: 0; font-size: 20px; }
-.btn { appearance: none; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; cursor: pointer; transition: all .18s ease; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(14,165,233,.25); }
+.btn { appearance: none; border: none; border-radius: 10px; padding: 12px 18px; font-size: 14px; cursor: pointer; transition: all .18s ease; position: relative; overflow: hidden; box-shadow: 0 8px 20px rgba(14,165,233,.25); min-width: 120px; }
 .btn.primary { background: linear-gradient(135deg, #0ea5e9, #38bdf8); color: #fff; }
+.btn.secondary { background: #fff; color: #0ea5e9; border: 1px solid #e5e7eb; box-shadow: 0 8px 20px rgba(14,165,233,.12); }
+.btn.secondary:hover { background: #f9fafb; }
 .btn.primary:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(14,165,233,.3); }
 .btn.primary:active { transform: translateY(0) scale(.98); box-shadow: 0 6px 16px rgba(14,165,233,.28); }
 .btn:focus-visible { outline: 2px solid #0ea5e9; outline-offset: 2px; }
@@ -22,6 +24,10 @@ code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; f
 .break { word-break: break-all; }
 .tip { margin-top: 6px; font-size: 12px; color: #6b7280; }
 .footer { margin: 28px 0; text-align: center; color: #6b7280; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+.input { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; margin-top: 8px; }
+.input:focus { outline: 2px solid #0ea5e9; outline-offset: 2px; }
 
 @keyframes fadeInDown { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }

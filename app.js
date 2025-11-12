@@ -118,3 +118,88 @@ createBtn.addEventListener('click', (evt) => {
   setTimeout(() => ripple.remove(), 600);
 });
 createBtn.addEventListener('click', handleCreate);
+
+// 页面入口交互：在首次进入展示“新建钱包 / 导入钱包”两按钮
+const entryCard = document.getElementById('entryCard');
+const newUserCard = document.getElementById('newUserCard');
+const importCard = document.getElementById('importCard');
+const createWalletBtn = document.getElementById('createWalletBtn');
+const importWalletBtn = document.getElementById('importWalletBtn');
+const importBtn = document.getElementById('importBtn');
+
+function showCard(card) {
+  // 隐藏其他卡片
+  if (entryCard) entryCard.classList.add('hidden');
+  if (newUserCard) newUserCard.classList.add('hidden');
+  if (importCard) importCard.classList.add('hidden');
+  // 显示指定卡片
+  card.classList.remove('hidden');
+  // 轻微过渡动画
+  card.classList.remove('fade-in');
+  requestAnimationFrame(() => card.classList.add('fade-in'));
+}
+
+// 简易哈希路由
+function routeTo(hash) {
+  if (location.hash !== hash) {
+    location.hash = hash;
+  } else {
+    // 若 hash 未变化，也触发一次路由逻辑
+    router();
+  }
+}
+
+function router() {
+  const h = (location.hash || '#/entry').replace(/^#/, '');
+  switch (h) {
+    case '/entry':
+      showCard(entryCard);
+      break;
+    case '/new':
+      showCard(newUserCard);
+      // 如果尚未生成，则自动生成一次
+      const resultEl = document.getElementById('result');
+      if (resultEl && resultEl.classList.contains('hidden')) {
+        handleCreate().catch(() => {});
+      }
+      break;
+    case '/import':
+      showCard(importCard);
+      break;
+    default:
+      // 未知路由回到入口
+      routeTo('#/entry');
+      break;
+  }
+}
+
+window.addEventListener('hashchange', router);
+// 初始路由：无 hash 时设为入口
+if (!location.hash) {
+  // 使用 replace 避免多一个历史记录层级
+  location.replace('#/entry');
+}
+// 执行一次路由以同步初始视图
+router();
+
+// 点击“新建钱包”：切换到路由并自动生成
+if (createWalletBtn) {
+  createWalletBtn.addEventListener('click', () => routeTo('#/new'));
+}
+
+// 点击“导入钱包”：切换到路由显示导入界面
+if (importWalletBtn) {
+  importWalletBtn.addEventListener('click', () => routeTo('#/import'));
+}
+
+// 导入钱包占位按钮：提示功能待接入
+if (importBtn) {
+  importBtn.addEventListener('click', () => {
+    const priv = document.getElementById('importPrivHex').value.trim();
+    if (!priv) {
+      alert('请输入私钥 Hex');
+      return;
+    }
+    alert('导入功能暂未接入：将基于私钥推导地址与公钥。');
+  });
+}

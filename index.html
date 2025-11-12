@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>简洁钱包前端 - 新建用户</title>
+    <title>简洁钱包前端 - 钱包操作</title>
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
@@ -14,11 +14,25 @@
     </header>
 
     <main class="container">
-      <section class="card">
+      <!-- 入口操作卡片：首次进入仅展示两个操作按钮 -->
+      <section class="card" id="entryCard">
+        <div class="card-header">
+          <h2>选择操作</h2>
+        </div>
+        <div class="actions">
+          <button id="createWalletBtn" class="btn primary">新建钱包</button>
+          <button id="importWalletBtn" class="btn secondary">导入钱包</button>
+        </div>
+        <p class="tip">您可以在本地生成新钱包，或从私钥导入现有钱包。</p>
+      </section>
+
+      <!-- 新建用户卡片：默认隐藏，点击“新建钱包”后显示并生成信息 -->
+      <section class="card hidden" id="newUserCard">
         <div class="card-header">
           <h2>新建用户</h2>
-          <button id="createBtn" class="btn primary">新建用户</button>
+          <button id="createBtn" class="btn primary">再次生成</button>
         </div>
+        <p class="tip">在浏览器内生成 P-256 ECDSA 密钥并派生地址与用户ID。</p>
         <div id="result" class="result hidden">
           <div class="grid">
             <div>
@@ -41,6 +55,25 @@
               <code id="pubX" class="break"></code>
               <code id="pubY" class="break"></code>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 导入钱包卡片：默认隐藏，目前仅提供按钮占位 -->
+      <section class="card hidden" id="importCard">
+        <div class="card-header">
+          <h2>导入钱包</h2>
+        </div>
+        <p class="tip">请输入私钥（Hex）以导入钱包。目前本地还原方法暂未接入，先提供操作按钮。</p>
+        <div class="grid">
+          <div>
+            <h3>私钥（Hex）</h3>
+            <input id="importPrivHex" class="input" type="text" placeholder="请输入私钥 Hex" />
+          </div>
+          <div>
+            <h3>操作</h3>
+            <button id="importBtn" class="btn primary">导入钱包（占位）</button>
+            <p class="tip">点击后将提示“导入功能待接入”，后续将根据私钥推导地址与公钥。</p>
           </div>
         </div>
       </section>
