@@ -61,6 +61,13 @@ function updateHeaderUser(user) {
   const avatarEl = document.getElementById('userAvatar');
   const menuAccountEl = document.getElementById('menuAccountId');
   const menuAddrEl = document.getElementById('menuAddress');
+  const menuAccountItem = document.getElementById('menuAccountItem');
+  const menuAddressItem = document.getElementById('menuAddressItem');
+  const menuOrgItem = document.getElementById('menuOrgItem');
+  const menuBalanceItem = document.getElementById('menuBalanceItem');
+  const menuOrgEl = document.getElementById('menuOrg');
+  const menuBalanceEl = document.getElementById('menuBalance');
+  const menuEmpty = document.getElementById('menuEmpty');
   const logoutEl = document.getElementById('logoutBtn');
   if (!labelEl || !avatarEl) return; // header 不存在时忽略
   if (user && user.accountId) {
@@ -68,8 +75,16 @@ function updateHeaderUser(user) {
     // 头像保持固定，不再随ID变化
     avatarEl.textContent = '👤';
     avatarEl.classList.add('avatar--active');
+    if (menuAccountItem) menuAccountItem.classList.remove('hidden');
+    if (menuAddressItem) menuAddressItem.classList.remove('hidden');
     if (menuAccountEl) menuAccountEl.textContent = user.accountId || '';
     if (menuAddrEl) menuAddrEl.textContent = user.address || '';
+    if (menuOrgItem) menuOrgItem.classList.remove('hidden');
+    if (menuBalanceItem) menuBalanceItem.classList.remove('hidden');
+    if (menuOrgEl) menuOrgEl.textContent = user.orgNumber || '暂未加入担保组织';
+    if (menuBalanceEl) menuBalanceEl.textContent = (typeof user.balance === 'number' ? user.balance : 0) + ' BTC';
+    if (menuOrgEl) menuOrgEl.classList.remove('code-waiting');
+    if (menuEmpty) menuEmpty.classList.add('hidden');
     if (logoutEl) {
       logoutEl.disabled = false;
       logoutEl.classList.remove('menu-action--disabled');
@@ -79,8 +94,16 @@ function updateHeaderUser(user) {
     labelEl.textContent = '未登录';
     avatarEl.textContent = '👤';
     avatarEl.classList.remove('avatar--active');
-    if (menuAccountEl) menuAccountEl.textContent = '暂未登录';
-    if (menuAddrEl) menuAddrEl.textContent = '暂未登录';
+    if (menuAccountItem) menuAccountItem.classList.add('hidden');
+    if (menuAddressItem) menuAddressItem.classList.add('hidden');
+    if (menuAccountEl) menuAccountEl.textContent = '';
+    if (menuAddrEl) menuAddrEl.textContent = '';
+    if (menuOrgItem) menuOrgItem.classList.add('hidden');
+    if (menuBalanceItem) menuBalanceItem.classList.add('hidden');
+    if (menuOrgEl) menuOrgEl.textContent = '';
+    if (menuBalanceEl) menuBalanceEl.textContent = '';
+    if (menuOrgEl) menuOrgEl.classList.add('code-waiting');
+    if (menuEmpty) menuEmpty.classList.remove('hidden');
     if (logoutEl) {
       logoutEl.disabled = true;
       logoutEl.classList.add('menu-action--disabled');
@@ -463,6 +486,7 @@ const userButton = document.getElementById('userButton');
 if (userButton) {
   userButton.addEventListener('click', (e) => {
     e.stopPropagation();
+    updateHeaderUser(loadUser());
     const menu = document.getElementById('userMenu');
     if (menu) menu.classList.toggle('hidden');
   });

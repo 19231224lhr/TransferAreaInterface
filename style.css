@@ -74,3 +74,13 @@ code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; f
 @keyframes reveal { from { opacity: 0; transform: translateY(6px) scale(.98); filter: blur(2px); } to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); } }
 .loader span:last-child { animation: pulse 1.2s ease-in-out infinite; color: #334155; }
 @keyframes pulse { 0% { opacity: .6; } 50% { opacity: 1; } 100% { opacity: .6; } }
+
+.user-menu .menu-empty { display: flex; align-items: center; gap: 10px; background: #f9fafb; border: 1px dashed #e5e7eb; border-radius: 10px; padding: 10px 12px; color: #64748b; font-size: 13px; }
+.user-menu .menu-empty.hidden { display: none !important; }
+.menu-empty__icon { font-size: 16px; }
+.menu-empty__text { line-height: 1.4; }
+
+.code-waiting { color: #9ca3af; background: #f3f4f6; position: relative; overflow: hidden; animation: waitingBlink .9s ease-in-out infinite; }
+.code-waiting::after { content: ""; position: absolute; left: -150%; top: 0; width: 150%; height: 100%; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,.6) 50%, rgba(255,255,255,0) 100%); animation: shimmer 1.4s linear infinite; }
+@keyframes waitingBlink { 0% { opacity: .6; } 50% { opacity: 1; } 100% { opacity: .6; } }
+@keyframes shimmer { 0% { transform: translateX(0); } 100% { transform: translateX(100%); } }

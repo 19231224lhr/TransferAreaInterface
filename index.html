@@ -16,13 +16,25 @@
             <span id="userLabel" class="user-label">未登录</span>
           </button>
           <div id="userMenu" class="user-menu hidden">
-            <div class="menu-item">
+            <div class="menu-item" id="menuAccountItem">
               <span>Account ID</span>
               <code id="menuAccountId"></code>
             </div>
-            <div class="menu-item">
+            <div class="menu-item" id="menuAddressItem">
               <span>主地址</span>
               <code id="menuAddress" class="break"></code>
+            </div>
+            <div class="menu-item hidden" id="menuOrgItem">
+              <span>担保组织</span>
+              <code id="menuOrg" class="break"></code>
+            </div>
+            <div class="menu-item hidden" id="menuBalanceItem">
+              <span>余额</span>
+              <code id="menuBalance"></code>
+            </div>
+            <div id="menuEmpty" class="menu-empty hidden">
+              <span class="menu-empty__icon">🔒</span>
+              <div class="menu-empty__text">未登录，请先创建或导入钱包</div>
             </div>
             <div class="menu-sep"></div>
             <button id="logoutBtn" class="menu-action">退出登录</button>
