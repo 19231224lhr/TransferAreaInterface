@@ -10,6 +10,24 @@
     <header class="header">
       <div class="container">
         <h1>UTXO快速转账钱包</h1>
+        <div id="userBar" class="user-bar">
+          <button id="userButton" class="user-button" aria-label="用户信息">
+            <span class="avatar" id="userAvatar">👤</span>
+            <span id="userLabel" class="user-label">未登录</span>
+          </button>
+          <div id="userMenu" class="user-menu hidden">
+            <div class="menu-item">
+              <span>Account ID</span>
+              <code id="menuAccountId"></code>
+            </div>
+            <div class="menu-item">
+              <span>主地址</span>
+              <code id="menuAddress" class="break"></code>
+            </div>
+            <div class="menu-sep"></div>
+            <button id="logoutBtn" class="menu-action">退出登录</button>
+          </div>
+        </div>
       </div>
     </header>
 
@@ -59,12 +77,12 @@
         </div>
       </section>
 
-      <!-- 导入钱包卡片：默认隐藏，目前仅提供按钮占位 -->
+      <!-- 导入钱包卡片：默认隐藏，导入后显示账户详细信息 -->
       <section class="card hidden" id="importCard">
         <div class="card-header">
           <h2>导入钱包</h2>
         </div>
-        <p class="tip">请输入私钥（Hex）以导入钱包。目前本地还原方法暂未接入，先提供操作按钮。</p>
+        <p class="tip">请输入私钥（Hex）以导入钱包。系统会根据私钥恢复公钥与地址并显示账户信息。</p>
         <div class="grid">
           <div>
             <h3>私钥（Hex）</h3>
@@ -72,8 +90,32 @@
           </div>
           <div>
             <h3>操作</h3>
-            <button id="importBtn" class="btn primary">导入钱包（占位）</button>
-            <p class="tip">点击后将提示“导入功能待接入”，后续将根据私钥推导地址与公钥。</p>
+            <button id="importBtn" class="btn primary">导入钱包</button>
+            <p class="tip">注意：请确认私钥来源可信，并谨慎保存。</p>
+          </div>
+        </div>
+        <div id="importResult" class="result hidden">
+          <div class="grid">
+            <div>
+              <h3>Account ID</h3>
+              <code id="importAccountId"></code>
+            </div>
+            <div>
+              <h3>主地址</h3>
+              <code id="importAddress"></code>
+            </div>
+          </div>
+          <div class="grid">
+            <div>
+              <h3>私钥（Hex）</h3>
+              <code id="importPrivHexOut" class="break"></code>
+              <p class="tip">勿泄露！仅演示用途，生产环境请安全存储。</p>
+            </div>
+            <div>
+              <h3>公钥（X / Y Hex）</h3>
+              <code id="importPubX" class="break"></code>
+              <code id="importPubY" class="break"></code>
+            </div>
           </div>
         </div>
       </section>
@@ -85,6 +127,7 @@
       </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/elliptic@6.5.5/dist/elliptic.min.js"></script>
     <script src="/app.js"></script>
   </body>
   </html>

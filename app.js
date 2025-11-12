@@ -43,6 +43,62 @@ const generate8DigitFromInputHex = (hex) => {
   return String(num).padStart(8, '0');
 };
 
+// 本地存储与头部用户栏渲染
+const STORAGE_KEY = 'walletUser';
+function loadUser() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.warn('加载本地用户信息失败', e);
+    return null;
+  }
+}
+function updateHeaderUser(user) {
+  const labelEl = document.getElementById('userLabel');
+  const avatarEl = document.getElementById('userAvatar');
+  const menuAccountEl = document.getElementById('menuAccountId');
+  const menuAddrEl = document.getElementById('menuAddress');
+  const logoutEl = document.getElementById('logoutBtn');
+  const userBtn = document.getElementById('userButton');
+  if (!labelEl || !avatarEl) return; // header 不存在时忽略
+  if (user && user.accountId) {
+    labelEl.textContent = user.accountId;
+    // 头像保持固定，不再随ID变化
+    avatarEl.textContent = '👤';
+    avatarEl.classList.add('avatar--active');
+    if (menuAccountEl) menuAccountEl.textContent = user.accountId || '';
+    if (menuAddrEl) menuAddrEl.textContent = user.address || '';
+    if (logoutEl) {
+      logoutEl.disabled = false;
+      logoutEl.classList.remove('menu-action--disabled');
+      logoutEl.textContent = '退出登录';
+    }
+    if (userBtn) userBtn.classList.add('user-button--active');
+  } else {
+    labelEl.textContent = '未登录';
+    avatarEl.textContent = '👤';
+    avatarEl.classList.remove('avatar--active');
+    if (menuAccountEl) menuAccountEl.textContent = '暂未登录';
+    if (menuAddrEl) menuAddrEl.textContent = '暂未登录';
+    if (logoutEl) {
+      logoutEl.disabled = true;
+      logoutEl.classList.add('menu-action--disabled');
+      logoutEl.textContent = '等待登录';
+    }
+    if (userBtn) userBtn.classList.remove('user-button--active');
+  }
+}
+function saveUser(user) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  } catch (e) {
+    console.warn('保存本地用户信息失败', e);
+  }
+  updateHeaderUser(user);
+}
+
 async function newUser() {
   // 生成密钥对
   const keyPair = await crypto.subtle.generateKey(
@@ -94,6 +150,8 @@ async function handleCreate() {
     document.getElementById('privHex').textContent = privHex;
     document.getElementById('pubX').textContent = pubXHex;
     document.getElementById('pubY').textContent = pubYHex;
+    // 保存并刷新右上角用户栏
+    saveUser({ accountId, address, privHex, pubXHex, pubYHex });
   } catch (err) {
     alert('创建用户失败：' + err);
     console.error(err);
@@ -151,6 +209,14 @@ function routeTo(hash) {
 
 function router() {
   const h = (location.hash || '#/entry').replace(/^#/, '');
+  const u = loadUser();
+  // 已登录时，进入入口页视图则隐藏所有卡片，仅保留顶部用户信息
+  if (u && h === '/entry') {
+    if (entryCard) entryCard.classList.add('hidden');
+    if (newUserCard) newUserCard.classList.add('hidden');
+    if (importCard) importCard.classList.add('hidden');
+    return;
+  }
   switch (h) {
     case '/entry':
       showCard(entryCard);
@@ -172,12 +238,42 @@ function router() {
       break;
   }
 }
-
-window.addEventListener('hashchange', router);
+// 返回时退出确认：从新建/导入返回入口页时进行确认
+window.addEventListener('hashchange', (e) => {
+  const newHash = location.hash || '#/entry';
+  let oldHash = '#/entry';
+  try { oldHash = new URL(e.oldURL).hash || '#/entry'; } catch {}
+  const u = loadUser();
+  const goingBackToEntry = (oldHash === '#/new' || oldHash === '#/import') && newHash === '#/entry';
+  if (u && goingBackToEntry) {
+    const ok = confirm('是否退出钱包并返回首页？');
+    if (ok) {
+      try { localStorage.removeItem(STORAGE_KEY); } catch {}
+      updateHeaderUser(null);
+      // 强制回到首页
+      location.replace('#/entry');
+      router();
+    } else {
+      // 取消返回，恢复原页面
+      location.replace(oldHash);
+      router();
+    }
+  } else {
+    router();
+  }
+});
 // 初始路由：无 hash 时设为入口
+const initialUser = loadUser();
 if (!location.hash) {
-  // 使用 replace 避免多一个历史记录层级
-  location.replace('#/entry');
+  if (initialUser) {
+    // 跳过欢迎页，仅显示顶部用户信息
+    if (entryCard) entryCard.classList.add('hidden');
+    if (newUserCard) newUserCard.classList.add('hidden');
+    if (importCard) importCard.classList.add('hidden');
+  } else {
+    // 使用 replace 避免多一个历史记录层级
+    location.replace('#/entry');
+  }
 }
 // 执行一次路由以同步初始视图
 router();
@@ -192,14 +288,92 @@ if (importWalletBtn) {
   importWalletBtn.addEventListener('click', () => routeTo('#/import'));
 }
 
-// 导入钱包占位按钮：提示功能待接入
+async function importFromPrivHex(privHex) {
+  // 调用后端 API 恢复公钥与地址
+  const res = await fetch('/api/keys/from-priv', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ privHex })
+  });
+  if (!res.ok) {
+    const msg = await res.text();
+    throw new Error(msg || '导入失败');
+  }
+  return await res.json();
+}
+
+// 导入钱包：根据私钥恢复账户信息并显示
 if (importBtn) {
-  importBtn.addEventListener('click', () => {
-    const priv = document.getElementById('importPrivHex').value.trim();
+  importBtn.addEventListener('click', async () => {
+    const inputEl = document.getElementById('importPrivHex');
+    const priv = inputEl.value.trim();
     if (!priv) {
       alert('请输入私钥 Hex');
+      inputEl.focus();
       return;
     }
-    alert('导入功能暂未接入：将基于私钥推导地址与公钥。');
+    // 简单校验：允许带 0x 前缀；去前缀后必须是 64 位十六进制
+    const normalized = priv.replace(/^0x/i, '');
+    if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
+      alert('私钥格式不正确：需为 64 位十六进制字符串');
+      inputEl.focus();
+      return;
+    }
+    importBtn.disabled = true;
+    try {
+      const data = await importFromPrivHex(priv);
+      const resultEl = document.getElementById('importResult');
+      resultEl.classList.remove('hidden');
+      resultEl.classList.remove('fade-in');
+      requestAnimationFrame(() => resultEl.classList.add('fade-in'));
+      document.getElementById('importAccountId').textContent = data.accountId || '';
+      document.getElementById('importAddress').textContent = data.address || '';
+      document.getElementById('importPrivHexOut').textContent = data.privHex || normalized;
+      document.getElementById('importPubX').textContent = data.pubXHex || '';
+      document.getElementById('importPubY').textContent = data.pubYHex || '';
+      // 保存并刷新右上角用户栏
+      saveUser({
+        accountId: data.accountId,
+        address: data.address,
+        privHex: data.privHex,
+        pubXHex: data.pubXHex,
+        pubYHex: data.pubYHex,
+      });
+    } catch (err) {
+      alert('导入失败：' + err.message);
+      console.error(err);
+    } finally {
+      importBtn.disabled = false;
+    }
+  });
+}
+
+// 用户菜单展开/收起与初始化渲染
+const userButton = document.getElementById('userButton');
+if (userButton) {
+  userButton.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.toggle('hidden');
+  });
+  document.addEventListener('click', () => {
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.add('hidden');
+  });
+  // 初始渲染用户栏
+  updateHeaderUser(loadUser());
+}
+
+// 登出：清除本地账户信息并返回入口页
+const logoutBtn = document.getElementById('logoutBtn');
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (logoutBtn.disabled) return;
+    try { localStorage.removeItem(STORAGE_KEY); } catch {}
+    updateHeaderUser(null);
+    const menu = document.getElementById('userMenu');
+    if (menu) menu.classList.add('hidden');
+    routeTo('#/entry');
   });
 }

@@ -11,6 +11,7 @@ import (
 	"math/big"
 	"reflect"
 	"time"
+	corepkg "TransferAreaInterface/backend/core"
 )
 
 // 通用结构体和方法
@@ -191,4 +192,14 @@ func Generate8DigitNumberBasedOnInput(input string) string {
 	// 将哈希值映射到10000000到99999999的范围
 	num := int(hash%90000000) + 10000000
 	return fmt.Sprintf("%08d", num)
+}
+
+// ParsePrivateKey 从 Hex 字符串解析 ECDSA 私钥
+func ParsePrivateKey(hexStr string) (*ecdsa.PrivateKey, error) {
+    return corepkg.ParsePrivateKey(hexStr)
+}
+
+// ParsePublicKey 从 Hex 字符串解析 ECDSA 公钥
+func ParsePublicKey(publicKeyString string) (*ecdsa.PublicKey, error) {
+    return corepkg.ParsePublicKey(publicKeyString)
 }

@@ -3,7 +3,9 @@ html, body { height: 100%; }
 body { margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Microsoft Yahei', sans-serif; color: #1f2937; background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%); }
 .container { max-width: 960px; margin: 0 auto; padding: 0 16px; }
 .header { background: #0ea5e9; color: #fff; padding: 28px 0; box-shadow: 0 2px 8px rgba(0,0,0,.08); animation: fadeInDown .6s ease-out both; }
+.header { position: relative; z-index: 2000; }
 .header h1 { margin: 0 0 6px; font-size: 24px; }
+.header .container { display: flex; justify-content: space-between; align-items: center; }
 .card { background: #fff; margin: 24px auto; padding: 20px; border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,.06); animation: fadeInUp .6s ease-out both; }
 .card-header { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 8px; }
 .card h2 { margin: 0; font-size: 20px; }
@@ -24,6 +26,23 @@ code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; f
 .break { word-break: break-all; }
 .tip { margin-top: 6px; font-size: 12px; color: #6b7280; }
 .footer { margin: 28px 0; text-align: center; color: #6b7280; }
+
+/* 用户信息栏 */
+.user-bar { position: relative; display: flex; align-items: center; }
+.user-button { display: flex; align-items: center; gap: 6px; background: transparent; border: none; color: #fff; cursor: pointer; padding: 6px 8px; border-radius: 8px; }
+.user-button:hover { background: rgba(255,255,255,.12); }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.user-menu { position: absolute; right: 0; top: 100%; margin-top: 8px; background: #fff; color: #1f2937; border: 1px solid #e5e7eb; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.12); padding: 12px; min-width: 260px; z-index: 1000; }
+.user-menu .menu-item { display: grid; grid-template-columns: 100px 1fr; align-items: start; gap: 8px; padding: 6px 0; }
+.user-menu .menu-item span { font-size: 12px; color: #6b7280; }
+.user-menu code { background: #f9fafb; }
+.user-menu .menu-sep { height: 1px; background: #e5e7eb; margin: 8px 0; }
+.menu-action { width: 100%; appearance: none; border: none; border-radius: 8px; padding: 10px 12px; font-size: 14px; cursor: pointer; background: #ef4444; color: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.2); }
+.menu-action:hover { background: #dc2626; }
+.avatar--active { background: #ffffff; box-shadow: 0 0 0 2px rgba(255,255,255,.95), 0 0 12px rgba(255,255,255,.55), 0 8px 18px rgba(14,165,233,.35); }
+.menu-action--disabled { background: #e5e7eb; color: #9ca3af; cursor: not-allowed; box-shadow: none; }
+.user-label { min-width: 88px; display: inline-block; }
+/* 登录后不高亮整体，仅头像高亮，移除按钮整体高亮样式 */
 
 .actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
 .input { width: 100%; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 8px; font-size: 14px; margin-top: 8px; }
