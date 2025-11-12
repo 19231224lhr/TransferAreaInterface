@@ -61,7 +61,6 @@ function updateHeaderUser(user) {
   const menuAccountEl = document.getElementById('menuAccountId');
   const menuAddrEl = document.getElementById('menuAddress');
   const logoutEl = document.getElementById('logoutBtn');
-  const userBtn = document.getElementById('userButton');
   if (!labelEl || !avatarEl) return; // header 不存在时忽略
   if (user && user.accountId) {
     labelEl.textContent = user.accountId;
@@ -75,7 +74,6 @@ function updateHeaderUser(user) {
       logoutEl.classList.remove('menu-action--disabled');
       logoutEl.textContent = '退出登录';
     }
-    if (userBtn) userBtn.classList.add('user-button--active');
   } else {
     labelEl.textContent = '未登录';
     avatarEl.textContent = '👤';
@@ -87,7 +85,6 @@ function updateHeaderUser(user) {
       logoutEl.classList.add('menu-action--disabled');
       logoutEl.textContent = '等待登录';
     }
-    if (userBtn) userBtn.classList.remove('user-button--active');
   }
 }
 function saveUser(user) {
@@ -288,18 +285,45 @@ if (importWalletBtn) {
   importWalletBtn.addEventListener('click', () => routeTo('#/import'));
 }
 
-async function importFromPrivHex(privHex) {
-  // 调用后端 API 恢复公钥与地址
-  const res = await fetch('/api/keys/from-priv', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ privHex })
-  });
-  if (!res.ok) {
-    const msg = await res.text();
-    throw new Error(msg || '导入失败');
+async function importLocallyFromPrivHex(privHex) {
+  const normalized = privHex.replace(/^0x/i, '');
+  if (!window.elliptic || !window.elliptic.ec) {
+    throw new Error('本地导入失败：缺少 elliptic 库');
   }
-  return await res.json();
+  const ec = new window.elliptic.ec('p256');
+  let key;
+  try {
+    key = ec.keyFromPrivate(normalized, 'hex');
+  } catch (e) {
+    throw new Error('私钥格式不正确或无法解析');
+  }
+  const pub = key.getPublic();
+  const xHex = pub.getX().toString(16).padStart(64, '0');
+  const yHex = pub.getY().toString(16).padStart(64, '0');
+  const uncompressedHex = '04' + xHex + yHex;
+  const uncompressed = hexToBytes(uncompressedHex);
+  const sha = await crypto.subtle.digest('SHA-256', uncompressed);
+  const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
+  const accountId = generate8DigitFromInputHex(normalized);
+  return { accountId, address, privHex: normalized, pubXHex: xHex, pubYHex: yHex };
+}
+
+async function importFromPrivHex(privHex) {
+  // 先尝试后端 API；若不可用则回退到前端本地计算
+  try {
+    const res = await fetch('/api/keys/from-priv', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privHex })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return data;
+    }
+  } catch (_) {
+    // 网络或跨域问题时直接回退
+  }
+  return await importLocallyFromPrivHex(privHex);
 }
 
 // 导入钱包：根据私钥恢复账户信息并显示
