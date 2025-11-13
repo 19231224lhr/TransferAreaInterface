@@ -325,6 +325,10 @@ function showCard(card) {
   if (walletCard) walletCard.classList.add('hidden');
   const importNextCard = document.getElementById('importNextCard');
   if (importNextCard) importNextCard.classList.add('hidden');
+  const inquiryCard = document.getElementById('inquiryCard');
+  if (inquiryCard) inquiryCard.classList.add('hidden');
+  const memberInfoCard = document.getElementById('memberInfoCard');
+  if (memberInfoCard) memberInfoCard.classList.add('hidden');
   const newLoader = document.getElementById('newLoader');
   if (newLoader) newLoader.classList.add('hidden');
   const importLoader = document.getElementById('importLoader');
@@ -347,6 +351,8 @@ function showCard(card) {
   if (recPane2) recPane2.classList.remove('collapsed');
   const gs2 = document.getElementById('groupSearch');
   if (gs2) gs2.value = '';
+  const allCards = document.querySelectorAll('.card');
+  allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
   // 轻微过渡动画
@@ -375,7 +381,7 @@ function router() {
     case '/welcome':
       showCard(welcomeCard);
       break;
-    case '/wallet':
+    case '/main':
       showCard(document.getElementById('walletCard'));
       try {
         const raw = localStorage.getItem('guarChoice');
@@ -416,6 +422,10 @@ function router() {
         const textE = document.getElementById('actionText');
         if (textE) textE.classList.remove('tip--error');
         if (modalE) modalE.classList.add('hidden');
+        const brief = document.getElementById('walletBriefList');
+        const toggleBtn = document.getElementById('briefToggleBtn');
+        if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
+        if (toggleBtn) toggleBtn.classList.add('hidden');
       }
       break;
     case '/join-group':
@@ -430,10 +440,39 @@ function router() {
       if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
       if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
       break;
+    case '/inquiry':
+      showCard(document.getElementById('inquiryCard'));
+      setTimeout(() => {
+        const u3 = loadUser();
+        if (u3) {
+          u3.orgNumber = '10000000';
+          saveUser(u3);
+        }
+        routeTo('#/member-info');
+      }, 2000);
+      break;
+    case '/member-info':
+      showCard(document.getElementById('memberInfoCard'));
+      {
+        const u4 = loadUser();
+        const aEl = document.getElementById('miAccountId');
+        const addrEl = document.getElementById('miAddress');
+        const gEl = document.getElementById('miGroupId');
+        const pgcEl = document.getElementById('miPGC');
+        const btcEl = document.getElementById('miBTC');
+        const ethEl = document.getElementById('miETH');
+        if (aEl) aEl.textContent = (u4 && u4.accountId) || '';
+        if (addrEl) addrEl.textContent = (u4 && u4.address) || '';
+        if (gEl) gEl.textContent = (u4 && u4.orgNumber) || '10000000';
+        if (pgcEl) pgcEl.textContent = 'PGC: 0';
+        if (btcEl) btcEl.textContent = 'BTC: 0';
+        if (ethEl) ethEl.textContent = 'ETH: 0';
+      }
+      break;
     case '/next':
       routeTo('#/join-group');
       break;
-    case '/wallet':
+    case '/main':
       showCard(document.getElementById('walletCard'));
       try {
         const raw = localStorage.getItem('guarChoice');
@@ -581,6 +620,12 @@ if (importWalletBtn && !importWalletBtn.dataset._bind) {
   importWalletBtn.dataset._bind = '1';
 }
 
+const miConfirmBtn = document.getElementById('miConfirmBtn');
+if (miConfirmBtn && !miConfirmBtn.dataset._bind) {
+  miConfirmBtn.addEventListener('click', () => routeTo('#/main'));
+  miConfirmBtn.dataset._bind = '1';
+}
+
 function updateWalletBrief() {
   const u = loadUser();
   const countEl = document.getElementById('walletCount');
@@ -616,9 +661,9 @@ function updateWalletBrief() {
       brief.innerHTML = '';
     }
   }
-  if (entryNextBtn) entryNextBtn.disabled = addrs.length === 0;
+  if (entryNextBtn) entryNextBtn.disabled = (addrs.length === 0) && !(u && u.orgNumber);
   if (tip) {
-    if (addrs.length === 0) tip.classList.remove('hidden'); else tip.classList.add('hidden');
+    if (addrs.length === 0 && !(u && u.orgNumber)) tip.classList.remove('hidden'); else tip.classList.add('hidden');
   }
 }
 
@@ -726,7 +771,7 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      routeTo('#/join-group');
+      routeTo('#/inquiry');
     });
   }
   if (proceedCancel) {
@@ -841,7 +886,7 @@ if (joinRecBtn) {
       if (joinSearchBtn) joinSearchBtn.disabled = false;
     }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
-    routeTo('#/wallet');
+    routeTo('#/main');
   });
 }
 if (joinSearchBtn) {
@@ -860,7 +905,7 @@ if (joinSearchBtn) {
       joinSearchBtn.disabled = false;
     }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
-    routeTo('#/wallet');
+    routeTo('#/main');
   });
 }
 
@@ -1059,6 +1104,16 @@ if (loginBtn) {
 if (loginNextBtn) {
   loginNextBtn.addEventListener('click', () => {
     window.__skipExitConfirm = true;
+    const u = loadUser();
+    if (u) {
+      u.wallet = u.wallet || { addressMsg: {}, totalTXCers: {}, totalValue: 0, valueDivision: { 0: 0, 1: 0, 2: 0 }, updateTime: Date.now(), updateBlock: 0 };
+      u.wallet.addressMsg = {};
+      saveUser(u);
+    }
+    const brief = document.getElementById('walletBriefList');
+    const toggleBtn = document.getElementById('briefToggleBtn');
+    if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
+    if (toggleBtn) toggleBtn.classList.add('hidden');
     routeTo('#/entry');
   });
 }
@@ -1229,6 +1284,22 @@ function renderWallet() {
       if (tagEls[2]) tagEls[2].addEventListener('click', (e) => { e.stopPropagation(); applyPts(ptsETH, 'ETH'); });
     });
   }
+
+  const woGroupID = document.getElementById('woGroupID');
+  const woAggre = document.getElementById('woAggre');
+  const woAssign = document.getElementById('woAssign');
+  const woPledge = document.getElementById('woPledge');
+  const gid = (u && u.orgNumber) || (DEFAULT_GROUP && DEFAULT_GROUP.groupID) || '';
+  if (woGroupID) woGroupID.textContent = gid || '';
+  if (DEFAULT_GROUP && gid === DEFAULT_GROUP.groupID) {
+    if (woAggre) woAggre.textContent = DEFAULT_GROUP.aggreNode;
+    if (woAssign) woAssign.textContent = DEFAULT_GROUP.assignNode;
+    if (woPledge) woPledge.textContent = DEFAULT_GROUP.pledgeAddress;
+  } else {
+    if (woAggre) woAggre.textContent = '';
+    if (woAssign) woAssign.textContent = '';
+    if (woPledge) woPledge.textContent = '';
+  }
   const totalEl = document.getElementById('walletTotalChart');
   if (totalEl) {
     const ptsTpgc = Array.from({ length: 40 }, (_, i) => Math.round(70 + 20 * Math.sin(i / 3.8) + Math.random() * 6));
@@ -1322,6 +1393,25 @@ function renderWallet() {
     });
     ctBtn.dataset._bind = '1';
   }
+
+  const tfMode = document.getElementById('tfMode');
+  const tfBtn = document.getElementById('tfSendBtn');
+  if (tfMode && tfBtn && !tfBtn.dataset._bind) {
+    const updateBtn = () => {
+      const v = tfMode.value;
+      tfBtn.textContent = v === 'cross' ? '发起跨链' : '发起转账';
+      tfBtn.classList.remove('secondary');
+      tfBtn.classList.remove('primary');
+      tfBtn.classList.add(v === 'cross' ? 'secondary' : 'primary');
+    };
+    updateBtn();
+    tfMode.addEventListener('change', updateBtn);
+    tfBtn.addEventListener('click', () => {
+      const v = tfMode.value;
+      alert(v === 'cross' ? '已提交跨链转账请求（占位）' : '已提交快速转账请求（占位）');
+    });
+    tfBtn.dataset._bind = '1';
+  }
 }
 // 不加入担保组织确认模态框
 const confirmSkipModal = document.getElementById('confirmSkipModal');
@@ -1331,7 +1421,7 @@ if (confirmSkipOk) {
   confirmSkipOk.addEventListener('click', () => {
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch {}
     if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
-    routeTo('#/wallet');
+    routeTo('#/main');
   });
 }
 if (confirmSkipCancel) {

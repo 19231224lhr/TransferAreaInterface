@@ -72,6 +72,7 @@
         <div class="card-header">
           <h2>生成或导入钱包</h2>
         </div>
+        <p id="entryImportSuggest" class="tip">建议导入已有钱包；若您已加入担保组织，未导入也可继续。</p>
         <div class="actions">
           <button id="createWalletBtn" class="btn primary">新建钱包</button>
           <button id="importWalletBtn" class="btn secondary">导入钱包</button>
@@ -80,10 +81,7 @@
         <div class="entry-layout">
           <div class="entry-left">
             <div class="grid">
-              <div style="display:flex;align-items:center;gap:8px;">
-                <h3>已添加钱包数</h3>
-                <code id="walletCount"></code>
-              </div>
+              <h3 class="metric-title">已添加钱包数 <code id="walletCount"></code></h3>
             </div>
             <ol id="walletBriefList" class="result list list--ordered hidden"></ol>
             <div class="actions">
@@ -331,6 +329,48 @@
         </div>
       </section>
 
+      <section class="card hidden" id="inquiryCard">
+        <div class="card-header">
+          <h2>正在连接</h2>
+        </div>
+        <div class="loader loader--hero">
+          <div class="bolt" aria-hidden="true">
+            <span class="seg seg1"></span>
+            <span class="seg seg2"></span>
+            <span class="seg seg3"></span>
+            <span class="seg seg4"></span>
+          </div>
+          <span>正在连接到快速转账网络...</span>
+        </div>
+        <p class="tip">正在发起网络问询以确定账户所属关系，请稍候。</p>
+      </section>
+
+      <section class="card hidden" id="memberInfoCard">
+        <div class="card-header">
+          <h2>账户与担保组织信息</h2>
+        </div>
+        <div class="mi-info">
+          <div class="mi-left">
+            <div class="mi-card"><h3>Account ID</h3><code id="miAccountId"></code></div>
+            <div class="mi-card"><h3>担保组织</h3><code id="miGroupId"></code></div>
+          </div>
+          <div class="mi-right">
+            <div class="mi-card">
+              <h3>主地址</h3>
+              <code id="miAddress" class="break"></code>
+              <div class="tags">
+                <span class="tag tag--pgc" id="miPGC">PGC: 0</span>
+                <span class="tag tag--btc" id="miBTC">BTC: 0</span>
+                <span class="tag tag--eth" id="miETH">ETH: 0</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="miConfirmBtn" class="btn primary">确认信息，进入系统</button>
+        </div>
+      </section>
+
       <section class="card hidden" id="walletCard">
         <div class="card-header">
           <h2>钱包主页</h2>
@@ -353,21 +393,41 @@
           </div>
           <div class="wallet-right">
             <div class="pane">
-              <h3>快速转账</h3>
+              <h3>转账与跨链</h3>
               <div class="form">
-                <div class="form-row"><label>From</label><input id="qtFrom" class="input" type="text" placeholder="输入来源地址" /></div>
-                <div class="form-row"><label>To</label><input id="qtTo" class="input" type="text" placeholder="输入目标地址" /></div>
-                <div class="form-row"><label>Value</label><input id="qtValue" class="input" type="number" placeholder="输入金额" /></div>
-                <div class="actions"><button id="qtSendBtn" class="btn primary">发起转账</button></div>
+                <div class="form-row"><label>功能</label>
+                  <select id="tfMode" class="input">
+                    <option value="quick" selected>快速转账</option>
+                    <option value="cross">跨链转账</option>
+                  </select>
+                </div>
+                <div class="form-row"><label>From</label><input id="tfFrom" class="input" type="text" placeholder="输入来源地址" /></div>
+                <div class="form-row"><label>To</label><input id="tfTo" class="input" type="text" placeholder="输入目标地址" /></div>
+                <div class="form-row"><label>Value</label><input id="tfValue" class="input" type="number" placeholder="输入金额" /></div>
+                <div class="actions"><button id="tfSendBtn" class="btn primary">发起转账</button></div>
               </div>
             </div>
             <div class="pane">
-              <h3>跨链转账</h3>
-              <div class="form">
-                <div class="form-row"><label>From</label><input id="ctFrom" class="input" type="text" placeholder="输入来源地址" /></div>
-                <div class="form-row"><label>To</label><input id="ctTo" class="input" type="text" placeholder="输入目标地址" /></div>
-                <div class="form-row"><label>Value</label><input id="ctValue" class="input" type="number" placeholder="输入金额" /></div>
-                <div class="actions"><button id="ctSendBtn" class="btn secondary">发起跨链</button></div>
+              <h3>担保组织信息</h3>
+              <div class="grid">
+                <div>
+                  <h3>GroupID</h3>
+                  <code id="woGroupID"></code>
+                </div>
+                <div>
+                  <h3>AggreNode</h3>
+                  <code id="woAggre"></code>
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <h3>AssignNode</h3>
+                  <code id="woAssign"></code>
+                </div>
+                <div>
+                  <h3>PledgeAddress</h3>
+                  <code id="woPledge" class="break"></code>
+                </div>
               </div>
             </div>
           </div>
