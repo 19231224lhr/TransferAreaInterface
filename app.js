@@ -264,6 +264,10 @@ function showCard(card) {
   if (importLoader) importLoader.classList.add('hidden');
   const suggest = document.getElementById('groupSuggest');
   if (suggest) suggest.classList.add('hidden');
+  const joinOverlay = document.getElementById('joinOverlay');
+  if (joinOverlay) joinOverlay.classList.add('hidden');
+  const confirmSkipModal = document.getElementById('confirmSkipModal');
+  if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
   // 显示指定卡片
   card.classList.remove('hidden');
   // 轻微过渡动画
@@ -362,21 +366,36 @@ window.addEventListener('hashchange', () => {
     window.__confirmingBack = true;
     // 恢复旧页面，避免浏览器先跳走
     location.replace(oldHash);
-    setTimeout(() => {
-      const ok = confirm('是否退出钱包并返回首页？');
-      if (ok) {
+    const modal = document.getElementById('confirmExitModal');
+    const okBtn = document.getElementById('confirmExitOk');
+    const cancelBtn = document.getElementById('confirmExitCancel');
+    if (modal && okBtn && cancelBtn) {
+      modal.classList.remove('hidden');
+      const okHandler = () => {
         try { localStorage.removeItem(STORAGE_KEY); } catch {}
         updateHeaderUser(null);
         clearUIState();
+        modal.classList.add('hidden');
         window.__lastHash = '#/entry';
         location.replace('#/entry');
         router();
-      } else {
+        okBtn.removeEventListener('click', okHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        window.__confirmingBack = false;
+      };
+      const cancelHandler = () => {
+        modal.classList.add('hidden');
         window.__lastHash = oldHash;
         router();
-      }
+        okBtn.removeEventListener('click', okHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        window.__confirmingBack = false;
+      };
+      okBtn.addEventListener('click', okHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+    } else {
       window.__confirmingBack = false;
-    }, 0);
+    }
     return;
   }
   window.__lastHash = newHash;
@@ -396,12 +415,27 @@ window.addEventListener('popstate', (e) => {
   const state = e.state || {};
   if (state.guard && (state.from === '/new' || state.from === '/import')) {
     try { history.pushState(state, '', location.href); } catch {}
-    const ok = confirm('是否退出钱包并返回首页？');
-    if (ok) {
-      try { localStorage.removeItem(STORAGE_KEY); } catch {}
-      updateHeaderUser(null);
-      clearUIState();
-      routeTo('#/entry');
+    const modal = document.getElementById('confirmExitModal');
+    const okBtn = document.getElementById('confirmExitOk');
+    const cancelBtn = document.getElementById('confirmExitCancel');
+    if (modal && okBtn && cancelBtn) {
+      modal.classList.remove('hidden');
+      const okHandler = () => {
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        updateHeaderUser(null);
+        clearUIState();
+        modal.classList.add('hidden');
+        routeTo('#/entry');
+        okBtn.removeEventListener('click', okHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+      };
+      const cancelHandler = () => {
+        modal.classList.add('hidden');
+        okBtn.removeEventListener('click', okHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+      };
+      okBtn.addEventListener('click', okHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
     }
   }
 });
@@ -513,21 +547,43 @@ if (groupSearch) {
 const skipJoinBtn = document.getElementById('skipJoinBtn');
 if (skipJoinBtn) {
   skipJoinBtn.addEventListener('click', () => {
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch {}
-    routeTo('#/final');
+    const modal = document.getElementById('confirmSkipModal');
+    if (modal) modal.classList.remove('hidden');
   });
 }
 if (joinRecBtn) {
-  joinRecBtn.addEventListener('click', () => {
+  joinRecBtn.addEventListener('click', async () => {
     const g = DEFAULT_GROUP;
+    const overlay = document.getElementById('joinOverlay');
+    try {
+      if (overlay) overlay.classList.remove('hidden');
+      joinRecBtn.disabled = true;
+      if (joinSearchBtn) joinSearchBtn.disabled = true;
+      await wait(2000);
+    } finally {
+      if (overlay) overlay.classList.add('hidden');
+      joinRecBtn.disabled = false;
+      if (joinSearchBtn) joinSearchBtn.disabled = false;
+    }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
     routeTo('#/final');
   });
 }
 if (joinSearchBtn) {
-  joinSearchBtn.addEventListener('click', () => {
+  joinSearchBtn.addEventListener('click', async () => {
     if (joinSearchBtn.disabled) return;
     const g = currentSelectedGroup || DEFAULT_GROUP;
+    const overlay = document.getElementById('joinOverlay');
+    try {
+      if (overlay) overlay.classList.remove('hidden');
+      joinRecBtn.disabled = true;
+      joinSearchBtn.disabled = true;
+      await wait(2000);
+    } finally {
+      if (overlay) overlay.classList.add('hidden');
+      joinRecBtn.disabled = false;
+      joinSearchBtn.disabled = false;
+    }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
     routeTo('#/final');
   });
@@ -674,6 +730,25 @@ if (recPaneHeader && recPane) {
     recPane.classList.toggle('collapsed');
   });
 }
+
+// 不加入担保组织确认模态框
+const confirmSkipModal = document.getElementById('confirmSkipModal');
+const confirmSkipOk = document.getElementById('confirmSkipOk');
+const confirmSkipCancel = document.getElementById('confirmSkipCancel');
+if (confirmSkipOk) {
+  confirmSkipOk.addEventListener('click', () => {
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch {}
+    if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
+    routeTo('#/final');
+  });
+}
+if (confirmSkipCancel) {
+  confirmSkipCancel.addEventListener('click', () => {
+    if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
+  });
+}
+
+// 以上模态框事件已绑定
 
 // （已移除）左侧加长逻辑
 

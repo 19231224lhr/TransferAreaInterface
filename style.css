@@ -138,3 +138,14 @@ code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; f
 .split-btn #joinSearchBtn:disabled { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #fff; cursor: not-allowed; opacity: .92; }
 .join-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 @media (max-width: 960px) { .join-layout { grid-template-columns: 1fr; } }
+/* 加入担保组织等待覆盖层 */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.overlay .loader { background: #fff; padding: 16px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); display: inline-flex; align-items: center; gap: 12px; }
+.overlay.hidden { display: none !important; }
+/* 警告确认模态框 */
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center; justify-content: center; z-index: 1001; }
+.modal.hidden { display: none !important; }
+.modal .dialog { width: 420px; max-width: calc(100% - 40px); background: #fff; border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.25); padding: 18px 20px; }
+.modal .dialog h3 { margin: 0 0 8px; }
+.modal .dialog .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; }
+.modal .dialog .actions .btn { min-width: 100px; padding: 10px 14px; font-size: 13px; }
