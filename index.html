@@ -242,11 +242,47 @@
         </div>
       </section>
 
-      <section class="card hidden" id="finalCard">
+      <section class="card hidden" id="walletCard">
         <div class="card-header">
-          <h2>下一步</h2>
+          <h2>钱包主页</h2>
         </div>
-        <p id="finalText" class="tip"></p>
+        <div class="wallet-layout">
+          <div class="wallet-left">
+            <h3>子地址列表</h3>
+            <div class="total-box">
+              <div class="addr-meta">
+                <strong>总余额</strong>
+                <div class="tags">
+                  <span class="tag tag--pgc">PGC: 0</span>
+                  <span class="tag tag--btc">BTC: 0</span>
+                  <span class="tag tag--eth">ETH: 0</span>
+                </div>
+              </div>
+              <div id="walletTotalChart" class="addr-chart addr-chart--open"></div>
+            </div>
+            <div id="walletAddrList" class="addr-list"></div>
+          </div>
+          <div class="wallet-right">
+            <div class="pane">
+              <h3>快速转账</h3>
+              <div class="form">
+                <div class="form-row"><label>From</label><input id="qtFrom" class="input" type="text" placeholder="输入来源地址" /></div>
+                <div class="form-row"><label>To</label><input id="qtTo" class="input" type="text" placeholder="输入目标地址" /></div>
+                <div class="form-row"><label>Value</label><input id="qtValue" class="input" type="number" placeholder="输入金额" /></div>
+                <div class="actions"><button id="qtSendBtn" class="btn primary">发起转账</button></div>
+              </div>
+            </div>
+            <div class="pane">
+              <h3>跨链转账</h3>
+              <div class="form">
+                <div class="form-row"><label>From</label><input id="ctFrom" class="input" type="text" placeholder="输入来源地址" /></div>
+                <div class="form-row"><label>To</label><input id="ctTo" class="input" type="text" placeholder="输入目标地址" /></div>
+                <div class="form-row"><label>Value</label><input id="ctValue" class="input" type="number" placeholder="输入金额" /></div>
+                <div class="actions"><button id="ctSendBtn" class="btn secondary">发起跨链</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section class="card hidden" id="importNextCard">
