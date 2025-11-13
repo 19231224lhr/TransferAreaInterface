@@ -44,22 +44,63 @@
     </header>
 
     <main class="container">
-      <!-- 入口操作卡片：首次进入仅展示两个操作按钮 -->
-      <section class="card" id="entryCard">
+      <section class="card" id="welcomeCard">
         <div class="card-header">
-          <h2>选择操作</h2>
+          <h2>欢迎使用 UTXO 钱包</h2>
+        </div>
+        <div class="hero-left reveal">
+          <div class="tiles">
+            <div class="tile"><span>✨</span></div>
+            <div class="tile"><span>🔐</span></div>
+            <div class="tile"><span>🚀</span></div>
+            <div class="tile"><span>💎</span></div>
+            <div class="tile"><span>🌈</span></div>
+          </div>
+          <div class="hero-content">
+            <strong>从这里开始你的账户之旅</strong>
+            <p class="tip">请选择登录或注册账户，随后进入钱包生成或导入</p>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="loginAccountBtn" class="btn secondary">登录</button>
+          <button id="registerAccountBtn" class="btn primary">注册账户</button>
+        </div>
+      </section>
+
+      <section class="card hidden" id="entryCard">
+        <div class="card-header">
+          <h2>生成或导入钱包</h2>
         </div>
         <div class="actions">
           <button id="createWalletBtn" class="btn primary">新建钱包</button>
           <button id="importWalletBtn" class="btn secondary">导入钱包</button>
         </div>
-        <p class="tip">您可以在本地生成新钱包，或从私钥导入现有钱包。</p>
+        <p class="tip">每次新建或导入都会加入到当前账户的钱包列表</p>
+        <div class="entry-layout">
+          <div class="entry-left">
+            <div class="grid">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <h3>已添加钱包数</h3>
+                <code id="walletCount"></code>
+              </div>
+            </div>
+            <ol id="walletBriefList" class="result list list--ordered hidden"></ol>
+            <div class="actions">
+              <button id="briefToggleBtn" class="btn secondary hidden">展开更多</button>
+            </div>
+            <p id="walletEmptyTip" class="tip tip--warn hidden">请先添加至少一个钱包地址</p>
+          </div>
+          
+        </div>
+        <div class="actions">
+          <button id="entryNextBtn" class="btn primary">下一步</button>
+        </div>
       </section>
 
       <!-- 新建用户卡片：默认隐藏，点击“新建钱包”后显示并生成信息 -->
       <section class="card hidden" id="newUserCard">
         <div class="card-header">
-          <h2>新建用户</h2>
+          <h2>注册账户</h2>
         </div>
         <p class="tip">在浏览器内生成 P-256 ECDSA 密钥并派生地址与用户ID。</p>
         <div id="newLoader" class="loader hidden">
@@ -93,7 +134,54 @@
         </div>
         <div class="actions actions--split actions--split-2">
           <button id="createBtn" class="btn secondary">再次生成</button>
-          <button id="newNextBtn" class="btn primary">下一步</button>
+          <button id="newNextBtn" class="btn primary">进入生成钱包</button>
+        </div>
+      </section>
+
+      <section class="card hidden" id="loginCard">
+        <div class="card-header">
+          <h2>登录账户</h2>
+        </div>
+        <p class="tip">使用私钥登录账户，系统将恢复账户ID、地址与公钥信息</p>
+        <div class="grid">
+          <div>
+            <h3>私钥（Hex）</h3>
+            <input id="loginPrivHex" class="input" type="text" placeholder="请输入私钥 Hex" />
+          </div>
+          <div>
+            <h3>操作</h3>
+            <button id="loginBtn" class="btn secondary">登录</button>
+          </div>
+        </div>
+        <div id="loginLoader" class="loader hidden">
+          <span class="spinner"></span>
+          <span>正在登录...</span>
+        </div>
+        <div id="loginResult" class="result hidden">
+          <div class="grid">
+            <div>
+              <h3>Account ID</h3>
+              <code id="loginAccountId"></code>
+            </div>
+            <div>
+              <h3>主地址</h3>
+              <code id="loginAddress"></code>
+            </div>
+          </div>
+          <div class="grid">
+            <div>
+              <h3>私钥（Hex）</h3>
+              <code id="loginPrivOut" class="break"></code>
+            </div>
+            <div>
+              <h3>公钥（X / Y Hex）</h3>
+              <code id="loginPubX" class="break"></code>
+              <code id="loginPubY" class="break"></code>
+            </div>
+          </div>
+        </div>
+        <div class="actions">
+          <button id="loginNextBtn" class="btn primary hidden">进入生成钱包</button>
         </div>
       </section>
 
@@ -297,6 +385,12 @@
           <span>正在申请加入担保组织...</span>
         </div>
       </div>
+      <div id="actionOverlay" class="overlay hidden">
+        <div class="loader">
+          <span class="spinner"></span>
+          <span id="actionOverlayText">正在处理...</span>
+        </div>
+      </div>
       <div id="confirmSkipModal" class="modal hidden" role="dialog" aria-modal="true">
         <div class="dialog">
           <h3>确认不加入担保组织</h3>
@@ -314,6 +408,25 @@
           <div class="actions">
             <button id="confirmExitCancel" class="btn secondary">取消</button>
             <button id="confirmExitOk" class="btn primary">确认</button>
+          </div>
+        </div>
+      </div>
+      <div id="confirmProceedModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="dialog">
+          <h3>确认导入子地址</h3>
+          <p id="confirmProceedText" class="tip">当前子地址数：0，是否确认继续下一步？</p>
+          <div class="actions">
+            <button id="confirmProceedCancel" class="btn secondary">取消</button>
+            <button id="confirmProceedOk" class="btn primary">确认</button>
+          </div>
+        </div>
+      </div>
+      <div id="actionModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="dialog">
+          <h3 id="actionTitle">操作成功</h3>
+          <p id="actionText" class="tip">已完成本次操作</p>
+          <div class="actions">
+            <button id="actionOkBtn" class="btn primary">好的</button>
           </div>
         </div>
       </div>

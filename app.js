@@ -54,7 +54,7 @@ const generate8DigitFromInputHex = (hex) => {
 const STORAGE_KEY = 'walletAccount';
 function toAccount(basic, prev) {
   const isSame = prev && prev.accountId && basic && basic.accountId && prev.accountId === basic.accountId;
-  const acc = isSame ? (prev || {}) : {};
+  const acc = isSame ? (prev ? JSON.parse(JSON.stringify(prev)) : {}) : {};
   acc.accountId = basic.accountId || acc.accountId || '';
   acc.orgNumber = acc.orgNumber || '';
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };
@@ -62,16 +62,14 @@ function toAccount(basic, prev) {
   acc.keys.pubXHex = basic.pubXHex || acc.keys.pubXHex || '';
   acc.keys.pubYHex = basic.pubYHex || acc.keys.pubYHex || '';
   acc.wallet = acc.wallet || { addressMsg: {}, totalTXCers: {}, totalValue: 0, valueDivision: { 0: 0, 1: 0, 2: 0 }, updateTime: Date.now(), updateBlock: 0 };
+  acc.wallet.addressMsg = acc.wallet.addressMsg || {};
   const mainAddr = basic.address || acc.address || '';
   if (mainAddr) {
     acc.address = mainAddr;
-    acc.wallet.addressMsg[mainAddr] = acc.wallet.addressMsg[mainAddr] || {
-      type: 0,
-      utxos: {},
-      txCers: {},
-      value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
-      estInterest: 0,
-    };
+    delete acc.wallet.addressMsg[mainAddr];
+  }
+  if (basic.wallet && basic.wallet.addressMsg) {
+    acc.wallet.addressMsg = { ...basic.wallet.addressMsg };
   }
   return acc;
 }
@@ -242,7 +240,17 @@ async function handleCreate() {
     if (resultEl) resultEl.classList.add('hidden');
     if (loader) loader.classList.remove('hidden');
     const t0 = Date.now();
-    const data = await newUser();
+    let data;
+    try {
+      const res = await fetch('/api/account/new', { method: 'POST' });
+      if (res.ok) {
+        data = await res.json();
+      } else {
+        data = await newUser();
+      }
+    } catch (_) {
+      data = await newUser();
+    }
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) await wait(1000 - elapsed);
     if (loader) loader.classList.add('hidden');
@@ -288,18 +296,26 @@ createBtn.addEventListener('click', (evt) => {
 });
 createBtn.addEventListener('click', handleCreate);
 
-// 页面入口交互：在首次进入展示“新建钱包 / 导入钱包”两按钮
+const welcomeCard = document.getElementById('welcomeCard');
 const entryCard = document.getElementById('entryCard');
 const newUserCard = document.getElementById('newUserCard');
+const loginCard = document.getElementById('loginCard');
 const importCard = document.getElementById('importCard');
 const createWalletBtn = document.getElementById('createWalletBtn');
 const importWalletBtn = document.getElementById('importWalletBtn');
 const importBtn = document.getElementById('importBtn');
+const loginBtn = document.getElementById('loginBtn');
+const loginNextBtn = document.getElementById('loginNextBtn');
+const loginAccountBtn = document.getElementById('loginAccountBtn');
+const registerAccountBtn = document.getElementById('registerAccountBtn');
+const entryNextBtn = document.getElementById('entryNextBtn');
 
 function showCard(card) {
   // 隐藏其他卡片
+  if (welcomeCard) welcomeCard.classList.add('hidden');
   if (entryCard) entryCard.classList.add('hidden');
   if (newUserCard) newUserCard.classList.add('hidden');
+  if (loginCard) loginCard.classList.add('hidden');
   if (importCard) importCard.classList.add('hidden');
   const nextCard = document.getElementById('nextCard');
   if (nextCard) nextCard.classList.add('hidden');
@@ -319,6 +335,10 @@ function showCard(card) {
   if (joinOverlay) joinOverlay.classList.add('hidden');
   const confirmSkipModal = document.getElementById('confirmSkipModal');
   if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
+  const actionOverlay = document.getElementById('actionOverlay');
+  if (actionOverlay) actionOverlay.classList.add('hidden');
+  const actionModal = document.getElementById('actionModal');
+  if (actionModal) actionModal.classList.add('hidden');
   const joinSearchBtn2 = document.getElementById('joinSearchBtn');
   if (joinSearchBtn2) joinSearchBtn2.disabled = true;
   const sr2 = document.getElementById('searchResult');
@@ -344,14 +364,17 @@ function routeTo(hash) {
 }
 
 function router() {
-  const h = (location.hash || '#/entry').replace(/^#/, '');
+  const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
-  const allowNoUser = ['/entry', '/new', '/import'];
+  const allowNoUser = ['/welcome', '/login', '/new'];
   if (!u && allowNoUser.indexOf(h) === -1) {
-    routeTo('#/entry');
+    routeTo('#/welcome');
     return;
   }
   switch (h) {
+    case '/welcome':
+      showCard(welcomeCard);
+      break;
     case '/wallet':
       showCard(document.getElementById('walletCard'));
       try {
@@ -366,6 +389,12 @@ function router() {
       break;
     case '/entry':
       showCard(entryCard);
+      updateWalletBrief();
+      break;
+    case '/login':
+      showCard(loginCard);
+      const lnb = document.getElementById('loginNextBtn');
+      if (lnb) lnb.classList.add('hidden');
       break;
     case '/new':
       showCard(newUserCard);
@@ -375,11 +404,18 @@ function router() {
         handleCreate().catch(() => {});
       }
       break;
-    case '/import':
+    case '/wallet-import':
       showCard(importCard);
+      const importNextBtn = document.getElementById('importNextBtn');
+      if (importNextBtn) importNextBtn.classList.add('hidden');
+      if (importBtn) importBtn.dataset.mode = 'wallet';
       {
-        const importNextBtn = document.getElementById('importNextBtn');
-        if (importNextBtn) importNextBtn.classList.add('hidden');
+        const inputEl = document.getElementById('importPrivHex');
+        if (inputEl) inputEl.value = '';
+        const modalE = document.getElementById('actionModal');
+        const textE = document.getElementById('actionText');
+        if (textE) textE.classList.remove('tip--error');
+        if (modalE) modalE.classList.add('hidden');
       }
       break;
     case '/join-group':
@@ -413,17 +449,23 @@ function router() {
       showCard(document.getElementById('importNextCard'));
       break;
     default:
-      // 未知路由回到入口
-      routeTo('#/entry');
+      routeTo('#/welcome');
       break;
   }
 }
-window.__lastHash = location.hash || '#/entry';
+window.__lastHash = location.hash || '#/welcome';
+window.__skipExitConfirm = false;
 window.addEventListener('hashchange', () => {
   const newHash = location.hash || '#/entry';
   const oldHash = window.__lastHash || '#/entry';
   const u = loadUser();
   const goingBackToEntry = (oldHash === '#/new' || oldHash === '#/import') && newHash === '#/entry';
+  if (window.__skipExitConfirm) {
+    window.__skipExitConfirm = false;
+    window.__lastHash = newHash;
+    router();
+    return;
+  }
   if (u && goingBackToEntry) {
     if (window.__confirmingBack) return;
     window.__confirmingBack = true;
@@ -467,8 +509,7 @@ window.addEventListener('hashchange', () => {
 // 初始路由：无 hash 时设为入口
 const initialUser = loadUser();
   if (!location.hash) {
-    // 使用 replace 避免多一个历史记录层级
-    location.replace('#/entry');
+    location.replace('#/welcome');
   }
 // 执行一次路由以同步初始视图
 router();
@@ -504,25 +545,196 @@ window.addEventListener('popstate', (e) => {
 });
 
 // 点击“新建钱包”：切换到路由并自动生成
+function addNewSubWallet() {
+  const u = loadUser();
+  if (!u || !u.accountId) { alert('请先登录或注册账户'); return; }
+  const ov = document.getElementById('actionOverlay');
+  const ovt = document.getElementById('actionOverlayText');
+  if (ovt) ovt.textContent = '正在新增钱包地址...';
+  if (ov) ov.classList.remove('hidden');
+  const rnd = new Uint8Array(20);
+  crypto.getRandomValues(rnd);
+  const addr = bytesToHex(rnd);
+  setTimeout(() => {
+    const acc = toAccount({ accountId: u.accountId, address: u.address }, u);
+    acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'created' };
+    saveUser(acc);
+    updateWalletBrief();
+    if (ov) ov.classList.add('hidden');
+    const modal = document.getElementById('actionModal');
+    const title = document.getElementById('actionTitle');
+    const text = document.getElementById('actionText');
+    const ok = document.getElementById('actionOkBtn');
+    if (title) title.textContent = '新增钱包成功';
+    if (text) text.textContent = '已新增一个钱包地址';
+    if (modal) modal.classList.remove('hidden');
+    const handler = () => { modal.classList.add('hidden'); ok.removeEventListener('click', handler); };
+    if (ok) ok.addEventListener('click', handler);
+  }, 1000);
+}
 if (createWalletBtn && !createWalletBtn.dataset._bind) {
-  createWalletBtn.addEventListener('click', () => routeTo('#/new'));
+  createWalletBtn.addEventListener('click', addNewSubWallet);
   createWalletBtn.dataset._bind = '1';
 }
-
-// 点击“导入钱包”：切换到路由显示导入界面
 if (importWalletBtn && !importWalletBtn.dataset._bind) {
-  importWalletBtn.addEventListener('click', () => routeTo('#/import'));
+  importWalletBtn.addEventListener('click', () => routeTo('#/wallet-import'));
   importWalletBtn.dataset._bind = '1';
+}
+
+function updateWalletBrief() {
+  const u = loadUser();
+  const countEl = document.getElementById('walletCount');
+  const brief = document.getElementById('walletBriefList');
+  const tip = document.getElementById('walletEmptyTip');
+  const addrs = u && u.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
+  if (countEl) countEl.textContent = String(addrs.length);
+  if (brief) {
+    if (addrs.length) {
+      brief.classList.remove('hidden');
+      const originOf = (addr) => {
+        const u2 = loadUser();
+        const ori = u2 && u2.wallet && u2.wallet.addressMsg && u2.wallet.addressMsg[addr] && u2.wallet.addressMsg[addr].origin ? u2.wallet.addressMsg[addr].origin : '';
+        return ori === 'created' ? { label: '新建', cls: 'origin--created' } : (ori === 'imported' ? { label: '导入', cls: 'origin--imported' } : { label: '未知', cls: 'origin--unknown' });
+      };
+      brief.classList.add('list');
+      const items = addrs.map(a => {
+        const o = originOf(a);
+        return `<li class=\"brief-item\" data-addr=\"${a}\"><div class=\"brief-content\"><span class=\"addr-text\">${a}</span><span class=\"origin-badge ${o.cls}\">${o.label}</span><button class=\"brief-del\" title=\"删除\">×</button></div></li>`;
+      }).join('');
+      brief.innerHTML = items;
+      // 折叠超过3项
+      const toggleBtn = document.getElementById('briefToggleBtn');
+      if (addrs.length > 3) {
+        brief.classList.add('collapsed');
+        if (toggleBtn) { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = '展开更多'; }
+      } else {
+        brief.classList.remove('collapsed');
+        if (toggleBtn) toggleBtn.classList.add('hidden');
+      }
+    } else {
+      brief.classList.add('hidden');
+      brief.innerHTML = '';
+    }
+  }
+  if (entryNextBtn) entryNextBtn.disabled = addrs.length === 0;
+  if (tip) {
+    if (addrs.length === 0) tip.classList.remove('hidden'); else tip.classList.add('hidden');
+  }
+}
+
+function renderEntryBriefDetail(addr) {
+  const box = document.getElementById('walletBriefDetail');
+  const addrEl = document.getElementById('entryDetailAddr');
+  const originEl = document.getElementById('entryDetailOrigin');
+  const pxEl = document.getElementById('entryDetailPubX');
+  const pyEl = document.getElementById('entryDetailPubY');
+  if (!box || !addrEl || !originEl || !pxEl || !pyEl) return;
+  const u = loadUser();
+  const origin = u && u.wallet && u.wallet.addressMsg && u.wallet.addressMsg[addr] && u.wallet.addressMsg[addr].origin ? u.wallet.addressMsg[addr].origin : '';
+  addrEl.textContent = addr || '';
+  originEl.textContent = origin === 'created' ? '新建' : (origin === 'imported' ? '导入' : '未知');
+  pxEl.textContent = (u && u.keys && u.keys.pubXHex) ? u.keys.pubXHex : '';
+  pyEl.textContent = (u && u.keys && u.keys.pubYHex) ? u.keys.pubYHex : '';
+  box.classList.remove('hidden');
+}
+
+const briefListEl = document.getElementById('walletBriefList');
+if (briefListEl && !briefListEl.dataset._bind) {
+  briefListEl.addEventListener('click', (e) => {
+    const item = e.target.closest('.brief-item');
+    if (!item) return;
+    const addr = item.getAttribute('data-addr');
+    const ok = e.target.closest('.brief-confirm-ok');
+    const cancel = e.target.closest('.brief-confirm-cancel');
+    const del = e.target.closest('.brief-del');
+    if (del) {
+      const existed = item.querySelector('.brief-confirm');
+      if (existed) { existed.remove(); }
+      const box = document.createElement('span');
+      box.className = 'brief-confirm';
+      box.innerHTML = '<button class="btn danger btn--sm brief-confirm-ok">确认</button><button class="btn secondary btn--sm brief-confirm-cancel">取消</button>';
+      del.insertAdjacentElement('afterend', box);
+      requestAnimationFrame(() => box.classList.add('show'));
+      return;
+    }
+    if (ok) {
+      const u = loadUser();
+      if (addr && u && u.wallet && u.wallet.addressMsg) {
+        item.remove();
+        delete u.wallet.addressMsg[addr];
+        saveUser(u);
+        updateWalletBrief();
+      }
+      return;
+    }
+    if (cancel) {
+      const existed = item.querySelector('.brief-confirm');
+      if (existed) existed.remove();
+      return;
+    }
+  });
+  briefListEl.dataset._bind = '1';
+}
+
+const briefToggleBtn = document.getElementById('briefToggleBtn');
+if (briefToggleBtn && !briefToggleBtn.dataset._bind) {
+  briefToggleBtn.addEventListener('click', () => {
+    const list = document.getElementById('walletBriefList');
+    if (!list) return;
+    const collapsed = list.classList.contains('collapsed');
+    if (collapsed) { list.classList.remove('collapsed'); briefToggleBtn.textContent = '收起'; }
+    else { list.classList.add('collapsed'); briefToggleBtn.textContent = '展开更多'; }
+  });
+  briefToggleBtn.dataset._bind = '1';
 }
 
 // 结果页“下一步”按钮：跳转到占位页
 const newNextBtn = document.getElementById('newNextBtn');
 if (newNextBtn) {
-  newNextBtn.addEventListener('click', () => routeTo('#/join-group'));
+  newNextBtn.addEventListener('click', () => {
+    const ov = document.getElementById('actionOverlay');
+    const ovt = document.getElementById('actionOverlayText');
+    if (ovt) ovt.textContent = '正在进入生成或导入钱包页面...';
+    if (ov) ov.classList.remove('hidden');
+    window.__skipExitConfirm = true;
+    setTimeout(() => {
+      if (ov) ov.classList.add('hidden');
+      routeTo('#/entry');
+    }, 600);
+  });
 }
 const importNextBtn = document.getElementById('importNextBtn');
 if (importNextBtn) {
-  importNextBtn.addEventListener('click', () => routeTo('#/import-next'));
+  importNextBtn.addEventListener('click', () => {
+    window.__skipExitConfirm = true;
+    routeTo('#/entry');
+  });
+}
+
+if (entryNextBtn) {
+  const proceedModal = document.getElementById('confirmProceedModal');
+  const proceedText = document.getElementById('confirmProceedText');
+  const proceedOk = document.getElementById('confirmProceedOk');
+  const proceedCancel = document.getElementById('confirmProceedCancel');
+  entryNextBtn.addEventListener('click', () => {
+    const u = loadUser();
+    const addrs = u && u.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
+    if (proceedText) proceedText.textContent = `当前子地址数：${addrs.length}，是否确认继续下一步？`;
+    if (proceedModal) proceedModal.classList.remove('hidden');
+  });
+  if (proceedOk) {
+    proceedOk.addEventListener('click', () => {
+      const proceedModal2 = document.getElementById('confirmProceedModal');
+      if (proceedModal2) proceedModal2.classList.add('hidden');
+      routeTo('#/join-group');
+    });
+  }
+  if (proceedCancel) {
+    proceedCancel.addEventListener('click', () => {
+      const proceedModal2 = document.getElementById('confirmProceedModal');
+      if (proceedModal2) proceedModal2.classList.add('hidden');
+    });
+  }
 }
 
 const groupSearch = document.getElementById('groupSearch');
@@ -698,6 +910,7 @@ async function importFromPrivHex(privHex) {
 // 导入钱包：根据私钥恢复账户信息并显示
 if (importBtn) {
   importBtn.addEventListener('click', async () => {
+    const mode = importBtn.dataset.mode || 'account';
     const inputEl = document.getElementById('importPrivHex');
     const priv = inputEl.value.trim();
     if (!priv) {
@@ -719,31 +932,74 @@ if (importBtn) {
       const importNextBtn = document.getElementById('importNextBtn');
       if (importNextBtn) importNextBtn.classList.add('hidden');
       if (resultEl) resultEl.classList.add('hidden');
-      if (loader) loader.classList.remove('hidden');
+      if (loader && mode === 'account') loader.classList.remove('hidden');
+      const ov = document.getElementById('actionOverlay');
+      const ovt = document.getElementById('actionOverlayText');
+      if (mode === 'wallet') { if (ovt) ovt.textContent = '正在导入钱包地址...'; if (ov) ov.classList.remove('hidden'); }
       const t0 = Date.now();
       const data = await importFromPrivHex(priv);
       const elapsed = Date.now() - t0;
       if (elapsed < 1000) await wait(1000 - elapsed);
       if (loader) loader.classList.add('hidden');
-      // 显示导入结果并淡入
-      resultEl.classList.remove('hidden');
-      resultEl.classList.remove('fade-in');
-      resultEl.classList.remove('reveal');
-      requestAnimationFrame(() => resultEl.classList.add('reveal'));
-      document.getElementById('importAccountId').textContent = data.accountId || '';
-      document.getElementById('importAddress').textContent = data.address || '';
-      document.getElementById('importPrivHexOut').textContent = data.privHex || normalized;
-      document.getElementById('importPubX').textContent = data.pubXHex || '';
-      document.getElementById('importPubY').textContent = data.pubYHex || '';
-      // 保存并刷新右上角用户栏
-      saveUser({
-        accountId: data.accountId,
-        address: data.address,
-        privHex: data.privHex,
-        pubXHex: data.pubXHex,
-        pubYHex: data.pubYHex,
-      });
-      if (importNextBtn) importNextBtn.classList.remove('hidden');
+      if (mode === 'account') {
+        resultEl.classList.remove('hidden');
+        resultEl.classList.remove('fade-in');
+        resultEl.classList.remove('reveal');
+        requestAnimationFrame(() => resultEl.classList.add('reveal'));
+        document.getElementById('importAccountId').textContent = data.accountId || '';
+        document.getElementById('importAddress').textContent = data.address || '';
+        document.getElementById('importPrivHexOut').textContent = data.privHex || normalized;
+        document.getElementById('importPubX').textContent = data.pubXHex || '';
+        document.getElementById('importPubY').textContent = data.pubYHex || '';
+        saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
+        if (importNextBtn) importNextBtn.classList.remove('hidden');
+      } else {
+        const u2 = loadUser();
+        if (!u2 || !u2.accountId) { alert('请先登录或注册账户'); return; }
+        if (ov) ov.classList.add('hidden');
+        const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
+        const addr = (data.address || '').toLowerCase();
+        if (!addr) {
+          const modalE = document.getElementById('actionModal');
+          const titleE = document.getElementById('actionTitle');
+          const textE = document.getElementById('actionText');
+          const okE = document.getElementById('actionOkBtn');
+          if (titleE) titleE.textContent = '导入失败';
+          if (textE) textE.textContent = '无法解析地址';
+          if (textE) textE.classList.add('tip--error');
+          if (modalE) modalE.classList.remove('hidden');
+          const handlerE = () => { modalE.classList.add('hidden'); okE.removeEventListener('click', handlerE); };
+          if (okE) okE.addEventListener('click', handlerE);
+          return;
+        }
+        const exists = (acc.wallet && acc.wallet.addressMsg && acc.wallet.addressMsg[addr]) || (u2.address && String(u2.address).toLowerCase() === addr);
+        if (exists) {
+          const modalE = document.getElementById('actionModal');
+          const titleE = document.getElementById('actionTitle');
+          const textE = document.getElementById('actionText');
+          const okE = document.getElementById('actionOkBtn');
+          if (titleE) titleE.textContent = '导入失败';
+          if (textE) textE.textContent = '该公钥地址已存在，不能重复导入';
+          if (textE) textE.classList.add('tip--error');
+          if (modalE) modalE.classList.remove('hidden');
+          const handlerE = () => { modalE.classList.add('hidden'); okE.removeEventListener('click', handlerE); };
+          if (okE) okE.addEventListener('click', handlerE);
+          return;
+        }
+        if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported' };
+        saveUser(acc);
+        updateWalletBrief();
+        const modal = document.getElementById('actionModal');
+        const title = document.getElementById('actionTitle');
+        const text = document.getElementById('actionText');
+        const ok = document.getElementById('actionOkBtn');
+        if (title) title.textContent = '导入钱包成功';
+        if (text) text.textContent = '已导入一个钱包地址';
+        if (text) text.classList.remove('tip--error');
+        if (modal) modal.classList.remove('hidden');
+        const handler = () => { modal.classList.add('hidden'); ok.removeEventListener('click', handler); routeTo('#/entry'); };
+        if (ok) ok.addEventListener('click', handler);
+      }
     } catch (err) {
       alert('导入失败：' + err.message);
       console.error(err);
@@ -752,6 +1008,58 @@ if (importBtn) {
       const loader = document.getElementById('importLoader');
       if (loader) loader.classList.add('hidden');
     }
+  });
+}
+
+if (loginAccountBtn) {
+  loginAccountBtn.addEventListener('click', () => routeTo('#/login'));
+}
+if (registerAccountBtn) {
+  registerAccountBtn.addEventListener('click', () => routeTo('#/new'));
+}
+if (loginBtn) {
+  loginBtn.addEventListener('click', async () => {
+    const inputEl = document.getElementById('loginPrivHex');
+    const priv = inputEl.value.trim();
+    if (!priv) { alert('请输入私钥 Hex'); inputEl.focus(); return; }
+    const normalized = priv.replace(/^0x/i, '');
+    if (!/^[0-9a-fA-F]{64}$/.test(normalized)) { alert('私钥格式不正确：需为 64 位十六进制字符串'); inputEl.focus(); return; }
+    loginBtn.disabled = true;
+    try {
+      const loader = document.getElementById('loginLoader');
+      const resultEl = document.getElementById('loginResult');
+      const nextBtn = document.getElementById('loginNextBtn');
+      if (resultEl) resultEl.classList.add('hidden');
+      if (nextBtn) nextBtn.classList.add('hidden');
+      if (loader) loader.classList.remove('hidden');
+      const t0 = Date.now();
+      const data = await importFromPrivHex(priv);
+      const elapsed = Date.now() - t0;
+      if (elapsed < 1000) await wait(1000 - elapsed);
+      if (loader) loader.classList.add('hidden');
+      resultEl.classList.remove('hidden');
+      resultEl.classList.remove('fade-in');
+      resultEl.classList.remove('reveal');
+      requestAnimationFrame(() => resultEl.classList.add('reveal'));
+      document.getElementById('loginAccountId').textContent = data.accountId || '';
+      document.getElementById('loginAddress').textContent = data.address || '';
+      document.getElementById('loginPrivOut').textContent = data.privHex || normalized;
+      document.getElementById('loginPubX').textContent = data.pubXHex || '';
+      document.getElementById('loginPubY').textContent = data.pubYHex || '';
+      saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
+      if (nextBtn) nextBtn.classList.remove('hidden');
+    } catch (e) {
+      alert('登录失败：' + e.message);
+      console.error(e);
+    } finally {
+      loginBtn.disabled = false;
+    }
+  });
+}
+if (loginNextBtn) {
+  loginNextBtn.addEventListener('click', () => {
+    window.__skipExitConfirm = true;
+    routeTo('#/entry');
   });
 }
 
@@ -783,7 +1091,7 @@ if (logoutBtn) {
     clearUIState();
     const menu = document.getElementById('userMenu');
     if (menu) menu.classList.add('hidden');
-    routeTo('#/entry');
+    routeTo('#/welcome');
   });
 }
 // 点击推荐区标题，切换收叠/展开
@@ -971,7 +1279,7 @@ function renderWallet() {
     });
     svgT.addEventListener('mouseleave', () => { cursorT.style.opacity = 0; dotT.style.opacity = 0; });
     const totalTags = document.querySelector('.total-box .tags');
-    if (totalTags && !totalEl.dataset._bind) {
+    if (totalTags) {
       const els = totalTags.querySelectorAll('.tag');
       const colorBy = (k) => k === 'BTC' ? '#f59e0b' : (k === 'ETH' ? '#6366f1' : '#22d3ee');
       const setActiveTotal = (k) => {
@@ -994,11 +1302,10 @@ function renderWallet() {
         updateTotalTip(ptsArr, label);
         cursorT.style.opacity = 0; dotT.style.opacity = 0;
       };
-      setActiveTotal('PGC');
-      if (els[0]) els[0].addEventListener('click', () => applyTotal(ptsTpgc, 'PGC'));
-      if (els[1]) els[1].addEventListener('click', () => applyTotal(ptsTbtc, 'BTC'));
-      if (els[2]) els[2].addEventListener('click', () => applyTotal(ptsTeth, 'ETH'));
-      totalEl.dataset._bind = '1';
+      setActiveTotal(totalEl.__label || 'PGC');
+      if (els[0]) els[0].onclick = () => applyTotal(ptsTpgc, 'PGC');
+      if (els[1]) els[1].onclick = () => applyTotal(ptsTbtc, 'BTC');
+      if (els[2]) els[2].onclick = () => applyTotal(ptsTeth, 'ETH');
     }
   }
   const qtBtn = document.getElementById('qtSendBtn');
