@@ -136,6 +136,5 @@ code { display: block; background: #f3f4f6; padding: 10px; border-radius: 8px; f
 .split-btn #skipJoinBtn { background: linear-gradient(135deg, #ef4444, #f97316); }
 /* 专为“加入搜索结果”按钮的禁用态设定非灰色方案 */
 .split-btn #joinSearchBtn:disabled { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #fff; cursor: not-allowed; opacity: .92; }
-.
 .join-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px; }
 @media (max-width: 960px) { .join-layout { grid-template-columns: 1fr; } }

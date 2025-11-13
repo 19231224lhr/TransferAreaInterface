@@ -42,8 +42,11 @@ const crc32 = (bytes) => {
 };
 
 const generate8DigitFromInputHex = (hex) => {
-  const crc = crc32(hexToBytes(hex));
-  const num = (crc % 90000000) + 10000000; // 映射到 10000000..99999999
+  const enc = new TextEncoder();
+  const s = String(hex).replace(/^0x/i, '').toLowerCase().replace(/^0+/, '');
+  const bytes = enc.encode(s);
+  const crc = crc32(bytes);
+  const num = (crc % 90000000) + 10000000;
   return String(num).padStart(8, '0');
 };
 
@@ -315,7 +318,6 @@ function router() {
       if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;
       if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
       if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
-      initHeroObserver();
       break;
     case '/next':
       routeTo('#/join-group');
@@ -328,6 +330,11 @@ function router() {
         const choice = raw ? JSON.parse(raw) : null;
         if (choice && choice.type === 'join') {
           finalText.textContent = `已选择加入担保组织：${choice.groupID}`;
+          const u = loadUser();
+          if (u) {
+            u.orgNumber = choice.groupID;
+            saveUser(u);
+          }
         } else {
           finalText.textContent = '已选择不加入担保组织';
         }
@@ -341,7 +348,6 @@ function router() {
     default:
       // 未知路由回到入口
       routeTo('#/entry');
-      stopHeroObserver();
       break;
   }
 }
@@ -456,7 +462,6 @@ function showGroupInfo(g) {
   }
   if (joinSearchBtn) joinSearchBtn.disabled = false;
   if (recPane) recPane.classList.add('collapsed');
-  syncHeroHeight();
 }
 
 function doSearchById() {
@@ -482,7 +487,6 @@ if (groupSearch) {
       if (sr) sr.classList.add('hidden');
       if (joinSearchBtn) joinSearchBtn.disabled = true;
       if (recPane) recPane.classList.remove('collapsed');
-      syncHeroHeight();
       return;
     }
     const list = GROUP_LIST.filter(g => g.groupID.includes(q)).slice(0, 6);
@@ -562,7 +566,9 @@ async function importFromPrivHex(privHex) {
     });
     if (res.ok) {
       const data = await res.json();
-      return data;
+      const normalized = (data.privHex || privHex).replace(/^0x/i, '').toLowerCase().replace(/^0+/, '');
+      const accountId = generate8DigitFromInputHex(normalized);
+      return { ...data, accountId };
     }
   } catch (_) {
     // 网络或跨域问题时直接回退
