@@ -151,9 +151,109 @@
       <!-- 下一步：空白页面占位 -->
       <section class="card hidden" id="nextCard">
         <div class="card-header">
+          <h2>加入担保组织</h2>
+        </div>
+        <div class="join-layout">
+          <div class="hero-left reveal">
+            <div class="tiles">
+              <div class="tile"><span>🛡️</span></div>
+              <div class="tile"><span>👥</span></div>
+              <div class="tile"><span>🔗</span></div>
+              <div class="tile"><span>💠</span></div>
+              <div class="tile"><span>📦</span></div>
+              <div class="tile"><span>🌐</span></div>
+              <div class="tile"><span>☁️</span></div>
+            </div>
+            <div class="hero-content">
+              <strong>解锁你的担保体验</strong>
+              <p class="tip">加入担保组织以获得更稳定的交易服务与账户保障</p>
+              <ul class="hero-list">
+                <li><span class="li-icon">⚡</span><div>加速交易确认</div></li>
+                <li><span class="li-icon">🔒</span><div>跨区保障与可选权益</div></li>
+                <li><span class="li-icon">🧭</span><div>个性化地址管理</div></li>
+                <li><span class="li-icon">📊</span><div>账户信息与利息统计</div></li>
+              </ul>
+            </div>
+          </div>
+          <div class="join-right">
+          <div class="join-pane collapsible" id="recPane">
+            <h3>推荐担保组织</h3>
+            <div class="tip">点击标题可收起或展开</div>
+            <div class="tip">系统为您推荐以下担保组织</div>
+              <div class="result">
+                <div class="grid">
+                  <div>
+                    <h3>GroupID</h3>
+                    <code id="recGroupID"></code>
+                  </div>
+                  <div>
+                    <h3>AggreNode</h3>
+                    <code id="recAggre"></code>
+                  </div>
+                </div>
+                <div class="grid">
+                  <div>
+                    <h3>AssignNode</h3>
+                    <code id="recAssign"></code>
+                  </div>
+                  <div>
+                    <h3>PledgeAddress</h3>
+                    <code id="recPledge" class="break"></code>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <div class="join-pane">
+            <h3>搜索担保组织</h3>
+            <div class="search-row">
+              <input id="groupSearch" class="input" type="text" placeholder="输入担保组织编号" />
+            </div>
+            <div id="groupSuggest" class="suggest hidden"></div>
+            <div id="searchResult" class="result hidden">
+              <div class="grid">
+                <div>
+                  <h3>GroupID</h3>
+                  <code id="srGroupID"></code>
+                </div>
+                <div>
+                  <h3>AggreNode</h3>
+                  <code id="srAggre"></code>
+                </div>
+              </div>
+              <div class="grid">
+                <div>
+                  <h3>AssignNode</h3>
+                  <code id="srAssign"></code>
+                </div>
+                <div>
+                  <h3>PledgeAddress</h3>
+                  <code id="srPledge" class="break"></code>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="join-actions reveal">
+            <div class="split-btn">
+              <button id="joinRecBtn" class="btn primary">加入系统推荐</button>
+              <button id="joinSearchBtn" class="btn primary" disabled>加入搜索结果</button>
+              <button id="skipJoinBtn" class="btn primary">不加入担保组织</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="finalCard">
+        <div class="card-header">
           <h2>下一步</h2>
         </div>
-        <p class="tip">此处为占位页面，后续将承载更多功能。</p>
+        <p id="finalText" class="tip"></p>
+      </section>
+
+      <section class="card hidden" id="importNextCard">
+        <div class="card-header">
+          <h2>导入流程下一步</h2>
+        </div>
+        <p class="tip">此页面为导入钱包后的下一步占位，后续将专门更新。</p>
       </section>
     </main>
 

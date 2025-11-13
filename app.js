@@ -20,6 +20,9 @@ const hexToBytes = (hex) => {
   return out;
 };
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
+let currentSelectedGroup = null;
+const DEFAULT_GROUP = { groupID: '10000000', aggreNode: '39012088', assignNode: '17770032', pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09' };
+const GROUP_LIST = [ DEFAULT_GROUP ];
 
 // CRC32（IEEE）
 const crc32Table = (() => {
@@ -248,10 +251,16 @@ function showCard(card) {
   if (importCard) importCard.classList.add('hidden');
   const nextCard = document.getElementById('nextCard');
   if (nextCard) nextCard.classList.add('hidden');
+  const finalCard = document.getElementById('finalCard');
+  if (finalCard) finalCard.classList.add('hidden');
+  const importNextCard = document.getElementById('importNextCard');
+  if (importNextCard) importNextCard.classList.add('hidden');
   const newLoader = document.getElementById('newLoader');
   if (newLoader) newLoader.classList.add('hidden');
   const importLoader = document.getElementById('importLoader');
   if (importLoader) importLoader.classList.add('hidden');
+  const suggest = document.getElementById('groupSuggest');
+  if (suggest) suggest.classList.add('hidden');
   // 显示指定卡片
   card.classList.remove('hidden');
   // 轻微过渡动画
@@ -263,10 +272,9 @@ function showCard(card) {
 function routeTo(hash) {
   if (location.hash !== hash) {
     location.hash = hash;
-  } else {
-    // 若 hash 未变化，也触发一次路由逻辑
-    router();
   }
+  // 立即执行一次路由作为兜底，避免某些环境下 hashchange 未触发
+  router();
 }
 
 function router() {
@@ -296,12 +304,44 @@ function router() {
         if (importNextBtn) importNextBtn.classList.add('hidden');
       }
       break;
-    case '/next':
+    case '/join-group':
       showCard(document.getElementById('nextCard'));
+      currentSelectedGroup = DEFAULT_GROUP;
+      const recGroupID = document.getElementById('recGroupID');
+      const recAggre = document.getElementById('recAggre');
+      const recAssign = document.getElementById('recAssign');
+      const recPledge = document.getElementById('recPledge');
+      if (recGroupID) recGroupID.textContent = DEFAULT_GROUP.groupID;
+      if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;
+      if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
+      if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
+      initHeroObserver();
+      break;
+    case '/next':
+      routeTo('#/join-group');
+      break;
+    case '/final':
+      showCard(document.getElementById('finalCard'));
+      const finalText = document.getElementById('finalText');
+      try {
+        const raw = localStorage.getItem('guarChoice');
+        const choice = raw ? JSON.parse(raw) : null;
+        if (choice && choice.type === 'join') {
+          finalText.textContent = `已选择加入担保组织：${choice.groupID}`;
+        } else {
+          finalText.textContent = '已选择不加入担保组织';
+        }
+      } catch (_) {
+        if (finalText) finalText.textContent = '';
+      }
+      break;
+    case '/import-next':
+      showCard(document.getElementById('importNextCard'));
       break;
     default:
       // 未知路由回到入口
       routeTo('#/entry');
+      stopHeroObserver();
       break;
   }
 }
@@ -361,23 +401,132 @@ window.addEventListener('popstate', (e) => {
 });
 
 // 点击“新建钱包”：切换到路由并自动生成
-if (createWalletBtn) {
+if (createWalletBtn && !createWalletBtn.dataset._bind) {
   createWalletBtn.addEventListener('click', () => routeTo('#/new'));
+  createWalletBtn.dataset._bind = '1';
 }
 
 // 点击“导入钱包”：切换到路由显示导入界面
-if (importWalletBtn) {
+if (importWalletBtn && !importWalletBtn.dataset._bind) {
   importWalletBtn.addEventListener('click', () => routeTo('#/import'));
+  importWalletBtn.dataset._bind = '1';
 }
 
 // 结果页“下一步”按钮：跳转到占位页
 const newNextBtn = document.getElementById('newNextBtn');
 if (newNextBtn) {
-  newNextBtn.addEventListener('click', () => routeTo('#/next'));
+  newNextBtn.addEventListener('click', () => routeTo('#/join-group'));
 }
 const importNextBtn = document.getElementById('importNextBtn');
 if (importNextBtn) {
-  importNextBtn.addEventListener('click', () => routeTo('#/next'));
+  importNextBtn.addEventListener('click', () => routeTo('#/import-next'));
+}
+
+const groupSearch = document.getElementById('groupSearch');
+const groupSuggest = document.getElementById('groupSuggest');
+const recPane = document.getElementById('recPane');
+const joinSearchBtn = document.getElementById('joinSearchBtn');
+const joinRecBtn = document.getElementById('joinRecBtn');
+
+function showGroupInfo(g) {
+  currentSelectedGroup = g;
+  const recGroupID = document.getElementById('recGroupID');
+  const recAggre = document.getElementById('recAggre');
+  const recAssign = document.getElementById('recAssign');
+  const recPledge = document.getElementById('recPledge');
+  if (recGroupID) recGroupID.textContent = g.groupID;
+  if (recAggre) recAggre.textContent = g.aggreNode;
+  if (recAssign) recAssign.textContent = g.assignNode;
+  if (recPledge) recPledge.textContent = g.pledgeAddress;
+  if (groupSuggest) groupSuggest.classList.add('hidden');
+  // 展示搜索详细信息并启用“加入搜索结果”
+  const sr = document.getElementById('searchResult');
+  if (sr) {
+    const sg = document.getElementById('srGroupID');
+    const sa = document.getElementById('srAggre');
+    const ss = document.getElementById('srAssign');
+    const sp = document.getElementById('srPledge');
+    if (sg) sg.textContent = g.groupID;
+    if (sa) sa.textContent = g.aggreNode;
+    if (ss) ss.textContent = g.assignNode;
+    if (sp) sp.textContent = g.pledgeAddress;
+    sr.classList.remove('hidden');
+    sr.classList.remove('reveal');
+    requestAnimationFrame(() => sr.classList.add('reveal'));
+  }
+  if (joinSearchBtn) joinSearchBtn.disabled = false;
+  if (recPane) recPane.classList.add('collapsed');
+  syncHeroHeight();
+}
+
+function doSearchById() {
+  const q = groupSearch ? groupSearch.value.trim() : '';
+  if (!q) { return; }
+  const g = GROUP_LIST.find(x => x.groupID === q);
+  if (g) {
+    showGroupInfo(g);
+  } else {
+    const list = GROUP_LIST.filter(x => x.groupID.includes(q)).slice(0, 6);
+    if (list.length) {
+      groupSuggest.innerHTML = list.map(x => `<div class="item" data-id="${x.groupID}"><span>${x.groupID}</span><span>${x.aggreNode} / ${x.assignNode}</span></div>`).join('');
+      groupSuggest.classList.remove('hidden');
+    }
+  }
+}
+if (groupSearch) {
+  groupSearch.addEventListener('input', () => {
+    const q = groupSearch.value.trim();
+    if (!q) {
+      groupSuggest.classList.add('hidden');
+      const sr = document.getElementById('searchResult');
+      if (sr) sr.classList.add('hidden');
+      if (joinSearchBtn) joinSearchBtn.disabled = true;
+      if (recPane) recPane.classList.remove('collapsed');
+      syncHeroHeight();
+      return;
+    }
+    const list = GROUP_LIST.filter(g => g.groupID.includes(q)).slice(0, 6);
+    if (list.length === 0) { groupSuggest.classList.add('hidden'); return; }
+    groupSuggest.innerHTML = list.map(g => `<div class="item" data-id="${g.groupID}"><span>${g.groupID}</span><span>${g.aggreNode} / ${g.assignNode}</span></div>`).join('');
+    groupSuggest.classList.remove('hidden');
+  });
+  groupSearch.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      doSearchById();
+    }
+  });
+  groupSuggest.addEventListener('click', (e) => {
+    const t = e.target.closest('.item');
+    if (!t) return;
+    const id = t.getAttribute('data-id');
+    const g = GROUP_LIST.find(x => x.groupID === id);
+    if (g) showGroupInfo(g);
+  });
+}
+
+// 移除“搜索”按钮，改为回车搜索或点击建议
+
+const skipJoinBtn = document.getElementById('skipJoinBtn');
+if (skipJoinBtn) {
+  skipJoinBtn.addEventListener('click', () => {
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch {}
+    routeTo('#/final');
+  });
+}
+if (joinRecBtn) {
+  joinRecBtn.addEventListener('click', () => {
+    const g = DEFAULT_GROUP;
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
+    routeTo('#/final');
+  });
+}
+if (joinSearchBtn) {
+  joinSearchBtn.addEventListener('click', () => {
+    if (joinSearchBtn.disabled) return;
+    const g = currentSelectedGroup || DEFAULT_GROUP;
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
+    routeTo('#/final');
+  });
 }
 
 async function importLocallyFromPrivHex(privHex) {
@@ -512,3 +661,14 @@ if (logoutBtn) {
     routeTo('#/entry');
   });
 }
+// 点击推荐区标题，切换收叠/展开
+const recPaneHeader = document.querySelector('#recPane h3');
+if (recPaneHeader && recPane) {
+  recPaneHeader.addEventListener('click', () => {
+    recPane.classList.toggle('collapsed');
+  });
+}
+
+// （已移除）左侧加长逻辑
+
+// 移除左侧高度同步逻辑
