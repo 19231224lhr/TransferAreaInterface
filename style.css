@@ -206,7 +206,6 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .btn.btn--sm { padding: 6px 10px; min-width: auto; font-size: 12px; border-radius: 8px; }
 .btn.danger { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.25); }
 .btn.danger:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(239,68,68,.3); }
-.
 .btn.secondary.btn--sm { background: linear-gradient(135deg, #ffffff, #f8fafc); color: #334155; border: 1px solid #e2e8f0; box-shadow: 0 6px 16px rgba(15,23,42,.08); }
 .btn.secondary.btn--sm:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 8px 20px rgba(15,23,42,.12); }
 #entryCard .list.collapsed .brief-item:nth-child(n+4) { display: none; }
@@ -218,3 +217,16 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .join-pane .result { border-top: none; padding: 12px; }
 #entryCard .brief-item code { background: #f7fafc; border-color: #e5e7eb; color: #0f172a; box-shadow: 0 2px 6px rgba(15,23,42,.06); }
 #entryCard .result { border-top: none; padding-top: 0; }
+#welcomeCard { position: relative; overflow: hidden; }
+#welcomeCard h2 { background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: .3px; background-size: 200% auto; animation: titleFlow 10s ease-in-out infinite; }
+#welcomeCard .welcome-splash { position: absolute; inset: -40px -60px -40px -60px; pointer-events: none; }
+#welcomeCard .welcome-splash::before, #welcomeCard .welcome-splash::after { content: ""; position: absolute; border-radius: 50%; filter: blur(40px); opacity: .35; }
+#welcomeCard .welcome-splash::before { width: 260px; height: 260px; left: -40px; top: 0; background: radial-gradient(closest-side, rgba(14,165,233,.55), rgba(14,165,233,0)); animation: drift 10s ease-in-out infinite; }
+#welcomeCard .welcome-splash::after { width: 320px; height: 320px; right: -60px; bottom: -20px; background: radial-gradient(closest-side, rgba(99,102,241,.45), rgba(99,102,241,0)); animation: drift 12s ease-in-out infinite reverse; }
+@keyframes titleFlow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes drift { 0% { transform: translateY(0) translateX(0); } 50% { transform: translateY(-10px) translateX(6px); } 100% { transform: translateY(0) translateX(0); } }
+#welcomeCard .actions { justify-content: center; }
+.btn.primary.flow { background-size: 200% 200%; animation: btnFlowPrimary 8s ease-in-out infinite; }
+.btn.secondary.flow { background-size: 200% 200%; animation: btnFlowSecondary 8s ease-in-out infinite; }
+@keyframes btnFlowPrimary { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+@keyframes btnFlowSecondary { 0% { background-position: 100% 50%; } 50% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
