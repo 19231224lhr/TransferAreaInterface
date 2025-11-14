@@ -508,6 +508,12 @@ function router() {
         routeTo('#/member-info');
       }, 2000);
       break;
+    case '/inquiry-main':
+      showCard(document.getElementById('inquiryCard'));
+      setTimeout(() => {
+        routeTo('#/main');
+      }, 2000);
+      break;
     case '/member-info':
       showCard(document.getElementById('memberInfoCard'));
       {
@@ -859,12 +865,7 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      const u = loadUser();
-      if (u && (u.orgNumber || u.flowOrigin === 'login')) {
-        routeTo('#/main');
-      } else {
-        routeTo('#/join-group');
-      }
+      routeTo('#/inquiry-main');
     });
   }
   if (proceedCancel) {
