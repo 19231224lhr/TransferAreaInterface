@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>简洁钱包前端 - 钱包操作</title>
-    <link rel="stylesheet" href="/style.css?v=20251114a" />
+    <link rel="stylesheet" href="/style.css?v=20251115h" />
   </head>
   <body>
     <header class="header">
@@ -401,24 +401,48 @@
             <div id="walletAddrList" class="addr-list"></div>
           </div>
           <div class="wallet-right">
-            <div class="pane">
-              <h3>转账与跨链</h3>
-              <div class="form">
+            <div class="pane" role="region" aria-labelledby="txFormTitle">
+              <h3 id="txFormTitle">转账与跨链</h3>
+              <div class="form tx-form" role="form" aria-describedby="txFormTitle">
                 <div class="form-row"><label>功能</label>
                   <select id="tfMode" class="input">
                     <option value="quick" selected>快速转账</option>
                     <option value="cross">跨链转账</option>
                   </select>
                 </div>
-                <div class="form-row"><label>From</label><input id="tfFrom" class="input" type="text" placeholder="输入来源地址" /></div>
-                <div class="form-row"><label>To</label><input id="tfTo" class="input" type="text" placeholder="输入目标地址" /></div>
-                <div class="form-row"><label>Value</label><input id="tfValue" class="input" type="number" placeholder="输入金额" /></div>
-                <div class="actions"><button id="tfSendBtn" class="btn primary">发起转账</button></div>
+                <div class="tx-section" role="group" aria-labelledby="srcAddrHead">
+                  <div class="tx-subhead" id="srcAddrHead">选择来源地址</div>
+                  <div id="srcAddrList" class="tx-addr-list" role="list"></div>
+                </div>
+                <div class="tx-section" role="group" aria-labelledby="billHead">
+                  <div class="tx-subhead" id="billHead">添加转账账单</div>
+                  <div id="billList" class="bill-list" role="list"></div>
+                  <div class="actions"><button id="addBillBtn" class="btn success btn--sm" aria-label="添加一笔账单">添加一笔</button></div>
+                </div>
+                <div class="tx-section" role="group" aria-labelledby="changeHead">
+                  <div class="tx-subhead" id="changeHead">找零地址</div>
+                  <div class="tx-grid-3" role="group" aria-label="按币种设置找零地址">
+                    <div><label>PGC</label><select id="chAddrPGC" class="input"></select></div>
+                    <div><label>BTC</label><select id="chAddrBTC" class="input"></select></div>
+                    <div><label>ETH</label><select id="chAddrETH" class="input"></select></div>
+                  </div>
+                </div>
+                <div class="tx-section" role="group" aria-labelledby="optHead">
+                  <div class="tx-subhead" id="optHead">交易选项</div>
+                  <div class="tx-grid-3">
+                    <div><label>额外支付PGC兑换Gas</label><input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" /></div>
+                    <div><label>优先使用TXCer</label><select id="useTXCer" class="input"><option value="true">是</option><option value="false">否</option></select></div>
+                    <div><label>质押交易</label><select id="isPledge" class="input"><option value="false">否</option><option value="true">是</option></select></div>
+                  </div>
+                </div>
+                <div class="actions"><button id="tfSendBtn" class="btn primary" aria-label="生成交易结构体">生成交易结构体</button></div>
+                <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
+                <pre id="txPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;" aria-live="polite"></pre>
               </div>
             </div>
-            <div class="pane">
+            <div class="pane pane--org">
               <h3>担保组织信息</h3>
-              <div id="woCard">
+              <div id="woCard" class="org-card">
                 <div class="grid">
                   <div>
                     <h3>GroupID</h3>
@@ -443,7 +467,7 @@
                   <button id="woExitBtn" class="btn secondary">退出担保组织</button>
                 </div>
               </div>
-              <div id="woEmpty" class="empty-pane hidden">
+              <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
                 <div class="empty-icon">
                   <svg viewBox="0 0 64 64" aria-hidden="true">
                     <defs>

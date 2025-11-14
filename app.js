@@ -1717,18 +1717,176 @@ function renderWallet() {
   const tfMode = document.getElementById('tfMode');
   const tfBtn = document.getElementById('tfSendBtn');
   if (tfMode && tfBtn && !tfBtn.dataset._bind) {
+    const addrList = document.getElementById('srcAddrList');
+    const billList = document.getElementById('billList');
+    const addBillBtn = document.getElementById('addBillBtn');
+    const chPGC = document.getElementById('chAddrPGC');
+    const chBTC = document.getElementById('chAddrBTC');
+    const chETH = document.getElementById('chAddrETH');
+    const gasInput = document.getElementById('extraGasPGC');
+    const useTXCer = document.getElementById('useTXCer');
+    const isPledge = document.getElementById('isPledge');
+    const txErr = document.getElementById('txError');
+    const txPreview = document.getElementById('txPreview');
+    const u0 = loadUser();
+    const srcAddrs = Object.keys((u0 && u0.wallet && u0.wallet.addressMsg) || {});
+    addrList.innerHTML = srcAddrs.map(a => `<label><input type="checkbox" value="${a}"><code class="break">${a}</code></label>`).join('');
+    const fillChange = () => {
+      const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
+      Array.from(addrList.querySelectorAll('label')).forEach(l => { const inp = l.querySelector('input[type="checkbox"]'); if (inp) l.classList.toggle('selected', inp.checked); });
+      const opts = sel.length ? sel : srcAddrs;
+      const html = opts.map(a => `<option value="${a}">${a}</option>`).join('');
+      chPGC.innerHTML = html;
+      chBTC.innerHTML = html;
+      chETH.innerHTML = html;
+    };
+    fillChange();
+    addrList.addEventListener('change', fillChange);
+    let billSeq = 0;
+    const updateRemoveState = () => {
+      const rows = Array.from(billList.querySelectorAll('.bill-item'));
+      const onlyOne = rows.length <= 1;
+      rows.forEach(r => {
+        const btn = r.querySelector('.bill-remove');
+        if (btn) {
+          btn.disabled = onlyOne;
+          if (onlyOne) {
+            btn.setAttribute('title', '仅剩一笔转账账单不允许删除');
+            btn.setAttribute('aria-disabled', 'true');
+          } else {
+            btn.removeAttribute('title');
+            btn.removeAttribute('aria-disabled');
+          }
+        }
+      });
+    };
+    const addBill = () => {
+      const g = computeCurrentOrgId() || '';
+      const row = document.createElement('div');
+      row.className = 'bill-item';
+      const idBase = `bill_${Date.now()}_${billSeq++}`;
+      row.innerHTML = `
+        <div class="bill-grid">
+          <div class="bill-row bill-row--full"><label class="bill-label" for="${idBase}_to">地址</label><input id="${idBase}_to" class="input" type="text" placeholder="To Address" aria-label="目标地址" data-name="to"></div>
+          <div class="bill-row"><label class="bill-label" for="${idBase}_val">金额</label><input id="${idBase}_val" class="input" type="number" placeholder="金额" aria-label="金额" data-name="val"></div>
+          <div class="bill-row"><label class="bill-label" for="${idBase}_mt">币种</label><div id="${idBase}_mt" class="input custom-select" role="button" aria-label="币种" data-name="mt" data-val="0"><span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></span><span class="custom-select__arrow">▾</span><div class="custom-select__menu"><div class="custom-select__item" data-val="0"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></div><div class="custom-select__item" data-val="1"><span class="coin-icon coin--btc"></span><span class="coin-label">BTC</span></div><div class="custom-select__item" data-val="2"><span class="coin-icon coin--eth"></span><span class="coin-label">ETH</span></div></div></div></div>
+          <div class="bill-row bill-row--full"><label class="bill-label" for="${idBase}_pub">公钥</label><input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y 或 X,Y" aria-label="公钥" data-name="pub"></div>
+          <div class="bill-row"><label class="bill-label" for="${idBase}_gid">担保组织ID</label><input id="${idBase}_gid" class="input" type="text" placeholder="担保组织ID" value="" aria-label="担保组织ID" data-name="gid"></div>
+          <div class="bill-row"><label class="bill-label" for="${idBase}_gas">转移Gas</label><input id="${idBase}_gas" class="input" type="number" placeholder="转移Gas" aria-label="转移Gas" data-name="gas"></div>
+          <div class="bill-actions bill-actions--full"><button class="btn danger btn--sm bill-remove">删除</button></div>
+        </div>
+      `;
+      billList.appendChild(row);
+      updateRemoveState();
+      const del = row.querySelector('.bill-remove');
+      del.addEventListener('click', () => {
+        const rows = Array.from(billList.querySelectorAll('.bill-item'));
+        if (rows.length <= 1) return;
+        row.remove();
+        updateRemoveState();
+      });
+      const gasInputEl = row.querySelector('[data-name="gas"]');
+      const cs = row.querySelector('#'+idBase+'_mt');
+      if (cs) {
+        cs.addEventListener('click', (e) => { e.stopPropagation(); cs.classList.toggle('open'); });
+        const menu = cs.querySelector('.custom-select__menu');
+        if (menu) {
+          menu.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const item = ev.target.closest('.custom-select__item');
+            if (!item) return;
+            const v = item.getAttribute('data-val');
+            cs.dataset.val = v;
+            const valEl = cs.querySelector('.custom-select__value');
+            if (valEl) {
+              const labels = { '0': { t: 'PGC', c: 'coin--pgc' }, '1': { t: 'BTC', c: 'coin--btc' }, '2': { t: 'ETH', c: 'coin--eth' } };
+              const m = labels[v] || labels['0'];
+              valEl.innerHTML = `<span class="coin-icon ${m.c}"></span><span class="coin-label">${m.t}</span>`;
+            }
+            cs.classList.remove('open');
+          });
+        }
+        document.addEventListener('click', () => { cs.classList.remove('open'); });
+      }
+      if (gasInputEl) { gasInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addBill(); } }); }
+    };
+    addBillBtn.addEventListener('click', () => { addBill(); });
+    addBill();
+    updateRemoveState();
     const updateBtn = () => {
       const v = tfMode.value;
-      tfBtn.textContent = v === 'cross' ? '发起跨链' : '发起转账';
+      tfBtn.textContent = '生成交易结构体';
       tfBtn.classList.remove('secondary');
-      tfBtn.classList.remove('primary');
-      tfBtn.classList.add(v === 'cross' ? 'secondary' : 'primary');
+      tfBtn.classList.add('primary');
     };
     updateBtn();
     tfMode.addEventListener('change', updateBtn);
+    const rates = { 0: 1, 1: 100000, 2: 4000 };
     tfBtn.addEventListener('click', () => {
-      const v = tfMode.value;
-      alert(v === 'cross' ? '已提交跨链转账请求（占位）' : '已提交快速转账请求（占位）');
+      if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
+      const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
+      if (sel.length === 0) { if (txErr) { txErr.textContent = '请选择至少一个来源地址'; txErr.classList.remove('hidden'); } return; }
+      const rows = Array.from(billList.querySelectorAll('.bill-item'));
+      if (rows.length === 0) { if (txErr) { txErr.textContent = '请至少添加一笔转账账单'; txErr.classList.remove('hidden'); } return; }
+      const isCross = tfMode.value === 'cross';
+      if (isCross && rows.length !== 1) { if (txErr) { txErr.textContent = '跨链交易只能包含一笔账单'; txErr.classList.remove('hidden'); } return; }
+      const changeMap = {};
+      if (chPGC.value) changeMap[0] = chPGC.value;
+      if (chBTC.value) changeMap[1] = chBTC.value;
+      if (chETH.value) changeMap[2] = chETH.value;
+      const bills = {};
+      const vd = { 0: 0, 1: 0, 2: 0 };
+      let outInterest = 0;
+      const parsePub = (raw) => {
+        const s = String(raw || '').trim().replace(/^0x/i, '').toLowerCase();
+        if (!s) return { x: '', y: '' };
+        if (s.length === 130 && s.startsWith('04')) { return { x: s.slice(2, 66), y: s.slice(66, 130) }; }
+        const parts = s.split(/[\s,]+/).filter(Boolean);
+        if (parts.length === 2 && parts[0].length === 64 && parts[1].length === 64) { return { x: parts[0], y: parts[1] }; }
+        return { x: '', y: '' };
+      };
+      for (const r of rows) {
+        const toEl = r.querySelector('[data-name="to"]');
+        const mtEl = r.querySelector('[data-name="mt"]');
+        const valEl = r.querySelector('[data-name="val"]');
+        const gidEl = r.querySelector('[data-name="gid"]');
+        const pubEl = r.querySelector('[data-name="pub"]');
+        const gasEl = r.querySelector('[data-name="gas"]');
+        const to = String((toEl && toEl.value) || '').trim();
+        const mt = Number((mtEl && (mtEl.dataset && mtEl.dataset.val)) || 0);
+        const val = Number((valEl && valEl.value) || 0);
+        const gid = String((gidEl && gidEl.value) || '').trim();
+        const comb = String((pubEl && pubEl.value) || '').trim();
+        const { x: px, y: py } = parsePub(comb);
+        const tInt = Number((gasEl && gasEl.value) || 0);
+        if (!to || val <= 0) { if (txErr) { txErr.textContent = '请填写有效的账单信息'; txErr.classList.remove('hidden'); } return; }
+        if (isCross && mt !== 0) { if (txErr) { txErr.textContent = '跨链交易只能使用主货币'; txErr.classList.remove('hidden'); } return; }
+        if (bills[to]) { if (txErr) { txErr.textContent = '同一地址仅允许一笔账单'; txErr.classList.remove('hidden'); } return; }
+        bills[to] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };
+        vd[mt] += val;
+        outInterest += Math.max(0, tInt || 0);
+      }
+      const extraPGC = Number(gasInput.value || 0);
+      const interestGas = extraPGC > 0 ? extraPGC * 10 : 0;
+      const firstAddr = sel[0];
+      const backAssign = {}; sel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
+      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[k] * rates[k], 0);
+      const build = {
+        Value: valueTotal,
+        ValueDivision: vd,
+        Bill: bills,
+        UserAddress: sel,
+        PriUseTXCer: String(useTXCer.value) === 'true',
+        ChangeAddress: changeMap,
+        IsPledgeTX: String(isPledge.value) === 'true',
+        HowMuchPayForGas: extraPGC,
+        IsCrossChainTX: isCross,
+        Data: '',
+        InterestAssign: { Gas: interestGas, Output: outInterest, BackAssign: backAssign }
+      };
+      if (isCross && sel.length !== 1) { if (txErr) { txErr.textContent = '跨链交易只能有一个来源地址'; txErr.classList.remove('hidden'); } return; }
+      if (isCross && (!changeMap[0] || Object.keys(changeMap).length !== 1)) { if (txErr) { txErr.textContent = '跨链交易找零地址必须仅包含主货币地址'; txErr.classList.remove('hidden'); } return; }
+      if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
     });
     tfBtn.dataset._bind = '1';
   }

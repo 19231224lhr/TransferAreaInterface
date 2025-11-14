@@ -26,11 +26,11 @@ type BuildTXInfo struct {
 }
 
 type BillMsg struct {
-	MoneyType   int
-	Value       float64
-	GuarGroupID string
-	PublicKey   ecdsa.PublicKey
-	ToInterest  float64 // 发送利息数量
+	MoneyType   int             // 货币类型 0：盘古币PGC 1：比特币BTC 2：以太坊ETH
+	Value       float64         // 转账金额
+	GuarGroupID string          // 目标地址所属担保组织
+	PublicKey   ecdsa.PublicKey // 目标地址公钥
+	ToInterest  float64         // 发送利息数量
 }
 
 // UserNewTX 用户发送新交易到担保组织
