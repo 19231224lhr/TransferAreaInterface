@@ -127,7 +127,7 @@ function updateHeaderUser(user) {
     if (menuAddrPopup) menuAddrPopup.classList.add('hidden');
     if (menuOrgItem) menuOrgItem.classList.remove('hidden');
     if (menuBalanceItem) menuBalanceItem.classList.remove('hidden');
-    if (menuOrgEl) menuOrgEl.textContent = user.orgNumber || '暂未加入担保组织';
+    if (menuOrgEl) menuOrgEl.textContent = computeCurrentOrgId() || '暂未加入担保组织';
     if (menuBalanceEl) menuBalanceEl.textContent = (typeof user.balance === 'number' ? user.balance : 0) + ' BTC';
     if (menuOrgEl) menuOrgEl.classList.remove('code-waiting');
     if (menuEmpty) menuEmpty.classList.add('hidden');
@@ -191,6 +191,7 @@ function saveUser(user) {
     const acc = toAccount(user, prev);
     localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
     updateHeaderUser(acc);
+    updateOrgDisplay();
   } catch (e) {
     console.warn('保存本地用户信息失败', e);
   }
@@ -422,6 +423,26 @@ function routeTo(hash) {
   router();
 }
 
+function getJoinedGroup() {
+  try {
+    const raw = localStorage.getItem('guarChoice');
+    if (raw) {
+      const c = JSON.parse(raw);
+      if (c && c.groupID) {
+        const g = (typeof GROUP_LIST !== 'undefined' && Array.isArray(GROUP_LIST)) ? GROUP_LIST.find(x => x.groupID === c.groupID) : null;
+        return g || (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
+      }
+    }
+  } catch {}
+  const u = loadUser();
+  const gid = u && (u.orgNumber || (u.guarGroup && u.guarGroup.groupID));
+  if (gid) {
+    const g = (typeof GROUP_LIST !== 'undefined' && Array.isArray(GROUP_LIST)) ? GROUP_LIST.find(x => x.groupID === gid) : null;
+    return g || (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
+  }
+  return null;
+}
+
 function router() {
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
@@ -441,10 +462,16 @@ function router() {
         const choice = raw ? JSON.parse(raw) : null;
         if (choice && choice.type === 'join') {
           const u2 = loadUser();
-          if (u2) { u2.orgNumber = choice.groupID; saveUser(u2); }
+          if (u2) {
+            u2.orgNumber = choice.groupID;
+            const g = (typeof GROUP_LIST !== 'undefined' && Array.isArray(GROUP_LIST)) ? GROUP_LIST.find(x => x.groupID === choice.groupID) : null;
+            u2.guarGroup = g || (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
+            saveUser(u2);
+          }
         }
       } catch (_) {}
       renderWallet();
+      refreshOrgPanel();
       break;
     case '/entry':
       showCard(entryCard);
@@ -542,10 +569,16 @@ function router() {
         const choice = raw ? JSON.parse(raw) : null;
         if (choice && choice.type === 'join') {
           const u = loadUser();
-          if (u) { u.orgNumber = choice.groupID; saveUser(u); }
+          if (u) {
+            u.orgNumber = choice.groupID;
+            const g = (typeof GROUP_LIST !== 'undefined' && Array.isArray(GROUP_LIST)) ? GROUP_LIST.find(x => x.groupID === choice.groupID) : null;
+            u.guarGroup = g || (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
+            saveUser(u);
+          }
         }
       } catch (_) {}
       renderWallet();
+      refreshOrgPanel();
       break;
     case '/import-next':
       showCard(document.getElementById('importNextCard'));
@@ -846,7 +879,7 @@ const importNextBtn = document.getElementById('importNextBtn');
 if (importNextBtn) {
   importNextBtn.addEventListener('click', () => {
     window.__skipExitConfirm = true;
-    routeTo('#/entry');
+    routeTo('#/join-group');
   });
 }
 
@@ -865,7 +898,7 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      routeTo('#/inquiry-main');
+      routeTo('#/join-group');
     });
   }
   if (proceedCancel) {
@@ -979,7 +1012,8 @@ if (joinRecBtn) {
       joinRecBtn.disabled = false;
       if (joinSearchBtn) joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
+    updateOrgDisplay();
     routeTo('#/main');
   });
 }
@@ -998,7 +1032,8 @@ if (joinSearchBtn) {
       joinRecBtn.disabled = false;
       joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID })); } catch {}
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
+    updateOrgDisplay();
     routeTo('#/main');
   });
 }
@@ -1206,9 +1241,9 @@ if (loginNextBtn) {
     }
     const brief = document.getElementById('walletBriefList');
     const toggleBtn = document.getElementById('briefToggleBtn');
-    if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
-    if (toggleBtn) toggleBtn.classList.add('hidden');
-    routeTo('#/entry');
+  if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
+  if (toggleBtn) toggleBtn.classList.add('hidden');
+    routeTo('#/join-group');
   });
 }
 
@@ -1218,6 +1253,7 @@ if (userButton) {
   userButton.addEventListener('click', (e) => {
     e.stopPropagation();
     updateHeaderUser(loadUser());
+    updateOrgDisplay();
     const menu = document.getElementById('userMenu');
     if (menu) menu.classList.toggle('hidden');
   });
@@ -1227,6 +1263,7 @@ if (userButton) {
   });
   // 初始渲染用户栏
   updateHeaderUser(loadUser());
+  updateOrgDisplay();
 }
 
 // 登出：清除本地账户信息并返回入口页
@@ -1511,22 +1548,19 @@ function renderWallet() {
 
   const woCard = document.getElementById('woCard');
   const woEmpty = document.getElementById('woEmpty');
-  const woGroupID = document.getElementById('woGroupID');
-  const woAggre = document.getElementById('woAggre');
-  const woAssign = document.getElementById('woAssign');
-  const woPledge = document.getElementById('woPledge');
   const woExit = document.getElementById('woExitBtn');
   const joinBtn = document.getElementById('woJoinBtn');
-  const storedGroup = (u && u.guarGroup && typeof u.guarGroup === 'object') ? u.guarGroup : null;
-  const joined = storedGroup && storedGroup.groupID;
+  const g = getJoinedGroup();
+  const joined = !!(g && g.groupID);
   if (woCard) woCard.classList.toggle('hidden', !joined);
   if (woExit) woExit.classList.toggle('hidden', !joined);
-  if (woEmpty) woEmpty.classList.toggle('hidden', !!joined);
-  if (joinBtn) joinBtn.classList.toggle('hidden', !!joined);
-  if (woGroupID) woGroupID.textContent = joined ? storedGroup.groupID : '';
-  if (woAggre) woAggre.textContent = joined ? storedGroup.aggreNode || '' : '';
-  if (woAssign) woAssign.textContent = joined ? storedGroup.assignNode || '' : '';
-  if (woPledge) woPledge.textContent = joined ? storedGroup.pledgeAddress || '' : '';
+  if (woEmpty) woEmpty.classList.toggle('hidden', joined);
+  if (joinBtn) joinBtn.classList.toggle('hidden', joined);
+  [['woGroupID', joined ? g.groupID : ''],
+   ['woAggre', joined ? (g.aggreNode || '') : ''],
+   ['woAssign', joined ? (g.assignNode || '') : ''],
+   ['woPledge', joined ? (g.pledgeAddress || '') : '']]
+  .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
   if (woExit && !woExit.dataset._bind) {
     woExit.addEventListener('click', () => {
       const u3 = loadUser();
@@ -1538,16 +1572,25 @@ function renderWallet() {
       const doExit = () => {
         const latest = loadUser();
         if (!latest) return;
+        try { localStorage.removeItem('guarChoice'); } catch {}
         latest.guarGroup = null;
         latest.orgNumber = '';
         saveUser(latest);
         updateWalletBrief();
         showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
       };
-      const confirmExit = () => {
+      const confirmExit = async () => {
         okEl && okEl.removeEventListener('click', confirmExit);
         if (modal) modal.classList.add('hidden');
+        const ov = document.getElementById('actionOverlay');
+        const ovt = document.getElementById('actionOverlayText');
+        if (ovt) ovt.textContent = '正在退出担保组织...';
+        if (ov) ov.classList.remove('hidden');
+        await wait(2000);
+        if (ov) ov.classList.add('hidden');
         doExit();
+        refreshOrgPanel();
+        updateOrgDisplay();
       };
       if (titleEl) titleEl.textContent = '退出担保组织';
       if (textEl) {
@@ -1829,3 +1872,49 @@ if (confirmSkipCancel) {
 // （已移除）左侧加长逻辑
 
 // 移除左侧高度同步逻辑
+function computeCurrentOrgId() {
+  try {
+    const raw = localStorage.getItem('guarChoice');
+    if (raw) {
+      const c = JSON.parse(raw);
+      if (c && c.groupID) return String(c.groupID);
+    }
+  } catch {}
+  const u = loadUser();
+  if (u && u.guarGroup && u.guarGroup.groupID) return String(u.guarGroup.groupID);
+  if (u && u.orgNumber) return String(u.orgNumber);
+  return '';
+}
+
+async function updateOrgDisplay() {
+  const el = document.getElementById('menuOrg');
+  if (!el) return;
+  el.classList.add('code-loading');
+  el.textContent = '同步中...';
+  await wait(150);
+  const gid = computeCurrentOrgId();
+  el.textContent = gid || '暂未加入担保组织';
+  el.classList.remove('code-loading');
+}
+
+window.addEventListener('storage', (e) => {
+  if (e.key === 'guarChoice' || e.key === STORAGE_KEY) updateOrgDisplay();
+});
+
+function refreshOrgPanel() {
+  const woCard = document.getElementById('woCard');
+  const woEmpty = document.getElementById('woEmpty');
+  const woExit = document.getElementById('woExitBtn');
+  const joinBtn = document.getElementById('woJoinBtn');
+  const g = getJoinedGroup();
+  const joined = !!(g && g.groupID);
+  if (woCard) woCard.classList.toggle('hidden', !joined);
+  if (woExit) woExit.classList.toggle('hidden', !joined);
+  if (woEmpty) woEmpty.classList.toggle('hidden', joined);
+  if (joinBtn) joinBtn.classList.toggle('hidden', joined);
+  [['woGroupID', joined ? g.groupID : ''],
+   ['woAggre', joined ? (g.aggreNode || '') : ''],
+   ['woAssign', joined ? (g.assignNode || '') : ''],
+   ['woPledge', joined ? (g.pledgeAddress || '') : '']]
+  .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
+}
