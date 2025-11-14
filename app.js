@@ -1730,7 +1730,18 @@ function renderWallet() {
     const txPreview = document.getElementById('txPreview');
     const u0 = loadUser();
     const srcAddrs = Object.keys((u0 && u0.wallet && u0.wallet.addressMsg) || {});
-    addrList.innerHTML = srcAddrs.map(a => `<label><input type="checkbox" value="${a}"><code class="break">${a}</code></label>`).join('');
+    addrList.innerHTML = srcAddrs.map(a => {
+      const meta = (u0 && u0.wallet && u0.wallet.addressMsg && u0.wallet.addressMsg[a]) || {};
+      const mt = Number(meta.type || 0);
+      const val = Number((meta.value && meta.value.totalValue) || 0);
+      const pgc = mt === 0 ? val : 0;
+      const btc = mt === 1 ? val : 0;
+      const eth = mt === 2 ? val : 0;
+      const tagP = `<span class="tag tag--pgc${pgc ? ' tag--active' : ''}">PGC: ${pgc}</span>`;
+      const tagB = `<span class="tag tag--btc${btc ? ' tag--active' : ''}">BTC: ${btc}</span>`;
+      const tagE = `<span class="tag tag--eth${eth ? ' tag--active' : ''}">ETH: ${eth}</span>`;
+      return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${tagP}${tagB}${tagE}</span></label>`;
+    }).join('');
     const fillChange = () => {
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
       Array.from(addrList.querySelectorAll('label')).forEach(l => { const inp = l.querySelector('input[type="checkbox"]'); if (inp) l.classList.toggle('selected', inp.checked); });

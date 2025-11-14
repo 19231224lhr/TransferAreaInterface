@@ -203,7 +203,7 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .modal .dialog h3 { margin: 0 0 8px; }
 .modal .dialog .actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 12px; }
 .modal .dialog .actions .btn { min-width: 100px; padding: 10px 14px; font-size: 13px; }
-.wallet-layout { display: grid; grid-template-columns: .8fr 1.2fr; gap: 24px; align-items: start; }
+.wallet-layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 20px; align-items: start; }
 .wallet-left, .wallet-right { display: flex; flex-direction: column; gap: 16px; }
 .wallet-left { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px; }
 .wallet-left .summary .grid code { display: block; }
@@ -229,13 +229,18 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .total-box { display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
 .total-head { display: flex; align-items: center; justify-content: space-between; width: 100%; }
 .total-head .usdt-badge { margin-left: auto; }
-.total-label { font-weight: 600; font-size: 13px; color: #64748b; letter-spacing: .2px; }
+.total-label { font-weight: 800; font-size: 16px; background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: .3px; }
 .usdt-badge { display: inline-flex; align-items: flex-end; gap: 2px; font-weight: 700; color: #0f172a; line-height: 1; }
 .usdt-badge .amt { font-size: 22px; }
 .usdt-badge .unit { font-size: 12px; color: #64748b; }
 .pane { border: 1px solid #e5e7eb; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #f8fafc); padding: 16px 18px; box-shadow: 0 6px 18px rgba(15,23,42,.06); transition: transform .16s ease, box-shadow .16s ease; }
 .pane:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,.09); }
 .pane h3 { margin: 0 0 8px; font-size: 15px; color: #0f172a; }
+.pane.pane--legend { position: relative; padding-top: 28px; border-top: none; border-top-left-radius: 0; border-top-right-radius: 0; }
+.pane.pane--legend h3 { position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); margin: 0; padding: 0 12px; background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 18px; letter-spacing: .6px; border-radius: 10px; }
+.pane.pane--legend::before, .pane.pane--legend::after { content: ""; position: absolute; top: 0; height: 0; border-top: 1px solid #e5e7eb; pointer-events: none; }
+.pane.pane--legend::before { left: 0; width: calc(50% - 110px); }
+.pane.pane--legend::after { left: calc(50% + 110px); right: 0; }
 .pane.pane--org { position: relative; overflow: hidden; }
 .pane--org > h3 { margin: 0 0 10px; font-size: 16px; background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; letter-spacing: .5px; }
 .pane--org .org-card { position: relative; border: none; border-radius: 12px; padding: 14px 16px; background: radial-gradient(closest-side, rgba(14,165,233,.06), rgba(14,165,233,0)), linear-gradient(180deg, #ffffff, #f8fafc); background-size: 200% 200%, 100% 100%; background-position: 0% 50%, 50% 50%; animation: orgBgFlow 14s ease-in-out infinite; box-shadow: 0 8px 22px rgba(15,23,42,.08); }
@@ -259,8 +264,11 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .tx-form { gap: .5rem; }
 .tx-section { border: 1px solid #e5e7eb; border-radius: 10px; padding: .6rem .75rem; background: linear-gradient(180deg, #ffffff, #f8fafc); box-shadow: 0 6px 16px rgba(15,23,42,.06); transition: padding .16s ease; position: relative; z-index: 1; }
 .tx-subhead { font-weight: 600; font-size: 13px; color: #0f172a; margin-bottom: .5rem; }
-.tx-addr-list { display: grid; grid-template-columns: 1fr 1fr; gap: .4rem; }
-.tx-addr-list label { display: flex; align-items: center; gap: 8px; padding: 6px 8px; border-radius: 8px; background: #f7fafc; border: 1px solid #e5e7eb; }
+.tx-addr-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: .4rem; }
+.tx-addr-list label { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .5rem; padding: 6px 8px; border-radius: 8px; background: #f7fafc; border: 1px solid #e5e7eb; }
+.tx-addr-list code.break { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-addr-list .addr-bal { display: inline-flex; gap: .3rem; white-space: nowrap; }
+.tx-addr-list .addr-bal .tag { font-size: 11px; padding: 2px 8px; }
 .tx-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 .bill-list { display: flex; flex-direction: column; gap: 10px; }
 .bill-item { display: grid; grid-template-columns: 1.2fr .8fr .8fr .8fr 1fr 1fr .8fr auto; gap: 8px; align-items: center; }
@@ -371,9 +379,12 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .tx-section { border: 1px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; background: linear-gradient(180deg, #ffffff, #f8fafc); box-shadow: 0 8px 18px rgba(15,23,42,.06); transition: transform .16s ease, box-shadow .16s ease; }
 .tx-section:hover { box-shadow: 0 10px 24px rgba(15,23,42,.09); }
 .tx-section + .tx-section { margin-top: .25rem; }
-.tx-subhead { font-weight: 700; font-size: 13px; color: #0f172a; margin-bottom: 8px; letter-spacing: .2px; }
-.tx-addr-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tx-addr-list label { display: flex; align-items: center; gap: .4rem; padding: .4rem .5rem; border-radius: 8px; background: #f7fafc; border: 1px solid #e5e7eb; cursor: pointer; transition: all .16s ease; }
+.tx-subhead { font-weight: 800; font-size: 14px; background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; margin-bottom: 10px; letter-spacing: .3px; position: relative; padding-bottom: 4px; }
+.tx-subhead::after { content: ""; position: absolute; left: 0; bottom: 0; width: 64px; height: 2px; background: linear-gradient(90deg, rgba(14,165,233,.9), rgba(99,102,241,.6)); border-radius: 2px; box-shadow: 0 1px 4px rgba(14,165,233,.25); }
+.tx-addr-list { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.tx-addr-list label { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .4rem; padding: .4rem .5rem; border-radius: 8px; background: #f7fafc; border: 1px solid #e5e7eb; cursor: pointer; transition: all .16s ease; width: 100%; box-sizing: border-box; }
+.tx-addr-list code.break { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tx-addr-list .addr-bal { display: inline-flex; gap: .3rem; white-space: nowrap; }
 .tx-addr-list label:hover { box-shadow: 0 6px 16px rgba(15,23,42,.08); transform: translateY(-1px); }
 .tx-addr-list label.selected { background: linear-gradient(180deg, #f0f9ff, #eaf6ff); border-color: #bae6fd; box-shadow: 0 8px 20px rgba(14,165,233,.16); }
 .tx-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .6rem; }
@@ -423,3 +434,11 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .coin--btc { background: linear-gradient(180deg, #f59e0b, #d97706); }
 .coin--eth { background: linear-gradient(180deg, #6366f1, #4f46e5); }
 .custom-select .coin-label { font-weight: 600; color: #0f172a; }
+.total-box .actions { display: flex; gap: 12px; justify-content: space-between; margin-top: 12px; }
+.total-box .actions.actions--split { justify-content: space-between; max-width: none; margin: 12px 0 0; }
+.total-box .actions.actions--split .btn { flex: 1; min-width: 0; }
+.wallet-left--legend { position: relative; border-top: none; border-top-left-radius: 0; border-top-right-radius: 0; padding-top: 28px; }
+.wallet-left--legend::before, .wallet-left--legend::after { content: ""; position: absolute; top: 0; height: 0; border-top: 1px solid #e5e7eb; pointer-events: none; }
+.wallet-left--legend::before { left: 0; width: calc(50% - 110px); }
+.wallet-left--legend::after { left: calc(50% + 110px); right: 0; }
+.wallet-left--legend .addr-head h3 { position: absolute; left: 50%; top: 0; transform: translate(-50%, -50%); margin: 0; padding: 0 12px; background: linear-gradient(90deg, #0ea5e9, #6366f1); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: 18px; letter-spacing: .6px; border-radius: 10px; }

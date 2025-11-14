@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>简洁钱包前端 - 钱包操作</title>
-    <link rel="stylesheet" href="/style.css?v=20251115h" />
+    <link rel="stylesheet" href="/style.css?v=20251116m" />
   </head>
   <body>
     <header class="header">
@@ -376,13 +376,9 @@
 
       <section class="card hidden" id="walletCard">
         <div class="wallet-layout">
-          <div class="wallet-left">
+          <div class="wallet-left wallet-left--legend">
             <div class="addr-head">
               <h3>钱包管理</h3>
-              <div class="split-btn">
-                <button id="openCreateAddrBtn" class="btn primary">新建地址</button>
-                <button id="openImportAddrBtn" class="btn secondary">导入地址</button>
-              </div>
             </div>
             <div class="total-box">
               <div class="addr-meta">
@@ -397,19 +393,14 @@
                 </div>
               </div>
               <div id="walletTotalChart" class="addr-chart addr-chart--open"></div>
+              <div class="actions actions--split"><button id="openCreateAddrBtn" class="btn primary">新建地址</button><button id="openImportAddrBtn" class="btn secondary">导入地址</button></div>
             </div>
             <div id="walletAddrList" class="addr-list"></div>
           </div>
           <div class="wallet-right">
-            <div class="pane" role="region" aria-labelledby="txFormTitle">
+            <div class="pane pane--legend" role="region" aria-labelledby="txFormTitle">
               <h3 id="txFormTitle">转账与跨链</h3>
               <div class="form tx-form" role="form" aria-describedby="txFormTitle">
-                <div class="form-row"><label>功能</label>
-                  <select id="tfMode" class="input">
-                    <option value="quick" selected>快速转账</option>
-                    <option value="cross">跨链转账</option>
-                  </select>
-                </div>
                 <div class="tx-section" role="group" aria-labelledby="srcAddrHead">
                   <div class="tx-subhead" id="srcAddrHead">选择来源地址</div>
                   <div id="srcAddrList" class="tx-addr-list" role="list"></div>
@@ -430,6 +421,7 @@
                 <div class="tx-section" role="group" aria-labelledby="optHead">
                   <div class="tx-subhead" id="optHead">交易选项</div>
                   <div class="tx-grid-3">
+                    <div><label>功能</label><select id="tfMode" class="input"><option value="quick" selected>快速转账</option><option value="cross">跨链转账</option></select></div>
                     <div><label>额外支付PGC兑换Gas</label><input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" /></div>
                     <div><label>优先使用TXCer</label><select id="useTXCer" class="input"><option value="true">是</option><option value="false">否</option></select></div>
                     <div><label>质押交易</label><select id="isPledge" class="input"><option value="false">否</option><option value="true">是</option></select></div>
