@@ -3,6 +3,9 @@
 // - 使用私钥 d 作为输入生成 8 位用户 ID（CRC32 结果映射）
 // - 使用未压缩公钥(0x04 || X || Y)的 SHA-256 前 20 字节生成地址
 
+try { window.addEventListener('error', function(e){ var m = String((e&&e.message)||''); var f = String((e&&e.filename)||''); if (m.indexOf('Cannot redefine property: ethereum')!==-1 || f.indexOf('evmAsk.js')!==-1) { if (e.preventDefault) e.preventDefault(); return true; } }, true); } catch(_){}
+try { window.addEventListener('unhandledrejection', function(){}, true); } catch(_){}
+
 const base64urlToBytes = (b64url) => {
   // 转换 base64url -> base64
   const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -23,6 +26,8 @@ const wait = (ms) => new Promise(r => setTimeout(r, ms));
 let currentSelectedGroup = null;
 const DEFAULT_GROUP = { groupID: '10000000', aggreNode: '39012088', assignNode: '17770032', pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09' };
 const GROUP_LIST = [ DEFAULT_GROUP ];
+
+const BASE_LIFT = 20;
 
 // CRC32（IEEE）
 const crc32Table = (() => {
@@ -57,6 +62,7 @@ function toAccount(basic, prev) {
   const acc = isSame ? (prev ? JSON.parse(JSON.stringify(prev)) : {}) : {};
   acc.accountId = basic.accountId || acc.accountId || '';
   acc.orgNumber = acc.orgNumber || '';
+  acc.flowOrigin = basic.flowOrigin || acc.flowOrigin || '';
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };
   acc.keys.privHex = basic.privHex || acc.keys.privHex || '';
   acc.keys.pubXHex = basic.pubXHex || acc.keys.pubXHex || '';
@@ -101,6 +107,8 @@ function updateHeaderUser(user) {
   const menuBalanceItem = document.getElementById('menuBalanceItem');
   const menuOrgEl = document.getElementById('menuOrg');
   const menuBalanceEl = document.getElementById('menuBalance');
+  const menuAddrPopup = document.getElementById('menuAddressPopup');
+  const menuAddrList = document.getElementById('menuAddressList');
   const menuEmpty = document.getElementById('menuEmpty');
   const logoutEl = document.getElementById('logoutBtn');
   if (!labelEl || !avatarEl) return; // header 不存在时忽略
@@ -113,7 +121,10 @@ function updateHeaderUser(user) {
     if (menuAddressItem) menuAddressItem.classList.remove('hidden');
     const mainAddr = user.address || (user.wallet && Object.keys(user.wallet.addressMsg || {})[0]) || '';
     if (menuAccountEl) menuAccountEl.textContent = user.accountId || '';
-    if (menuAddrEl) menuAddrEl.textContent = mainAddr;
+    const subMap = (user.wallet && user.wallet.addressMsg) || {};
+    const addrCount = Object.keys(subMap).length;
+    if (menuAddrEl) menuAddrEl.textContent = addrCount + ' 个地址';
+    if (menuAddrPopup) menuAddrPopup.classList.add('hidden');
     if (menuOrgItem) menuOrgItem.classList.remove('hidden');
     if (menuBalanceItem) menuBalanceItem.classList.remove('hidden');
     if (menuOrgEl) menuOrgEl.textContent = user.orgNumber || '暂未加入担保组织';
@@ -144,6 +155,34 @@ function updateHeaderUser(user) {
       logoutEl.classList.add('menu-action--disabled');
       logoutEl.textContent = '等待登录';
     }
+    if (menuAddrList) menuAddrList.innerHTML = '';
+    if (menuAddrPopup) menuAddrPopup.classList.add('hidden');
+  }
+  if (menuAddressItem && !menuAddressItem.dataset._bind) {
+    menuAddressItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const u = loadUser();
+      const popup = document.getElementById('menuAddressPopup');
+      const list = document.getElementById('menuAddressList');
+      if (!popup || !list) return;
+      const map = (u && u.wallet && u.wallet.addressMsg) || {};
+      let html = '<div class="tip" style="margin:2px 0 6px;color:#667085;">提示：登录账号的地址不计入列表</div>';
+      Object.keys(map).forEach((k) => {
+        if (u && u.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
+        const m = map[k];
+        const v = (m && m.value && typeof m.value.totalValue === 'number') ? m.value.totalValue : 0;
+        html += `<div class="addr-row" style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin:4px 0;">
+          <code class="break" style="max-width:150px;background:#f6f8fe;padding:4px 6px;border-radius:8px;">${k}</code>
+          <span style="color:#667085;font-weight:600;min-width:64px;text-align:right;white-space:nowrap;">${v} USDT</span>
+        </div>`;
+      });
+      if (Object.keys(map).length === 0) html += '<div class="tip">暂无地址</div>';
+      list.innerHTML = html;
+      popup.classList.toggle('hidden');
+    });
+    const popup = document.getElementById('menuAddressPopup');
+    if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
+    menuAddressItem.dataset._bind = '1';
   }
 }
 function saveUser(user) {
@@ -155,6 +194,20 @@ function saveUser(user) {
   } catch (e) {
     console.warn('保存本地用户信息失败', e);
   }
+}
+function showModalTip(title, html, isError) {
+  const modal = document.getElementById('actionModal');
+  const titleEl = document.getElementById('actionTitle');
+  const textEl = document.getElementById('actionText');
+  const okEl = document.getElementById('actionOkBtn');
+  if (titleEl) titleEl.textContent = title || '';
+  if (textEl) {
+    if (isError) textEl.classList.add('tip--error'); else textEl.classList.remove('tip--error');
+    textEl.innerHTML = html || '';
+  }
+  if (modal) modal.classList.remove('hidden');
+  const handler = () => { modal.classList.add('hidden'); okEl && okEl.removeEventListener('click', handler); };
+  okEl && okEl.addEventListener('click', handler);
 }
 function clearAccountStorage() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
@@ -263,7 +316,7 @@ async function handleCreate() {
     document.getElementById('privHex').textContent = data.privHex;
     document.getElementById('pubX').textContent = data.pubXHex;
     document.getElementById('pubY').textContent = data.pubYHex;
-    saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
+    saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex, flowOrigin: 'new' });
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
   } catch (err) {
@@ -426,6 +479,10 @@ function router() {
         const toggleBtn = document.getElementById('briefToggleBtn');
         if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
         if (toggleBtn) toggleBtn.classList.add('hidden');
+        const addrError2 = document.getElementById('addrError');
+        if (addrError2) { addrError2.textContent = ''; addrError2.classList.add('hidden'); }
+        const addrPrivHex2 = document.getElementById('addrPrivHex');
+        if (addrPrivHex2) addrPrivHex2.value = '';
       }
       break;
     case '/join-group':
@@ -584,22 +641,48 @@ window.addEventListener('popstate', (e) => {
 });
 
 // 点击“新建钱包”：切换到路由并自动生成
-function addNewSubWallet() {
+async function addNewSubWallet() {
   const u = loadUser();
   if (!u || !u.accountId) { alert('请先登录或注册账户'); return; }
   const ov = document.getElementById('actionOverlay');
   const ovt = document.getElementById('actionOverlayText');
   if (ovt) ovt.textContent = '正在新增钱包地址...';
   if (ov) ov.classList.remove('hidden');
-  const rnd = new Uint8Array(20);
-  crypto.getRandomValues(rnd);
-  const addr = bytesToHex(rnd);
-  setTimeout(() => {
+  try {
+    const t0 = Date.now();
+    const keyPair = await crypto.subtle.generateKey(
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      true,
+      ['sign', 'verify']
+    );
+    const jwkPub = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
+    const jwkPriv = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+    const dBytes = base64urlToBytes(jwkPriv.d);
+    const xBytes = base64urlToBytes(jwkPub.x);
+    const yBytes = base64urlToBytes(jwkPub.y);
+    const privHex = bytesToHex(dBytes);
+    const pubXHex = bytesToHex(xBytes);
+    const pubYHex = bytesToHex(yBytes);
+    const uncompressed = new Uint8Array(1 + xBytes.length + yBytes.length);
+    uncompressed[0] = 0x04;
+    uncompressed.set(xBytes, 1);
+    uncompressed.set(yBytes, 1 + xBytes.length);
+    const sha = await crypto.subtle.digest('SHA-256', uncompressed);
+    const addr = bytesToHex(new Uint8Array(sha).slice(0, 20));
+    const elapsed = Date.now() - t0;
+    if (elapsed < 800) { await new Promise(r => setTimeout(r, 800 - elapsed)); }
     const acc = toAccount({ accountId: u.accountId, address: u.address }, u);
     acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'created' };
+    acc.wallet.addressMsg[addr].privHex = privHex;
+    acc.wallet.addressMsg[addr].pubXHex = pubXHex;
+    acc.wallet.addressMsg[addr].pubYHex = pubYHex;
     saveUser(acc);
-    updateWalletBrief();
-    if (ov) ov.classList.add('hidden');
+    try { renderWallet(); } catch {}
+    try {
+      updateWalletBrief();
+      requestAnimationFrame(() => updateWalletBrief());
+      setTimeout(() => updateWalletBrief(), 0);
+    } catch {}
     const modal = document.getElementById('actionModal');
     const title = document.getElementById('actionTitle');
     const text = document.getElementById('actionText');
@@ -607,9 +690,14 @@ function addNewSubWallet() {
     if (title) title.textContent = '新增钱包成功';
     if (text) text.textContent = '已新增一个钱包地址';
     if (modal) modal.classList.remove('hidden');
-    const handler = () => { modal.classList.add('hidden'); ok.removeEventListener('click', handler); };
-    if (ok) ok.addEventListener('click', handler);
-  }, 1000);
+    const handler = () => { modal.classList.add('hidden'); try { renderWallet(); updateWalletBrief(); } catch {} ok && ok.removeEventListener('click', handler); };
+    ok && ok.addEventListener('click', handler);
+  } catch (e) {
+    alert('新增地址失败：' + (e && e.message ? e.message : e));
+    console.error(e);
+  } finally {
+    if (ov) ov.classList.add('hidden');
+  }
 }
 if (createWalletBtn && !createWalletBtn.dataset._bind) {
   createWalletBtn.addEventListener('click', addNewSubWallet);
@@ -771,7 +859,12 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      routeTo('#/inquiry');
+      const u = loadUser();
+      if (u && (u.orgNumber || u.flowOrigin === 'login')) {
+        routeTo('#/main');
+      } else {
+        routeTo('#/join-group');
+      }
     });
   }
   if (proceedCancel) {
@@ -1031,7 +1124,7 @@ if (importBtn) {
           if (okE) okE.addEventListener('click', handlerE);
           return;
         }
-        if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported' };
+        if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported', privHex: (data.privHex || normalized) };
         saveUser(acc);
         updateWalletBrief();
         const modal = document.getElementById('actionModal');
@@ -1091,7 +1184,7 @@ if (loginBtn) {
       document.getElementById('loginPrivOut').textContent = data.privHex || normalized;
       document.getElementById('loginPubX').textContent = data.pubXHex || '';
       document.getElementById('loginPubY').textContent = data.pubYHex || '';
-      saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
+      saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex, flowOrigin: 'login' });
       if (nextBtn) nextBtn.classList.remove('hidden');
     } catch (e) {
       alert('登录失败：' + e.message);
@@ -1172,18 +1265,30 @@ function renderWallet() {
   if (priv) priv.textContent = u.privHex || '';
   if (px) px.textContent = u.pubXHex || '';
   if (py) py.textContent = u.pubYHex || '';
+  const formatTime = (idx, len) => {
+    const d = new Date();
+    d.setHours(d.getHours() - (len - 1 - idx));
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+  };
   const list = document.getElementById('walletAddrList');
   if (list) {
-    const addrKeys = Object.keys((u.wallet && u.wallet.addressMsg) || {});
-    const addresses = addrKeys.length ? addrKeys : [u.address || ''].filter(Boolean);
+    const addresses = Object.keys((u.wallet && u.wallet.addressMsg) || {});
     const pointsBase = Array.from({ length: 40 }, (_, i) => Math.round(50 + 30 * Math.sin(i / 4) + Math.random() * 10));
     list.innerHTML = '';
     addresses.forEach((a, idx) => {
       const item = document.createElement('div');
       item.className = 'addr-item';
-      const ptsPGC = pointsBase.map(v => v + Math.round((Math.random() - 0.5) * 6));
-      const ptsBTC = Array.from({ length: 40 }, (_, i) => Math.round(55 + 22 * Math.cos(i / 3.2) + Math.random() * 7));
-      const ptsETH = Array.from({ length: 40 }, (_, i) => Math.round(50 + 18 * Math.sin(i / 3.8 + 0.6) + Math.random() * 6));
+      const meta = (u.wallet && u.wallet.addressMsg && u.wallet.addressMsg[a]) || null;
+      const isZero = !!(meta && meta.origin === 'created');
+      const zeroArr = Array.from({ length: 40 }, () => 0);
+      const ptsPGC = isZero ? zeroArr : pointsBase.map(v => v + Math.round((Math.random() - 0.5) * 6));
+      const ptsBTC = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(55 + 22 * Math.cos(i / 3.2) + Math.random() * 7));
+      const ptsETH = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(50 + 18 * Math.sin(i / 3.8 + 0.6) + Math.random() * 6));
       item.innerHTML = `
         <div class=\"addr-meta\">
           <code class=\"break\">${a}</code>
@@ -1205,6 +1310,104 @@ function renderWallet() {
         if (opening) { p.style.strokeDasharray = L2; p.style.strokeDashoffset = L2; requestAnimationFrame(() => { p.style.strokeDashoffset = 0; }); } else { p.style.strokeDasharray = L2; p.style.strokeDashoffset = L2; }
       });
       list.appendChild(item);
+      const metaEl = item.querySelector('.addr-meta');
+      if (metaEl) {
+        const ops = document.createElement('div');
+        ops.className = 'addr-ops';
+        const toggle = document.createElement('button');
+        toggle.className = 'ops-toggle';
+        toggle.textContent = '▾';
+        const menu = document.createElement('div');
+        menu.className = 'ops-menu hidden';
+        const delBtn = document.createElement('button');
+        delBtn.className = 'btn danger btn--sm';
+        delBtn.textContent = '删除地址';
+        const expBtn = document.createElement('button');
+        expBtn.className = 'btn secondary btn--sm';
+        expBtn.textContent = '导出私钥';
+        menu.appendChild(delBtn);
+        menu.appendChild(expBtn);
+        ops.appendChild(toggle);
+        ops.appendChild(menu);
+        metaEl.appendChild(ops);
+        toggle.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('hidden'); });
+        document.addEventListener('click', () => { menu.classList.add('hidden'); });
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const modal = document.getElementById('confirmDelModal');
+          const okBtn = document.getElementById('confirmDelOk');
+          const cancelBtn = document.getElementById('confirmDelCancel');
+          const textEl = document.getElementById('confirmDelText');
+          if (textEl) textEl.textContent = `是否删除地址 ${a} 及其本地数据？`;
+          if (modal) modal.classList.remove('hidden');
+          const doDel = () => {
+            if (modal) modal.classList.add('hidden');
+            const u3 = loadUser();
+            if (!u3) return;
+            const key = String(a).toLowerCase();
+            const isMain = (u3.address && u3.address.toLowerCase() === key);
+            if (u3.wallet && u3.wallet.addressMsg) {
+              u3.wallet.addressMsg = Object.fromEntries(
+                Object.entries(u3.wallet.addressMsg).filter(([k]) => String(k).toLowerCase() !== key)
+              );
+            }
+            if (isMain) {
+              u3.address = '';
+            }
+            saveUser(u3);
+            renderWallet();
+            updateWalletBrief();
+            const ok1 = document.getElementById('actionOkBtn');
+            const am = document.getElementById('actionModal');
+            const at = document.getElementById('actionTitle');
+            const ax = document.getElementById('actionText');
+            if (at) at.textContent = '删除成功';
+            if (ax) { ax.classList.remove('tip--error'); ax.textContent = '已删除该地址及其相关本地数据'; }
+            if (am) am.classList.remove('hidden');
+            const h2 = () => { am.classList.add('hidden'); ok1 && ok1.removeEventListener('click', h2); };
+            ok1 && ok1.addEventListener('click', h2);
+            menu.classList.add('hidden');
+          };
+          const cancel = () => { if (modal) modal.classList.add('hidden'); okBtn && okBtn.removeEventListener('click', doDel); cancelBtn && cancelBtn.removeEventListener('click', cancel); };
+          okBtn && okBtn.addEventListener('click', doDel, { once: true });
+          cancelBtn && cancelBtn.addEventListener('click', cancel, { once: true });
+        });
+        expBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const u3 = loadUser();
+          const key = String(a).toLowerCase();
+          let priv = '';
+          if (u3) {
+            const map = (u3.wallet && u3.wallet.addressMsg) || {};
+            let found = map[a] || map[key] || null;
+            if (!found) {
+              for (const k in map) {
+                if (String(k).toLowerCase() === key) { found = map[k]; break; }
+              }
+            }
+            if (found && found.privHex) {
+              priv = found.privHex || '';
+            } else if (u3.address && String(u3.address).toLowerCase() === key) {
+              priv = (u3.keys && u3.keys.privHex) || u3.privHex || '';
+            }
+          }
+          const modal = document.getElementById('actionModal');
+          const title = document.getElementById('actionTitle');
+          const text = document.getElementById('actionText');
+          const ok = document.getElementById('actionOkBtn');
+          if (priv) {
+            if (title) title.textContent = '导出私钥';
+            if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${priv}</code>`; }
+          } else {
+            if (title) title.textContent = '导出失败';
+            if (text) { text.classList.add('tip--error'); text.textContent = '该地址无可导出私钥'; }
+          }
+          if (modal) modal.classList.remove('hidden');
+          const handler = () => { modal.classList.add('hidden'); ok && ok.removeEventListener('click', handler); };
+          ok && ok.addEventListener('click', handler);
+          menu.classList.add('hidden');
+        });
+      }
       const tagSpans = item.querySelectorAll('.tags .tag');
       if (tagSpans[0]) tagSpans[0].classList.add('tag--pgc');
       if (tagSpans[1]) tagSpans[1].classList.add('tag--btc');
@@ -1212,7 +1415,8 @@ function renderWallet() {
       const chartEl = item.querySelector('.addr-chart');
       chartEl.__pts = ptsPGC;
       chartEl.__label = 'PGC';
-      const path = ptsPGC.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${160 - y}`).join(' ');
+      const toY = (v) => Math.max(0, 160 - v - BASE_LIFT);
+      const path = ptsPGC.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toY(y)}`).join(' ');
       chartEl.innerHTML = `
         <svg viewBox=\"0 0 320 160\">
           <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
@@ -1231,11 +1435,21 @@ function renderWallet() {
       p.style.strokeDasharray = L;
       p.style.strokeDashoffset = L;
       requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
+      const formatTime = (idx, len) => {
+        const d = new Date();
+        d.setHours(d.getHours() - (len - 1 - idx));
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const mi = String(d.getMinutes()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+      };
       const updateTipInstant = (ptsArr, label) => {
         const lastIdx = ptsArr.length - 1;
         const yv = ptsArr[lastIdx];
         const tip = chartEl.querySelector('.tooltip');
-        if (tip) tip.textContent = `${label} ${yv} · ${String(lastIdx).padStart(2,'0')}:00`;
+        if (tip) tip.textContent = `${label} ${yv} · ${formatTime(lastIdx, ptsArr.length)}`;
       };
       updateTipInstant(chartEl.__pts || ptsPGC, 'PGC');
       svg.addEventListener('mousemove', (e) => {
@@ -1247,12 +1461,12 @@ function renderWallet() {
         cursor.setAttribute('x1', String(x));
         cursor.setAttribute('x2', String(x));
         cursor.style.opacity = .9;
-        const cy = 160 - yv;
+        const cy = Math.max(0, 160 - yv - BASE_LIFT);
         dot.setAttribute('cx', String(x));
         dot.setAttribute('cy', String(cy));
         dot.style.opacity = 1;
         const label = chartEl.__label || 'PGC';
-        if (tipEl) tipEl.textContent = `${label} ${yv} · ${String(idx2).padStart(2,'0')}:00`;
+        if (tipEl) tipEl.textContent = `${label} ${yv} · ${formatTime(idx2, curPts.length)}`;
       });
       svg.addEventListener('mouseleave', () => { cursor.style.opacity = 0; dot.style.opacity = 0; });
 
@@ -1267,7 +1481,7 @@ function renderWallet() {
       const applyPts = (ptsArr, label) => {
         chartEl.__pts = ptsArr;
         chartEl.__label = label;
-        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${160 - y}`).join(' ');
+        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toY(y)}`).join(' ');
         p.setAttribute('d', d);
         const L3 = p.getTotalLength();
         p.style.strokeDasharray = L3;
@@ -1279,9 +1493,18 @@ function renderWallet() {
         cursor.style.opacity = 0; dot.style.opacity = 0;
       };
       setActive('PGC');
-      if (tagEls[0]) tagEls[0].addEventListener('click', (e) => { e.stopPropagation(); applyPts(ptsPGC, 'PGC'); });
-      if (tagEls[1]) tagEls[1].addEventListener('click', (e) => { e.stopPropagation(); applyPts(ptsBTC, 'BTC'); });
-      if (tagEls[2]) tagEls[2].addEventListener('click', (e) => { e.stopPropagation(); applyPts(ptsETH, 'ETH'); });
+      const ensureOpen = () => {
+        if (!item.classList.contains('open')) {
+          item.classList.add('open');
+          const L2 = p.getTotalLength();
+          p.style.strokeDasharray = L2;
+          p.style.strokeDashoffset = L2;
+          requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
+        }
+      };
+      if (tagEls[0]) tagEls[0].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsPGC, 'PGC'); });
+      if (tagEls[1]) tagEls[1].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsBTC, 'BTC'); });
+      if (tagEls[2]) tagEls[2].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsETH, 'ETH'); });
     });
   }
 
@@ -1305,7 +1528,8 @@ function renderWallet() {
     const ptsTpgc = Array.from({ length: 40 }, (_, i) => Math.round(70 + 20 * Math.sin(i / 3.8) + Math.random() * 6));
     const ptsTbtc = Array.from({ length: 40 }, (_, i) => Math.round(65 + 18 * Math.cos(i / 3.2) + Math.random() * 6));
     const ptsTeth = Array.from({ length: 40 }, (_, i) => Math.round(68 + 16 * Math.sin(i / 3.5 + 0.5) + Math.random() * 5));
-    const pathT = ptsTpgc.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${160 - y}`).join(' ');
+    const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
+    const pathT = ptsTpgc.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
     totalEl.innerHTML = `
       <svg viewBox=\"0 0 320 160\">
         <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
@@ -1329,7 +1553,7 @@ function renderWallet() {
     const updateTotalTip = (ptsArr, label) => {
       const lastIdx = ptsArr.length - 1;
       const yv = ptsArr[lastIdx];
-      if (tipT) tipT.textContent = `${label} ${yv} · ${String(lastIdx).padStart(2,'0')}:00`;
+      if (tipT) tipT.textContent = `${label} ${yv} · ${formatTime(lastIdx, ptsArr.length)}`;
     };
     updateTotalTip(ptsTpgc, 'PGC');
     svgT.addEventListener('mousemove', (e) => {
@@ -1341,12 +1565,12 @@ function renderWallet() {
       cursorT.setAttribute('x1', String(x));
       cursorT.setAttribute('x2', String(x));
       cursorT.style.opacity = .9;
-      const cy = 160 - yv;
+      const cy = Math.max(0, 160 - yv - BASE_LIFT);
       dotT.setAttribute('cx', String(x));
       dotT.setAttribute('cy', String(cy));
       dotT.style.opacity = 1;
       const label = totalEl.__label || 'PGC';
-      if (tipT) tipT.textContent = `${label} ${yv} · ${String(idx2).padStart(2,'0')}:00`;
+      if (tipT) tipT.textContent = `${label} ${yv} · ${formatTime(idx2, curPts.length)}`;
     });
     svgT.addEventListener('mouseleave', () => { cursorT.style.opacity = 0; dotT.style.opacity = 0; });
     const totalTags = document.querySelector('.total-box .tags');
@@ -1362,7 +1586,7 @@ function renderWallet() {
       const applyTotal = (ptsArr, label) => {
         totalEl.__pts = ptsArr;
         totalEl.__label = label;
-        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${160 - y}`).join(' ');
+      const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
         pT.setAttribute('d', d);
         const L4 = pT.getTotalLength();
         pT.style.strokeDasharray = L4;
@@ -1378,6 +1602,15 @@ function renderWallet() {
       if (els[1]) els[1].onclick = () => applyTotal(ptsTbtc, 'BTC');
       if (els[2]) els[2].onclick = () => applyTotal(ptsTeth, 'ETH');
     }
+  }
+  const usdtEl = document.getElementById('walletUSDT');
+  if (usdtEl && u && u.wallet) {
+    const vd = (u.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+    const pgc = Number(vd[0] || 0);
+    const btc = Number(vd[1] || 0);
+    const eth = Number(vd[2] || 0);
+    const usdt = Math.round(pgc * 1 + btc * 100000 + eth * 4000);
+    usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
   }
   const qtBtn = document.getElementById('qtSendBtn');
   if (qtBtn && !qtBtn.dataset._bind) {
@@ -1411,6 +1644,123 @@ function renderWallet() {
       alert(v === 'cross' ? '已提交跨链转账请求（占位）' : '已提交快速转账请求（占位）');
     });
     tfBtn.dataset._bind = '1';
+  }
+
+  const openCreateAddrBtn = document.getElementById('openCreateAddrBtn');
+  const openImportAddrBtn = document.getElementById('openImportAddrBtn');
+  const addrModal = document.getElementById('addrModal');
+  const addrTitle = document.getElementById('addrModalTitle');
+  const addrCreateBox = document.getElementById('addrCreateBox');
+  const addrImportBox = document.getElementById('addrImportBox');
+  const addrCancelBtn = document.getElementById('addrCancelBtn');
+  const addrOkBtn = document.getElementById('addrOkBtn');
+  const setAddrError = (msg) => {
+    const box = document.getElementById('addrError');
+    if (!box) return;
+    if (msg) {
+      box.textContent = msg;
+      box.classList.remove('hidden');
+    } else {
+      box.textContent = '';
+      box.classList.add('hidden');
+    }
+  };
+  let __addrMode = 'create';
+  const showAddrModal = (mode) => {
+    __addrMode = mode;
+    if (addrTitle) addrTitle.textContent = mode === 'import' ? '导入地址' : '新建地址';
+    if (addrCreateBox) addrCreateBox.classList.toggle('hidden', mode !== 'create');
+    if (addrImportBox) addrImportBox.classList.toggle('hidden', mode !== 'import');
+    if (mode === 'import') {
+      const input = document.getElementById('addrPrivHex');
+      if (input) input.value = '';
+    }
+    if (addrModal) addrModal.classList.remove('hidden');
+    setAddrError('');
+  };
+  const hideAddrModal = () => {
+    if (addrModal) addrModal.classList.add('hidden');
+    setAddrError('');
+  };
+  if (openCreateAddrBtn) {
+    openCreateAddrBtn.onclick = () => showAddrModal('create');
+  }
+  if (openImportAddrBtn) {
+    openImportAddrBtn.onclick = () => showAddrModal('import');
+  }
+  if (addrCancelBtn) {
+    addrCancelBtn.onclick = hideAddrModal;
+  }
+  const importAddressInPlace = async (priv) => {
+    const u2 = loadUser();
+    if (!u2 || !u2.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
+    const ov = document.getElementById('actionOverlay');
+    const ovt = document.getElementById('actionOverlayText');
+    if (ovt) ovt.textContent = '正在导入钱包地址...';
+    if (ov) ov.classList.remove('hidden');
+    try {
+      const data = await importFromPrivHex(priv);
+      const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
+      const addr = (data.address || '').toLowerCase();
+      if (!addr) { showModalTip('导入失败', '无法解析地址', true); return; }
+      const map = (acc.wallet && acc.wallet.addressMsg) || {};
+      let dup = false;
+      const lowerMain = (u2.address || '').toLowerCase();
+      if (lowerMain && lowerMain === addr) dup = true;
+      if (!dup) {
+        for (const k in map) { if (Object.prototype.hasOwnProperty.call(map, k)) { if (String(k).toLowerCase() === addr) { dup = true; break; } } }
+      }
+      if (dup) { showModalTip('导入失败', '该地址已存在，不能重复导入', true); return; }
+      acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported' };
+      const normPriv = (data.privHex || priv).replace(/^0x/i, '');
+      acc.wallet.addressMsg[addr].privHex = normPriv;
+      acc.wallet.addressMsg[addr].pubXHex = data.pubXHex || acc.wallet.addressMsg[addr].pubXHex || '';
+      acc.wallet.addressMsg[addr].pubYHex = data.pubYHex || acc.wallet.addressMsg[addr].pubYHex || '';
+      saveUser(acc);
+      renderWallet();
+      try { updateWalletBrief(); } catch {}
+      const modal = document.getElementById('actionModal');
+      const title = document.getElementById('actionTitle');
+      const text = document.getElementById('actionText');
+      const ok = document.getElementById('actionOkBtn');
+      if (title) title.textContent = '导入钱包成功';
+      if (text) { text.textContent = '已导入一个钱包地址'; text.classList.remove('tip--error'); }
+      if (modal) modal.classList.remove('hidden');
+      if (ok) {
+        const handler = () => {
+          modal && modal.classList.add('hidden');
+          ok.removeEventListener('click', handler);
+        };
+        ok.addEventListener('click', handler);
+      }
+    } catch (err) {
+      showModalTip('导入失败', '导入失败：' + (err && err.message ? err.message : err), true);
+    } finally {
+      if (ov) ov.classList.add('hidden');
+    }
+  };
+  if (addrOkBtn) {
+    addrOkBtn.onclick = async () => {
+      if (__addrMode === 'create') { hideAddrModal(); addNewSubWallet(); }
+      else {
+        const input = document.getElementById('addrPrivHex');
+        const v = input ? input.value.trim() : '';
+        if (!v) {
+          setAddrError('请输入私钥 Hex');
+          if (input) input.focus();
+          return;
+        }
+        const normalized = v.replace(/^0x/i, '');
+        if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
+          setAddrError('私钥格式不正确：需为 64 位十六进制字符串');
+          if (input) input.focus();
+          return;
+        }
+        setAddrError('');
+        hideAddrModal();
+        await importAddressInPlace(v);
+      }
+    };
   }
 }
 // 不加入担保组织确认模态框

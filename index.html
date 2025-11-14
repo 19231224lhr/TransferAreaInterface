@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>简洁钱包前端 - 钱包操作</title>
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="/style.css?v=20251114a" />
   </head>
   <body>
     <header class="header">
@@ -16,21 +16,24 @@
             <span id="userLabel" class="user-label">未登录</span>
           </button>
           <div id="userMenu" class="user-menu hidden">
-            <div class="menu-item" id="menuAccountItem">
-              <span>Account ID</span>
-              <code id="menuAccountId"></code>
+            <div class="menu-item" id="menuAccountItem" style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:12px;">
+              <span style="display:flex;align-items:center;min-height:36px;">Account ID</span>
+              <code id="menuAccountId" style="display:flex;align-items:center;min-height:36px;"></code>
             </div>
-            <div class="menu-item" id="menuAddressItem">
-              <span>主地址</span>
-              <code id="menuAddress" class="break"></code>
+            <div class="menu-item" id="menuAddressItem" style="position: relative; display:grid; grid-template-columns:88px 1fr; align-items:center; gap:12px; cursor:pointer;">
+              <span style="display:flex;align-items:center;min-height:36px;">地址信息</span>
+              <code id="menuAddress" class="break" style="display:flex;align-items:center;min-height:36px;"></code>
+              <div id="menuAddressPopup" class="hidden" style="position:absolute; left:-240px; right:auto; top:0; width:220px; max-height:260px; overflow:auto; background:#fff; box-shadow:0 8px 24px rgba(0,0,0,.12); border-radius:12px; padding:10px; border:1px solid #eceff7; z-index:50;">
+                <div id="menuAddressList"></div>
+              </div>
             </div>
-            <div class="menu-item hidden" id="menuOrgItem">
-              <span>担保组织</span>
-              <code id="menuOrg" class="break"></code>
+            <div class="menu-item hidden" id="menuOrgItem" style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:12px;">
+              <span style="display:flex;align-items:center;min-height:36px;">担保组织</span>
+              <code id="menuOrg" class="break" style="display:flex;align-items:center;min-height:36px;"></code>
             </div>
-            <div class="menu-item hidden" id="menuBalanceItem">
-              <span>余额</span>
-              <code id="menuBalance"></code>
+            <div class="menu-item hidden" id="menuBalanceItem" style="display:grid;grid-template-columns:88px 1fr;align-items:center;gap:12px;">
+              <span style="display:flex;align-items:center;min-height:36px;">余额</span>
+              <code id="menuBalance" style="display:flex;align-items:center;min-height:36px;"></code>
             </div>
             <div id="menuEmpty" class="menu-empty hidden">
               <span class="menu-empty__icon">🔒</span>
@@ -372,15 +375,21 @@
       </section>
 
       <section class="card hidden" id="walletCard">
-        <div class="card-header">
-          <h2>钱包主页</h2>
-        </div>
         <div class="wallet-layout">
           <div class="wallet-left">
-            <h3>子地址列表</h3>
+            <div class="addr-head">
+              <h3>钱包管理</h3>
+              <div class="split-btn">
+                <button id="openCreateAddrBtn" class="btn primary">新建地址</button>
+                <button id="openImportAddrBtn" class="btn secondary">导入地址</button>
+              </div>
+            </div>
             <div class="total-box">
               <div class="addr-meta">
-                <strong>总余额</strong>
+                <div class="total-head">
+                  <span class="total-label">总余额</span>
+                  <span id="walletUSDT" class="usdt-badge"><span class="amt">0</span><span class="unit">USDT</span></span>
+                </div>
                 <div class="tags">
                   <span class="tag tag--pgc">PGC: 0</span>
                   <span class="tag tag--btc">BTC: 0</span>
@@ -491,6 +500,34 @@
           </div>
         </div>
       </div>
+      <div id="confirmDelModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="dialog">
+          <h3>确认删除地址</h3>
+          <p id="confirmDelText" class="tip">是否删除该地址及其本地数据？</p>
+          <div class="actions">
+            <button id="confirmDelCancel" class="btn secondary">取消</button>
+            <button id="confirmDelOk" class="btn danger">删除</button>
+          </div>
+        </div>
+      </div>
+      <div id="addrModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="dialog">
+          <h3 id="addrModalTitle">新建地址</h3>
+          <div id="addrCreateBox" class="result">
+            <p class="tip">确认新建一个子地址并加入当前账户。</p>
+          </div>
+          <div id="addrImportBox" class="result hidden">
+            <div class="form">
+              <div class="form-row"><label>私钥（Hex）</label><input id="addrPrivHex" class="input" type="text" placeholder="请输入私钥 Hex" /></div>
+            </div>
+            <p id="addrError" class="tip tip--error hidden"></p>
+          </div>
+          <div class="actions actions--split">
+            <button id="addrCancelBtn" class="btn secondary">取消</button>
+            <button id="addrOkBtn" class="btn primary">确认</button>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer class="footer">
@@ -499,6 +536,6 @@
       </div>
     </footer>
 
-    <script src="/app.js"></script>
+    <script src="/app.js?v=20251114a"></script>
   </body>
   </html>
