@@ -1509,20 +1509,63 @@ function renderWallet() {
     });
   }
 
+  const woCard = document.getElementById('woCard');
+  const woEmpty = document.getElementById('woEmpty');
   const woGroupID = document.getElementById('woGroupID');
   const woAggre = document.getElementById('woAggre');
   const woAssign = document.getElementById('woAssign');
   const woPledge = document.getElementById('woPledge');
-  const gid = (u && u.orgNumber) || (DEFAULT_GROUP && DEFAULT_GROUP.groupID) || '';
-  if (woGroupID) woGroupID.textContent = gid || '';
-  if (DEFAULT_GROUP && gid === DEFAULT_GROUP.groupID) {
-    if (woAggre) woAggre.textContent = DEFAULT_GROUP.aggreNode;
-    if (woAssign) woAssign.textContent = DEFAULT_GROUP.assignNode;
-    if (woPledge) woPledge.textContent = DEFAULT_GROUP.pledgeAddress;
-  } else {
-    if (woAggre) woAggre.textContent = '';
-    if (woAssign) woAssign.textContent = '';
-    if (woPledge) woPledge.textContent = '';
+  const woExit = document.getElementById('woExitBtn');
+  const joinBtn = document.getElementById('woJoinBtn');
+  const storedGroup = (u && u.guarGroup && typeof u.guarGroup === 'object') ? u.guarGroup : null;
+  const joined = storedGroup && storedGroup.groupID;
+  if (woCard) woCard.classList.toggle('hidden', !joined);
+  if (woExit) woExit.classList.toggle('hidden', !joined);
+  if (woEmpty) woEmpty.classList.toggle('hidden', !!joined);
+  if (joinBtn) joinBtn.classList.toggle('hidden', !!joined);
+  if (woGroupID) woGroupID.textContent = joined ? storedGroup.groupID : '';
+  if (woAggre) woAggre.textContent = joined ? storedGroup.aggreNode || '' : '';
+  if (woAssign) woAssign.textContent = joined ? storedGroup.assignNode || '' : '';
+  if (woPledge) woPledge.textContent = joined ? storedGroup.pledgeAddress || '' : '';
+  if (woExit && !woExit.dataset._bind) {
+    woExit.addEventListener('click', () => {
+      const u3 = loadUser();
+      if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
+      const modal = document.getElementById('actionModal');
+      const titleEl = document.getElementById('actionTitle');
+      const textEl = document.getElementById('actionText');
+      const okEl = document.getElementById('actionOkBtn');
+      const doExit = () => {
+        const latest = loadUser();
+        if (!latest) return;
+        latest.guarGroup = null;
+        latest.orgNumber = '';
+        saveUser(latest);
+        updateWalletBrief();
+        showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
+      };
+      const confirmExit = () => {
+        okEl && okEl.removeEventListener('click', confirmExit);
+        if (modal) modal.classList.add('hidden');
+        doExit();
+      };
+      if (titleEl) titleEl.textContent = '退出担保组织';
+      if (textEl) {
+        textEl.innerHTML = '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？';
+        textEl.classList.add('tip--error');
+      }
+      if (modal) modal.classList.remove('hidden');
+      if (okEl) {
+        okEl.addEventListener('click', confirmExit);
+      }
+    });
+    woExit.dataset._bind = '1';
+  }
+  if (joinBtn && !joinBtn.dataset._bind) {
+    joinBtn.addEventListener('click', () => {
+      routeTo('#/join-group');
+    });
+    joinBtn.dataset._bind = '1';
   }
   const totalEl = document.getElementById('walletTotalChart');
   if (totalEl) {
