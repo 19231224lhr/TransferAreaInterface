@@ -1621,8 +1621,8 @@ function renderWallet() {
       <svg viewBox=\"0 0 320 160\">
         <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
         <path class=\"line\" d=\"${pathT}\" />
-        <line class=\"cursor\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"160\" style=\"opacity:.0\" />
-        <circle class=\"dot\" cx=\"0\" cy=\"0\" style=\"opacity:.0\" />
+        <line class=\"cursor\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" style=\"opacity:.35\" />
+        <circle class=\"dot\" cx=\"160\" cy=\"${toYt(ptsTpgc[Math.max(0, Math.min(ptsTpgc.length - 1, Math.round(160/8)))])}\" style=\"opacity:.0\" />
       </svg>
       <div class=\"tooltip\">PGC 0 · 00:00</div>
     `;
@@ -1714,7 +1714,8 @@ function renderWallet() {
     ctBtn.dataset._bind = '1';
   }
 
-  const tfMode = document.getElementById('tfMode');
+    const tfMode = document.getElementById('tfMode');
+    const tfCrossChk = document.getElementById('tfCross');
   const tfBtn = document.getElementById('tfSendBtn');
   if (tfMode && tfBtn && !tfBtn.dataset._bind) {
     const addrList = document.getElementById('srcAddrList');
@@ -1723,9 +1724,14 @@ function renderWallet() {
     const chPGC = document.getElementById('chAddrPGC');
     const chBTC = document.getElementById('chAddrBTC');
     const chETH = document.getElementById('chAddrETH');
+    const csPGC = document.getElementById('csChPGC');
+    const csBTC = document.getElementById('csChBTC');
+    const csETH = document.getElementById('csChETH');
     const gasInput = document.getElementById('extraGasPGC');
     const useTXCer = document.getElementById('useTXCer');
     const isPledge = document.getElementById('isPledge');
+    const useTXCerChk = document.getElementById('useTXCerChk');
+    const isPledgeChk = document.getElementById('isPledgeChk');
     const txErr = document.getElementById('txError');
     const txPreview = document.getElementById('txPreview');
     const u0 = loadUser();
@@ -1750,9 +1756,72 @@ function renderWallet() {
       chPGC.innerHTML = html;
       chBTC.innerHTML = html;
       chETH.innerHTML = html;
+      const buildMenu = (box, optsArr, hidden) => {
+        if (!box) return;
+        const menu = box.querySelector('.custom-select__menu');
+        const valEl = box.querySelector('.addr-val');
+        if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><span class="coin-icon ${box.dataset.coin==='BTC'?'coin--btc':(box.dataset.coin==='ETH'?'coin--eth':'coin--pgc')}"></span><code class="break" style="font-weight:700">${a}</code></div>`).join('');
+        const first = optsArr[0] || '';
+        if (valEl) valEl.textContent = first;
+        if (hidden) hidden.value = first;
+      };
+      buildMenu(csPGC, opts, chPGC);
+      buildMenu(csBTC, opts, chBTC);
+      buildMenu(csETH, opts, chETH);
+      updateSummaryAddr();
     };
     fillChange();
     addrList.addEventListener('change', fillChange);
+    const bindCs = (box, hidden) => {
+      if (!box || box.dataset._bind) return;
+      box.addEventListener('click', (e) => { e.stopPropagation(); const sec = box.closest('.tx-section'); const opening = !box.classList.contains('open'); box.classList.toggle('open'); if (sec) sec.classList.toggle('has-open', opening); });
+      const menu = box.querySelector('.custom-select__menu');
+      if (menu) {
+        menu.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const item = ev.target.closest('.custom-select__item');
+          if (!item) return;
+          const v = item.getAttribute('data-val');
+          const valEl = box.querySelector('.addr-val');
+          if (valEl) valEl.textContent = v;
+          if (hidden) hidden.value = v;
+          box.classList.remove('open'); const sec = box.closest('.tx-section'); if (sec) sec.classList.remove('has-open'); updateSummaryAddr();
+        });
+      }
+      document.addEventListener('click', () => { box.classList.remove('open'); const sec = box.closest('.tx-section'); if (sec) sec.classList.remove('has-open'); });
+      box.dataset._bind = '1';
+    };
+    bindCs(csPGC, chPGC);
+    bindCs(csBTC, chBTC);
+    bindCs(csETH, chETH);
+    const changeSec = document.querySelector('.tx-section.tx-change');
+    const changeSummary = document.getElementById('changeSummary');
+    const changeHeadBtn = document.getElementById('changeHead');
+    const changeAddrText = document.getElementById('changeAddrText');
+    function shortAddr(s) {
+      const t = String(s||''); if (t.length <= 22) return t; return t.slice(0, 14) + '...' + t.slice(-6);
+    }
+    function updateSummaryAddr() {
+      let v = chPGC && chPGC.value ? chPGC.value : (csPGC && csPGC.querySelector('.addr-val') ? csPGC.querySelector('.addr-val').textContent : '');
+      if (!v) {
+        const u = loadUser();
+        const first = u && u.wallet ? Object.keys(u.wallet.addressMsg || {})[0] : '';
+        v = (u && u.address) || first || '';
+      }
+      const el = document.getElementById('changeAddrText');
+      if (el) el.textContent = shortAddr(v);
+    }
+    updateSummaryAddr();
+    if (changeSec) { changeSec.classList.add('collapsed'); }
+    const toggleChangeCollapsed = () => {
+      if (!changeSec) return;
+      const isCollapsed = changeSec.classList.contains('collapsed');
+      if (isCollapsed) { changeSec.classList.remove('collapsed'); }
+      else { changeSec.classList.add('collapsed'); updateSummaryAddr(); }
+    };
+    const bindToggle = (el) => { if (!el) return; el.onclick = toggleChangeCollapsed; };
+    bindToggle(changeSummary);
+    bindToggle(changeHeadBtn);
     let billSeq = 0;
     const updateRemoveState = () => {
       const rows = Array.from(billList.querySelectorAll('.bill-item'));
@@ -1832,6 +1901,18 @@ function renderWallet() {
     };
     updateBtn();
     tfMode.addEventListener('change', updateBtn);
+    if (tfCrossChk) {
+      tfCrossChk.checked = (tfMode.value === 'cross');
+      tfCrossChk.addEventListener('change', () => { tfMode.value = tfCrossChk.checked ? 'cross' : 'quick'; updateBtn(); });
+    }
+    if (useTXCerChk) {
+      useTXCerChk.checked = (String(useTXCer.value) === 'true');
+      useTXCerChk.addEventListener('change', () => { useTXCer.value = useTXCerChk.checked ? 'true' : 'false'; });
+    }
+    if (isPledgeChk) {
+      isPledgeChk.checked = (String(isPledge.value) === 'true');
+      isPledgeChk.addEventListener('change', () => { isPledge.value = isPledgeChk.checked ? 'true' : 'false'; });
+    }
     const rates = { 0: 1, 1: 100000, 2: 4000 };
     tfBtn.addEventListener('click', () => {
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }

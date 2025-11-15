@@ -380,7 +380,7 @@
             <div class="addr-head">
               <h3>钱包管理</h3>
             </div>
-            <div class="total-box">
+            <div class="total-box total-box--emphasis">
               <div class="addr-meta">
                 <div class="total-head">
                   <span class="total-label">总余额</span>
@@ -406,25 +406,49 @@
                   <div id="srcAddrList" class="tx-addr-list" role="list"></div>
                 </div>
                 <div class="tx-section" role="group" aria-labelledby="billHead">
-                  <div class="tx-subhead" id="billHead">添加转账账单</div>
+                  <div class="tx-head-row"><div class="tx-subhead" id="billHead">添加转账账单</div><button id="addBillBtn" class="btn success btn--sm" aria-label="添加一笔账单">+</button></div>
                   <div id="billList" class="bill-list" role="list"></div>
-                  <div class="actions"><button id="addBillBtn" class="btn success btn--sm" aria-label="添加一笔账单">添加一笔</button></div>
+                  
                 </div>
-                <div class="tx-section" role="group" aria-labelledby="changeHead">
-                  <div class="tx-subhead" id="changeHead">找零地址</div>
-                  <div class="tx-grid-3" role="group" aria-label="按币种设置找零地址">
-                    <div><label>PGC</label><select id="chAddrPGC" class="input"></select></div>
-                    <div><label>BTC</label><select id="chAddrBTC" class="input"></select></div>
-                    <div><label>ETH</label><select id="chAddrETH" class="input"></select></div>
+                <div class="tx-section tx-change collapsed" role="group" aria-labelledby="changeHead">
+                  <div class="tx-change-head" id="changeSummary"><div class="tx-subhead" id="changeHead">找零地址</div><span id="changeAddrText" class="summary-value"></span></div>
+                  <div class="tx-grid-3 tx-grid--stack" role="group" aria-label="按币种设置找零地址">
+                    <div class="addr-row">
+                      <label>PGC</label>
+                      <select id="chAddrPGC" class="input" style="display:none"></select>
+                      <div id="csChPGC" class="input custom-select cs-addr" role="button" aria-label="PGC 找零地址" data-coin="PGC">
+                        <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="addr-val" style="margin-left:6px;color:#334155"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <div class="addr-row">
+                      <label>BTC</label>
+                      <select id="chAddrBTC" class="input" style="display:none"></select>
+                      <div id="csChBTC" class="input custom-select cs-addr" role="button" aria-label="BTC 找零地址" data-coin="BTC">
+                        <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span class="addr-val" style="margin-left:6px;color:#334155"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <div class="addr-row">
+                      <label>ETH</label>
+                      <select id="chAddrETH" class="input" style="display:none"></select>
+                      <div id="csChETH" class="input custom-select cs-addr" role="button" aria-label="ETH 找零地址" data-coin="ETH">
+                        <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span class="addr-val" style="margin-left:6px;color:#334155"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div class="tx-section" role="group" aria-labelledby="optHead">
                   <div class="tx-subhead" id="optHead">交易选项</div>
-                  <div class="tx-grid-3">
-                    <div><label>功能</label><select id="tfMode" class="input"><option value="quick" selected>快速转账</option><option value="cross">跨链转账</option></select></div>
-                    <div><label>额外支付PGC兑换Gas</label><input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" /></div>
-                    <div><label>优先使用TXCer</label><select id="useTXCer" class="input"><option value="true">是</option><option value="false">否</option></select></div>
-                    <div><label>质押交易</label><select id="isPledge" class="input"><option value="false">否</option><option value="true">是</option></select></div>
+                  <div class="tx-grid-3 tx-grid--stack">
+                    <div class="opt-row"><label>跨链转账</label><input id="tfCross" type="checkbox" aria-label="跨链转账" /><select id="tfMode" class="input" style="display:none"><option value="quick" selected>快速转账</option><option value="cross">跨链转账</option></select></div>
+                    <div class="opt-row"><label>额外支付PGC兑换Gas</label><input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" /></div>
+                    <div class="opt-row"><label>优先使用TXCer</label><input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" /><select id="useTXCer" class="input" style="display:none"><option value="true">是</option><option value="false" selected>否</option></select></div>
+                    <div class="opt-row"><label>质押交易</label><input id="isPledgeChk" type="checkbox" aria-label="质押交易" /><select id="isPledge" class="input" style="display:none"><option value="false" selected>否</option><option value="true">是</option></select></div>
                   </div>
                 </div>
                 <div class="actions"><button id="tfSendBtn" class="btn primary" aria-label="生成交易结构体">生成交易结构体</button></div>
