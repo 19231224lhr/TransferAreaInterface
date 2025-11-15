@@ -1715,7 +1715,8 @@ function renderWallet() {
   }
 
     const tfMode = document.getElementById('tfMode');
-    const tfCrossChk = document.getElementById('tfCross');
+    const tfModeQuick = document.getElementById('tfModeQuick');
+    const tfModeCross = document.getElementById('tfModeCross');
   const tfBtn = document.getElementById('tfSendBtn');
   if (tfMode && tfBtn && !tfBtn.dataset._bind) {
     const addrList = document.getElementById('srcAddrList');
@@ -1901,9 +1902,13 @@ function renderWallet() {
     };
     updateBtn();
     tfMode.addEventListener('change', updateBtn);
-    if (tfCrossChk) {
-      tfCrossChk.checked = (tfMode.value === 'cross');
-      tfCrossChk.addEventListener('change', () => { tfMode.value = tfCrossChk.checked ? 'cross' : 'quick'; updateBtn(); });
+    if (tfModeQuick && tfModeCross) {
+      const initVal = tfMode.value;
+      tfModeQuick.checked = (initVal === 'quick');
+      tfModeCross.checked = (initVal === 'cross');
+      const applyRadio = () => { tfMode.value = tfModeCross.checked ? 'cross' : 'quick'; updateBtn(); };
+      tfModeQuick.addEventListener('change', applyRadio);
+      tfModeCross.addEventListener('change', applyRadio);
     }
     if (useTXCerChk) {
       useTXCerChk.checked = (String(useTXCer.value) === 'true');
@@ -1913,6 +1918,7 @@ function renderWallet() {
       isPledgeChk.checked = (String(isPledge.value) === 'true');
       isPledgeChk.addEventListener('change', () => { isPledge.value = isPledgeChk.checked ? 'true' : 'false'; });
     }
+    if (gasInput) { if (!gasInput.value) gasInput.value = '0'; }
     const rates = { 0: 1, 1: 100000, 2: 4000 };
     tfBtn.addEventListener('click', () => {
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
