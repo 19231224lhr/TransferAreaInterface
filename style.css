@@ -498,3 +498,58 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .tx-addr-list label input[type="checkbox"] { appearance: none; width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid #94a3b8; background: linear-gradient(180deg, #ffffff, #f8fafc); box-shadow: 0 2px 6px rgba(15,23,42,.08); margin-right: 6px; }
 .tx-addr-list label input[type="checkbox"]:checked { background: linear-gradient(135deg, #60a5fa, #0ea5e9); border-color: #60a5fa; }
 .tx-addr-list label input[type="checkbox"]:focus { outline: none; box-shadow: 0 0 0 3px rgba(96,165,250,.25); }
+/* Welcome page enhancements */
+#welcomeCard {
+  padding: 28px 24px;
+  background: radial-gradient(closest-side, rgba(14,165,233,.06), rgba(14,165,233,0)) 0 0/200% 200%, linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 10px 28px rgba(15,23,42,.08);
+}
+#welcomeCard .card-header h2 {
+  font-size: 24px;
+  letter-spacing: .6px;
+  text-shadow: 0 2px 10px rgba(37,99,235,.14);
+}
+#welcomeCard .hero-left {
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226,232,240,.35);
+  backdrop-filter: blur(8px);
+}
+#welcomeCard::before,
+#welcomeCard::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(36px);
+  opacity: .28;
+  pointer-events: none;
+}
+#welcomeCard::before {
+  width: 240px; height: 240px; left: -30px; top: -20px;
+  background: radial-gradient(closest-side, rgba(14,165,233,.45), rgba(14,165,233,0));
+  animation: drift 12s ease-in-out infinite;
+}
+#welcomeCard::after {
+  width: 280px; height: 280px; right: -40px; bottom: -30px;
+  background: radial-gradient(closest-side, rgba(99,102,241,.35), rgba(99,102,241,0));
+  animation: drift 14s ease-in-out infinite reverse;
+}
+#welcomeCard .tiles .tile {
+  transition: transform .25s ease, box-shadow .25s ease, filter .25s ease;
+}
+#welcomeCard .tiles .tile:hover {
+  transform: translateY(-3px) scale(1.03);
+  box-shadow: 0 12px 28px rgba(14,165,233,.22);
+  filter: brightness(1.04);
+}
+#welcomeCard .actions {
+  justify-content: center;
+  gap: 14px;
+}
+#welcomeCard .actions .btn {
+  min-width: 140px;
+}
+.btn.flow:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px) scale(1.01);
+}

@@ -244,6 +244,19 @@ function clearUIState() {
   const newNextBtnEl = document.getElementById('newNextBtn');
   if (createBtnEl) createBtnEl.classList.add('hidden');
   if (newNextBtnEl) newNextBtnEl.classList.add('hidden');
+  const loginInput = document.getElementById('loginPrivHex');
+  if (loginInput) loginInput.value = '';
+  const loginResult = document.getElementById('loginResult');
+  if (loginResult) loginResult.classList.add('hidden');
+  const ids3 = ['loginAccountId', 'loginAddress', 'loginPrivOut', 'loginPubX', 'loginPubY'];
+  ids3.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '';
+  });
+  const loginLoader = document.getElementById('loginLoader');
+  if (loginLoader) loginLoader.classList.add('hidden');
+  const loginNextBtn2 = document.getElementById('loginNextBtn');
+  if (loginNextBtn2) loginNextBtn2.classList.add('hidden');
 }
 
 async function newUser() {
@@ -481,6 +494,16 @@ function router() {
       showCard(loginCard);
       const lnb = document.getElementById('loginNextBtn');
       if (lnb) lnb.classList.add('hidden');
+      {
+        const inputEl = document.getElementById('loginPrivHex');
+        if (inputEl) inputEl.value = '';
+        const resEl = document.getElementById('loginResult');
+        if (resEl) resEl.classList.add('hidden');
+        const ids = ['loginAccountId', 'loginAddress', 'loginPrivOut', 'loginPubX', 'loginPubY'];
+        ids.forEach((id) => { const el = document.getElementById(id); if (el) el.textContent = ''; });
+        const loaderEl = document.getElementById('loginLoader');
+        if (loaderEl) loaderEl.classList.add('hidden');
+      }
       break;
     case '/new':
       showCard(newUserCard);
@@ -898,7 +921,7 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      routeTo('#/join-group');
+      routeTo('#/inquiry-main');
     });
   }
   if (proceedCancel) {
@@ -1237,13 +1260,19 @@ if (loginNextBtn) {
     if (u) {
       u.wallet = u.wallet || { addressMsg: {}, totalTXCers: {}, totalValue: 0, valueDivision: { 0: 0, 1: 0, 2: 0 }, updateTime: Date.now(), updateBlock: 0 };
       u.wallet.addressMsg = {};
+      u.orgNumber = (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP.groupID : '10000000');
+      u.guarGroup = (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
       saveUser(u);
+      try {
+        const g = u.guarGroup || DEFAULT_GROUP || { groupID: u.orgNumber, aggreNode: '', assignNode: '', pledgeAddress: '' };
+        localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: String(u.orgNumber || ''), aggreNode: String(g.aggreNode || ''), assignNode: String(g.assignNode || ''), pledgeAddress: String(g.pledgeAddress || '') }));
+      } catch {}
     }
     const brief = document.getElementById('walletBriefList');
     const toggleBtn = document.getElementById('briefToggleBtn');
-  if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
-  if (toggleBtn) toggleBtn.classList.add('hidden');
-    routeTo('#/join-group');
+    if (brief) { brief.classList.add('hidden'); brief.innerHTML = ''; }
+    if (toggleBtn) toggleBtn.classList.add('hidden');
+    routeTo('#/entry');
   });
 }
 
