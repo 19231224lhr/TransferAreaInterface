@@ -215,6 +215,30 @@ function clearAccountStorage() {
   try { localStorage.removeItem('walletUser'); } catch {}
 }
 
+function resetOrgSelectionForNewUser() {
+  let changed = false;
+  try {
+    if (localStorage.getItem('guarChoice')) {
+      localStorage.removeItem('guarChoice');
+      changed = true;
+    }
+  } catch (_) {}
+  const current = loadUser();
+  if (current && (current.orgNumber || current.guarGroup)) {
+    current.orgNumber = '';
+    current.guarGroup = null;
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch (_) {}
+    updateHeaderUser(current);
+    changed = true;
+  }
+  if (changed) {
+    updateOrgDisplay();
+    if (typeof refreshOrgPanel === 'function') {
+      try { refreshOrgPanel(); } catch (_) {}
+    }
+  }
+}
+
 function clearUIState() {
   const newResult = document.getElementById('result');
   if (newResult) {
@@ -506,6 +530,7 @@ function router() {
       }
       break;
     case '/new':
+      resetOrgSelectionForNewUser();
       showCard(newUserCard);
       // 如果尚未生成，则自动生成一次
       const resultEl = document.getElementById('result');
@@ -536,6 +561,11 @@ function router() {
       }
       break;
     case '/join-group':
+      {
+        const g0 = getJoinedGroup();
+        const joined = !!(g0 && g0.groupID);
+        if (joined) { routeTo('#/inquiry-main'); break; }
+      }
       showCard(document.getElementById('nextCard'));
       currentSelectedGroup = DEFAULT_GROUP;
       const recGroupID = document.getElementById('recGroupID');
@@ -921,7 +951,8 @@ if (entryNextBtn) {
     proceedOk.addEventListener('click', () => {
       const proceedModal2 = document.getElementById('confirmProceedModal');
       if (proceedModal2) proceedModal2.classList.add('hidden');
-      routeTo('#/inquiry-main');
+      const gid = computeCurrentOrgId();
+      if (gid) routeTo('#/inquiry-main'); else routeTo('#/join-group');
     });
   }
   if (proceedCancel) {
@@ -1037,7 +1068,7 @@ if (joinRecBtn) {
     }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
     updateOrgDisplay();
-    routeTo('#/main');
+    routeTo('#/inquiry-main');
   });
 }
 if (joinSearchBtn) {
@@ -1057,7 +1088,7 @@ if (joinSearchBtn) {
     }
     try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
     updateOrgDisplay();
-    routeTo('#/main');
+    routeTo('#/inquiry-main');
   });
 }
 
@@ -1212,7 +1243,10 @@ if (loginAccountBtn) {
   loginAccountBtn.addEventListener('click', () => routeTo('#/login'));
 }
 if (registerAccountBtn) {
-  registerAccountBtn.addEventListener('click', () => routeTo('#/new'));
+  registerAccountBtn.addEventListener('click', () => {
+    resetOrgSelectionForNewUser();
+    routeTo('#/new');
+  });
 }
 if (loginBtn) {
   loginBtn.addEventListener('click', async () => {
@@ -1234,10 +1268,13 @@ if (loginBtn) {
       const elapsed = Date.now() - t0;
       if (elapsed < 1000) await wait(1000 - elapsed);
       if (loader) loader.classList.add('hidden');
-      resultEl.classList.remove('hidden');
-      resultEl.classList.remove('fade-in');
-      resultEl.classList.remove('reveal');
-      requestAnimationFrame(() => resultEl.classList.add('reveal'));
+      const resultEl2 = document.getElementById('loginResult');
+      if (resultEl2) {
+        resultEl2.classList.remove('hidden');
+        resultEl2.classList.remove('fade-in');
+        resultEl2.classList.remove('reveal');
+        requestAnimationFrame(() => resultEl2.classList.add('reveal'));
+      }
       document.getElementById('loginAccountId').textContent = data.accountId || '';
       document.getElementById('loginAddress').textContent = data.address || '';
       document.getElementById('loginPrivOut').textContent = data.privHex || normalized;

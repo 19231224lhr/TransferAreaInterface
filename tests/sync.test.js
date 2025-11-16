@@ -22,5 +22,21 @@ async function run() {
   saveUser(u);
   await updateOrgDisplay();
   assertEq(el.textContent, '99999999', 'sync from user');
+
+  // Fast timers for routing animations
+  const _setTimeout = window.setTimeout;
+  window.setTimeout = (cb) => { try { cb(); } catch(_){} return 0; };
+
+  // Register flow: entry → join-group → inquiry-main → main
+  clearAccountStorage();
+  saveUser({ accountId: '11111111', address: 'addr', privHex: 'p', pubXHex: 'x', pubYHex: 'y', flowOrigin: 'new' });
+  routeTo('#/entry');
+  assertEq(location.hash, '#/join-group', 'register redirected to join-group');
+  const jr = document.getElementById('joinRecBtn');
+  jr && jr.click();
+  assertEq(location.hash, '#/main', 'after inquiry-main goes to main');
+
+  // Restore
+  window.setTimeout = _setTimeout;
 }
 run();
