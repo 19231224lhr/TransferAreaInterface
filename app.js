@@ -1802,9 +1802,40 @@ function renderWallet() {
     const txErr = document.getElementById('txError');
     const txPreview = document.getElementById('txPreview');
     const u0 = loadUser();
-    const srcAddrs = Object.keys((u0 && u0.wallet && u0.wallet.addressMsg) || {});
+    const walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
+    const srcAddrs = Object.keys(walletMap);
+    const currencyLabels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+    const showTxValidationError = (msg, focusEl) => {
+      if (txErr) {
+        txErr.textContent = msg;
+        txErr.classList.remove('hidden');
+      }
+      showModalTip('参数校验失败', msg, true);
+      if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
+    };
+    const normalizeAddrInput = (addr) => (addr ? String(addr).trim().toLowerCase() : '');
+    const isValidAddressFormat = (addr) => /^[0-9a-f]{40}$/.test(addr);
+    const getAddrMeta = (addr) => walletMap[addr];
+    const getAddrBalance = (meta) => {
+      if (!meta) return 0;
+      if (meta.value) {
+        if (typeof meta.value.totalValue === 'number') return Number(meta.value.totalValue);
+        if (typeof meta.value.TotalValue === 'number') return Number(meta.value.TotalValue);
+      }
+      if (typeof meta.totalValue === 'number') return Number(meta.totalValue);
+      if (typeof meta.balance === 'number') return Number(meta.balance);
+      return 0;
+    };
+    const getAddrGasBalance = (meta) => {
+      if (!meta) return 0;
+      if (typeof meta.gas === 'number') return meta.gas;
+      if (typeof meta.interest === 'number') return meta.interest;
+      if (typeof meta.estInterest === 'number') return meta.estInterest;
+      if (typeof meta.EstInterest === 'number') return meta.EstInterest;
+      return 0;
+    };
     addrList.innerHTML = srcAddrs.map(a => {
-      const meta = (u0 && u0.wallet && u0.wallet.addressMsg && u0.wallet.addressMsg[a]) || {};
+      const meta = walletMap[a] || {};
       const mt = Number(meta.type || 0);
       const val = Number((meta.value && meta.value.totalValue) || 0);
       const pgc = mt === 0 ? val : 0;
@@ -1988,12 +2019,19 @@ function renderWallet() {
     const rates = { 0: 1, 1: 100000, 2: 4000 };
     tfBtn.addEventListener('click', () => {
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
+      if (txPreview) { txPreview.classList.add('hidden'); txPreview.textContent = ''; }
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
-      if (sel.length === 0) { if (txErr) { txErr.textContent = '请选择至少一个来源地址'; txErr.classList.remove('hidden'); } return; }
+      if (sel.length === 0) { showTxValidationError('请选择至少一个来源地址'); return; }
+      for (const addr of sel) {
+        if (!getAddrMeta(addr)) {
+          showTxValidationError('部分来源地址不存在，请刷新后重试');
+          return;
+        }
+      }
       const rows = Array.from(billList.querySelectorAll('.bill-item'));
-      if (rows.length === 0) { if (txErr) { txErr.textContent = '请至少添加一笔转账账单'; txErr.classList.remove('hidden'); } return; }
+      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账账单'); return; }
       const isCross = tfMode.value === 'cross';
-      if (isCross && rows.length !== 1) { if (txErr) { txErr.textContent = '跨链交易只能包含一笔账单'; txErr.classList.remove('hidden'); } return; }
+      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔账单'); return; }
       const changeMap = {};
       if (chPGC.value) changeMap[0] = chPGC.value;
       if (chBTC.value) changeMap[1] = chBTC.value;
@@ -2002,12 +2040,23 @@ function renderWallet() {
       const vd = { 0: 0, 1: 0, 2: 0 };
       let outInterest = 0;
       const parsePub = (raw) => {
-        const s = String(raw || '').trim().replace(/^0x/i, '').toLowerCase();
-        if (!s) return { x: '', y: '' };
-        if (s.length === 130 && s.startsWith('04')) { return { x: s.slice(2, 66), y: s.slice(66, 130) }; }
-        const parts = s.split(/[\s,]+/).filter(Boolean);
-        if (parts.length === 2 && parts[0].length === 64 && parts[1].length === 64) { return { x: parts[0], y: parts[1] }; }
-        return { x: '', y: '' };
+        const res = { x: '', y: '', ok: false };
+        const rawStr = String(raw || '').trim();
+        if (!rawStr) return res;
+        const normalized = rawStr.replace(/^0x/i, '').toLowerCase();
+        if (/^04[0-9a-f]{128}$/.test(normalized)) {
+          res.x = normalized.slice(2, 66);
+          res.y = normalized.slice(66);
+          res.ok = true;
+          return res;
+        }
+        const parts = normalized.split(/[,&\s]+/).filter(Boolean);
+        if (parts.length === 2 && /^[0-9a-f]{64}$/.test(parts[0]) && /^[0-9a-f]{64}$/.test(parts[1])) {
+          res.x = parts[0];
+          res.y = parts[1];
+          res.ok = true;
+        }
+        return res;
       };
       for (const r of rows) {
         const toEl = r.querySelector('[data-name="to"]');
@@ -2017,22 +2066,62 @@ function renderWallet() {
         const pubEl = r.querySelector('[data-name="pub"]');
         const gasEl = r.querySelector('[data-name="gas"]');
         const to = String((toEl && toEl.value) || '').trim();
-        const mt = Number((mtEl && (mtEl.dataset && mtEl.dataset.val)) || 0);
+        const normalizedTo = normalizeAddrInput(to);
+        const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
+        const mt = Number(mtRaw);
         const val = Number((valEl && valEl.value) || 0);
         const gid = String((gidEl && gidEl.value) || '').trim();
         const comb = String((pubEl && pubEl.value) || '').trim();
-        const { x: px, y: py } = parsePub(comb);
+        const parsedPub = parsePub(comb);
+        const { x: px, y: py, ok: pubOk } = parsedPub;
         const tInt = Number((gasEl && gasEl.value) || 0);
-        if (!to || val <= 0) { if (txErr) { txErr.textContent = '请填写有效的账单信息'; txErr.classList.remove('hidden'); } return; }
-        if (isCross && mt !== 0) { if (txErr) { txErr.textContent = '跨链交易只能使用主货币'; txErr.classList.remove('hidden'); } return; }
-        if (bills[to]) { if (txErr) { txErr.textContent = '同一地址仅允许一笔账单'; txErr.classList.remove('hidden'); } return; }
-        bills[to] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };
+        if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl); return; }
+        if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl); return; }
+        if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种'); return; }
+        if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl); return; }
+        if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl); return; }
+        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl); return; }
+        if (isCross && mt !== 0) { showTxValidationError('跨链交易只能使用主货币'); return; }
+        if (bills[normalizedTo]) { showTxValidationError('同一地址仅允许一笔账单'); return; }
+        bills[normalizedTo] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };
         vd[mt] += val;
         outInterest += Math.max(0, tInt || 0);
       }
       const extraPGC = Number(gasInput.value || 0);
+      if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput); return; }
       const interestGas = extraPGC > 0 ? extraPGC * 10 : 0;
-      const firstAddr = sel[0];
+      vd[0] += extraPGC;
+      const typeBalances = { 0: 0, 1: 0, 2: 0 };
+      let availableGas = 0;
+      sel.forEach((addr) => {
+        const meta = getAddrMeta(addr);
+        const typeId = Number(meta && meta.type !== undefined ? meta.type : 0);
+        typeBalances[typeId] += getAddrBalance(meta);
+        availableGas += getAddrGasBalance(meta);
+      });
+      const ensureChangeAddrValid = (typeId) => {
+        const need = vd[typeId] || 0;
+        if (need <= 0) return true;
+        const addr = changeMap[typeId];
+        if (!addr) { showTxValidationError(`请为 ${currencyLabels[typeId]} 选择找零地址`); return false; }
+        const meta = getAddrMeta(addr);
+        if (!meta) { showTxValidationError('找零地址不存在，请重新选择'); return false; }
+        if (Number(meta.type || 0) !== Number(typeId)) { showTxValidationError(`${currencyLabels[typeId]} 找零地址的币种不匹配`); return false; }
+        return true;
+      };
+      if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
+        const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
+        showTxValidationError(`${currencyLabels[lackType]} 余额不足，无法覆盖转出与兑换需求`);
+        return;
+      }
+      if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
+      const mintedGas = interestGas;
+      const totalGasNeed = interestGas + outInterest;
+      const totalGasAvailable = availableGas + mintedGas;
+      if (totalGasNeed > totalGasAvailable + 1e-8) {
+        showTxValidationError('Gas 不足：可用 Gas 与兑换总和低于本次需求');
+        return;
+      }
       const backAssign = {}; sel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
       const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[k] * rates[k], 0);
       const build = {
@@ -2048,8 +2137,8 @@ function renderWallet() {
         Data: '',
         InterestAssign: { Gas: interestGas, Output: outInterest, BackAssign: backAssign }
       };
-      if (isCross && sel.length !== 1) { if (txErr) { txErr.textContent = '跨链交易只能有一个来源地址'; txErr.classList.remove('hidden'); } return; }
-      if (isCross && (!changeMap[0] || Object.keys(changeMap).length !== 1)) { if (txErr) { txErr.textContent = '跨链交易找零地址必须仅包含主货币地址'; txErr.classList.remove('hidden'); } return; }
+      if (isCross && sel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
+      if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }
       if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
     });
     tfBtn.dataset._bind = '1';
