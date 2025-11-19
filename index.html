@@ -391,9 +391,17 @@
                   <span class="tag tag--btc">BTC: 0</span>
                   <span class="tag tag--eth">ETH: 0</span>
                 </div>
+                <div class="gas-head">
+                  <span class="gas-label">总利息</span>
+                  <span id="walletGAS" class="gas-badge"><span class="amt">0</span><span class="unit">GAS</span></span>
+                </div>
               </div>
               <div id="walletTotalChart" class="addr-chart addr-chart--open"></div>
               <div class="actions actions--split"><button id="openCreateAddrBtn" class="btn primary">新建地址</button><button id="openImportAddrBtn" class="btn secondary">导入地址</button></div>
+            </div>
+            <div class="pane" id="walletStructPane">
+              <button id="walletStructToggle" class="btn secondary">展开账户结构体</button>
+              <pre id="walletStructBox" class="result hidden struct-box" aria-live="polite"></pre>
             </div>
             <div id="walletAddrList" class="addr-list"></div>
           </div>
@@ -447,6 +455,7 @@
                   <div class="tx-grid-3 tx-grid--stack">
                     <div class="opt-row"><label>交易形式</label><div class="opt-mode"><label><input type="radio" name="tfModeChoice" id="tfModeQuick" value="quick"> 快速转账</label><label><input type="radio" name="tfModeChoice" id="tfModeCross" value="cross"> 跨链转账</label></div><select id="tfMode" class="input" style="display:none"><option value="quick" selected>快速转账</option><option value="cross">跨链转账</option></select></div>
                     <div class="opt-row opt-row--triple"><div class="opt-gas"><label>额外Gas兑换</label><input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" value="0" /></div><div class="opt-dual"><label>PreTXCer</label><input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" /><select id="useTXCer" class="input" style="display:none"><option value="true" selected>是</option><option value="false">否</option></select><label>质押交易</label><input id="isPledgeChk" type="checkbox" aria-label="质押交易" /><select id="isPledge" class="input" style="display:none"><option value="false" selected>否</option><option value="true">是</option></select></div></div>
+                    <div class="opt-row"><label>交易Gas</label><input id="txGasInput" class="input" type="number" placeholder="交易Gas" value="1" /></div>
                   </div>
                 </div>
                 <div class="actions"><button id="tfSendBtn" class="btn primary" aria-label="生成交易结构体">生成交易结构体</button></div>
@@ -599,6 +608,6 @@
       </div>
     </footer>
 
-    <script src="/app.js?v=20251114a"></script>
+    <script src="/app.js?v=20251118b"></script>
   </body>
   </html>

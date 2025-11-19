@@ -29,6 +29,28 @@ const GROUP_LIST = [ DEFAULT_GROUP ];
 
 const BASE_LIFT = 20;
 
+const toFiniteNumber = (val) => {
+  if (typeof val === 'number') return Number.isFinite(val) ? val : null;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    const num = Number(trimmed);
+    return Number.isFinite(num) ? num : null;
+  }
+  return null;
+};
+
+function readAddressInterest(meta) {
+  if (!meta) return 0;
+  const props = ['gas', 'estInterest', 'interest', 'EstInterest'];
+  for (const key of props) {
+    if (meta[key] === undefined || meta[key] === null) continue;
+    const num = toFiniteNumber(meta[key]);
+    if (num !== null) return num;
+  }
+  return 0;
+}
+
 // CRC32（IEEE）
 const crc32Table = (() => {
   const table = new Uint32Array(256);
@@ -170,7 +192,11 @@ function updateHeaderUser(user) {
       Object.keys(map).forEach((k) => {
         if (u && u.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
         const m = map[k];
-        const v = (m && m.value && typeof m.value.totalValue === 'number') ? m.value.totalValue : 0;
+        const vd = (m && m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+        const pgc = Number(vd[0] || 0);
+        const btc = Number(vd[1] || 0);
+        const eth = Number(vd[2] || 0);
+        const v = Math.round(pgc * 1 + btc * 100 + eth * 10);
         html += `<div class="addr-row" style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin:4px 0;">
           <code class="break" style="max-width:150px;background:#f6f8fe;padding:4px 6px;border-radius:8px;">${k}</code>
           <span style="color:#667085;font-weight:600;min-width:64px;text-align:right;white-space:nowrap;">${v} USDT</span>
@@ -847,6 +873,58 @@ function updateWalletBrief() {
   }
 }
 
+function updateWalletStruct() {
+  const u = loadUser();
+  const box = document.getElementById('walletStructBox');
+  if (!box || !u || !u.wallet) return;
+  const w = u.wallet || {};
+  const addr = w.addressMsg || {};
+  const sums = { 0: 0, 1: 0, 2: 0 };
+  Object.keys(addr).forEach((k) => {
+    const m = addr[k] || {};
+    const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+    sums[0] += Number(vd[0] || 0);
+    sums[1] += Number(vd[1] || 0);
+    sums[2] += Number(vd[2] || 0);
+  });
+  const totalPGC = Number(sums[0] || 0) + Number(sums[1] || 0) * 1000000 + Number(sums[2] || 0) * 1000;
+  const printable = {
+    AddressMsg: Object.keys(addr).reduce((acc, k) => {
+      const m = addr[k] || {};
+      const tId = Number(m && m.type !== undefined ? m.type : 0);
+      const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+      const txc = Number((m.value && m.value.txCerValue) || 0);
+      const cash = Number(vd[tId] || 0);
+      acc[k] = {
+        type: m.type,
+        valueDivision: m.valueDivision,
+        value: { utxoValue: cash, txCerValue: txc, totalValue: cash + txc },
+        estInterest: readAddressInterest(m),
+        utxosCount: m.utxos ? Object.keys(m.utxos).length : 0,
+        txCersCount: m.txCers ? Object.keys(m.txCers).length : 0
+      };
+      return acc;
+    }, {}),
+    TotalTXCers: w.totalTXCers || {},
+    TotalValue: totalPGC,
+    ValueDivision: sums,
+    UpdateTime: w.updateTime || 0,
+    UpdateBlock: w.updateBlock || 0
+  };
+  box.textContent = JSON.stringify(printable, null, 2);
+}
+
+function updateTotalGasBadge(u) {
+  const gasBadge = document.getElementById('walletGAS');
+  const user = u || loadUser();
+  if (!gasBadge || !user || !user.wallet) return;
+  const sumGas = Object.keys(user.wallet.addressMsg || {}).reduce((s, k) => {
+    const m = user.wallet.addressMsg[k];
+    return s + readAddressInterest(m);
+  }, 0);
+  gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+}
+
 function renderEntryBriefDetail(addr) {
   const box = document.getElementById('walletBriefDetail');
   const addrEl = document.getElementById('entryDetailAddr');
@@ -1393,14 +1471,18 @@ function renderWallet() {
       const ptsPGC = isZero ? zeroArr : pointsBase.map(v => v + Math.round((Math.random() - 0.5) * 6));
       const ptsBTC = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(55 + 22 * Math.cos(i / 3.2) + Math.random() * 7));
       const ptsETH = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(50 + 18 * Math.sin(i / 3.8 + 0.6) + Math.random() * 6));
+      const typeId0 = Number(meta && meta.type !== undefined ? meta.type : 0);
+      const amtCash0 = Number((meta && meta.value && meta.value.utxoValue) || 0);
+      const gas0 = readAddressInterest(meta);
       item.innerHTML = `
         <div class=\"addr-meta\">
           <code class=\"break\">${a}</code>
           <div class=\"tags\">
-            <span class=\"tag\">PGC: 0</span>
-            <span class=\"tag\">BTC: 0</span>
-            <span class=\"tag\">ETH: 0</span>
+            ${typeId0===1?`<span class=\"tag tag--btc${amtCash0 ? ' tag--active' : ''}\">BTC: <span class=\"amt-btc\">${amtCash0}</span></span>`:(typeId0===2?`<span class=\"tag tag--eth${amtCash0 ? ' tag--active' : ''}\">ETH: <span class=\"amt-eth\">${amtCash0}</span></span>`:`<span class=\"tag tag--pgc${amtCash0 ? ' tag--active' : ''}\">PGC: <span class=\"amt-pgc\">${amtCash0}</span></span>`)}
+            <button class=\"btn success btn--sm test-add-any\" title=\"无中生有\">无中生有</button>
+            <button class=\"btn danger btn--sm test-zero-any\" title=\"大梦一场\">大梦一场</button>
           </div>
+          <div class=\"addr-gas\"><span class=\"gas-label\">利息(Gas)</span><span class=\"gas-badge\"><span class=\"amt amt-gas\">${gas0}</span><span class=\"unit\">GAS</span></span></div>
         </div>
         <div class=\"addr-chart\"></div>
       `;
@@ -1513,9 +1595,251 @@ function renderWallet() {
         });
       }
       const tagSpans = item.querySelectorAll('.tags .tag');
-      if (tagSpans[0]) tagSpans[0].classList.add('tag--pgc');
-      if (tagSpans[1]) tagSpans[1].classList.add('tag--btc');
-      if (tagSpans[2]) tagSpans[2].classList.add('tag--eth');
+      tagSpans.forEach((sp) => { const t = Number(meta && meta.type !== undefined ? meta.type : 0); sp.classList.add(t===1?'tag--btc':(t===2?'tag--eth':'tag--pgc')); });
+      const addBtn = item.querySelector('.tags .test-add-any');
+      const zeroBtn = item.querySelector('.tags .test-zero-any');
+      if (addBtn) {
+        addBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const u4 = loadUser();
+          if (!u4 || !u4.wallet || !u4.wallet.addressMsg) return;
+          const key = String(a).toLowerCase();
+          const found = u4.wallet.addressMsg[a] || u4.wallet.addressMsg[key];
+          if (!found) return;
+          const typeId = Number(found && found.type !== undefined ? found.type : 0);
+          const inc = typeId===1?1:(typeId===2?5:10);
+          found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+          found.valueDivision = found.valueDivision || { 0: 0, 1: 0, 2: 0 };
+          found.valueDivision[typeId] = Number(found.valueDivision[typeId] || 0) + inc;
+          found.value.utxoValue = Number(found.valueDivision[typeId] || 0);
+          found.value.totalValue = Number(found.value.utxoValue || 0) + Number(found.value.txCerValue || 0);
+          found.estInterest = Number(found.estInterest || 0) + 10;
+          found.gas = Number(found.estInterest || 0);
+          const sumVD = { 0: 0, 1: 0, 2: 0 };
+          Object.keys(u4.wallet.addressMsg || {}).forEach((addrK) => {
+            const m = u4.wallet.addressMsg[addrK] || {};
+            const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            sumVD[0] += Number(vd[0] || 0);
+            sumVD[1] += Number(vd[1] || 0);
+            sumVD[2] += Number(vd[2] || 0);
+          });
+          u4.wallet.valueDivision = sumVD;
+          u4.wallet.ValueDivision = sumVD;
+          u4.wallet.ValueDivision = sumVD;
+          const pgcTotal = Number(sumVD[0] || 0);
+          const btcTotal = Number(sumVD[1] || 0);
+          const ethTotal = Number(sumVD[2] || 0);
+          const valueTotalPGC = pgcTotal + btcTotal * 1000000 + ethTotal * 1000;
+          u4.wallet.totalValue = valueTotalPGC;
+          u4.wallet.TotalValue = valueTotalPGC;
+          saveUser(u4);
+          updateTotalGasBadge(u4);
+          const pgcEl = item.querySelector('.amt-pgc');
+          const btcEl = item.querySelector('.amt-btc');
+          const ethEl = item.querySelector('.amt-eth');
+          if (typeId===0 && pgcEl) pgcEl.textContent = String(Number(found.value.utxoValue || 0));
+          if (typeId===1 && btcEl) btcEl.textContent = String(Number(found.value.utxoValue || 0));
+          if (typeId===2 && ethEl) ethEl.textContent = String(Number(found.value.utxoValue || 0));
+          const gasEl = item.querySelector('.amt-gas');
+          if (gasEl) gasEl.textContent = String(Number(found.estInterest || 0));
+          const addrList = document.getElementById('srcAddrList');
+          if (addrList) {
+            const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
+            if (label) {
+              const bal = label.querySelector('.addr-bal');
+              if (bal) {
+                const tId = Number(found && found.type !== undefined ? found.type : 0);
+                const vCash = Number((found && found.value && found.value.utxoValue) || 0);
+                const html = tId===1?`<span class=\\\"tag tag--btc${vCash ? ' tag--active' : ''}\\\">BTC: ${vCash}</span>`:(tId===2?`<span class=\\\"tag tag--eth${vCash ? ' tag--active' : ''}\\\">ETH: ${vCash}</span>`:`<span class=\\\"tag tag--pgc${vCash ? ' tag--active' : ''}\\\">PGC: ${vCash}</span>`);
+                bal.innerHTML = html;
+              }
+            }
+          }
+          const usdtEl = document.getElementById('walletUSDT');
+          if (usdtEl && u4 && u4.wallet) {
+            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            const pgcA = Number(vdAll[0] || 0);
+            const btcA = Number(vdAll[1] || 0);
+            const ethA = Number(vdAll[2] || 0);
+            const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
+            usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+            const totalTags = document.querySelector('.total-box .tags');
+            if (totalTags) {
+              const els = totalTags.querySelectorAll('.tag');
+              if (els[0]) els[0].textContent = `PGC: ${pgcA}`;
+              if (els[1]) els[1].textContent = `BTC: ${btcA}`;
+              if (els[2]) els[2].textContent = `ETH: ${ethA}`;
+            }
+          const gasBadge = document.getElementById('walletGAS');
+          if (gasBadge && u4 && u4.wallet) {
+              const sumGas = Object.keys(u4.wallet.addressMsg || {}).reduce((s, k) => {
+                const m = u4.wallet.addressMsg[k];
+                return s + readAddressInterest(m);
+              }, 0);
+              gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+          }
+          }
+          const toPt = (amt) => Math.max(0, Math.min(150, 50 + amt));
+          const lastIdx = (arr) => Math.max(0, (arr || []).length - 1);
+          const pgAmt = Number(found.valueDivision[0] || 0);
+          const btAmt = Number(found.valueDivision[1] || 0);
+          const etAmt = Number(found.valueDivision[2] || 0);
+          if (Array.isArray(ptsPGC) && ptsPGC.length) ptsPGC[lastIdx(ptsPGC)] = toPt(pgAmt);
+          if (Array.isArray(ptsBTC) && ptsBTC.length) ptsBTC[lastIdx(ptsBTC)] = toPt(btAmt);
+          if (Array.isArray(ptsETH) && ptsETH.length) ptsETH[lastIdx(ptsETH)] = toPt(etAmt);
+          const curLabel = (chartEl.__label || 'PGC');
+          if (curLabel === 'PGC') applyPts(ptsPGC, 'PGC');
+          if (curLabel === 'BTC') applyPts(ptsBTC, 'BTC');
+          if (curLabel === 'ETH') applyPts(ptsETH, 'ETH');
+          const totalEl = document.getElementById('walletTotalChart');
+          if (totalEl) {
+            const curPts = totalEl.__pts || [];
+            const curLab = totalEl.__label || 'PGC';
+            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            const useAmt = curLab === 'PGC' ? Number(vdAll[0] || 0) : (curLab === 'BTC' ? Number(vdAll[1] || 0) : Number(vdAll[2] || 0));
+            if (curPts.length) {
+              curPts[curPts.length - 1] = toPt(useAmt);
+              const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
+              const d = curPts.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
+              const pT = totalEl.querySelector('path.line');
+              if (pT) pT.setAttribute('d', d);
+              const tipT = totalEl.querySelector('.tooltip');
+              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0,16)}`;
+            }
+          }
+          const menuList = document.getElementById('menuAddressList');
+          if (menuList) {
+            const rows = Array.from(menuList.querySelectorAll('.addr-row'));
+            rows.forEach(r => {
+              const codeEl = r.querySelector('code.break');
+              const valEl = r.querySelector('span');
+              if (codeEl && valEl && String(codeEl.textContent).toLowerCase() === key) {
+                const vdAll2 = (u4.wallet.addressMsg[key] && u4.wallet.addressMsg[key].valueDivision) || found.valueDivision || { 0: 0, 1: 0, 2: 0 };
+                const vUSDT = Math.round(Number(vdAll2[0]||0)*1 + Number(vdAll2[1]||0)*100 + Number(vdAll2[2]||0)*10);
+                valEl.textContent = `${vUSDT} USDT`;
+              }
+            });
+          }
+          try { updateWalletStruct(); } catch {}
+          updateWalletBrief();
+        });
+      }
+      if (zeroBtn) {
+        zeroBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const u4 = loadUser();
+          if (!u4 || !u4.wallet || !u4.wallet.addressMsg) return;
+          const key = String(a).toLowerCase();
+          const found = u4.wallet.addressMsg[a] || u4.wallet.addressMsg[key];
+          if (!found) return;
+          found.valueDivision = { 0: 0, 1: 0, 2: 0 };
+          found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+          found.value.utxoValue = 0;
+          found.value.totalValue = Number(found.value.txCerValue || 0);
+          found.estInterest = 0;
+          found.gas = 0;
+          const sumVD = { 0: 0, 1: 0, 2: 0 };
+          Object.keys(u4.wallet.addressMsg || {}).forEach((addrK) => {
+            const m = u4.wallet.addressMsg[addrK] || {};
+            const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            sumVD[0] += Number(vd[0] || 0);
+            sumVD[1] += Number(vd[1] || 0);
+            sumVD[2] += Number(vd[2] || 0);
+          });
+          u4.wallet.valueDivision = sumVD;
+          const pgcTotalZ = Number(sumVD[0] || 0);
+          const btcTotalZ = Number(sumVD[1] || 0);
+          const ethTotalZ = Number(sumVD[2] || 0);
+          const valueTotalPGCZ = pgcTotalZ + btcTotalZ * 1000000 + ethTotalZ * 1000;
+          u4.wallet.totalValue = valueTotalPGCZ;
+          u4.wallet.TotalValue = valueTotalPGCZ;
+          saveUser(u4);
+          updateTotalGasBadge(u4);
+          const pgcEl = item.querySelector('.amt-pgc');
+          const btcEl = item.querySelector('.amt-btc');
+          const ethEl = item.querySelector('.amt-eth');
+          if (pgcEl) pgcEl.textContent = '0';
+          if (btcEl) btcEl.textContent = '0';
+          if (ethEl) ethEl.textContent = '0';
+          const gasEl = item.querySelector('.amt-gas');
+          if (gasEl) gasEl.textContent = '0';
+          const addrList = document.getElementById('srcAddrList');
+          if (addrList) {
+            const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
+            if (label) {
+              const bal = label.querySelector('.addr-bal');
+              if (bal) {
+                const tId = Number(found && found.type !== undefined ? found.type : 0);
+                const html = tId===1?`<span class=\\\"tag tag--btc\\\">BTC: 0</span>`:(tId===2?`<span class=\\\"tag tag--eth\\\">ETH: 0</span>`:`<span class=\\\"tag tag--pgc\\\">PGC: 0</span>`);
+                bal.innerHTML = html;
+              }
+            }
+          }
+          const usdtEl = document.getElementById('walletUSDT');
+          if (usdtEl && u4 && u4.wallet) {
+            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            const pgcA = Number(vdAll[0] || 0);
+            const btcA = Number(vdAll[1] || 0);
+            const ethA = Number(vdAll[2] || 0);
+            const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
+            usdtEl.innerHTML = `<span class=\"amt\">${usdt.toLocaleString()}</span><span class=\"unit\">USDT</span>`;
+            const totalTags = document.querySelector('.total-box .tags');
+            if (totalTags) {
+              const els = totalTags.querySelectorAll('.tag');
+              if (els[0]) els[0].textContent = `PGC: ${pgcA}`;
+              if (els[1]) els[1].textContent = `BTC: ${btcA}`;
+              if (els[2]) els[2].textContent = `ETH: ${ethA}`;
+            }
+          const gasBadge = document.getElementById('walletGAS');
+          if (gasBadge && u4 && u4.wallet) {
+              const sumGas = Object.keys(u4.wallet.addressMsg || {}).reduce((s, k) => {
+                const m = u4.wallet.addressMsg[k];
+                return s + readAddressInterest(m);
+              }, 0);
+              gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+          }
+            try { updateWalletStruct(); } catch {}
+          }
+          const toPt = (amt) => Math.max(0, Math.min(150, 50 + amt));
+          const lastIdx = (arr) => Math.max(0, (arr || []).length - 1);
+          if (Array.isArray(ptsPGC) && ptsPGC.length) ptsPGC[lastIdx(ptsPGC)] = toPt(0);
+          if (Array.isArray(ptsBTC) && ptsBTC.length) ptsBTC[lastIdx(ptsBTC)] = toPt(0);
+          if (Array.isArray(ptsETH) && ptsETH.length) ptsETH[lastIdx(ptsETH)] = toPt(0);
+          const curLabel = (chartEl.__label || 'PGC');
+          if (curLabel === 'PGC') applyPts(ptsPGC, 'PGC');
+          if (curLabel === 'BTC') applyPts(ptsBTC, 'BTC');
+          if (curLabel === 'ETH') applyPts(ptsETH, 'ETH');
+          const totalEl = document.getElementById('walletTotalChart');
+          if (totalEl) {
+            const curPts = totalEl.__pts || [];
+            const curLab = totalEl.__label || 'PGC';
+            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            const useAmt = curLab === 'PGC' ? Number(vdAll[0] || 0) : (curLab === 'BTC' ? Number(vdAll[1] || 0) : Number(vdAll[2] || 0));
+            if (curPts.length) {
+              curPts[curPts.length - 1] = toPt(useAmt);
+              const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
+              const d = curPts.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
+              const pT = totalEl.querySelector('path.line');
+              if (pT) pT.setAttribute('d', d);
+              const tipT = totalEl.querySelector('.tooltip');
+              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0,16)}`;
+            }
+          }
+          const menuList = document.getElementById('menuAddressList');
+          if (menuList) {
+            const rows = Array.from(menuList.querySelectorAll('.addr-row'));
+            rows.forEach(r => {
+              const codeEl = r.querySelector('code.break');
+              const valEl = r.querySelector('span');
+              if (codeEl && valEl && String(codeEl.textContent).toLowerCase() === key) {
+                valEl.textContent = `0 USDT`;
+              }
+            });
+          }
+          try { updateWalletStruct(); } catch {}
+          updateWalletBrief();
+        });
+      }
       const chartEl = item.querySelector('.addr-chart');
       chartEl.__pts = ptsPGC;
       chartEl.__label = 'PGC';
@@ -1762,8 +2086,34 @@ function renderWallet() {
     const pgc = Number(vd[0] || 0);
     const btc = Number(vd[1] || 0);
     const eth = Number(vd[2] || 0);
-    const usdt = Math.round(pgc * 1 + btc * 100000 + eth * 4000);
+    const usdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
     usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+    const totalTags2 = document.querySelector('.total-box .tags');
+    if (totalTags2) {
+      const els2 = totalTags2.querySelectorAll('.tag');
+      if (els2[0]) els2[0].textContent = `PGC: ${pgc}`;
+      if (els2[1]) els2[1].textContent = `BTC: ${btc}`;
+      if (els2[2]) els2[2].textContent = `ETH: ${eth}`;
+    }
+    const gasBadge2 = document.getElementById('walletGAS');
+    if (gasBadge2 && u && u.wallet) {
+      const sumGas2 = Object.keys(u.wallet.addressMsg || {}).reduce((s, k) => {
+        const m = u.wallet.addressMsg[k];
+        return s + readAddressInterest(m);
+      }, 0);
+      gasBadge2.innerHTML = `<span class="amt">${sumGas2.toLocaleString()}</span><span class="unit">GAS</span>`;
+    }
+  }
+  const wsToggle = document.getElementById('walletStructToggle');
+  const wsBox = document.getElementById('walletStructBox');
+  if (wsToggle && wsBox && !wsToggle.dataset._bind) {
+    wsToggle.addEventListener('click', () => {
+      const isHidden = wsBox.classList.contains('hidden');
+      wsBox.classList.toggle('hidden');
+      wsToggle.textContent = isHidden ? '收起账户结构体' : '展开账户结构体';
+      if (isHidden) updateWalletStruct();
+    });
+    wsToggle.dataset._bind = '1';
   }
   const qtBtn = document.getElementById('qtSendBtn');
   if (qtBtn && !qtBtn.dataset._bind) {
@@ -1795,6 +2145,7 @@ function renderWallet() {
     const csBTC = document.getElementById('csChBTC');
     const csETH = document.getElementById('csChETH');
     const gasInput = document.getElementById('extraGasPGC');
+    const txGasInput = document.getElementById('txGasInput');
     const useTXCer = document.getElementById('useTXCer');
     const isPledge = document.getElementById('isPledge');
     const useTXCerChk = document.getElementById('useTXCerChk');
@@ -1802,7 +2153,18 @@ function renderWallet() {
     const txErr = document.getElementById('txError');
     const txPreview = document.getElementById('txPreview');
     const u0 = loadUser();
-    const walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
+    let walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
+    const getWalletGasSum = (map) => Object.keys(map).reduce((sum, addr) => {
+      const meta = map[addr];
+      return sum + readAddressInterest(meta);
+    }, 0);
+    var walletGasTotal = getWalletGasSum(walletMap);
+    const refreshWalletSnapshot = () => {
+      const latest = loadUser();
+      walletMap = (latest && latest.wallet && latest.wallet.addressMsg) || {};
+      walletGasTotal = getWalletGasSum(walletMap);
+      return walletMap;
+    };
     const srcAddrs = Object.keys(walletMap);
     const currencyLabels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
     const showTxValidationError = (msg, focusEl) => {
@@ -1826,25 +2188,13 @@ function renderWallet() {
       if (typeof meta.balance === 'number') return Number(meta.balance);
       return 0;
     };
-    const getAddrGasBalance = (meta) => {
-      if (!meta) return 0;
-      if (typeof meta.gas === 'number') return meta.gas;
-      if (typeof meta.interest === 'number') return meta.interest;
-      if (typeof meta.estInterest === 'number') return meta.estInterest;
-      if (typeof meta.EstInterest === 'number') return meta.EstInterest;
-      return 0;
-    };
+    const getAddrGasBalance = (meta) => readAddressInterest(meta);
     addrList.innerHTML = srcAddrs.map(a => {
       const meta = walletMap[a] || {};
-      const mt = Number(meta.type || 0);
-      const val = Number((meta.value && meta.value.totalValue) || 0);
-      const pgc = mt === 0 ? val : 0;
-      const btc = mt === 1 ? val : 0;
-      const eth = mt === 2 ? val : 0;
-      const tagP = `<span class="tag tag--pgc${pgc ? ' tag--active' : ''}">PGC: ${pgc}</span>`;
-      const tagB = `<span class="tag tag--btc${btc ? ' tag--active' : ''}">BTC: ${btc}</span>`;
-      const tagE = `<span class="tag tag--eth${eth ? ' tag--active' : ''}">ETH: ${eth}</span>`;
-      return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${tagP}${tagB}${tagE}</span></label>`;
+      const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
+      const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
+      const html = tId===1?`<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>`:(tId===2?`<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>`:`<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`);
+      return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
     }).join('');
     const fillChange = () => {
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
@@ -2016,8 +2366,9 @@ function renderWallet() {
       isPledgeChk.addEventListener('change', () => { isPledge.value = isPledgeChk.checked ? 'true' : 'false'; });
     }
     if (gasInput) { if (!gasInput.value) gasInput.value = '0'; }
-    const rates = { 0: 1, 1: 100000, 2: 4000 };
+    const rates = { 0: 1, 1: 1000000, 2: 1000 };
     tfBtn.addEventListener('click', () => {
+      refreshWalletSnapshot();
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
       if (txPreview) { txPreview.classList.add('hidden'); txPreview.textContent = ''; }
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
@@ -2091,13 +2442,16 @@ function renderWallet() {
       if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput); return; }
       const interestGas = extraPGC > 0 ? extraPGC * 10 : 0;
       vd[0] += extraPGC;
+      const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
+      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError('交易Gas 需为不小于 0 的数字', txGasInput); return; }
       const typeBalances = { 0: 0, 1: 0, 2: 0 };
-      let availableGas = 0;
+      const availableGas = walletGasTotal;
       sel.forEach((addr) => {
-        const meta = getAddrMeta(addr);
-        const typeId = Number(meta && meta.type !== undefined ? meta.type : 0);
-        typeBalances[typeId] += getAddrBalance(meta);
-        availableGas += getAddrGasBalance(meta);
+        const meta = getAddrMeta(addr) || {};
+        const vdMeta = (meta.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+        typeBalances[0] += Number(vdMeta[0] || 0);
+        typeBalances[1] += Number(vdMeta[1] || 0);
+        typeBalances[2] += Number(vdMeta[2] || 0);
       });
       const ensureChangeAddrValid = (typeId) => {
         const need = vd[typeId] || 0;
@@ -2116,10 +2470,9 @@ function renderWallet() {
       }
       if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
       const mintedGas = interestGas;
-      const totalGasNeed = interestGas + outInterest;
-      const totalGasAvailable = availableGas + mintedGas;
-      if (totalGasNeed > totalGasAvailable + 1e-8) {
-        showTxValidationError('Gas 不足：可用 Gas 与兑换总和低于本次需求');
+      const totalGasNeed = baseTxGas + outInterest + mintedGas;
+      if (totalGasNeed > availableGas + 1e-8) {
+        showTxValidationError('Gas 不足：交易Gas、转移Gas 与兑换Gas 总和超出钱包可用 Gas');
         return;
       }
       const backAssign = {}; sel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
@@ -2135,7 +2488,7 @@ function renderWallet() {
         HowMuchPayForGas: extraPGC,
         IsCrossChainTX: isCross,
         Data: '',
-        InterestAssign: { Gas: interestGas, Output: outInterest, BackAssign: backAssign }
+        InterestAssign: { Gas: baseTxGas, Output: outInterest, BackAssign: backAssign }
       };
       if (isCross && sel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
       if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }

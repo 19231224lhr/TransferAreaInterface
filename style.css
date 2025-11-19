@@ -235,6 +235,15 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .usdt-badge { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 800; color: #0f172a; line-height: 1; letter-spacing: .3px; }
 .usdt-badge .amt { font-size: 28px; }
 .usdt-badge .unit { font-size: 12px; color: #64748b; }
+.gas-head { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-top: 6px; }
+.gas-label { font-weight: 700; font-size: 14px; color: #334155; letter-spacing: .3px; }
+.gas-badge { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 800; color: #0f172a; line-height: 1; letter-spacing: .3px; }
+.gas-badge .amt { font-size: 22px; }
+.gas-badge .unit { font-size: 12px; color: #64748b; }
+.addr-gas { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+.addr-gas .gas-label { font-weight: 700; font-size: 13px; color: #334155; }
+.addr-gas .gas-badge .amt { font-size: 18px; }
+.struct-box { max-height: 320px; overflow: auto; background: linear-gradient(180deg, #f7fafc, #eef2f7); border-radius: 10px; padding: 10px 12px; box-shadow: 0 6px 16px rgba(15,23,42,.06); }
 .pane { border: 1px solid #e5e7eb; border-radius: 12px; background: linear-gradient(180deg, #ffffff, #f8fafc); padding: 16px 18px; box-shadow: 0 6px 18px rgba(15,23,42,.06); transition: transform .16s ease, box-shadow .16s ease; }
 .pane:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(15,23,42,.09); }
 .pane h3 { margin: 0 0 8px; font-size: 15px; color: #0f172a; }
@@ -312,6 +321,10 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 #entryCard .brief-confirm { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; opacity: 0; transform: scaleX(.86) translateX(-4px); transform-origin: left center; transition: opacity .18s ease, transform .18s ease; }
 #entryCard .brief-confirm.show { opacity: 1; transform: scaleX(1) translateX(0); }
 .btn.btn--sm { padding: 6px 10px; min-width: auto; font-size: 12px; border-radius: 8px; }
+.addr-meta .tags .btn { margin-left: 6px; }
+.addr-meta .tags .btn.btn--sm { padding: 5px 9px; }
+.addr-meta .tags .test-add-any { background: linear-gradient(135deg, #fb923c, #f59e0b); color: #1f2937; border: 1px solid rgba(245,158,11,.35); box-shadow: 0 4px 12px rgba(245,158,11,.24); }
+.addr-meta .tags .test-add-any:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(245,158,11,.32); }
 .btn.danger { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.25); border: 1px solid #fca5a5; }
 .btn.danger:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(239,68,68,.3); }
 .
