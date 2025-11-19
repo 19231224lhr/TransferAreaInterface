@@ -236,6 +236,37 @@ function showModalTip(title, html, isError) {
   const handler = () => { modal.classList.add('hidden'); okEl && okEl.removeEventListener('click', handler); };
   okEl && okEl.addEventListener('click', handler);
 }
+function showConfirmModal(title, html, okText, cancelText) {
+  return new Promise((resolve) => {
+    const modal = document.getElementById('confirmGasModal');
+    const titleEl = document.getElementById('confirmGasTitle');
+    const textEl = document.getElementById('confirmGasText');
+    const okEl = document.getElementById('confirmGasOk');
+    const cancelEl = document.getElementById('confirmGasCancel');
+    if (!modal || !okEl || !cancelEl) {
+      resolve(true);
+      return;
+    }
+    if (titleEl) titleEl.textContent = title || '确认操作';
+    if (textEl) {
+      textEl.innerHTML = html || '';
+      textEl.classList.remove('tip--error');
+    }
+    if (okText) okEl.textContent = okText;
+    if (cancelText) cancelEl.textContent = cancelText;
+    modal.classList.remove('hidden');
+    const cleanup = (result) => {
+      modal.classList.add('hidden');
+      okEl.removeEventListener('click', onOk);
+      cancelEl.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onOk = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+    okEl.addEventListener('click', onOk);
+    cancelEl.addEventListener('click', onCancel);
+  });
+}
 function clearAccountStorage() {
   try { localStorage.removeItem(STORAGE_KEY); } catch {}
   try { localStorage.removeItem('walletUser'); } catch {}
@@ -1650,7 +1681,7 @@ function renderWallet() {
               if (bal) {
                 const tId = Number(found && found.type !== undefined ? found.type : 0);
                 const vCash = Number((found && found.value && found.value.utxoValue) || 0);
-                const html = tId===1?`<span class=\\\"tag tag--btc${vCash ? ' tag--active' : ''}\\\">BTC: ${vCash}</span>`:(tId===2?`<span class=\\\"tag tag--eth${vCash ? ' tag--active' : ''}\\\">ETH: ${vCash}</span>`:`<span class=\\\"tag tag--pgc${vCash ? ' tag--active' : ''}\\\">PGC: ${vCash}</span>`);
+                const html = tId===1?`<span class="tag tag--btc${vCash ? ' tag--active' : ''}">BTC: ${vCash}</span>`:(tId===2?`<span class="tag tag--eth${vCash ? ' tag--active' : ''}">ETH: ${vCash}</span>`:`<span class="tag tag--pgc${vCash ? ' tag--active' : ''}">PGC: ${vCash}</span>`);
                 bal.innerHTML = html;
               }
             }
@@ -1770,7 +1801,7 @@ function renderWallet() {
               const bal = label.querySelector('.addr-bal');
               if (bal) {
                 const tId = Number(found && found.type !== undefined ? found.type : 0);
-                const html = tId===1?`<span class=\\\"tag tag--btc\\\">BTC: 0</span>`:(tId===2?`<span class=\\\"tag tag--eth\\\">ETH: 0</span>`:`<span class=\\\"tag tag--pgc\\\">PGC: 0</span>`);
+                const html = tId===1?`<span class="tag tag--btc">BTC: 0</span>`:(tId===2?`<span class="tag tag--eth">ETH: 0</span>`:`<span class="tag tag--pgc">PGC: 0</span>`);
                 bal.innerHTML = html;
               }
             }
@@ -2133,6 +2164,7 @@ function renderWallet() {
     const tfMode = document.getElementById('tfMode');
     const tfModeQuick = document.getElementById('tfModeQuick');
     const tfModeCross = document.getElementById('tfModeCross');
+    const tfModePledge = document.getElementById('tfModePledge');
   const tfBtn = document.getElementById('tfSendBtn');
   if (tfMode && tfBtn && !tfBtn.dataset._bind) {
     const addrList = document.getElementById('srcAddrList');
@@ -2149,7 +2181,6 @@ function renderWallet() {
     const useTXCer = document.getElementById('useTXCer');
     const isPledge = document.getElementById('isPledge');
     const useTXCerChk = document.getElementById('useTXCerChk');
-    const isPledgeChk = document.getElementById('isPledgeChk');
     const txErr = document.getElementById('txError');
     const txPreview = document.getElementById('txPreview');
     const u0 = loadUser();
@@ -2342,32 +2373,38 @@ function renderWallet() {
     addBill();
     updateRemoveState();
     const updateBtn = () => {
-      const v = tfMode.value;
       tfBtn.textContent = '生成交易结构体';
       tfBtn.classList.remove('secondary');
       tfBtn.classList.add('primary');
     };
+    const syncModeState = () => {
+      const current = tfMode.value || 'quick';
+      if (tfModeQuick) tfModeQuick.checked = current === 'quick';
+      if (tfModeCross) tfModeCross.checked = current === 'cross';
+      if (tfModePledge) tfModePledge.checked = current === 'pledge';
+      if (isPledge) isPledge.value = current === 'pledge' ? 'true' : 'false';
+    };
+    const applyRadio = () => {
+      if (tfModeQuick && tfModeQuick.checked) tfMode.value = 'quick';
+      else if (tfModeCross && tfModeCross.checked) tfMode.value = 'cross';
+      else if (tfModePledge && tfModePledge.checked) tfMode.value = 'pledge';
+      else tfMode.value = 'quick';
+      if (isPledge) isPledge.value = tfMode.value === 'pledge' ? 'true' : 'false';
+      updateBtn();
+    };
     updateBtn();
-    tfMode.addEventListener('change', updateBtn);
-    if (tfModeQuick && tfModeCross) {
-      const initVal = tfMode.value;
-      tfModeQuick.checked = (initVal === 'quick');
-      tfModeCross.checked = (initVal === 'cross');
-      const applyRadio = () => { tfMode.value = tfModeCross.checked ? 'cross' : 'quick'; updateBtn(); };
-      tfModeQuick.addEventListener('change', applyRadio);
-      tfModeCross.addEventListener('change', applyRadio);
-    }
+    syncModeState();
+    if (tfMode) tfMode.addEventListener('change', () => { syncModeState(); updateBtn(); });
+    [tfModeQuick, tfModeCross, tfModePledge].forEach((radio) => {
+      if (radio) radio.addEventListener('change', applyRadio);
+    });
     if (useTXCerChk) {
       useTXCerChk.checked = (String(useTXCer.value) === 'true');
       useTXCerChk.addEventListener('change', () => { useTXCer.value = useTXCerChk.checked ? 'true' : 'false'; });
     }
-    if (isPledgeChk) {
-      isPledgeChk.checked = (String(isPledge.value) === 'true');
-      isPledgeChk.addEventListener('change', () => { isPledge.value = isPledgeChk.checked ? 'true' : 'false'; });
-    }
     if (gasInput) { if (!gasInput.value) gasInput.value = '0'; }
     const rates = { 0: 1, 1: 1000000, 2: 1000 };
-    tfBtn.addEventListener('click', () => {
+    tfBtn.addEventListener('click', async () => {
       refreshWalletSnapshot();
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
       if (txPreview) { txPreview.classList.add('hidden'); txPreview.textContent = ''; }
@@ -2440,7 +2477,7 @@ function renderWallet() {
       }
       const extraPGC = Number(gasInput.value || 0);
       if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput); return; }
-      const interestGas = extraPGC > 0 ? extraPGC * 10 : 0;
+      const interestGas = extraPGC > 0 ? extraPGC : 0;
       vd[0] += extraPGC;
       const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
       if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError('交易Gas 需为不小于 0 的数字', txGasInput); return; }
@@ -2470,10 +2507,18 @@ function renderWallet() {
       }
       if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
       const mintedGas = interestGas;
-      const totalGasNeed = baseTxGas + outInterest + mintedGas;
-      if (totalGasNeed > availableGas + 1e-8) {
-        showTxValidationError('Gas 不足：交易Gas、转移Gas 与兑换Gas 总和超出钱包可用 Gas');
+      const totalGasNeed = baseTxGas + outInterest;
+      const totalGasBudget = availableGas + mintedGas;
+      if (totalGasNeed > totalGasBudget + 1e-8) {
+        const msg = mintedGas > 0
+          ? 'Gas 不足：即使兑换额外 Gas，交易Gas 与转移Gas 仍超出钱包可用 Gas'
+          : 'Gas 不足：交易Gas 与转移Gas 超出钱包可用 Gas';
+        showTxValidationError(msg);
         return;
+      }
+      if (extraPGC > 0) {
+        const confirmed = await showConfirmModal('确认兑换 Gas', `将使用 <strong>${extraPGC}</strong> PGC 兑换 <strong>${extraPGC}</strong> Gas，用于本次交易。确认继续？`, '确认兑换', '取消');
+        if (!confirmed) return;
       }
       const backAssign = {}; sel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
       const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[k] * rates[k], 0);
@@ -2492,6 +2537,10 @@ function renderWallet() {
       };
       if (isCross && sel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
       if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }
+      if (extraPGC > 0) {
+        const confirmed = window.confirm(`将使用 ${extraPGC} PGC 兑换 ${extraPGC} Gas，用于本次交易。确认继续？`);
+        if (!confirmed) return;
+      }
       if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
     });
     tfBtn.dataset._bind = '1';
