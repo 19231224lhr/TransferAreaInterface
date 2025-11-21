@@ -826,6 +826,7 @@ async function addNewSubWallet() {
     acc.wallet.addressMsg[addr].pubXHex = pubXHex;
     acc.wallet.addressMsg[addr].pubYHex = pubYHex;
     saveUser(acc);
+    if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) {} }
     try { renderWallet(); } catch {}
     try {
       updateWalletBrief();
@@ -1572,6 +1573,19 @@ function renderWallet() {
               u3.address = '';
             }
             saveUser(u3);
+            try {
+              if (window.__refreshSrcAddrList) window.__refreshSrcAddrList();
+            } catch (_) {}
+            const menuList = document.getElementById('menuAddressList');
+            if (menuList) {
+              const rows = Array.from(menuList.querySelectorAll('.addr-row'));
+              rows.forEach(r => {
+                const codeEl = r.querySelector('code.break');
+                if (codeEl && String(codeEl.textContent).toLowerCase() === key) {
+                  r.remove();
+                }
+              });
+            }
             renderWallet();
             updateWalletBrief();
             const ok1 = document.getElementById('actionOkBtn');
@@ -2196,7 +2210,7 @@ function renderWallet() {
       walletGasTotal = getWalletGasSum(walletMap);
       return walletMap;
     };
-    const srcAddrs = Object.keys(walletMap);
+    let srcAddrs = Object.keys(walletMap);
     const currencyLabels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
     const showTxValidationError = (msg, focusEl) => {
       if (txErr) {
@@ -2220,13 +2234,17 @@ function renderWallet() {
       return 0;
     };
     const getAddrGasBalance = (meta) => readAddressInterest(meta);
-    addrList.innerHTML = srcAddrs.map(a => {
-      const meta = walletMap[a] || {};
-      const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
-      const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
-      const html = tId===1?`<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>`:(tId===2?`<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>`:`<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`);
-      return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
-    }).join('');
+    const rebuildAddrList = () => {
+      srcAddrs = Object.keys(walletMap);
+      addrList.innerHTML = srcAddrs.map(a => {
+        const meta = walletMap[a] || {};
+        const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
+        const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
+        const html = tId===1?`<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>`:(tId===2?`<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>`:`<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`);
+        return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
+      }).join('');
+    };
+    rebuildAddrList();
     const fillChange = () => {
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
       Array.from(addrList.querySelectorAll('label')).forEach(l => { const inp = l.querySelector('input[type="checkbox"]'); if (inp) l.classList.toggle('selected', inp.checked); });
@@ -2466,6 +2484,7 @@ function renderWallet() {
         if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl); return; }
         if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl); return; }
         if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种'); return; }
+        if (!/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl); return; }
         if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl); return; }
         if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl); return; }
         if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl); return; }
@@ -2516,17 +2535,70 @@ function renderWallet() {
         showTxValidationError(msg);
         return;
       }
+      const usedTypes = [0, 1, 2].filter((t) => (vd[t] || 0) > 0);
+      let finalSel = sel.slice();
+      let removedAddrs = [];
+      if (usedTypes.length) {
+        const infos = sel.map((addr) => {
+          const meta = getAddrMeta(addr) || {};
+          const vdMeta = (meta.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+          const bal = {
+            0: Number(vdMeta[0] || 0),
+            1: Number(vdMeta[1] || 0),
+            2: Number(vdMeta[2] || 0),
+          };
+          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * rates[t], 0);
+          return { addr, bal, totalRel };
+        });
+        const candidates = infos.filter((info) => usedTypes.some((t) => info.bal[t] > 0));
+        if (candidates.length) {
+          candidates.sort((a, b) => b.totalRel - a.totalRel);
+          const remain = {};
+          usedTypes.forEach((t) => { remain[t] = vd[t] || 0; });
+          const chosen = [];
+          for (const info of candidates) {
+            if (usedTypes.every((t) => (remain[t] || 0) <= 0)) break;
+            const helps = usedTypes.some((t) => (remain[t] || 0) > 0 && info.bal[t] > 0);
+            if (!helps) continue;
+            chosen.push(info.addr);
+            usedTypes.forEach((t) => {
+              if ((remain[t] || 0) > 0 && info.bal[t] > 0) {
+                remain[t] = Math.max(0, (remain[t] || 0) - info.bal[t]);
+              }
+            });
+          }
+          if (usedTypes.every((t) => (remain[t] || 0) <= 0)) {
+            const chosenSet = new Set(chosen);
+            const optimizedSel = sel.filter((a) => chosenSet.has(a));
+            const extra = sel.filter((a) => !chosenSet.has(a));
+            if (optimizedSel.length && extra.length) {
+              finalSel = optimizedSel;
+              removedAddrs = extra;
+              Array.from(addrList.querySelectorAll('input[type="checkbox"]')).forEach((inp) => {
+                const checked = finalSel.indexOf(inp.value) !== -1;
+                inp.checked = checked;
+                const label = inp.closest('label');
+                if (label) label.classList.toggle('selected', checked);
+              });
+            }
+          }
+        }
+      }
+      if (removedAddrs.length) {
+        const tipHtml = `检测到本次转账中有 <strong>${removedAddrs.length}</strong> 个来源地址在本次转账中未被实际使用，已自动为你保留余额更高且能够覆盖本次转账的地址集合。`;
+        showModalTip('已优化来源地址', tipHtml, false);
+      }
       if (extraPGC > 0) {
         const confirmed = await showConfirmModal('确认兑换 Gas', `将使用 <strong>${extraPGC}</strong> PGC 兑换 <strong>${extraPGC}</strong> Gas，用于本次交易。确认继续？`, '确认兑换', '取消');
         if (!confirmed) return;
       }
-      const backAssign = {}; sel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
+      const backAssign = {}; finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
       const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[k] * rates[k], 0);
       const build = {
         Value: valueTotal,
         ValueDivision: vd,
         Bill: bills,
-        UserAddress: sel,
+        UserAddress: finalSel,
         PriUseTXCer: String(useTXCer.value) === 'true',
         ChangeAddress: changeMap,
         IsPledgeTX: String(isPledge.value) === 'true',
@@ -2535,14 +2607,17 @@ function renderWallet() {
         Data: '',
         InterestAssign: { Gas: baseTxGas, Output: outInterest, BackAssign: backAssign }
       };
-      if (isCross && sel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
+      if (isCross && finalSel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
       if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }
-      if (extraPGC > 0) {
-        const confirmed = window.confirm(`将使用 ${extraPGC} PGC 兑换 ${extraPGC} Gas，用于本次交易。确认继续？`);
-        if (!confirmed) return;
-      }
       if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
     });
+    window.__refreshSrcAddrList = () => {
+      try {
+        refreshWalletSnapshot();
+        rebuildAddrList();
+        fillChange();
+      } catch (_) {}
+    };
     tfBtn.dataset._bind = '1';
   }
 
@@ -2617,6 +2692,7 @@ function renderWallet() {
       acc.wallet.addressMsg[addr].pubXHex = data.pubXHex || acc.wallet.addressMsg[addr].pubXHex || '';
       acc.wallet.addressMsg[addr].pubYHex = data.pubYHex || acc.wallet.addressMsg[addr].pubYHex || '';
       saveUser(acc);
+      if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) {} }
       renderWallet();
       try { updateWalletBrief(); } catch {}
       const modal = document.getElementById('actionModal');
