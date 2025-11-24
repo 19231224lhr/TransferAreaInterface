@@ -327,7 +327,6 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .addr-meta .tags .test-add-any:hover { transform: translateY(-1px); box-shadow: 0 8px 18px rgba(245,158,11,.32); }
 .btn.danger { background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; box-shadow: 0 8px 20px rgba(239,68,68,.25); border: 1px solid #fca5a5; }
 .btn.danger:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(239,68,68,.3); }
-.
 .btn.success { background: linear-gradient(135deg, #10b981, #22c55e); color: #fff; box-shadow: 0 8px 20px rgba(16,185,129,.25); border: 1px solid #86efac; }
 .btn.success:hover { transform: translateY(-1px) scale(1.01); box-shadow: 0 10px 24px rgba(16,185,129,.3); }
 .btn.success:active { transform: translateY(0) scale(.98); box-shadow: 0 6px 16px rgba(16,185,129,.28); }
@@ -353,6 +352,7 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 #welcomeCard .actions { justify-content: center; }
 @keyframes orgBgFlow { 0% { background-position: 0% 50%, 50% 50%; } 50% { background-position: 100% 50%, 50% 50%; } 100% { background-position: 0% 50%, 50% 50%; } }
 @keyframes spinSlow { 100% { transform: rotate(360deg); } }
+@keyframes addrLookupSpin { 0% { transform: translate(-50%, -50%) rotate(0deg); } 100% { transform: translate(-50%, -50%) rotate(360deg); } }
 #welcomeCard .actions { justify-content: center; }
 .btn.primary.flow { background-size: 200% 200%; animation: btnFlowPrimary 8s ease-in-out infinite; }
 .btn.secondary.flow { background-size: 200% 200%; animation: btnFlowSecondary 8s ease-in-out infinite; }
@@ -427,7 +427,6 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 #addBillBtn { display: inline-flex; align-items: center; justify-content: center; height: 24px; min-width: 52px; margin: 0; padding: 0 14px; border-radius: 10px; background: linear-gradient(135deg, #60a5fa, #0ea5e9); color: #fff; border: 1px solid #7dd3fc; box-shadow: 0 6px 16px rgba(14,165,233,.22); font-size: 18px; font-weight: 800; line-height: 24px; }
 #addBillBtn:hover { transform: translateY(-1px) scale(1.02); box-shadow: 0 10px 22px rgba(14,165,233,.28); filter: brightness(1.05); }
 #addBillBtn:active { transform: translateY(0) scale(.98); box-shadow: 0 5px 14px rgba(14,165,233,.24); }
-.
 .btn.danger:disabled { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #fff; cursor: not-allowed; box-shadow: none; border-color: #fca5a5; opacity: .92; }
 .bill-item:hover { box-shadow: 0 6px 16px rgba(15,23,42,.08); transform: translateY(-1px); }
 .bill-item:focus-within { border: 1px solid #bae6fd; outline: none; box-shadow: 0 8px 20px rgba(14,165,233,.16); }
@@ -436,6 +435,57 @@ code:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(17,24,39,.
 .bill-item .input { min-height: 1.6rem; line-height: 1.3; padding: .3rem .5rem; transition: padding .16s ease, min-height .16s ease; }
 .bill-actions { display: flex; justify-content: flex-end; }
 .bill-remove { min-width: 6rem; }
+.bill-row.bill-row--addr { align-items: center; }
+.bill-addr-input-wrap { display: flex; align-items: center; gap: .5rem; width: 100%; }
+.bill-addr-input-wrap .input { flex: 1 1 auto; min-width: 0; }
+.bill-addr-lookup {
+  appearance: none;
+  border: 1px solid #fca5a5;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #ffffff;
+  padding: 0;
+  height: 1.8rem;
+  width: 1.8rem;
+  line-height: 1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(239,68,68,.35);
+  position: relative;
+}
+.bill-addr-lookup svg {
+  width: 14px;
+  height: 14px;
+}
+.bill-addr-lookup:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 18px rgba(239,68,68,.45);
+}
+.bill-addr-lookup:active {
+  filter: brightness(.97);
+  box-shadow: 0 4px 10px rgba(239,68,68,.35);
+}
+.bill-addr-lookup.is-loading svg {
+  opacity: 0;
+}
+.bill-addr-lookup.is-loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,.55);
+  border-top-color: #ffffff;
+  border-right-color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  animation: addrLookupSpin .8s linear infinite;
+}
 .tx-form .input { background: linear-gradient(180deg, #ffffff, #f8fafc); border: 1px solid rgba(226,232,240,.22); border-radius: 10px; padding: .35rem .6rem; font-size: 14px; color: #0f172a; box-shadow: 0 2px 6px rgba(15,23,42,.06) inset, 0 2px 8px rgba(15,23,42,.05); transition: border-color .18s ease, box-shadow .18s ease, transform .06s ease; margin-top: 0; }
 .tx-form .input::placeholder { color: #94a3b8; }
 .tx-form .input:hover { border-color: rgba(148,163,184,.35); box-shadow: 0 2px 8px rgba(15,23,42,.08) inset, 0 3px 10px rgba(15,23,42,.06); }

@@ -14,7 +14,7 @@
 - 目录结构：`web/index.html`、`web/app.js`、`web/style.css`
 - 运行预览：
   - 启动本地静态服务器：`go run ./backend/cmd/webserver/main.go`
-  - 打开页面：`http://localhost:8080/`
+  - 打开页面：`http://localhost:8081/`
 - 页面文案与动效：标题更新为“UTXO快速转账钱包”，新增按钮点击涟漪与入场动画，整体更灵动。
 - 功能说明：
   - 在浏览器中通过 WebCrypto 生成 ECDSA P-256 密钥对（与 Go 版本一致）。

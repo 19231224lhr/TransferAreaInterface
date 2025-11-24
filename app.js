@@ -2197,6 +2197,32 @@ function renderWallet() {
     const useTXCerChk = document.getElementById('useTXCerChk');
     const txErr = document.getElementById('txError');
     const txPreview = document.getElementById('txPreview');
+    const currentOrgId = (typeof computeCurrentOrgId === 'function' ? computeCurrentOrgId() : '');
+    const hasOrg = !!String(currentOrgId || '').trim();
+    if (tfModeQuick && tfModeQuick.parentNode) {
+      const quickLabel = tfModeQuick.parentNode;
+      const last = quickLabel.lastChild;
+      if (last && last.nodeType === 3) {
+        last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+      }
+    }
+    if (!hasOrg) {
+      if (tfModeCross) {
+        tfModeCross.checked = false;
+        tfModeCross.disabled = true;
+        const l = tfModeCross.parentNode;
+        if (l && l.style) l.style.display = 'none';
+      }
+      if (tfModePledge) {
+        tfModePledge.checked = false;
+        tfModePledge.disabled = true;
+        const l2 = tfModePledge.parentNode;
+        if (l2 && l2.style) l2.style.display = 'none';
+      }
+      tfMode.value = 'quick';
+      if (tfModeQuick) tfModeQuick.checked = true;
+      if (isPledge) isPledge.value = 'false';
+    }
     const u0 = loadUser();
     let walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
     const getWalletGasSum = (map) => Object.keys(map).reduce((sum, addr) => {
@@ -2222,6 +2248,25 @@ function renderWallet() {
     };
     const normalizeAddrInput = (addr) => (addr ? String(addr).trim().toLowerCase() : '');
     const isValidAddressFormat = (addr) => /^[0-9a-f]{40}$/.test(addr);
+    const MOCK_ADDR_INFO = {
+      '299954ff8bbd78eda3a686abcf86732cd18533af': {
+        groupId: '10000000',
+        pubKey: '2b9edf25237d23a753ea8774ffbfb1b6d6bbbc2c96209d41ee59089528eb1566&c295d31bfd805e18b212fbbb726fc29a1bfc0762523789be70a2a1b737e63a80'
+      },
+      'd76ec4020140d58c35e999a730bea07bf74a7763': {
+        groupId: '',
+        pubKey: '11970dd5a7c3f6a131e24e8f066416941d79a177579c63d889ef9ce90ffd9ca8&037d81e8fb19883cc9e5ed8ebcc2b75e1696880c75a864099bec10a5821f69e0'
+      }
+    };
+    const fetchAddrInfo = async (addr) => {
+      const norm = normalizeAddrInput(addr);
+      if (!norm || !isValidAddressFormat(norm)) return null;
+      const info = MOCK_ADDR_INFO[norm];
+      if (info) {
+        return { groupId: info.groupId || '', pubKey: info.pubKey || '' };
+      }
+      return null;
+    };
     const getAddrMeta = (addr) => walletMap[addr];
     const getAddrBalance = (meta) => {
       if (!meta) return 0;
@@ -2344,7 +2389,7 @@ function renderWallet() {
       const idBase = `bill_${Date.now()}_${billSeq++}`;
       row.innerHTML = `
         <div class="bill-grid">
-          <div class="bill-row bill-row--full"><label class="bill-label" for="${idBase}_to">地址</label><input id="${idBase}_to" class="input" type="text" placeholder="To Address" aria-label="目标地址" data-name="to"></div>
+          <div class="bill-row bill-row--full bill-row--addr"><label class="bill-label" for="${idBase}_to">地址</label><div class="bill-addr-input-wrap"><input id="${idBase}_to" class="input" type="text" placeholder="To Address" aria-label="目标地址" data-name="to"><button type="button" class="bill-addr-lookup" aria-label="自动补全担保组织与公钥" title="查询担保组织与公钥" data-role="addr-lookup"><svg class="icon-search" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.6" fill="none"></circle><line x1="10.2" y1="10.2" x2="13" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg></button></div></div>
           <div class="bill-row"><label class="bill-label" for="${idBase}_val">金额</label><input id="${idBase}_val" class="input" type="number" placeholder="金额" aria-label="金额" data-name="val"></div>
           <div class="bill-row"><label class="bill-label" for="${idBase}_mt">币种</label><div id="${idBase}_mt" class="input custom-select" role="button" aria-label="币种" data-name="mt" data-val="0"><span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></span><span class="custom-select__arrow">▾</span><div class="custom-select__menu"><div class="custom-select__item" data-val="0"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></div><div class="custom-select__item" data-val="1"><span class="coin-icon coin--btc"></span><span class="coin-label">BTC</span></div><div class="custom-select__item" data-val="2"><span class="coin-icon coin--eth"></span><span class="coin-label">ETH</span></div></div></div></div>
           <div class="bill-row bill-row--full"><label class="bill-label" for="${idBase}_pub">公钥</label><input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y 或 X,Y" aria-label="公钥" data-name="pub"></div>
@@ -2353,6 +2398,52 @@ function renderWallet() {
           <div class="bill-actions bill-actions--full"><button class="btn danger btn--sm bill-remove">删除</button></div>
         </div>
       `;
+      const addrInputEl = row.querySelector('[data-name="to"]');
+      const gidInputEl = row.querySelector('[data-name="gid"]');
+      const pubInputEl = row.querySelector('[data-name="pub"]');
+      const lookupBtn = row.querySelector('[data-role="addr-lookup"]');
+      if (lookupBtn && addrInputEl) {
+        lookupBtn.addEventListener('click', async () => {
+          if (lookupBtn.dataset.loading === '1') return;
+          const raw = addrInputEl.value || '';
+          const normalized = normalizeAddrInput(raw);
+          if (!normalized) {
+            showTxValidationError('请先填写要查询的地址', addrInputEl);
+            return;
+          }
+          if (!isValidAddressFormat(normalized)) {
+            showTxValidationError('目标地址格式错误，应为40位十六进制字符串', addrInputEl);
+            return;
+          }
+          lookupBtn.dataset.loading = '1';
+          lookupBtn.classList.add('is-loading');
+          lookupBtn.disabled = true;
+          try {
+            const started = Date.now();
+            const info = await fetchAddrInfo(normalized);
+            const elapsed = Date.now() - started;
+            if (elapsed < 2000) {
+              await new Promise((resolve) => setTimeout(resolve, 2000 - elapsed));
+            }
+            if (!info) {
+              showModalTip('地址查询失败', '未找到该地址对应的信息，请检查输入是否正确。', true);
+              return;
+            }
+            if (pubInputEl && info.pubKey) {
+              pubInputEl.value = info.pubKey;
+            }
+            if (gidInputEl) {
+              gidInputEl.value = info.groupId || '';
+            }
+          } catch (e) {
+            showModalTip('地址查询失败', '查询地址信息时发生错误，请稍后重试。', true);
+          } finally {
+            lookupBtn.disabled = false;
+            lookupBtn.classList.remove('is-loading');
+            delete lookupBtn.dataset.loading;
+          }
+        });
+      }
       billList.appendChild(row);
       updateRemoveState();
       const del = row.querySelector('.bill-remove');
@@ -2484,7 +2575,7 @@ function renderWallet() {
         if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl); return; }
         if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl); return; }
         if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种'); return; }
-        if (!/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl); return; }
+        if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl); return; }
         if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl); return; }
         if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl); return; }
         if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl); return; }
@@ -2801,6 +2892,54 @@ function refreshOrgPanel() {
   if (woExit) woExit.classList.toggle('hidden', !joined);
   if (woEmpty) woEmpty.classList.toggle('hidden', joined);
   if (joinBtn) joinBtn.classList.toggle('hidden', joined);
+  const tfMode = document.getElementById('tfMode');
+  const tfModeQuick = document.getElementById('tfModeQuick');
+  const tfModeCross = document.getElementById('tfModeCross');
+  const tfModePledge = document.getElementById('tfModePledge');
+  const isPledgeSel = document.getElementById('isPledge');
+  const hasOrg = joined;
+  if (tfModeQuick && tfModeQuick.parentNode) {
+    const quickLabel = tfModeQuick.parentNode;
+    const last = quickLabel.lastChild;
+    if (last && last.nodeType === 3) {
+      last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+    }
+  }
+  if (tfMode && tfModeQuick) {
+    if (!hasOrg) {
+      if (tfModeCross) {
+        tfModeCross.checked = false;
+        tfModeCross.disabled = true;
+        const l = tfModeCross.parentNode;
+        if (l && l.style) l.style.display = 'none';
+      }
+      if (tfModePledge) {
+        tfModePledge.checked = false;
+        tfModePledge.disabled = true;
+        const l2 = tfModePledge.parentNode;
+        if (l2 && l2.style) l2.style.display = 'none';
+      }
+      tfMode.value = 'quick';
+      tfModeQuick.checked = true;
+      if (isPledgeSel) isPledgeSel.value = 'false';
+    } else {
+      if (tfModeCross) {
+        tfModeCross.disabled = false;
+        const l = tfModeCross.parentNode;
+        if (l && l.style) l.style.display = '';
+      }
+      if (tfModePledge) {
+        tfModePledge.disabled = false;
+        const l2 = tfModePledge.parentNode;
+        if (l2 && l2.style) l2.style.display = '';
+      }
+      if (!tfMode.value) tfMode.value = 'quick';
+      if (tfMode.value === 'cross' && (!tfModeCross || tfModeCross.disabled)) tfMode.value = 'quick';
+      if (tfMode.value === 'pledge' && (!tfModePledge || tfModePledge.disabled)) tfMode.value = 'quick';
+      if (tfMode.value === 'quick') tfModeQuick.checked = true;
+      if (isPledgeSel) isPledgeSel.value = tfMode.value === 'pledge' ? 'true' : 'false';
+    }
+  }
   [['woGroupID', joined ? g.groupID : ''],
    ['woAggre', joined ? (g.aggreNode || '') : ''],
    ['woAssign', joined ? (g.assignNode || '') : ''],
