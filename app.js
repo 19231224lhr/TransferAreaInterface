@@ -1699,12 +1699,10 @@ function renderWallet() {
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
             if (label) {
-              const bal = label.querySelector('.addr-bal');
-              if (bal) {
-                const tId = Number(found && found.type !== undefined ? found.type : 0);
+              const amtVal = label.querySelector('.amount-val');
+              if (amtVal) {
                 const vCash = Number((found && found.value && found.value.utxoValue) || 0);
-                const html = tId === 1 ? `<span class="tag tag--btc${vCash ? ' tag--active' : ''}">BTC: ${vCash}</span>` : (tId === 2 ? `<span class="tag tag--eth${vCash ? ' tag--active' : ''}">ETH: ${vCash}</span>` : `<span class="tag tag--pgc${vCash ? ' tag--active' : ''}">PGC: ${vCash}</span>`);
-                bal.innerHTML = html;
+                amtVal.textContent = String(vCash);
               }
             }
           }
@@ -1813,11 +1811,9 @@ function renderWallet() {
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
             if (label) {
-              const bal = label.querySelector('.addr-bal');
-              if (bal) {
-                const tId = Number(found && found.type !== undefined ? found.type : 0);
-                const html = tId === 1 ? `<span class="tag tag--btc">BTC: 0</span>` : (tId === 2 ? `<span class="tag tag--eth">ETH: 0</span>` : `<span class="tag tag--pgc">PGC: 0</span>`);
-                bal.innerHTML = html;
+              const amtVal = label.querySelector('.amount-val');
+              if (amtVal) {
+                amtVal.textContent = '0';
               }
             }
           }
@@ -2195,7 +2191,22 @@ function renderWallet() {
         const meta = walletMap[a] || {};
         const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
         const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
-        const html = tId === 1 ? `<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>` : (tId === 2 ? `<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>` : `<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`); return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
+        // 币种图标和颜色
+        const coinIcons = { 0: '₱', 1: '₿', 2: 'Ξ' };
+        const coinColors = { 0: 'pgc', 1: 'btc', 2: 'eth' };
+        const icon = coinIcons[tId] || '₱';
+        const color = coinColors[tId] || 'pgc';
+        // 地址缩略显示
+        const shortAddr = a.slice(0, 6) + '...' + a.slice(-4);
+        return `<label class="src-addr-item" data-addr="${a}">
+          <input type="checkbox" value="${a}">
+          <span class="addr-check"></span>
+          <span class="addr-short" title="${a}">${shortAddr}</span>
+          <span class="addr-amount coin--${color}">
+            <span class="coin-symbol">${icon}</span>
+            <span class="amount-val">${amt}</span>
+          </span>
+        </label>`;
       }).join('');
     };
     rebuildAddrList();
