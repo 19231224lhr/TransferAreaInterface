@@ -9,6 +9,15 @@
 
 ## 前端纯静态演示（web/）
 
+测试数据：
+ToAddress：299954ff8bbd78eda3a686abcf86732cd18533af
+ToGroup：10000000
+ToPubKey：2b9edf25237d23a753ea8774ffbfb1b6d6bbbc2c96209d41ee59089528eb1566&c295d31bfd805e18b212fbbb726fc29a1bfc0762523789be70a2a1b737e63a80
+
+ToAddress：d76ec4020140d58c35e999a730bea07bf74a7763
+ToGroup：None
+ToPubKey：11970dd5a7c3f6a131e24e8f066416941d79a177579c63d889ef9ce90ffd9ca8&037d81e8fb19883cc9e5ed8ebcc2b75e1696880c75a864099bec10a5821f69e0
+
 本项目新增了一个“纯前端钱包演示”，无需后端即可在浏览器侧生成账户信息。
 
 - 目录结构：`web/index.html`、`web/app.js`、`web/style.css`

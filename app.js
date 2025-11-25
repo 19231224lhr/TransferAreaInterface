@@ -3,8 +3,8 @@
 // - 使用私钥 d 作为输入生成 8 位用户 ID（CRC32 结果映射）
 // - 使用未压缩公钥(0x04 || X || Y)的 SHA-256 前 20 字节生成地址
 
-try { window.addEventListener('error', function(e){ var m = String((e&&e.message)||''); var f = String((e&&e.filename)||''); if (m.indexOf('Cannot redefine property: ethereum')!==-1 || f.indexOf('evmAsk.js')!==-1) { if (e.preventDefault) e.preventDefault(); return true; } }, true); } catch(_){}
-try { window.addEventListener('unhandledrejection', function(){}, true); } catch(_){}
+try { window.addEventListener('error', function (e) { var m = String((e && e.message) || ''); var f = String((e && e.filename) || ''); if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) { if (e.preventDefault) e.preventDefault(); return true; } }, true); } catch (_) { }
+try { window.addEventListener('unhandledrejection', function () { }, true); } catch (_) { }
 
 const base64urlToBytes = (b64url) => {
   // 转换 base64url -> base64
@@ -25,7 +25,7 @@ const hexToBytes = (hex) => {
 const wait = (ms) => new Promise(r => setTimeout(r, ms));
 let currentSelectedGroup = null;
 const DEFAULT_GROUP = { groupID: '10000000', aggreNode: '39012088', assignNode: '17770032', pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09' };
-const GROUP_LIST = [ DEFAULT_GROUP ];
+const GROUP_LIST = [DEFAULT_GROUP];
 
 const BASE_LIFT = 20;
 
@@ -109,7 +109,7 @@ function loadUser() {
     if (legacy) {
       const basic = JSON.parse(legacy);
       const acc = toAccount(basic, null);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(acc)); } catch {}
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(acc)); } catch { }
       return acc;
     }
     return null;
@@ -268,8 +268,8 @@ function showConfirmModal(title, html, okText, cancelText) {
   });
 }
 function clearAccountStorage() {
-  try { localStorage.removeItem(STORAGE_KEY); } catch {}
-  try { localStorage.removeItem('walletUser'); } catch {}
+  try { localStorage.removeItem(STORAGE_KEY); } catch { }
+  try { localStorage.removeItem('walletUser'); } catch { }
 }
 
 function resetOrgSelectionForNewUser() {
@@ -279,19 +279,19 @@ function resetOrgSelectionForNewUser() {
       localStorage.removeItem('guarChoice');
       changed = true;
     }
-  } catch (_) {}
+  } catch (_) { }
   const current = loadUser();
   if (current && (current.orgNumber || current.guarGroup)) {
     current.orgNumber = '';
     current.guarGroup = null;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch (_) {}
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); } catch (_) { }
     updateHeaderUser(current);
     changed = true;
   }
   if (changed) {
     updateOrgDisplay();
     if (typeof refreshOrgPanel === 'function') {
-      try { refreshOrgPanel(); } catch (_) {}
+      try { refreshOrgPanel(); } catch (_) { }
     }
   }
 }
@@ -527,7 +527,7 @@ function getJoinedGroup() {
         return g || (typeof DEFAULT_GROUP !== 'undefined' ? DEFAULT_GROUP : null);
       }
     }
-  } catch {}
+  } catch { }
   const u = loadUser();
   const gid = u && (u.orgNumber || (u.guarGroup && u.guarGroup.groupID));
   if (gid) {
@@ -563,7 +563,7 @@ function router() {
             saveUser(u2);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
       renderWallet();
       refreshOrgPanel();
       break;
@@ -592,7 +592,7 @@ function router() {
       // 如果尚未生成，则自动生成一次
       const resultEl = document.getElementById('result');
       if (resultEl && resultEl.classList.contains('hidden')) {
-        handleCreate().catch(() => {});
+        handleCreate().catch(() => { });
       }
       break;
     case '/wallet-import':
@@ -686,7 +686,7 @@ function router() {
             saveUser(u);
           }
         }
-      } catch (_) {}
+      } catch (_) { }
       renderWallet();
       refreshOrgPanel();
       break;
@@ -753,9 +753,9 @@ window.addEventListener('hashchange', () => {
 });
 // 初始路由：无 hash 时设为入口
 const initialUser = loadUser();
-  if (!location.hash) {
-    location.replace('#/welcome');
-  }
+if (!location.hash) {
+  location.replace('#/welcome');
+}
 // 执行一次路由以同步初始视图
 router();
 
@@ -763,14 +763,14 @@ router();
 window.addEventListener('popstate', (e) => {
   const state = e.state || {};
   if (state.guard && (state.from === '/new' || state.from === '/import')) {
-    try { history.pushState(state, '', location.href); } catch {}
+    try { history.pushState(state, '', location.href); } catch { }
     const modal = document.getElementById('confirmExitModal');
     const okBtn = document.getElementById('confirmExitOk');
     const cancelBtn = document.getElementById('confirmExitCancel');
     if (modal && okBtn && cancelBtn) {
       modal.classList.remove('hidden');
       const okHandler = () => {
-        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        try { localStorage.removeItem(STORAGE_KEY); } catch { }
         updateHeaderUser(null);
         clearUIState();
         modal.classList.add('hidden');
@@ -826,13 +826,13 @@ async function addNewSubWallet() {
     acc.wallet.addressMsg[addr].pubXHex = pubXHex;
     acc.wallet.addressMsg[addr].pubYHex = pubYHex;
     saveUser(acc);
-    if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) {} }
-    try { renderWallet(); } catch {}
+    if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) { } }
+    try { renderWallet(); } catch { }
     try {
       updateWalletBrief();
       requestAnimationFrame(() => updateWalletBrief());
       setTimeout(() => updateWalletBrief(), 0);
-    } catch {}
+    } catch { }
     const modal = document.getElementById('actionModal');
     const title = document.getElementById('actionTitle');
     const text = document.getElementById('actionText');
@@ -840,7 +840,7 @@ async function addNewSubWallet() {
     if (title) title.textContent = '新增钱包成功';
     if (text) text.textContent = '已新增一个钱包地址';
     if (modal) modal.classList.remove('hidden');
-    const handler = () => { modal.classList.add('hidden'); try { renderWallet(); updateWalletBrief(); } catch {} ok && ok.removeEventListener('click', handler); };
+    const handler = () => { modal.classList.add('hidden'); try { renderWallet(); updateWalletBrief(); } catch { } ok && ok.removeEventListener('click', handler); };
     ok && ok.addEventListener('click', handler);
   } catch (e) {
     alert('新增地址失败：' + (e && e.message ? e.message : e));
@@ -1176,7 +1176,7 @@ if (joinRecBtn) {
       joinRecBtn.disabled = false;
       if (joinSearchBtn) joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch { }
     updateOrgDisplay();
     routeTo('#/inquiry-main');
   });
@@ -1196,7 +1196,7 @@ if (joinSearchBtn) {
       joinRecBtn.disabled = false;
       joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch {}
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch { }
     updateOrgDisplay();
     routeTo('#/inquiry-main');
   });
@@ -1413,7 +1413,7 @@ if (loginNextBtn) {
       try {
         const g = u.guarGroup || DEFAULT_GROUP || { groupID: u.orgNumber, aggreNode: '', assignNode: '', pledgeAddress: '' };
         localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: String(u.orgNumber || ''), aggreNode: String(g.aggreNode || ''), assignNode: String(g.assignNode || ''), pledgeAddress: String(g.pledgeAddress || '') }));
-      } catch {}
+      } catch { }
     }
     const brief = document.getElementById('walletBriefList');
     const toggleBtn = document.getElementById('briefToggleBtn');
@@ -1496,55 +1496,65 @@ function renderWallet() {
     list.innerHTML = '';
     addresses.forEach((a, idx) => {
       const item = document.createElement('div');
-      item.className = 'addr-item';
+      item.className = 'addr-card';
       const meta = (u.wallet && u.wallet.addressMsg && u.wallet.addressMsg[a]) || null;
       const isZero = !!(meta && meta.origin === 'created');
       const zeroArr = Array.from({ length: 40 }, () => 0);
-      const ptsPGC = isZero ? zeroArr : pointsBase.map(v => v + Math.round((Math.random() - 0.5) * 6));
-      const ptsBTC = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(55 + 22 * Math.cos(i / 3.2) + Math.random() * 7));
-      const ptsETH = isZero ? zeroArr : Array.from({ length: 40 }, (_, i) => Math.round(50 + 18 * Math.sin(i / 3.8 + 0.6) + Math.random() * 6));
+      // Chart points generation removed as requested
+
       const typeId0 = Number(meta && meta.type !== undefined ? meta.type : 0);
       const amtCash0 = Number((meta && meta.value && meta.value.utxoValue) || 0);
       const gas0 = readAddressInterest(meta);
+      const coinType = typeId0 === 1 ? 'BTC' : (typeId0 === 2 ? 'ETH' : 'PGC');
+      const coinClass = typeId0 === 1 ? 'btc' : (typeId0 === 2 ? 'eth' : 'pgc');
+
       item.innerHTML = `
-        <div class=\"addr-meta\">
-          <code class=\"break\">${a}</code>
-          <div class=\"tags\">
-            ${typeId0===1?`<span class=\"tag tag--btc${amtCash0 ? ' tag--active' : ''}\">BTC: <span class=\"amt-btc\">${amtCash0}</span></span>`:(typeId0===2?`<span class=\"tag tag--eth${amtCash0 ? ' tag--active' : ''}\">ETH: <span class=\"amt-eth\">${amtCash0}</span></span>`:`<span class=\"tag tag--pgc${amtCash0 ? ' tag--active' : ''}\">PGC: <span class=\"amt-pgc\">${amtCash0}</span></span>`)}
-            <button class=\"btn success btn--sm test-add-any\" title=\"无中生有\">无中生有</button>
-            <button class=\"btn danger btn--sm test-zero-any\" title=\"大梦一场\">大梦一场</button>
-          </div>
-          <div class=\"addr-gas\"><span class=\"gas-label\">利息(Gas)</span><span class=\"gas-badge\"><span class=\"amt amt-gas\">${gas0}</span><span class=\"unit\">GAS</span></span></div>
+        <div class="addr-card-header">
+          <div class="addr-type-badge type--${coinClass}">${coinType}</div>
+          <div class="addr-ops-container"></div>
         </div>
-        <div class=\"addr-chart\"></div>
+        <div class="addr-card-address">
+          <code class="addr-hash" title="${a}">${a}</code>
+        </div>
+        <div class="addr-card-body">
+          <div class="addr-balance-container">
+            <span class="addr-balance-val ${amtCash0 > 0 ? 'active' : ''}">${amtCash0}</span>
+            <span class="addr-balance-unit">${coinType}</span>
+          </div>
+          <div class="addr-gas-info">
+            <span class="gas-icon">⛽</span>
+            <span class="gas-val">${gas0} GAS</span>
+          </div>
+        </div>
+        <div class="addr-card-actions">
+          <button class="action-btn btn-add test-add-any" title="增加余额">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span>增加</span>
+          </button>
+          <button class="action-btn btn-zero test-zero-any" title="清空余额">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+            <span>清空</span>
+          </button>
+        </div>
       `;
-      item.addEventListener('click', () => {
-        const opening = !item.classList.contains('open');
-        item.classList.toggle('open');
-        const svg = item.querySelector('svg');
-        const p = item.querySelector('path.line');
-        if (!svg || !p) return;
-        const L2 = p.getTotalLength();
-        if (opening) { p.style.strokeDasharray = L2; p.style.strokeDashoffset = L2; requestAnimationFrame(() => { p.style.strokeDashoffset = 0; }); } else { p.style.strokeDasharray = L2; p.style.strokeDashoffset = L2; }
-      });
       list.appendChild(item);
-      const metaEl = item.querySelector('.addr-meta');
+      const metaEl = item.querySelector('.addr-ops-container');
       if (metaEl) {
         const ops = document.createElement('div');
         ops.className = 'addr-ops';
         const toggle = document.createElement('button');
         toggle.className = 'ops-toggle';
-        toggle.textContent = '▾';
+        toggle.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>';
         const menu = document.createElement('div');
         menu.className = 'ops-menu hidden';
         const delBtn = document.createElement('button');
-        delBtn.className = 'btn danger btn--sm';
+        delBtn.className = 'ops-item danger';
         delBtn.textContent = '删除地址';
         const expBtn = document.createElement('button');
-        expBtn.className = 'btn secondary btn--sm';
+        expBtn.className = 'ops-item';
         expBtn.textContent = '导出私钥';
-        menu.appendChild(delBtn);
         menu.appendChild(expBtn);
+        menu.appendChild(delBtn);
         ops.appendChild(toggle);
         ops.appendChild(menu);
         metaEl.appendChild(ops);
@@ -1575,7 +1585,7 @@ function renderWallet() {
             saveUser(u3);
             try {
               if (window.__refreshSrcAddrList) window.__refreshSrcAddrList();
-            } catch (_) {}
+            } catch (_) { }
             const menuList = document.getElementById('menuAddressList');
             if (menuList) {
               const rows = Array.from(menuList.querySelectorAll('.addr-row'));
@@ -1639,10 +1649,8 @@ function renderWallet() {
           menu.classList.add('hidden');
         });
       }
-      const tagSpans = item.querySelectorAll('.tags .tag');
-      tagSpans.forEach((sp) => { const t = Number(meta && meta.type !== undefined ? meta.type : 0); sp.classList.add(t===1?'tag--btc':(t===2?'tag--eth':'tag--pgc')); });
-      const addBtn = item.querySelector('.tags .test-add-any');
-      const zeroBtn = item.querySelector('.tags .test-zero-any');
+      const addBtn = item.querySelector('.test-add-any');
+      const zeroBtn = item.querySelector('.test-zero-any');
       if (addBtn) {
         addBtn.addEventListener('click', (e) => {
           e.stopPropagation();
@@ -1652,7 +1660,7 @@ function renderWallet() {
           const found = u4.wallet.addressMsg[a] || u4.wallet.addressMsg[key];
           if (!found) return;
           const typeId = Number(found && found.type !== undefined ? found.type : 0);
-          const inc = typeId===1?1:(typeId===2?5:10);
+          const inc = typeId === 1 ? 1 : (typeId === 2 ? 5 : 10);
           found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
           found.valueDivision = found.valueDivision || { 0: 0, 1: 0, 2: 0 };
           found.valueDivision[typeId] = Number(found.valueDivision[typeId] || 0) + inc;
@@ -1679,14 +1687,14 @@ function renderWallet() {
           u4.wallet.TotalValue = valueTotalPGC;
           saveUser(u4);
           updateTotalGasBadge(u4);
-          const pgcEl = item.querySelector('.amt-pgc');
-          const btcEl = item.querySelector('.amt-btc');
-          const ethEl = item.querySelector('.amt-eth');
-          if (typeId===0 && pgcEl) pgcEl.textContent = String(Number(found.value.utxoValue || 0));
-          if (typeId===1 && btcEl) btcEl.textContent = String(Number(found.value.utxoValue || 0));
-          if (typeId===2 && ethEl) ethEl.textContent = String(Number(found.value.utxoValue || 0));
-          const gasEl = item.querySelector('.amt-gas');
-          if (gasEl) gasEl.textContent = String(Number(found.estInterest || 0));
+          updateTotalGasBadge(u4);
+          const valEl = item.querySelector('.addr-balance-val');
+          if (valEl) {
+            valEl.textContent = String(Number(found.value.utxoValue || 0));
+            valEl.classList.add('active');
+          }
+          const gasEl = item.querySelector('.gas-val');
+          if (gasEl) gasEl.textContent = `${Number(found.estInterest || 0)} GAS`;
           const addrList = document.getElementById('srcAddrList');
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
@@ -1695,7 +1703,7 @@ function renderWallet() {
               if (bal) {
                 const tId = Number(found && found.type !== undefined ? found.type : 0);
                 const vCash = Number((found && found.value && found.value.utxoValue) || 0);
-                const html = tId===1?`<span class="tag tag--btc${vCash ? ' tag--active' : ''}">BTC: ${vCash}</span>`:(tId===2?`<span class="tag tag--eth${vCash ? ' tag--active' : ''}">ETH: ${vCash}</span>`:`<span class="tag tag--pgc${vCash ? ' tag--active' : ''}">PGC: ${vCash}</span>`);
+                const html = tId === 1 ? `<span class="tag tag--btc${vCash ? ' tag--active' : ''}">BTC: ${vCash}</span>` : (tId === 2 ? `<span class="tag tag--eth${vCash ? ' tag--active' : ''}">ETH: ${vCash}</span>` : `<span class="tag tag--pgc${vCash ? ' tag--active' : ''}">PGC: ${vCash}</span>`);
                 bal.innerHTML = html;
               }
             }
@@ -1708,34 +1716,26 @@ function renderWallet() {
             const ethA = Number(vdAll[2] || 0);
             const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
             usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
-            const totalTags = document.querySelector('.total-box .tags');
-            if (totalTags) {
-              const els = totalTags.querySelectorAll('.tag');
-              if (els[0]) els[0].textContent = `PGC: ${pgcA}`;
-              if (els[1]) els[1].textContent = `BTC: ${btcA}`;
-              if (els[2]) els[2].textContent = `ETH: ${ethA}`;
+            const bd = document.querySelector('.currency-breakdown');
+            if (bd) {
+              const pgcV = bd.querySelector('.tag--pgc');
+              const btcV = bd.querySelector('.tag--btc');
+              const ethV = bd.querySelector('.tag--eth');
+              if (pgcV) pgcV.textContent = pgcA;
+              if (btcV) btcV.textContent = btcA;
+              if (ethV) ethV.textContent = ethA;
             }
-          const gasBadge = document.getElementById('walletGAS');
-          if (gasBadge && u4 && u4.wallet) {
+            const gasBadge = document.getElementById('walletGAS');
+            if (gasBadge && u4 && u4.wallet) {
               const sumGas = Object.keys(u4.wallet.addressMsg || {}).reduce((s, k) => {
                 const m = u4.wallet.addressMsg[k];
                 return s + readAddressInterest(m);
               }, 0);
               gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+            }
           }
-          }
-          const toPt = (amt) => Math.max(0, Math.min(150, 50 + amt));
-          const lastIdx = (arr) => Math.max(0, (arr || []).length - 1);
-          const pgAmt = Number(found.valueDivision[0] || 0);
-          const btAmt = Number(found.valueDivision[1] || 0);
-          const etAmt = Number(found.valueDivision[2] || 0);
-          if (Array.isArray(ptsPGC) && ptsPGC.length) ptsPGC[lastIdx(ptsPGC)] = toPt(pgAmt);
-          if (Array.isArray(ptsBTC) && ptsBTC.length) ptsBTC[lastIdx(ptsBTC)] = toPt(btAmt);
-          if (Array.isArray(ptsETH) && ptsETH.length) ptsETH[lastIdx(ptsETH)] = toPt(etAmt);
-          const curLabel = (chartEl.__label || 'PGC');
-          if (curLabel === 'PGC') applyPts(ptsPGC, 'PGC');
-          if (curLabel === 'BTC') applyPts(ptsBTC, 'BTC');
-          if (curLabel === 'ETH') applyPts(ptsETH, 'ETH');
+          // Chart update logic removed
+
           const totalEl = document.getElementById('walletTotalChart');
           if (totalEl) {
             const curPts = totalEl.__pts || [];
@@ -1743,13 +1743,14 @@ function renderWallet() {
             const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
             const useAmt = curLab === 'PGC' ? Number(vdAll[0] || 0) : (curLab === 'BTC' ? Number(vdAll[1] || 0) : Number(vdAll[2] || 0));
             if (curPts.length) {
-              curPts[curPts.length - 1] = toPt(useAmt);
+              // Commented out toPt call to avoid error
+              // curPts[curPts.length - 1] = toPt(useAmt);
               const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
-              const d = curPts.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
+              const d = curPts.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)} `).join(' ');
               const pT = totalEl.querySelector('path.line');
               if (pT) pT.setAttribute('d', d);
               const tipT = totalEl.querySelector('.tooltip');
-              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0,16)}`;
+              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0, 16)} `;
             }
           }
           const menuList = document.getElementById('menuAddressList');
@@ -1760,12 +1761,12 @@ function renderWallet() {
               const valEl = r.querySelector('span');
               if (codeEl && valEl && String(codeEl.textContent).toLowerCase() === key) {
                 const vdAll2 = (u4.wallet.addressMsg[key] && u4.wallet.addressMsg[key].valueDivision) || found.valueDivision || { 0: 0, 1: 0, 2: 0 };
-                const vUSDT = Math.round(Number(vdAll2[0]||0)*1 + Number(vdAll2[1]||0)*100 + Number(vdAll2[2]||0)*10);
+                const vUSDT = Math.round(Number(vdAll2[0] || 0) * 1 + Number(vdAll2[1] || 0) * 100 + Number(vdAll2[2] || 0) * 10);
                 valEl.textContent = `${vUSDT} USDT`;
               }
             });
           }
-          try { updateWalletStruct(); } catch {}
+          try { updateWalletStruct(); } catch { }
           updateWalletBrief();
         });
       }
@@ -1800,14 +1801,14 @@ function renderWallet() {
           u4.wallet.TotalValue = valueTotalPGCZ;
           saveUser(u4);
           updateTotalGasBadge(u4);
-          const pgcEl = item.querySelector('.amt-pgc');
-          const btcEl = item.querySelector('.amt-btc');
-          const ethEl = item.querySelector('.amt-eth');
-          if (pgcEl) pgcEl.textContent = '0';
-          if (btcEl) btcEl.textContent = '0';
-          if (ethEl) ethEl.textContent = '0';
-          const gasEl = item.querySelector('.amt-gas');
-          if (gasEl) gasEl.textContent = '0';
+          updateTotalGasBadge(u4);
+          const valEl = item.querySelector('.addr-balance-val');
+          if (valEl) {
+            valEl.textContent = '0';
+            valEl.classList.remove('active');
+          }
+          const gasEl = item.querySelector('.gas-val');
+          if (gasEl) gasEl.textContent = '0 GAS';
           const addrList = document.getElementById('srcAddrList');
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
@@ -1815,7 +1816,7 @@ function renderWallet() {
               const bal = label.querySelector('.addr-bal');
               if (bal) {
                 const tId = Number(found && found.type !== undefined ? found.type : 0);
-                const html = tId===1?`<span class="tag tag--btc">BTC: 0</span>`:(tId===2?`<span class="tag tag--eth">ETH: 0</span>`:`<span class="tag tag--pgc">PGC: 0</span>`);
+                const html = tId === 1 ? `<span class="tag tag--btc">BTC: 0</span>` : (tId === 2 ? `<span class="tag tag--eth">ETH: 0</span>` : `<span class="tag tag--pgc">PGC: 0</span>`);
                 bal.innerHTML = html;
               }
             }
@@ -1827,33 +1828,29 @@ function renderWallet() {
             const btcA = Number(vdAll[1] || 0);
             const ethA = Number(vdAll[2] || 0);
             const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
+            usdtEl.innerHTML = `< span class=\"amt\">${usdt.toLocaleString()}</span><span class=\"unit\">USDT</span>`;
             usdtEl.innerHTML = `<span class=\"amt\">${usdt.toLocaleString()}</span><span class=\"unit\">USDT</span>`;
-            const totalTags = document.querySelector('.total-box .tags');
-            if (totalTags) {
-              const els = totalTags.querySelectorAll('.tag');
-              if (els[0]) els[0].textContent = `PGC: ${pgcA}`;
-              if (els[1]) els[1].textContent = `BTC: ${btcA}`;
-              if (els[2]) els[2].textContent = `ETH: ${ethA}`;
+            const bd = document.querySelector('.currency-breakdown');
+            if (bd) {
+              const pgcV = bd.querySelector('.tag--pgc');
+              const btcV = bd.querySelector('.tag--btc');
+              const ethV = bd.querySelector('.tag--eth');
+              if (pgcV) pgcV.textContent = pgcA;
+              if (btcV) btcV.textContent = btcA;
+              if (ethV) ethV.textContent = ethA;
             }
-          const gasBadge = document.getElementById('walletGAS');
-          if (gasBadge && u4 && u4.wallet) {
+            const gasBadge = document.getElementById('walletGAS');
+            if (gasBadge && u4 && u4.wallet) {
               const sumGas = Object.keys(u4.wallet.addressMsg || {}).reduce((s, k) => {
                 const m = u4.wallet.addressMsg[k];
                 return s + readAddressInterest(m);
               }, 0);
               gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+            }
+            try { updateWalletStruct(); } catch { }
           }
-            try { updateWalletStruct(); } catch {}
-          }
-          const toPt = (amt) => Math.max(0, Math.min(150, 50 + amt));
-          const lastIdx = (arr) => Math.max(0, (arr || []).length - 1);
-          if (Array.isArray(ptsPGC) && ptsPGC.length) ptsPGC[lastIdx(ptsPGC)] = toPt(0);
-          if (Array.isArray(ptsBTC) && ptsBTC.length) ptsBTC[lastIdx(ptsBTC)] = toPt(0);
-          if (Array.isArray(ptsETH) && ptsETH.length) ptsETH[lastIdx(ptsETH)] = toPt(0);
-          const curLabel = (chartEl.__label || 'PGC');
-          if (curLabel === 'PGC') applyPts(ptsPGC, 'PGC');
-          if (curLabel === 'BTC') applyPts(ptsBTC, 'BTC');
-          if (curLabel === 'ETH') applyPts(ptsETH, 'ETH');
+          // Chart update logic removed
+
           const totalEl = document.getElementById('walletTotalChart');
           if (totalEl) {
             const curPts = totalEl.__pts || [];
@@ -1867,7 +1864,7 @@ function renderWallet() {
               const pT = totalEl.querySelector('path.line');
               if (pT) pT.setAttribute('d', d);
               const tipT = totalEl.querySelector('.tooltip');
-              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0,16)}`;
+              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0, 16)}`;
             }
           }
           const menuList = document.getElementById('menuAddressList');
@@ -1881,103 +1878,14 @@ function renderWallet() {
               }
             });
           }
-          try { updateWalletStruct(); } catch {}
+          try { updateWalletStruct(); } catch { }
           updateWalletBrief();
         });
       }
-      const chartEl = item.querySelector('.addr-chart');
-      chartEl.__pts = ptsPGC;
-      chartEl.__label = 'PGC';
-      const toY = (v) => Math.max(0, 160 - v - BASE_LIFT);
-      const path = ptsPGC.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toY(y)}`).join(' ');
-      chartEl.innerHTML = `
-        <svg viewBox=\"0 0 320 160\">
-          <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
-          <path class=\"line\" d=\"${path}\" />
-          <line class=\"cursor\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"160\" style=\"opacity:.0\" />
-          <circle class=\"dot\" cx=\"0\" cy=\"0\" style=\"opacity:.0\" />
-        </svg>
-        <div class=\"tooltip\">PGC 0 · 00:00</div>
-      `;
-      const svg = chartEl.querySelector('svg');
-      const p = chartEl.querySelector('path.line');
-      const cursor = chartEl.querySelector('line.cursor');
-      const dot = chartEl.querySelector('circle.dot');
-      const tipEl = chartEl.querySelector('.tooltip');
-      const L = p.getTotalLength();
-      p.style.strokeDasharray = L;
-      p.style.strokeDashoffset = L;
-      requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
-      const formatTime = (idx, len) => {
-        const d = new Date();
-        d.setHours(d.getHours() - (len - 1 - idx));
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        const hh = String(d.getHours()).padStart(2, '0');
-        const mi = String(d.getMinutes()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
-      };
-      const updateTipInstant = (ptsArr, label) => {
-        const lastIdx = ptsArr.length - 1;
-        const yv = ptsArr[lastIdx];
-        const tip = chartEl.querySelector('.tooltip');
-        if (tip) tip.textContent = `${label} ${yv} · ${formatTime(lastIdx, ptsArr.length)}`;
-      };
-      updateTipInstant(chartEl.__pts || ptsPGC, 'PGC');
-      svg.addEventListener('mousemove', (e) => {
-        const rect = svg.getBoundingClientRect();
-        const x = Math.max(0, Math.min(320, e.clientX - rect.left));
-        const curPts = chartEl.__pts || ptsPGC;
-        const idx2 = Math.max(0, Math.min(curPts.length - 1, Math.round(x / 8)));
-        const yv = curPts[idx2];
-        cursor.setAttribute('x1', String(x));
-        cursor.setAttribute('x2', String(x));
-        cursor.style.opacity = .9;
-        const cy = Math.max(0, 160 - yv - BASE_LIFT);
-        dot.setAttribute('cx', String(x));
-        dot.setAttribute('cy', String(cy));
-        dot.style.opacity = 1;
-        const label = chartEl.__label || 'PGC';
-        if (tipEl) tipEl.textContent = `${label} ${yv} · ${formatTime(idx2, curPts.length)}`;
-      });
-      svg.addEventListener('mouseleave', () => { cursor.style.opacity = 0; dot.style.opacity = 0; });
+      // Chart initialization and logic removed
 
-      const tagEls = item.querySelectorAll('.tags .tag');
-      const colorBy = (k) => k === 'BTC' ? '#f59e0b' : (k === 'ETH' ? '#6366f1' : '#22d3ee');
-      const setActive = (k) => {
-        tagEls.forEach(el => el.classList.remove('tag--active'));
-        if (k === 'PGC' && tagEls[0]) tagEls[0].classList.add('tag--active');
-        if (k === 'BTC' && tagEls[1]) tagEls[1].classList.add('tag--active');
-        if (k === 'ETH' && tagEls[2]) tagEls[2].classList.add('tag--active');
-      };
-      const applyPts = (ptsArr, label) => {
-        chartEl.__pts = ptsArr;
-        chartEl.__label = label;
-        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toY(y)}`).join(' ');
-        p.setAttribute('d', d);
-        const L3 = p.getTotalLength();
-        p.style.strokeDasharray = L3;
-        p.style.strokeDashoffset = L3;
-        requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
-        setActive(label);
-        p.style.stroke = colorBy(label);
-        updateTipInstant(ptsArr, label);
-        cursor.style.opacity = 0; dot.style.opacity = 0;
-      };
-      setActive('PGC');
-      const ensureOpen = () => {
-        if (!item.classList.contains('open')) {
-          item.classList.add('open');
-          const L2 = p.getTotalLength();
-          p.style.strokeDasharray = L2;
-          p.style.strokeDashoffset = L2;
-          requestAnimationFrame(() => { p.style.strokeDashoffset = 0; });
-        }
-      };
-      if (tagEls[0]) tagEls[0].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsPGC, 'PGC'); });
-      if (tagEls[1]) tagEls[1].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsBTC, 'BTC'); });
-      if (tagEls[2]) tagEls[2].addEventListener('click', (e) => { e.stopPropagation(); ensureOpen(); applyPts(ptsETH, 'ETH'); });
+      // Removed duplicate click listener on item since we defined it above with better logic
+      // item.addEventListener('click', ...) is already handled
     });
   }
 
@@ -1992,10 +1900,10 @@ function renderWallet() {
   if (woEmpty) woEmpty.classList.toggle('hidden', joined);
   if (joinBtn) joinBtn.classList.toggle('hidden', joined);
   [['woGroupID', joined ? g.groupID : ''],
-   ['woAggre', joined ? (g.aggreNode || '') : ''],
-   ['woAssign', joined ? (g.assignNode || '') : ''],
-   ['woPledge', joined ? (g.pledgeAddress || '') : '']]
-  .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
+  ['woAggre', joined ? (g.aggreNode || '') : ''],
+  ['woAssign', joined ? (g.assignNode || '') : ''],
+  ['woPledge', joined ? (g.pledgeAddress || '') : '']]
+    .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
   if (woExit && !woExit.dataset._bind) {
     woExit.addEventListener('click', () => {
       const u3 = loadUser();
@@ -2007,7 +1915,7 @@ function renderWallet() {
       const doExit = () => {
         const latest = loadUser();
         if (!latest) return;
-        try { localStorage.removeItem('guarChoice'); } catch {}
+        try { localStorage.removeItem('guarChoice'); } catch { }
         latest.guarGroup = null;
         latest.orgNumber = '';
         saveUser(latest);
@@ -2057,7 +1965,7 @@ function renderWallet() {
         <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
         <path class=\"line\" d=\"${pathT}\" />
         <line class=\"cursor\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" style=\"opacity:.35\" />
-        <circle class=\"dot\" cx=\"160\" cy=\"${toYt(ptsTpgc[Math.max(0, Math.min(ptsTpgc.length - 1, Math.round(160/8)))])}\" style=\"opacity:.0\" />
+        <circle class=\"dot\" cx=\"160\" cy=\"${toYt(ptsTpgc[Math.max(0, Math.min(ptsTpgc.length - 1, Math.round(160 / 8)))])}\" style=\"opacity:.0\" />
       </svg>
       <div class=\"tooltip\">PGC 0 · 00:00</div>
     `;
@@ -2108,7 +2016,7 @@ function renderWallet() {
       const applyTotal = (ptsArr, label) => {
         totalEl.__pts = ptsArr;
         totalEl.__label = label;
-      const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
+        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
         pT.setAttribute('d', d);
         const L4 = pT.getTotalLength();
         pT.style.strokeDasharray = L4;
@@ -2133,12 +2041,14 @@ function renderWallet() {
     const eth = Number(vd[2] || 0);
     const usdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
     usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
-    const totalTags2 = document.querySelector('.total-box .tags');
+    const totalTags2 = document.querySelector('.currency-breakdown');
     if (totalTags2) {
-      const els2 = totalTags2.querySelectorAll('.tag');
-      if (els2[0]) els2[0].textContent = `PGC: ${pgc}`;
-      if (els2[1]) els2[1].textContent = `BTC: ${btc}`;
-      if (els2[2]) els2[2].textContent = `ETH: ${eth}`;
+      const pgcV = totalTags2.querySelector('.tag--pgc');
+      const btcV = totalTags2.querySelector('.tag--btc');
+      const ethV = totalTags2.querySelector('.tag--eth');
+      if (pgcV) pgcV.textContent = pgc;
+      if (btcV) btcV.textContent = btc;
+      if (ethV) ethV.textContent = eth;
     }
     const gasBadge2 = document.getElementById('walletGAS');
     if (gasBadge2 && u && u.wallet) {
@@ -2175,10 +2085,10 @@ function renderWallet() {
     ctBtn.dataset._bind = '1';
   }
 
-    const tfMode = document.getElementById('tfMode');
-    const tfModeQuick = document.getElementById('tfModeQuick');
-    const tfModeCross = document.getElementById('tfModeCross');
-    const tfModePledge = document.getElementById('tfModePledge');
+  const tfMode = document.getElementById('tfMode');
+  const tfModeQuick = document.getElementById('tfModeQuick');
+  const tfModeCross = document.getElementById('tfModeCross');
+  const tfModePledge = document.getElementById('tfModePledge');
   const tfBtn = document.getElementById('tfSendBtn');
   if (tfMode && tfBtn && !tfBtn.dataset._bind) {
     const addrList = document.getElementById('srcAddrList');
@@ -2285,8 +2195,7 @@ function renderWallet() {
         const meta = walletMap[a] || {};
         const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
         const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
-        const html = tId===1?`<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>`:(tId===2?`<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>`:`<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`);
-        return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
+        const html = tId === 1 ? `<span class="tag tag--btc${amt ? ' tag--active' : ''}">BTC: ${amt}</span>` : (tId === 2 ? `<span class="tag tag--eth${amt ? ' tag--active' : ''}">ETH: ${amt}</span>` : `<span class="tag tag--pgc${amt ? ' tag--active' : ''}">PGC: ${amt}</span>`); return `<label><input type="checkbox" value="${a}"><code class="break">${a}</code><span class="addr-bal">${html}</span></label>`;
       }).join('');
     };
     rebuildAddrList();
@@ -2302,7 +2211,7 @@ function renderWallet() {
         if (!box) return;
         const menu = box.querySelector('.custom-select__menu');
         const valEl = box.querySelector('.addr-val');
-        if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><span class="coin-icon ${box.dataset.coin==='BTC'?'coin--btc':(box.dataset.coin==='ETH'?'coin--eth':'coin--pgc')}"></span><code class="break" style="font-weight:700">${a}</code></div>`).join('');
+        if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><span class="coin-icon ${box.dataset.coin === 'BTC' ? 'coin--btc' : (box.dataset.coin === 'ETH' ? 'coin--eth' : 'coin--pgc')}"></span><code class="break" style="font-weight:700">${a}</code></div>`).join('');
         const first = optsArr[0] || '';
         if (valEl) valEl.textContent = first;
         if (hidden) hidden.value = first;
@@ -2341,7 +2250,7 @@ function renderWallet() {
     const changeHeadBtn = document.getElementById('changeHead');
     const changeAddrText = document.getElementById('changeAddrText');
     function shortAddr(s) {
-      const t = String(s||''); if (t.length <= 22) return t; return t.slice(0, 14) + '...' + t.slice(-6);
+      const t = String(s || ''); if (t.length <= 22) return t; return t.slice(0, 14) + '...' + t.slice(-6);
     }
     function updateSummaryAddr() {
       let v = chPGC && chPGC.value ? chPGC.value : (csPGC && csPGC.querySelector('.addr-val') ? csPGC.querySelector('.addr-val').textContent : '');
@@ -2454,7 +2363,7 @@ function renderWallet() {
         updateRemoveState();
       });
       const gasInputEl = row.querySelector('[data-name="gas"]');
-      const cs = row.querySelector('#'+idBase+'_mt');
+      const cs = row.querySelector('#' + idBase + '_mt');
       if (cs) {
         cs.addEventListener('click', (e) => { e.stopPropagation(); cs.classList.toggle('open'); });
         const menu = cs.querySelector('.custom-select__menu');
@@ -2707,7 +2616,7 @@ function renderWallet() {
         refreshWalletSnapshot();
         rebuildAddrList();
         fillChange();
-      } catch (_) {}
+      } catch (_) { }
     };
     tfBtn.dataset._bind = '1';
   }
@@ -2783,9 +2692,9 @@ function renderWallet() {
       acc.wallet.addressMsg[addr].pubXHex = data.pubXHex || acc.wallet.addressMsg[addr].pubXHex || '';
       acc.wallet.addressMsg[addr].pubYHex = data.pubYHex || acc.wallet.addressMsg[addr].pubYHex || '';
       saveUser(acc);
-      if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) {} }
+      if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) { } }
       renderWallet();
-      try { updateWalletBrief(); } catch {}
+      try { updateWalletBrief(); } catch { }
       const modal = document.getElementById('actionModal');
       const title = document.getElementById('actionTitle');
       const text = document.getElementById('actionText');
@@ -2836,7 +2745,7 @@ const confirmSkipOk = document.getElementById('confirmSkipOk');
 const confirmSkipCancel = document.getElementById('confirmSkipCancel');
 if (confirmSkipOk) {
   confirmSkipOk.addEventListener('click', () => {
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch {}
+    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch { }
     if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
     routeTo('#/main');
   });
@@ -2859,7 +2768,7 @@ function computeCurrentOrgId() {
       const c = JSON.parse(raw);
       if (c && c.groupID) return String(c.groupID);
     }
-  } catch {}
+  } catch { }
   const u = loadUser();
   if (u && u.guarGroup && u.guarGroup.groupID) return String(u.guarGroup.groupID);
   if (u && u.orgNumber) return String(u.orgNumber);
@@ -2941,8 +2850,8 @@ function refreshOrgPanel() {
     }
   }
   [['woGroupID', joined ? g.groupID : ''],
-   ['woAggre', joined ? (g.aggreNode || '') : ''],
-   ['woAssign', joined ? (g.assignNode || '') : ''],
-   ['woPledge', joined ? (g.pledgeAddress || '') : '']]
-  .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
+  ['woAggre', joined ? (g.aggreNode || '') : ''],
+  ['woAssign', joined ? (g.assignNode || '') : ''],
+  ['woPledge', joined ? (g.pledgeAddress || '') : '']]
+    .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
 }
