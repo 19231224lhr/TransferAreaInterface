@@ -256,11 +256,20 @@ function saveUser(user) {
     console.warn('保存本地用户信息失败', e);
   }
 }
-function showModalTip(title, html, isError) {
+function getActionModalElements() {
   const modal = document.getElementById('actionModal');
   const titleEl = document.getElementById('actionTitle');
   const textEl = document.getElementById('actionText');
   const okEl = document.getElementById('actionOkBtn');
+  const cancelEl = document.getElementById('actionCancelBtn');
+  if (cancelEl) {
+    cancelEl.classList.add('hidden');
+    cancelEl.onclick = null;
+  }
+  return { modal, titleEl, textEl, okEl, cancelEl };
+}
+function showModalTip(title, html, isError) {
+  const { modal, titleEl, textEl, okEl } = getActionModalElements();
   if (titleEl) titleEl.textContent = title || '';
   if (textEl) {
     if (isError) textEl.classList.add('tip--error'); else textEl.classList.remove('tip--error');
@@ -637,8 +646,7 @@ function router() {
       {
         const inputEl = document.getElementById('importPrivHex');
         if (inputEl) inputEl.value = '';
-        const modalE = document.getElementById('actionModal');
-        const textE = document.getElementById('actionText');
+        const { modal: modalE, textEl: textE } = getActionModalElements();
         if (textE) textE.classList.remove('tip--error');
         if (modalE) modalE.classList.add('hidden');
         const brief = document.getElementById('walletBriefList');
@@ -867,10 +875,7 @@ async function addNewSubWallet() {
       requestAnimationFrame(() => updateWalletBrief());
       setTimeout(() => updateWalletBrief(), 0);
     } catch { }
-    const modal = document.getElementById('actionModal');
-    const title = document.getElementById('actionTitle');
-    const text = document.getElementById('actionText');
-    const ok = document.getElementById('actionOkBtn');
+    const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
     if (title) title.textContent = '新增钱包成功';
     if (text) text.textContent = '已新增一个钱包地址';
     if (modal) modal.classList.remove('hidden');
@@ -1332,39 +1337,28 @@ if (importBtn) {
         const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
         const addr = (data.address || '').toLowerCase();
         if (!addr) {
-          const modalE = document.getElementById('actionModal');
-          const titleE = document.getElementById('actionTitle');
-          const textE = document.getElementById('actionText');
-          const okE = document.getElementById('actionOkBtn');
+          const { modal: modalE, titleEl: titleE, textEl: textE, okEl: okE } = getActionModalElements();
           if (titleE) titleE.textContent = '导入失败';
-          if (textE) textE.textContent = '无法解析地址';
-          if (textE) textE.classList.add('tip--error');
+          if (textE) { textE.textContent = '无法解析地址'; textE.classList.add('tip--error'); }
           if (modalE) modalE.classList.remove('hidden');
-          const handlerE = () => { modalE.classList.add('hidden'); okE.removeEventListener('click', handlerE); };
+          const handlerE = () => { modalE.classList.add('hidden'); okE && okE.removeEventListener('click', handlerE); };
           if (okE) okE.addEventListener('click', handlerE);
           return;
         }
         const exists = (acc.wallet && acc.wallet.addressMsg && acc.wallet.addressMsg[addr]) || (u2.address && String(u2.address).toLowerCase() === addr);
         if (exists) {
-          const modalE = document.getElementById('actionModal');
-          const titleE = document.getElementById('actionTitle');
-          const textE = document.getElementById('actionText');
-          const okE = document.getElementById('actionOkBtn');
+          const { modal: modalE, titleEl: titleE, textEl: textE, okEl: okE } = getActionModalElements();
           if (titleE) titleE.textContent = '导入失败';
-          if (textE) textE.textContent = '该公钥地址已存在，不能重复导入';
-          if (textE) textE.classList.add('tip--error');
+          if (textE) { textE.textContent = '该公钥地址已存在，不能重复导入'; textE.classList.add('tip--error'); }
           if (modalE) modalE.classList.remove('hidden');
-          const handlerE = () => { modalE.classList.add('hidden'); okE.removeEventListener('click', handlerE); };
+          const handlerE = () => { modalE.classList.add('hidden'); okE && okE.removeEventListener('click', handlerE); };
           if (okE) okE.addEventListener('click', handlerE);
           return;
         }
         if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported', privHex: (data.privHex || normalized) };
         saveUser(acc);
         updateWalletBrief();
-        const modal = document.getElementById('actionModal');
-        const title = document.getElementById('actionTitle');
-        const text = document.getElementById('actionText');
-        const ok = document.getElementById('actionOkBtn');
+        const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
         if (title) title.textContent = '导入钱包成功';
         if (text) text.textContent = '已导入一个钱包地址';
         if (text) text.classList.remove('tip--error');
@@ -1632,10 +1626,7 @@ function renderWallet() {
             }
             renderWallet();
             updateWalletBrief();
-            const ok1 = document.getElementById('actionOkBtn');
-            const am = document.getElementById('actionModal');
-            const at = document.getElementById('actionTitle');
-            const ax = document.getElementById('actionText');
+            const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
             if (at) at.textContent = '删除成功';
             if (ax) { ax.classList.remove('tip--error'); ax.textContent = '已删除该地址及其相关本地数据'; }
             if (am) am.classList.remove('hidden');
@@ -1666,10 +1657,7 @@ function renderWallet() {
               priv = (u3.keys && u3.keys.privHex) || u3.privHex || '';
             }
           }
-          const modal = document.getElementById('actionModal');
-          const title = document.getElementById('actionTitle');
-          const text = document.getElementById('actionText');
-          const ok = document.getElementById('actionOkBtn');
+          const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
           if (priv) {
             if (title) title.textContent = '导出私钥';
             if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${priv}</code>`; }
@@ -1938,10 +1926,7 @@ function renderWallet() {
     woExit.addEventListener('click', () => {
       const u3 = loadUser();
       if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
-      const modal = document.getElementById('actionModal');
-      const titleEl = document.getElementById('actionTitle');
-      const textEl = document.getElementById('actionText');
-      const okEl = document.getElementById('actionOkBtn');
+      const { modal, titleEl, textEl, okEl, cancelEl } = getActionModalElements();
       const doExit = () => {
         const latest = loadUser();
         if (!latest) return;
@@ -1952,9 +1937,16 @@ function renderWallet() {
         updateWalletBrief();
         showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
       };
-      const confirmExit = async () => {
-        okEl && okEl.removeEventListener('click', confirmExit);
+      const cleanupActionModal = () => {
         if (modal) modal.classList.add('hidden');
+        if (okEl) okEl.removeEventListener('click', confirmExit);
+        if (cancelEl) {
+          cancelEl.classList.add('hidden');
+          cancelEl.onclick = null;
+        }
+      };
+      const confirmExit = async () => {
+        cleanupActionModal();
         const ov = document.getElementById('actionOverlay');
         const ovt = document.getElementById('actionOverlayText');
         if (ovt) ovt.textContent = '正在退出担保组织...';
@@ -1971,9 +1963,12 @@ function renderWallet() {
         textEl.classList.add('tip--error');
       }
       if (modal) modal.classList.remove('hidden');
-      if (okEl) {
-        okEl.addEventListener('click', confirmExit);
+      if (cancelEl) {
+        cancelEl.textContent = '取消';
+        cancelEl.classList.remove('hidden');
+        cancelEl.onclick = cleanupActionModal;
       }
+      if (okEl) okEl.addEventListener('click', confirmExit);
     });
     woExit.dataset._bind = '1';
   }
@@ -2923,10 +2918,7 @@ function renderWallet() {
       if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) { } }
       renderWallet();
       try { updateWalletBrief(); } catch { }
-      const modal = document.getElementById('actionModal');
-      const title = document.getElementById('actionTitle');
-      const text = document.getElementById('actionText');
-      const ok = document.getElementById('actionOkBtn');
+      const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
       if (title) title.textContent = '导入钱包成功';
       if (text) { text.textContent = '已导入一个钱包地址'; text.classList.remove('tip--error'); }
       if (modal) modal.classList.remove('hidden');

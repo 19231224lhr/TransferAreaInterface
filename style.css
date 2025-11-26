@@ -4479,6 +4479,30 @@ code:hover {
   color: #ef4444;
 }
 
+/* Section Title Redesign */
+.section-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 16px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  letter-spacing: -0.01em;
+}
+
+.section-title::before {
+  content: '';
+  display: block;
+  width: 6px;
+  height: 24px;
+  background: linear-gradient(180deg, #38bdf8 0%, #6366f1 100%);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+
 .ops-item.danger:hover {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   color: #dc2626;
