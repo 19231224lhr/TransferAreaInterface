@@ -1923,52 +1923,31 @@ function renderWallet() {
   ['woPledge', joined ? (g.pledgeAddress || '') : '']]
     .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
   if (woExit && !woExit.dataset._bind) {
-    woExit.addEventListener('click', () => {
+    woExit.addEventListener('click', async () => {
       const u3 = loadUser();
       if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
-      const { modal, titleEl, textEl, okEl, cancelEl } = getActionModalElements();
-      const doExit = () => {
-        const latest = loadUser();
-        if (!latest) return;
+      
+      const confirmed = await showConfirmModal('退出担保组织', '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？', '确认', '取消');
+      if (!confirmed) return;
+
+      const ov = document.getElementById('actionOverlay');
+      const ovt = document.getElementById('actionOverlayText');
+      if (ovt) ovt.textContent = '正在退出担保组织...';
+      if (ov) ov.classList.remove('hidden');
+      await wait(2000);
+      if (ov) ov.classList.add('hidden');
+
+      const latest = loadUser();
+      if (latest) {
         try { localStorage.removeItem('guarChoice'); } catch { }
         latest.guarGroup = null;
         latest.orgNumber = '';
         saveUser(latest);
-        updateWalletBrief();
-        showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
-      };
-      const cleanupActionModal = () => {
-        if (modal) modal.classList.add('hidden');
-        if (okEl) okEl.removeEventListener('click', confirmExit);
-        if (cancelEl) {
-          cancelEl.classList.add('hidden');
-          cancelEl.onclick = null;
-        }
-      };
-      const confirmExit = async () => {
-        cleanupActionModal();
-        const ov = document.getElementById('actionOverlay');
-        const ovt = document.getElementById('actionOverlayText');
-        if (ovt) ovt.textContent = '正在退出担保组织...';
-        if (ov) ov.classList.remove('hidden');
-        await wait(2000);
-        if (ov) ov.classList.add('hidden');
-        doExit();
-        refreshOrgPanel();
-        updateOrgDisplay();
-      };
-      if (titleEl) titleEl.textContent = '退出担保组织';
-      if (textEl) {
-        textEl.innerHTML = '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？';
-        textEl.classList.add('tip--error');
       }
-      if (modal) modal.classList.remove('hidden');
-      if (cancelEl) {
-        cancelEl.textContent = '取消';
-        cancelEl.classList.remove('hidden');
-        cancelEl.onclick = cleanupActionModal;
-      }
-      if (okEl) okEl.addEventListener('click', confirmExit);
+      updateWalletBrief();
+      refreshOrgPanel();
+      updateOrgDisplay();
+      showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
     });
     woExit.dataset._bind = '1';
   }
@@ -2291,6 +2270,16 @@ function renderWallet() {
       alert('已提交跨链转账请求（占位）');
     });
     ctBtn.dataset._bind = '1';
+  }
+  const refreshBtn = document.getElementById('refreshWalletBtn');
+  if (refreshBtn && !refreshBtn.dataset._bind) {
+    refreshBtn.addEventListener('click', () => {
+      refreshBtn.classList.add('is-loading');
+      setTimeout(() => {
+        refreshBtn.classList.remove('is-loading');
+      }, 1500);
+    });
+    refreshBtn.dataset._bind = '1';
   }
 
   const tfMode = document.getElementById('tfMode');

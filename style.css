@@ -4502,6 +4502,16 @@ code:hover {
   box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 
+/* Refresh Button Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.icon-btn.is-loading svg {
+  animation: spin 1s linear infinite;
+}
+
 
 .ops-item.danger:hover {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
