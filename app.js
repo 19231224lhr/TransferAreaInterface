@@ -96,8 +96,12 @@ function toAccount(basic, prev) {
     acc.address = mainAddr;
     delete acc.wallet.addressMsg[mainAddr];
   }
-  if (basic.wallet && basic.wallet.addressMsg) {
-    acc.wallet.addressMsg = { ...basic.wallet.addressMsg };
+  if (basic.wallet) {
+    acc.wallet.addressMsg = { ...acc.wallet.addressMsg, ...(basic.wallet.addressMsg || {}) };
+    if (basic.wallet.valueDivision) acc.wallet.valueDivision = { ...basic.wallet.valueDivision };
+    if (basic.wallet.totalValue !== undefined) acc.wallet.totalValue = basic.wallet.totalValue;
+    if (basic.wallet.TotalValue !== undefined) acc.wallet.TotalValue = basic.wallet.TotalValue;
+    if (basic.wallet.history) acc.wallet.history = [...basic.wallet.history];
   }
   return acc;
 }
@@ -215,9 +219,39 @@ function saveUser(user) {
   try {
     const prev = loadUser();
     const acc = toAccount(user, prev);
+
+    // 历史余额记录逻辑
+    if (!acc.wallet) acc.wallet = {};
+    if (!acc.wallet.history) acc.wallet.history = [];
+
+    // 计算当前总资产 (USDT)
+    const vd = acc.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
+    const pgc = Number(vd[0] || 0);
+    const btc = Number(vd[1] || 0);
+    const eth = Number(vd[2] || 0);
+    const totalUsdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
+
+    const now = Date.now();
+    const last = acc.wallet.history[acc.wallet.history.length - 1];
+
+    // 如果是新的记录（值变化或时间超过1分钟），则添加
+    // 或者如果是第一条记录
+    if (!last || last.v !== totalUsdt || (now - last.t > 60000)) {
+      acc.wallet.history.push({ t: now, v: totalUsdt });
+      // 限制历史记录长度，保留最近100条
+      if (acc.wallet.history.length > 100) {
+        acc.wallet.history = acc.wallet.history.slice(-100);
+      }
+    }
+
     localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
     updateHeaderUser(acc);
     updateOrgDisplay();
+
+    // 触发图表更新
+    if (typeof updateWalletChart === 'function') {
+      updateWalletChart(acc);
+    }
   } catch (e) {
     console.warn('保存本地用户信息失败', e);
   }
@@ -1949,86 +1983,269 @@ function renderWallet() {
     });
     joinBtn.dataset._bind = '1';
   }
-  const totalEl = document.getElementById('walletTotalChart');
-  if (totalEl) {
-    const ptsTpgc = Array.from({ length: 40 }, (_, i) => Math.round(70 + 20 * Math.sin(i / 3.8) + Math.random() * 6));
-    const ptsTbtc = Array.from({ length: 40 }, (_, i) => Math.round(65 + 18 * Math.cos(i / 3.2) + Math.random() * 6));
-    const ptsTeth = Array.from({ length: 40 }, (_, i) => Math.round(68 + 16 * Math.sin(i / 3.5 + 0.5) + Math.random() * 5));
-    const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
-    const pathT = ptsTpgc.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
-    totalEl.innerHTML = `
-      <svg viewBox=\"0 0 320 160\">
-        <line class=\"axis\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" />
-        <path class=\"line\" d=\"${pathT}\" />
-        <line class=\"cursor\" x1=\"160\" y1=\"0\" x2=\"160\" y2=\"160\" style=\"opacity:.35\" />
-        <circle class=\"dot\" cx=\"160\" cy=\"${toYt(ptsTpgc[Math.max(0, Math.min(ptsTpgc.length - 1, Math.round(160 / 8)))])}\" style=\"opacity:.0\" />
-      </svg>
-      <div class=\"tooltip\">PGC 0 · 00:00</div>
-    `;
-    const svgT = totalEl.querySelector('svg');
-    const pT = totalEl.querySelector('path.line');
-    const cursorT = totalEl.querySelector('line.cursor');
-    const dotT = totalEl.querySelector('circle.dot');
-    totalEl.__pts = ptsTpgc;
-    totalEl.__label = 'PGC';
-    const tipT = totalEl.querySelector('.tooltip');
-    const LT = pT.getTotalLength();
-    pT.style.strokeDasharray = LT;
-    pT.style.strokeDashoffset = LT;
-    requestAnimationFrame(() => { pT.style.strokeDashoffset = 0; });
-    const updateTotalTip = (ptsArr, label) => {
-      const lastIdx = ptsArr.length - 1;
-      const yv = ptsArr[lastIdx];
-      if (tipT) tipT.textContent = `${label} ${yv} · ${formatTime(lastIdx, ptsArr.length)}`;
+  // 动画循环控制
+  let chartAnimationId = null;
+
+  window.startChartAnimation = () => {
+    if (chartAnimationId) cancelAnimationFrame(chartAnimationId);
+
+    const animate = () => {
+      const u = loadUser();
+      if (u && u.wallet) {
+        // 传入当前时间戳作为"实时"标记，updateWalletChart 内部会处理
+        updateWalletChart(u, true);
+      }
+      chartAnimationId = requestAnimationFrame(animate);
     };
-    updateTotalTip(ptsTpgc, 'PGC');
-    svgT.addEventListener('mousemove', (e) => {
-      const rect = svgT.getBoundingClientRect();
-      const x = Math.max(0, Math.min(320, e.clientX - rect.left));
-      const curPts = totalEl.__pts || ptsTpgc;
-      const idx2 = Math.max(0, Math.min(curPts.length - 1, Math.round(x / 8)));
-      const yv = curPts[idx2];
-      cursorT.setAttribute('x1', String(x));
-      cursorT.setAttribute('x2', String(x));
-      cursorT.style.opacity = .9;
-      const cy = Math.max(0, 160 - yv - BASE_LIFT);
-      dotT.setAttribute('cx', String(x));
-      dotT.setAttribute('cy', String(cy));
-      dotT.style.opacity = 1;
-      const label = totalEl.__label || 'PGC';
-      if (tipT) tipT.textContent = `${label} ${yv} · ${formatTime(idx2, curPts.length)}`;
-    });
-    svgT.addEventListener('mouseleave', () => { cursorT.style.opacity = 0; dotT.style.opacity = 0; });
-    const totalTags = document.querySelector('.total-box .tags');
-    if (totalTags) {
-      const els = totalTags.querySelectorAll('.tag');
-      const colorBy = (k) => k === 'BTC' ? '#f59e0b' : (k === 'ETH' ? '#6366f1' : '#22d3ee');
-      const setActiveTotal = (k) => {
-        els.forEach(el => el.classList.remove('tag--active'));
-        if (k === 'PGC' && els[0]) els[0].classList.add('tag--active');
-        if (k === 'BTC' && els[1]) els[1].classList.add('tag--active');
-        if (k === 'ETH' && els[2]) els[2].classList.add('tag--active');
-      };
-      const applyTotal = (ptsArr, label) => {
-        totalEl.__pts = ptsArr;
-        totalEl.__label = label;
-        const d = ptsArr.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)}`).join(' ');
-        pT.setAttribute('d', d);
-        const L4 = pT.getTotalLength();
-        pT.style.strokeDasharray = L4;
-        pT.style.strokeDashoffset = L4;
-        requestAnimationFrame(() => { pT.style.strokeDashoffset = 0; });
-        setActiveTotal(label);
-        pT.style.stroke = colorBy(label);
-        updateTotalTip(ptsArr, label);
-        cursorT.style.opacity = 0; dotT.style.opacity = 0;
-      };
-      setActiveTotal(totalEl.__label || 'PGC');
-      if (els[0]) els[0].onclick = () => applyTotal(ptsTpgc, 'PGC');
-      if (els[1]) els[1].onclick = () => applyTotal(ptsTbtc, 'BTC');
-      if (els[2]) els[2].onclick = () => applyTotal(ptsTeth, 'ETH');
+    chartAnimationId = requestAnimationFrame(animate);
+  };
+
+  // 修改 updateWalletChart 支持实时模式
+  window.updateWalletChart = (u, isLive = false) => {
+    const totalEl = document.getElementById('walletTotalChart');
+    if (!totalEl) return;
+
+    // 获取历史数据
+    let history = (u && u.wallet && u.wallet.history) || [];
+    if (history.length === 0) {
+      const now = Date.now();
+      history = [{ t: now - 3600000, v: 0 }, { t: now, v: 0 }];
+    } else if (history.length === 1) {
+      history = [{ t: history[0].t - 3600000, v: history[0].v }, history[0]];
     }
+
+    // 如果是实时模式，添加当前时间点作为最新的数据点（视觉上）
+    // 注意：这不会修改 u.wallet.history，只是用于渲染
+    if (isLive) {
+      const lastPoint = history[history.length - 1];
+      const now = Date.now();
+      // 只有当当前时间大于最后一个点的时间时才添加，避免回退
+      if (now > lastPoint.t) {
+        // 构造一个新的历史数组用于显示，包含当前时间的点
+        // 这个点的值等于最后一个点的值（假设余额未变）
+        history = [...history, { t: now, v: lastPoint.v }];
+      }
+    }
+
+    // ========== 滚动时间窗口设计 ==========
+    // 始终显示最近1小时的数据，形成实时监控效果
+    const timeWindowSize = 60 * 60 * 1000; // 1小时窗口
+    const latestTime = history[history.length - 1].t;
+    const windowStartTime = latestTime - timeWindowSize;
+
+    // 过滤出窗口内的数据点
+    const visibleHistory = history.filter(h => h.t >= windowStartTime);
+
+    // 如果窗口内没有数据点，使用所有历史数据
+    const displayHistory = visibleHistory.length > 0 ? visibleHistory : history;
+
+    // ========== 动态Y轴缩放 ==========
+    // 根据可见数据的实际范围动态调整Y轴
+    const visibleValues = displayHistory.map(h => h.v);
+    const dataMax = Math.max(...visibleValues);
+    const dataMin = Math.min(...visibleValues);
+
+    // 计算数据范围
+    const dataRange = dataMax - dataMin;
+
+    // 设置最小显示范围（避免曲线过于平坦）
+    const minDisplayRange = 20;
+    const effectiveRange = Math.max(dataRange, minDisplayRange);
+
+    // 添加上下缓冲区（15%），让曲线不会顶格或贴底
+    const bufferRatio = 0.15;
+    const buffer = effectiveRange * bufferRatio;
+
+    // 计算最终的显示范围
+    let displayMin = dataMin - buffer;
+    let displayMax = dataMax + buffer;
+
+    // 如果数据范围使用了最小显示范围，居中显示数据
+    if (dataRange < minDisplayRange) {
+      const center = (dataMax + dataMin) / 2;
+      displayMin = center - (minDisplayRange + buffer * 2) / 2;
+      displayMax = center + (minDisplayRange + buffer * 2) / 2;
+    }
+
+    // 确保显示范围包含0（如果数据接近0）
+    if (displayMin > 0 && displayMin < 5) {
+      displayMin = 0;
+    }
+
+    const valSpan = displayMax - displayMin;
+
+    // ========== 坐标系统 ==========
+    const width = totalEl.clientWidth || 320;
+    const height = 160;
+    const paddingX = 20;
+    const paddingY = 30;
+
+    // 时间轴：始终显示完整的1小时窗口
+    const toX = (t) => paddingX + ((t - windowStartTime) / timeWindowSize) * (width - paddingX * 2);
+    const toY = (v) => height - paddingY - ((v - displayMin) / valSpan) * (height - paddingY * 2);
+
+    // ========== 阶梯化数据处理 ==========
+    // 为了实现"水平保持 -> 垂直突变"的效果，我们需要在数值变化点插入一个中间点
+    // 即：在 t2 时刻值变为 v2，我们在 t2 时刻先插入一个 v1 的点
+    const steppedHistory = [];
+    if (displayHistory.length > 0) {
+      steppedHistory.push(displayHistory[0]);
+      for (let i = 1; i < displayHistory.length; i++) {
+        const prev = displayHistory[i - 1];
+        const curr = displayHistory[i];
+
+        // 如果数值发生变化，插入阶梯点
+        if (curr.v !== prev.v) {
+          // 插入点：时间 = 当前时间，值 = 上一个值
+          // 注意：为了避免完全垂直导致的计算问题（虽然我们的算法能处理），
+          // 或者为了逻辑清晰，这里直接插入即可。
+          // 我们的圆角算法可以处理垂直线段。
+          steppedHistory.push({ t: curr.t, v: prev.v });
+        }
+        steppedHistory.push(curr);
+      }
+    }
+
+    // 生成路径点（使用阶梯化后的数据）
+    const points = steppedHistory.map(h => [toX(h.t), toY(h.v)]);
+
+    // 圆角折线生成算法
+    const cornerRadius = 10; // 圆角半径
+
+    // 重新实现构建逻辑
+    let pathD = '';
+    if (points.length > 0) {
+      pathD = `M ${points[0][0].toFixed(1)},${points[0][1].toFixed(1)}`;
+
+      for (let i = 1; i < points.length - 1; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        const next = points[i + 1];
+
+        const v1Len = Math.sqrt(Math.pow(curr[0] - prev[0], 2) + Math.pow(curr[1] - prev[1], 2));
+        const v2Len = Math.sqrt(Math.pow(next[0] - curr[0], 2) + Math.pow(next[1] - curr[1], 2));
+
+        const r = Math.min(cornerRadius, v1Len / 2, v2Len / 2);
+
+        // 起始点
+        const startX = curr[0] - (curr[0] - prev[0]) * r / v1Len;
+        const startY = curr[1] - (curr[1] - prev[1]) * r / v1Len;
+
+        // 结束点
+        const endX = curr[0] + (next[0] - curr[0]) * r / v2Len;
+        const endY = curr[1] + (next[1] - curr[1]) * r / v2Len;
+
+        // 直线连到圆角起始点
+        pathD += ` L ${startX.toFixed(1)},${startY.toFixed(1)}`;
+        // 二次贝塞尔曲线画圆角
+        pathD += ` Q ${curr[0].toFixed(1)},${curr[1].toFixed(1)} ${endX.toFixed(1)},${endY.toFixed(1)}`;
+      }
+
+      // 连接最后一个点
+      if (points.length > 1) {
+        const last = points[points.length - 1];
+        pathD += ` L ${last[0].toFixed(1)},${last[1].toFixed(1)}`;
+      }
+    }
+
+    // 闭合区域路径 (注意底部闭合点也要考虑 paddingX)
+    const areaD = `${pathD} L ${width - paddingX} ${height - paddingY} L ${paddingX} ${height - paddingY} Z`;
+
+    // 检查并初始化 SVG
+    let svg = totalEl.querySelector('svg');
+    if (!svg) {
+      totalEl.innerHTML = `
+        <svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="width:100%;height:100%;overflow:visible;">
+          <defs>
+            <linearGradient id="totalChartGradient" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.15"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path class="area" d="" fill="url(#totalChartGradient)" style="transition: none;"/>
+          <path class="line" d="" fill="none" stroke="#3b82f6" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="transition: none;"/>
+          <line class="cursor" x1="0" y1="0" x2="0" y2="${height}" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 4" style="opacity:0; pointer-events:none;"/>
+          <circle class="dot" cx="0" cy="0" r="5" fill="#fff" stroke="#3b82f6" stroke-width="2.5" style="opacity:0; pointer-events:none; box-shadow: 0 2px 4px rgba(0,0,0,0.1);"/>
+        </svg>
+        <div class="tooltip" style="opacity:0; position:absolute; top:10px; right:10px; background:rgba(255,255,255,0.95); padding:6px 10px; border-radius:8px; font-size:12px; color:#475569; box-shadow:0 4px 12px rgba(0,0,0,0.08); border:1px solid #e2e8f0; pointer-events:none; transition:opacity 0.2s; font-family: 'Inter', sans-serif; font-weight:500;"></div>
+      `;
+      svg = totalEl.querySelector('svg');
+    } else {
+      // 更新 viewBox 以适应可能的容器大小变化
+      svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    }
+
+    const pathLine = totalEl.querySelector('path.line');
+    const pathArea = totalEl.querySelector('path.area');
+
+    if (pathLine) pathLine.setAttribute('d', pathD);
+    if (pathArea) pathArea.setAttribute('d', areaD);
+
+    // 存储数据供事件处理使用
+    totalEl.__history = displayHistory; // 注意这里存储的是 displayHistory
+    totalEl.__toX = toX;
+    totalEl.__toY = toY;
+    totalEl.__width = width;
+
+    // 绑定事件 (只绑定一次)
+    if (!svg.dataset._boundV3) {
+      const mouseMoveHandler = (e) => {
+        const h = totalEl.__history;
+        const w = totalEl.__width;
+        if (!h || !w) return;
+
+        const rect = svg.getBoundingClientRect();
+        const x = Math.max(0, Math.min(w, (e.clientX - rect.left) * (w / rect.width)));
+
+        // 查找最近点
+        let closest = h[0];
+        let minDist = Infinity;
+        h.forEach(pt => {
+          const px = totalEl.__toX(pt.t);
+          const dist = Math.abs(px - x);
+          if (dist < minDist) { minDist = dist; closest = pt; }
+        });
+
+        const cx = totalEl.__toX(closest.t);
+        const cy = totalEl.__toY(closest.v);
+
+        const c = totalEl.querySelector('.cursor');
+        const d = totalEl.querySelector('.dot');
+        const t = totalEl.querySelector('.tooltip');
+
+        if (c) { c.setAttribute('x1', cx); c.setAttribute('x2', cx); c.style.opacity = 1; }
+        if (d) { d.setAttribute('cx', cx); d.setAttribute('cy', cy); d.style.opacity = 1; }
+
+        const date = new Date(closest.t);
+        const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+        if (t) {
+          t.innerHTML = `<span style="color:#64748b">Total:</span> <span style="color:#0f172a;font-weight:700">${closest.v.toLocaleString()} USDT</span> <span style="color:#cbd5e1;margin:0 4px">|</span> <span style="color:#94a3b8">${timeStr}</span>`;
+          t.style.opacity = 1;
+        }
+      };
+
+      const mouseLeaveHandler = () => {
+        const c = totalEl.querySelector('.cursor');
+        const d = totalEl.querySelector('.dot');
+        const t = totalEl.querySelector('.tooltip');
+        if (c) c.style.opacity = 0;
+        if (d) d.style.opacity = 0;
+        if (t) t.style.opacity = 0;
+      };
+
+      svg.addEventListener('mousemove', mouseMoveHandler);
+      svg.addEventListener('mouseleave', mouseLeaveHandler);
+      svg.dataset._boundV3 = 'true';
+    }
+  };
+
+  // 初始化调用并启动动画
+  const uChart = loadUser();
+  if (uChart) {
+    updateWalletChart(uChart);
+    startChartAnimation();
   }
+
   const usdtEl = document.getElementById('walletUSDT');
   if (usdtEl && u && u.wallet) {
     const vd = (u.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };

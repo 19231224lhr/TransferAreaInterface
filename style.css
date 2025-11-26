@@ -4113,37 +4113,22 @@ code:hover {
 }
 
 .addr-chart--overview {
-  max-height: 140px !important;
+  height: 160px !important;
+  max-height: none !important;
   background: transparent !important;
   box-shadow: none !important;
   border-radius: 0 !important;
   opacity: 1 !important;
   transform: none !important;
+  margin-top: 10px;
+  overflow: hidden;
+  position: relative;
 }
 
 .addr-chart--overview svg {
-  height: 140px !important;
-}
-
-.addr-chart--overview .line {
-  stroke: #0ea5e9;
-  stroke-width: 2;
-  fill: none;
-}
-
-.addr-chart--overview {
-  max-height: 140px !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  border-radius: 0 !important;
-  opacity: 1 !important;
-  stroke: #0ea5e9 !important;
-  stroke-width: 2.5 !important;
-  color: #64748b;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  height: 100% !important;
+  width: 100% !important;
+  overflow: visible;
 }
 
 /* Sub-address Card Redesign */
