@@ -1,5 +1,5 @@
 
-/* Wallet Structure Styles - Optimized */
+/* Wallet Structure Styles - Optimized v3 */
 .wb-section {
   margin-top: 12px;
 }
@@ -34,7 +34,7 @@
 }
 
 .wb-summary {
-  padding: 10px 12px; /* Reduced padding */
+  padding: 10px 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -71,10 +71,10 @@
 .wb-summary-content {
   display: flex;
   align-items: center;
-  gap: 8px; /* Reduced gap */
+  gap: 8px;
   flex: 1;
   min-width: 0;
-  overflow: hidden; /* Ensure overflow handling */
+  overflow: hidden;
 }
 
 .wb-addr-short {
@@ -84,11 +84,13 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 60px; /* Prevent shrinking too much */
+  min-width: 60px;
+  flex-shrink: 1;
 }
 
 .wb-coin-tag-wrapper {
   flex-shrink: 0;
+  display: flex;
 }
 
 .wb-balance-tag {
@@ -262,13 +264,18 @@
 .wb-sub-title-success { color: #16a34a; }
 .wb-sub-title-purple { color: #9333ea; }
 
-/* Overwrite default pre styles and add animation */
+/* Overwrite default pre styles and add CSS Grid animation */
 #walletStructBox.wb-clean-box {
   white-space: normal;
   font-family: inherit;
   
-  /* Animation styles */
-  height: 0;
+  /* CSS Grid Animation styles */
+  display: grid;
+  grid-template-rows: 0fr;
+  
+  /* Reset JS height if any */
+  height: auto;
+  
   opacity: 0;
   overflow: hidden;
   padding: 0;
@@ -277,6 +284,46 @@
   background: #f8fafc;
   
   transition: 
+    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#walletStructBox.wb-clean-box.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  padding: 12px;
+  margin-top: 12px;
+  border-width: 1px;
+}
+
+.wb-inner-wrapper {
+  min-height: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Animation for Raw JSON Box */
+.wb-json-box {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #334155;
+  overflow: hidden;
+  
+  /* Collapsed state */
+  height: 0;
+  opacity: 0;
+  padding: 0;
+  margin-top: 0;
+  border: 0 solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+
+  transition: 
     height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s ease-out,
     padding 0.35s ease,
@@ -284,7 +331,7 @@
     border-width 0.35s ease;
 }
 
-#walletStructBox.wb-clean-box.expanded {
+.wb-json-box.expanded {
   height: auto;
   opacity: 1;
   padding: 12px;

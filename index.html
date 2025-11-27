@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>简洁钱包前端 - 钱包操作</title>
   <link rel="stylesheet" href="/style.css?v=20251125_fix2" />
-  <link rel="stylesheet" href="/wallet_struct_styles.css" />
+  <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
   <style>
     /* Fix for Wallet Structure Toggle Button */
     #walletStructToggle {
@@ -27,14 +27,17 @@
       gap: 8px;
       margin-top: 16px;
     }
+
     #walletStructToggle:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
       background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
     }
+
     #walletStructToggle:active {
       transform: translateY(0);
     }
+
     /* Ensure detail modal styles are present */
     .detail-content {
       max-height: 60vh;
@@ -45,17 +48,20 @@
       border: 1px solid #e2e8f0;
       margin-bottom: 24px;
     }
+
     .detail-row {
       display: flex;
       margin-bottom: 8px;
       border-bottom: 1px dashed #e2e8f0;
       padding-bottom: 8px;
     }
+
     .detail-row:last-child {
       border-bottom: none;
       margin-bottom: 0;
       padding-bottom: 0;
     }
+
     .detail-label {
       width: 120px;
       flex-shrink: 0;
@@ -63,6 +69,7 @@
       font-size: 13px;
       font-weight: 500;
     }
+
     .detail-val {
       flex: 1;
       color: #334155;
@@ -70,6 +77,7 @@
       font-size: 13px;
       word-break: break-all;
     }
+
     .detail-sub {
       margin-top: 4px;
       background: #fff;
@@ -530,9 +538,10 @@
               <div id="walletTotalChart" class="addr-chart addr-chart--overview"></div>
             </div>
           </div>
-          <div class="pane" id="walletStructPane">
-            <button id="walletStructToggle" class="btn primary full-width" style="justify-content: center;">展开账户结构体</button>
-            <div id="walletStructBox" class="wb-clean-box hidden"></div>
+          <div class="pane pane--tight" id="walletStructPane">
+            <button id="walletStructToggle" class="btn primary full-width"
+              style="justify-content: center;">展开账户结构体</button>
+            <pre id="walletStructBox" class="result hidden struct-box" aria-live="polite"></pre>
           </div>
           <div id="walletAddrList" class="addr-list"></div>
         </div>

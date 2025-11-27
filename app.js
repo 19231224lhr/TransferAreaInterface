@@ -16,6 +16,17 @@ const base64urlToBytes = (b64url) => {
   return bytes;
 };
 
+const bytesToBase64url = (bytes) => {
+  // 转换 bytes -> base64url
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const b64 = btoa(binary);
+  // 转换 base64 -> base64url (移除填充并替换字符)
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+};
+
 const bytesToHex = (bytes) => Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
 const hexToBytes = (hex) => {
   const out = new Uint8Array(hex.length / 2);
@@ -976,15 +987,15 @@ window.showUtxoDetail = (addrKey, utxoKey) => {
   html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${utxo.Value || 0}</div></div>`;
   html += `<div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${getLabel(utxo.Type || 0)}</div></div>`;
   html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${utxo.Time || 0}</div></div>`;
-  
+
   if (utxo.Position) {
     html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">
       Block: ${utxo.Position.Blocknum}, IdxX: ${utxo.Position.IndexX}, IdxY: ${utxo.Position.IndexY}, IdxZ: ${utxo.Position.IndexZ}
     </div></div>`;
   }
-  
+
   html += `<div class="detail-row"><div class="detail-label">Is TXCer</div><div class="detail-val">${utxo.IsTXCerUTXO ? 'Yes' : 'No'}</div></div>`;
-  
+
   if (utxo.UTXO) {
     html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">
       <div class="detail-sub">
@@ -1040,22 +1051,147 @@ function updateWalletStruct() {
   };
 
   // Build HTML
-  let html = '<div style="font-family:\'Inter\', sans-serif;font-size:13px;line-height:1.6;">';
+  let html = '<div class="wb-inner-wrapper">';
 
-  // Wallet Summary Section
+  // Account Overview Section - 账户总览
+  html += '<div style="background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);padding:16px;border-radius:12px;margin-bottom:16px;border-left:4px solid #f59e0b;max-width:100%;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.05);">';
+  html += '<h4 style="margin:0 0 16px 0;color:#92400e;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;"><span>👤</span> 账户总览</h4>';
+
+  // Account ID Card
+  html += '<div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;border:1px solid rgba(245,158,11,0.2);">';
+  html += '<div style="color:#92400e;font-size:12px;margin-bottom:4px;">Account ID</div>';
+  html += `<div style="color:#d97706;font-size:24px;font-weight:700;letter-spacing:1px;font-family:monospace;">${u.accountId || '未设置'}</div>`;
+  html += '</div>';
+
+  // Main Address Row
+  html += '<div style="background:rgba(255,255,255,0.4);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);">';
+  html += '<div style="color:#78350f;font-size:11px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><span>🏠</span> 主地址</div>';
+  html += `<div style="color:#92400e;font-family:monospace;font-size:10px;word-break:break-all;overflow-wrap:break-word;line-height:1.4;">${u.address || '未设置'}</div>`;
+  html += '</div>';
+
+  // 获取担保组织信息 - 优先从 localStorage 读取
+  let guarantorInfo = null;
+  try {
+    const guarChoice = localStorage.getItem('guarChoice');
+    if (guarChoice) {
+      const choice = JSON.parse(guarChoice);
+      if (choice && choice.type === 'join' && choice.groupID) {
+        guarantorInfo = choice;
+      }
+    }
+  } catch (e) { }
+
+  // 如果 localStorage 没有，尝试从用户对象获取
+  if (!guarantorInfo) {
+    const guarantorId = u.orgNumber || u.guarGroup?.groupID || u.GuarantorGroupID || '';
+    if (guarantorId) {
+      guarantorInfo = { groupID: guarantorId };
+      if (u.guarGroup) {
+        guarantorInfo.aggreNode = u.guarGroup.aggreNode || u.guarGroup.AggrID || '';
+        guarantorInfo.assignNode = u.guarGroup.assignNode || u.guarGroup.AssiID || '';
+        guarantorInfo.pledgeAddress = u.guarGroup.pledgeAddress || u.guarGroup.PledgeAddress || '';
+      }
+    }
+  }
+
+  if (guarantorInfo && guarantorInfo.groupID) {
+    html += '<details style="margin-bottom:12px;background:rgba(255,255,255,0.4);border-radius:8px;border:1px solid rgba(245,158,11,0.1);overflow:hidden;">';
+    html += '<summary style="cursor:pointer;padding:10px;color:#047857;font-size:12px;font-weight:600;user-select:none;display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.05);"><span>🛡️</span> 担保组织信息</summary>';
+    html += '<div style="padding:10px;font-size:11px;border-top:1px solid rgba(16,185,129,0.1);">';
+
+    // Grid for Group Info
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
+    html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">GroupID</div><code style="color:#047857;font-weight:600;background:rgba(16,185,129,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.groupID}</code></div>`;
+    if (guarantorInfo.aggreNode) {
+      html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">AggreNode</div><code style="color:#0369a1;background:rgba(14,165,233,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.aggreNode}</code></div>`;
+    }
+    html += '</div>';
+
+    if (guarantorInfo.assignNode) {
+      html += `<div style="margin-bottom:8px;"><div style="color:#065f46;font-size:10px;margin-bottom:2px;">AssignNode</div><code style="color:#0369a1;background:rgba(14,165,233,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.assignNode}</code></div>`;
+    }
+    if (guarantorInfo.pledgeAddress) {
+      html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">Pledge Address</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#92400e;display:block;background:rgba(245,158,11,0.1);padding:4px;border-radius:4px;">${guarantorInfo.pledgeAddress}</code></div>`;
+    }
+    html += '</div>';
+    html += '</details>';
+  } else {
+    html += '<div style="background:rgba(255,255,255,0.4);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);display:flex;justify-content:space-between;align-items:center;">';
+    html += '<span style="color:#78350f;font-size:12px;font-weight:600;">🛡️ 担保组织</span>';
+    html += '<span style="color:#6b7280;font-size:12px;">未加入</span>';
+    html += '</div>';
+  }
+
+  // 显示账户密钥信息（可折叠）
+  const privHex = u.keys?.privHex || '';
+  const pubXHex = u.keys?.pubXHex || '';
+  const pubYHex = u.keys?.pubYHex || '';
+  if (privHex || pubXHex || pubYHex) {
+    html += '<details style="background:rgba(255,255,255,0.4);border-radius:8px;border:1px solid rgba(245,158,11,0.1);overflow:hidden;">';
+    html += '<summary style="cursor:pointer;padding:10px;color:#92400e;font-size:12px;font-weight:600;user-select:none;display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.05);"><span>🔑</span> 查看账户密钥</summary>';
+    html += '<div style="padding:10px;max-width:100%;overflow:hidden;border-top:1px solid rgba(245,158,11,0.1);">';
+    if (privHex) {
+      html += '<div style="margin-bottom:8px;padding:8px;background:rgba(254,242,242,0.8);border-left:3px solid #ef4444;border-radius:4px;max-width:100%;overflow:hidden;">';
+      html += '<div style="color:#991b1b;font-size:11px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><span>⚠️</span> 私钥 (请勿泄露)</div>';
+      html += `<code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#7f1d1d;display:block;font-family:monospace;">${privHex}</code>`;
+      html += '</div>';
+    }
+    if (pubXHex && pubYHex) {
+      html += '<div style="display:flex;flex-direction:column;gap:6px;">';
+      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#92400e;font-size:10px;margin-bottom:2px;">公钥 X</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#78350f;display:block;background:rgba(255,255,255,0.6);padding:4px;border-radius:4px;border:1px solid rgba(245,158,11,0.1);">${pubXHex}</code></div>`;
+      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#92400e;font-size:10px;margin-bottom:2px;">公钥 Y</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#78350f;display:block;background:rgba(255,255,255,0.6);padding:4px;border-radius:4px;border:1px solid rgba(245,158,11,0.1);">${pubYHex}</code></div>`;
+      html += '</div>';
+    }
+    html += '</div>';
+    html += '</details>';
+  }
+  html += '</div>';
+
+  // Wallet Summary Section - 钱包总览
   html += '<div style="background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);padding:16px;border-radius:12px;margin-bottom:16px;border-left:4px solid #0ea5e9;">';
-  html += '<h4 style="margin:0 0 12px 0;color:#0c4a6e;font-size:14px;font-weight:600;">📊 钱包总览</h4>';
-  html += createField('总价值', `<span style="color:#0ea5e9;font-weight:600;font-size:16px;">${totalPGC.toLocaleString()} PGC</span>`, true);
-  html += createField('PGC余额', `<span style="color:#10b981;font-weight:600;">${sums[0]}</span>`);
-  html += createField('BTC余额', `<span style="color:#f59e0b;font-weight:600;">${sums[1]}</span>`);
-  html += createField('ETH余额', `<span style="color:#3b82f6;font-weight:600;">${sums[2]}</span>`);
+  html += '<h4 style="margin:0 0 16px 0;color:#0c4a6e;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;"><span>📊</span> 钱包总览</h4>';
+
+  // Total Value Card
+  html += '<div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;border:1px solid rgba(14,165,233,0.2);">';
+  html += '<div style="color:#64748b;font-size:12px;margin-bottom:4px;">总价值估算</div>';
+  html += `<div style="color:#0ea5e9;font-size:24px;font-weight:700;letter-spacing:-0.5px;">${totalPGC.toLocaleString()} <span style="font-size:14px;font-weight:600;">PGC</span></div>`;
+  html += '</div>';
+
+  // Asset Grid
+  html += '<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:12px;">';
+
+  // PGC
+  html += '<div style="background:rgba(16,185,129,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(16,185,129,0.2);">';
+  html += '<div style="color:#059669;font-size:11px;font-weight:600;margin-bottom:2px;">PGC</div>';
+  html += `<div style="color:#047857;font-weight:700;font-size:14px;">${sums[0]}</div>`;
+  html += '</div>';
+
+  // BTC
+  html += '<div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(245,158,11,0.2);">';
+  html += '<div style="color:#d97706;font-size:11px;font-weight:600;margin-bottom:2px;">BTC</div>';
+  html += `<div style="color:#b45309;font-weight:700;font-size:14px;">${sums[1]}</div>`;
+  html += '</div>';
+
+  // ETH
+  html += '<div style="background:rgba(59,130,246,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(59,130,246,0.2);">';
+  html += '<div style="color:#2563eb;font-size:11px;font-weight:600;margin-bottom:2px;">ETH</div>';
+  html += `<div style="color:#1d4ed8;font-weight:700;font-size:14px;">${sums[2]}</div>`;
+  html += '</div>';
+
+  html += '</div>'; // End Grid
+
+  // Footer Info
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748b;padding-top:8px;border-top:1px dashed rgba(14,165,233,0.2);">';
   if (w.updateTime) {
     const ts = Number(w.updateTime);
-    // If timestamp is > 100 billion, assume it's milliseconds; otherwise seconds
     const date = new Date(ts > 100000000000 ? ts : ts * 1000);
-    html += createField('更新时间', date.toLocaleString());
+    html += `<div>🕒 ${date.toLocaleString()}</div>`;
   }
-  if (w.updateBlock) html += createField('更新区块', w.updateBlock);
+  if (w.updateBlock) {
+    html += `<div>📦 区块: ${w.updateBlock}</div>`;
+  }
+  html += '</div>';
+
   html += '</div>';
 
   // Addresses Section
@@ -1086,7 +1222,7 @@ function updateWalletStruct() {
       html += '<div class="wb-label wb-mb-sm">完整地址</div>';
       html += `<div class="wb-code-box">${addrKey}</div>`;
       html += '</div>';
-      
+
       html += `<div class="wb-row"><span class="wb-label">币种类型</span><span class="wb-value">${getCoinLabel(typeId)}</span></div>`;
       html += `<div class="wb-row"><span class="wb-label">UTXO 价值</span><span class="wb-value wb-text-success">${valObj.utxoValue || 0}</span></div>`;
       html += `<div class="wb-row"><span class="wb-label">TXCer 价值</span><span class="wb-value wb-text-purple">${valObj.txCerValue || 0}</span></div>`;
@@ -1133,14 +1269,91 @@ function updateWalletStruct() {
     html += `<h4 class="wb-total-title">📜 总TXCers (${totalTXCersKeys.length})</h4>`;
     html += '<div>';
     totalTXCersKeys.forEach(key => {
-      html += `<div class="wb-total-item">${key}: ${w.totalTXCers[key]}</div>`;
+      html += `<div style="font-size:11px;color:#7f1d1d;font-family:monospace;padding:4px 0;">${key}: ${w.totalTXCers[key]}</div>`;
     });
     html += '</div></div>';
   }
 
+  // Raw JSON Toggle Section
+  html += '<div style="margin-top:16px;">';
+  html += '<button id="rawStructBtn" class="btn secondary full-width" onclick="window.toggleRawStruct()" style="justify-content:center;border-style:dashed;color:#64748b;">展示完整信息</button>';
+  html += '<pre id="rawStructContent" class="wb-json-box"></pre>';
+  html += '</div>';
+
   html += '</div>';
   box.innerHTML = html;
 }
+
+window.toggleRawStruct = () => {
+  const btn = document.getElementById('rawStructBtn');
+  const content = document.getElementById('rawStructContent');
+  if (!btn || !content) return;
+
+  const isExpanded = content.classList.contains('expanded');
+
+  if (!isExpanded) {
+    // Populate content first
+    const u = loadUser();
+    if (u && u.wallet) {
+      // 移除 history 字段
+      const walletCopy = JSON.parse(JSON.stringify(u.wallet));
+      delete walletCopy.history;
+      content.textContent = JSON.stringify(walletCopy, null, 2);
+    } else {
+      content.textContent = '{}';
+    }
+
+    // Expand Animation Logic
+    content.style.height = 'auto';
+    content.style.padding = '12px';
+    content.style.marginTop = '12px';
+    content.style.borderWidth = '1px';
+    const fullHeight = content.scrollHeight + 'px';
+
+    content.style.height = '0px';
+    content.style.padding = '0px';
+    content.style.marginTop = '0px';
+    content.style.borderWidth = '0px';
+    content.offsetHeight; // Force reflow
+
+    content.classList.add('expanded');
+    content.style.height = fullHeight;
+
+    setTimeout(() => {
+      content.style.height = '';
+      content.style.padding = '';
+      content.style.marginTop = '';
+      content.style.borderWidth = '';
+    }, 350);
+
+    btn.textContent = '收起完整信息';
+  } else {
+    // Collapse Animation Logic
+    content.style.height = content.scrollHeight + 'px';
+    content.style.padding = '12px';
+    content.style.marginTop = '12px';
+    content.style.borderWidth = '1px';
+    content.offsetHeight; // Force reflow
+
+    content.classList.remove('expanded');
+
+    requestAnimationFrame(() => {
+      content.style.height = '0px';
+      content.style.padding = '0px';
+      content.style.marginTop = '0px';
+      content.style.borderWidth = '0px';
+    });
+
+    setTimeout(() => {
+      content.style.height = '';
+      content.style.padding = '';
+      content.style.marginTop = '';
+      content.style.borderWidth = '';
+    }, 350);
+
+    btn.textContent = '展示完整信息';
+  }
+};
 
 function updateTotalGasBadge(u) {
   const gasBadge = document.getElementById('walletGAS');
@@ -1372,7 +1585,31 @@ if (joinRecBtn) {
       joinRecBtn.disabled = false;
       if (joinSearchBtn) joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch { }
+
+    // 保存到 localStorage 和 Account 对象
+    try {
+      localStorage.setItem('guarChoice', JSON.stringify({
+        type: 'join',
+        groupID: g.groupID,
+        aggreNode: g.aggreNode,
+        assignNode: g.assignNode,
+        pledgeAddress: g.pledgeAddress
+      }));
+    } catch { }
+
+    // 保存到 Account.guarGroup
+    const u = loadUser();
+    if (u) {
+      u.guarGroup = {
+        groupID: g.groupID,
+        aggreNode: g.aggreNode,
+        assignNode: g.assignNode,
+        pledgeAddress: g.pledgeAddress
+      };
+      u.orgNumber = g.groupID;
+      saveUser(u);
+    }
+
     updateOrgDisplay();
     routeTo('#/inquiry-main');
   });
@@ -1392,7 +1629,31 @@ if (joinSearchBtn) {
       joinRecBtn.disabled = false;
       joinSearchBtn.disabled = false;
     }
-    try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'join', groupID: g.groupID, aggreNode: g.aggreNode, assignNode: g.assignNode, pledgeAddress: g.pledgeAddress })); } catch { }
+
+    // 保存到 localStorage 和 Account 对象
+    try {
+      localStorage.setItem('guarChoice', JSON.stringify({
+        type: 'join',
+        groupID: g.groupID,
+        aggreNode: g.aggreNode,
+        assignNode: g.assignNode,
+        pledgeAddress: g.pledgeAddress
+      }));
+    } catch { }
+
+    // 保存到 Account.guarGroup
+    const u = loadUser();
+    if (u) {
+      u.guarGroup = {
+        groupID: g.groupID,
+        aggreNode: g.aggreNode,
+        assignNode: g.assignNode,
+        pledgeAddress: g.pledgeAddress
+      };
+      u.orgNumber = g.groupID;
+      saveUser(u);
+    }
+
     updateOrgDisplay();
     routeTo('#/inquiry-main');
   });
@@ -2453,77 +2714,25 @@ function renderWallet() {
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
       const isExpanded = wsBox.classList.contains('expanded');
-      
+
       if (!isExpanded) {
-        // Expanding
-        // Render content first so we can calculate height if needed, though 'auto' height animation is tricky in CSS alone
-        // A common trick is to set max-height, or use grid template rows. 
-        // But here we used height: auto in CSS which doesn't animate. 
-        // Let's update content before expanding.
         updateWalletStruct();
-        
-        // To animate from 0 to auto height, we can use a grid trick or JS calculation.
-        // For simplicity with the current CSS 'height: auto' approach (which snaps), let's use a JS helper for smooth height.
-        
-        wsBox.classList.remove('hidden'); // ensure it's display:block if it was hidden
-        
-        // Get natural height
-        wsBox.style.height = 'auto';
-        wsBox.style.padding = '12px';
-        wsBox.style.marginTop = '12px';
-        wsBox.style.borderWidth = '1px';
-        const fullHeight = wsBox.scrollHeight + 'px';
-        
-        // Reset to start animation
-        wsBox.style.height = '0px';
-        wsBox.style.padding = '0px';
-        wsBox.style.marginTop = '0px';
-        wsBox.style.borderWidth = '0px';
-        wsBox.offsetHeight; // Force reflow
-        
+        wsBox.classList.remove('hidden');
+
+        // Force reflow to ensure transition runs from collapsed state
+        wsBox.offsetHeight;
+
         wsBox.classList.add('expanded');
-        wsBox.style.height = fullHeight;
-        // Clear manual styles after transition to allow auto resize
-        setTimeout(() => {
-           wsBox.style.height = '';
-           wsBox.style.padding = '';
-           wsBox.style.marginTop = '';
-           wsBox.style.borderWidth = '';
-        }, 350);
-        
         wsToggle.textContent = '收起账户结构体';
       } else {
-        // Collapsing
-        // Lock current height
-        wsBox.style.height = wsBox.scrollHeight + 'px';
-        wsBox.style.padding = '12px';
-        wsBox.style.marginTop = '12px';
-        wsBox.style.borderWidth = '1px';
-        wsBox.offsetHeight; // Force reflow
-        
         wsBox.classList.remove('expanded');
-        // Trigger close styles via class removal, but we need inline styles to animate to 0 properly if class removal isn't enough or overrides
-        // Actually the class removal handles the target state (height: 0), but we need to ensure it transitions.
-        // The CSS defines the target state for non-expanded.
-        
-        // We need to clear inline styles that locked it open, so CSS takes over? 
-        // No, CSS 'height:0' is the target. If we set inline height to scrollHeight, removing class 'expanded' 
-        // will try to go to 0, but inline style wins. So we must set inline to 0.
-        
-        requestAnimationFrame(() => {
-          wsBox.style.height = '0px';
-          wsBox.style.padding = '0px';
-          wsBox.style.marginTop = '0px';
-          wsBox.style.borderWidth = '0px';
-        });
-        
+
+        // Wait for transition to finish before hiding (optional, but good practice)
         setTimeout(() => {
-          wsBox.style.height = '';
-          wsBox.style.padding = '';
-          wsBox.style.marginTop = '';
-          wsBox.style.borderWidth = '';
-          wsBox.classList.add('hidden'); // optional, but keeps accessible state
-        }, 350);
+          if (!wsBox.classList.contains('expanded')) {
+            wsBox.classList.add('hidden');
+          }
+        }, 300);
 
         wsToggle.textContent = '展开账户结构体';
       }
@@ -3427,19 +3636,26 @@ function exchangeRate(moneyType) {
 }
 
 // ECDSA 签名函数：使用私钥签名哈希值
-async function ecdsaSignHash(privateKeyHex, hashBytes) {
+async function ecdsaSignHash(privateKeyHex, hashBytes, pubXHex = null, pubYHex = null) {
   try {
     // 1. 从 Hex 导入私钥
     const privBytes = hexToBytes(privateKeyHex);
 
-    // 2. 构造 JWK 格式的私钥 (需要公钥坐标，这里简化处理)
-    // 实际应该从私钥推导公钥，这里暂时使用简化方案
+    // 2. 构造 JWK 格式的私钥（需要公钥坐标 x, y）
     const jwk = {
       kty: 'EC',
       crv: 'P-256',
       d: bytesToBase64url(privBytes),
       ext: true
     };
+
+    // 如果提供了公钥坐标，添加到 JWK 中
+    if (pubXHex && pubYHex) {
+      const pubXBytes = hexToBytes(pubXHex);
+      const pubYBytes = hexToBytes(pubYHex);
+      jwk.x = bytesToBase64url(pubXBytes);
+      jwk.y = bytesToBase64url(pubYBytes);
+    }
 
     // 3. 导入私钥
     const privateKey = await crypto.subtle.importKey(
@@ -3487,12 +3703,157 @@ function parseECDSASignature(signature) {
   };
 }
 
+// ==================== Backend Compatibility Helpers ====================
+
+function hexToDecimal(hex) {
+  if (!hex) return null;
+  try {
+    return BigInt('0x' + hex).toString(10);
+  } catch (e) {
+    return null;
+  }
+}
+
+function toBase64(uint8Arr) {
+  if (!uint8Arr || uint8Arr.length === 0) return null;
+  let binary = '';
+  const len = uint8Arr.byteLength;
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(uint8Arr[i]);
+  }
+  return btoa(binary);
+}
+
+// Sort object keys alphabetically (to match Go's json.Marshal map ordering)
+function sortObjectKeys(obj) {
+  if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return obj;
+  const sorted = {};
+  Object.keys(obj).sort().forEach(key => {
+    sorted[key] = obj[key];
+  });
+  return sorted;
+}
+
+// Map frontend objects to backend struct structure (Ordered Keys & Type Conversion)
+function mapToBackend(data, type) {
+  if (!data) return null;
+
+  if (type === 'Transaction') {
+    // Filter inputs/outputs like backend GetTXHash
+    const txInputs = (data.TXInputsNormal || []).filter(i => !i.IsGuarMake).map(i => mapToBackend(i, 'TXInputNormal'));
+    const txOutputs = (data.TXOutputs || []).filter(o => !o.IsGuarMake).map(o => mapToBackend(o, 'TXOutput'));
+
+    // Handle nulls for empty slices
+    const inputsCert = (!data.TXInputsCertificate || data.TXInputsCertificate.length === 0) ? null : data.TXInputsCertificate;
+    const dataField = (!data.Data || data.Data.length === 0) ? null : toBase64(new Uint8Array(data.Data));
+
+    return {
+      TXID: data.TXID || "",
+      Size: data.Size || 0,
+      Version: data.Version || 0,
+      GuarantorGroup: data.GuarantorGroup || "",
+      TXType: data.TXType || 0,
+      Value: data.Value || 0,
+      ValueDivision: sortObjectKeys(data.ValueDivision) || null,
+      NewValue: data.NewValue || 0,
+      NewValueDiv: sortObjectKeys(data.NewValueDiv) || null,
+      InterestAssign: mapToBackend(data.InterestAssign, 'InterestAssign'),
+      UserSignature: mapToBackend(data.UserSignature, 'EcdsaSignature'),
+      TXInputsNormal: txInputs.length > 0 ? txInputs : null,
+      TXInputsCertificate: inputsCert,
+      TXOutputs: txOutputs.length > 0 ? txOutputs : null,
+      Data: dataField
+    };
+  }
+
+  if (type === 'TXInputNormal') {
+    return {
+      FromTXID: data.FromTXID || "",
+      FromTxPosition: mapToBackend(data.FromTxPosition, 'TxPosition'),
+      FromAddress: data.FromAddress || "",
+      IsGuarMake: !!data.IsGuarMake,
+      IsCommitteeMake: !!data.IsCommitteeMake,
+      IsCrossChain: !!data.IsCrossChain,
+      InputSignature: mapToBackend(data.InputSignature, 'EcdsaSignature'),
+      TXOutputHash: (data.TXOutputHash && data.TXOutputHash.length > 0) ? toBase64(new Uint8Array(data.TXOutputHash)) : null
+    };
+  }
+
+  if (type === 'TXOutput') {
+    return {
+      ToAddress: data.ToAddress || "",
+      ToValue: data.ToValue || 0,
+      ToGuarGroupID: data.ToGuarGroupID || "",
+      ToPublicKey: mapToBackend(data.ToPublicKey, 'PublicKeyNew'),
+      ToInterest: data.ToInterest || 0,
+      Type: data.Type || 0,
+      ToPeerID: data.ToPeerID || "",
+      IsPayForGas: !!data.IsPayForGas,
+      IsCrossChain: !!data.IsCrossChain,
+      IsGuarMake: !!data.IsGuarMake
+    };
+  }
+
+  if (type === 'PublicKeyNew') {
+    if (!data) return { CurveName: "", X: null, Y: null }; // Zero value
+    return {
+      CurveName: data.CurveName || data.Curve || "",
+      X: "@@BIGINT@@" + hexToDecimal(data.XHex || data.X),
+      Y: "@@BIGINT@@" + hexToDecimal(data.YHex || data.Y)
+    };
+  }
+
+  if (type === 'EcdsaSignature') {
+    if (!data) return { R: null, S: null };
+    return {
+      R: data.R ? "@@BIGINT@@" + hexToDecimal(data.R) : null,
+      S: data.S ? "@@BIGINT@@" + hexToDecimal(data.S) : null
+    };
+  }
+
+  if (type === 'TxPosition') {
+    return {
+      Blocknum: data.Blocknum || 0,
+      IndexX: data.IndexX || 0,
+      IndexY: data.IndexY || 0,
+      IndexZ: data.IndexZ || 0
+    };
+  }
+
+  if (type === 'InterestAssign') {
+    return {
+      Gas: data.Gas || 0,
+      Output: data.Output || 0,
+      BackAssign: sortObjectKeys(data.BackAssign) || null
+    };
+  }
+
+  return data;
+}
+
+function serializeStruct(data, type, excludeFields = []) {
+  const mapped = mapToBackend(data, type);
+
+  // Handle excluded fields by setting to zero values
+  excludeFields.forEach(field => {
+    if (field === 'Size') mapped.Size = 0;
+    if (field === 'NewValue') mapped.NewValue = 0;
+    if (field === 'UserSignature') mapped.UserSignature = { R: null, S: null };
+    if (field === 'TXType') mapped.TXType = 0;
+  });
+
+  let json = JSON.stringify(mapped);
+
+  // Replace BigInt placeholders with unquoted numbers
+  json = json.replace(/"@@BIGINT@@(\d+)"/g, '$1');
+
+  return new TextEncoder().encode(json);
+}
+
 // 计算 TXOutput 的哈希
 async function getTXOutputHash(output) {
   try {
-    const serialized = JSON.stringify(output);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(serialized);
+    const data = serializeStruct(output, 'TXOutput');
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     return new Uint8Array(hashBuffer);
   } catch (err) {
@@ -3501,19 +3862,19 @@ async function getTXOutputHash(output) {
   }
 }
 
+// 计算交易哈希 (Internal)
+async function getTXHash(tx) {
+  // Exclude fields: Size, NewValue, UserSignature, TXType
+  const data = serializeStruct(tx, 'Transaction', ['Size', 'NewValue', 'UserSignature', 'TXType']);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  return new Uint8Array(hashBuffer);
+}
+
 // 计算交易 TXID
 async function getTXID(tx) {
   try {
-    const txCopy = JSON.parse(JSON.stringify(tx));
-    delete txCopy.UserSignature;
-    delete txCopy.TXID;
-
-    const serialized = JSON.stringify(txCopy);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(serialized);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-
-    return bytesToHex(new Uint8Array(hashBuffer));
+    const hashBytes = await getTXHash(tx);
+    return bytesToHex(hashBytes);
   } catch (err) {
     console.error('TXID 计算失败:', err);
     throw new Error('Failed to calculate TXID: ' + err.message);
@@ -3523,8 +3884,8 @@ async function getTXID(tx) {
 // 计算交易 Size
 function getTXSize(tx) {
   try {
-    const serialized = JSON.stringify(tx);
-    return new TextEncoder().encode(serialized).length;
+    const data = serializeStruct(tx, 'Transaction', ['Size']);
+    return data.length;
   } catch (err) {
     console.error('交易 Size 计算失败:', err);
     return 0;
@@ -3532,19 +3893,10 @@ function getTXSize(tx) {
 }
 
 // 计算交易的用户签名
-async function getTXUserSignature(tx, privateKeyHex) {
+async function getTXUserSignature(tx, privateKeyHex, pubXHex = null, pubYHex = null) {
   try {
-    const txCopy = JSON.parse(JSON.stringify(tx));
-    delete txCopy.UserSignature;
-
-    const serialized = JSON.stringify(txCopy);
-    const encoder = new TextEncoder();
-    const data = encoder.encode(serialized);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashBytes = new Uint8Array(hashBuffer);
-
-    const signature = await ecdsaSignHash(privateKeyHex, hashBytes);
-
+    const hashBytes = await getTXHash(tx);
+    const signature = await ecdsaSignHash(privateKeyHex, hashBytes, pubXHex, pubYHex);
     return signature;
   } catch (err) {
     console.error('用户签名失败:', err);
@@ -3710,11 +4062,11 @@ async function buildNewTX(buildTXInfo, userAccount) {
         }
 
         // 遍历 UTXO
-        const utxos = addrData.utxo || addrData.UTXO || {};
+        const utxos = addrData.utxos || addrData.utxo || addrData.UTXO || {};
         for (const [utxoId, utxoData] of Object.entries(utxos)) {
           const input = {
-            FromTXID: utxoData.utxo?.TXID || utxoData.TXID || '',
-            FromTxPosition: utxoData.position || { IndexZ: 0 },
+            FromTXID: utxoData.utxo?.TXID || utxoData.UTXO?.TXID || utxoData.TXID || '',
+            FromTxPosition: utxoData.position || utxoData.Position || { IndexZ: 0 },
             FromAddress: address,
             IsGuarMake: false,
             TXOutputHash: [],
@@ -3733,7 +4085,9 @@ async function buildNewTX(buildTXInfo, userAccount) {
 
               const privKeyHex = addrData.privHex || addrData.wPrivateKey || '';
               if (privKeyHex) {
-                const sig = await ecdsaSignHash(privKeyHex, hashBytes);
+                const pubXHex = addrData.pubXHex || '';
+                const pubYHex = addrData.pubYHex || '';
+                const sig = await ecdsaSignHash(privKeyHex, hashBytes, pubXHex, pubYHex);
                 input.InputSignature = { R: sig.R, S: sig.S };
               }
             }
@@ -3743,7 +4097,7 @@ async function buildNewTX(buildTXInfo, userAccount) {
 
           tx.TXInputsNormal.push(input);
 
-          const utxoValue = Number(utxoData.value || 0);
+          const utxoValue = Number(utxoData.value || utxoData.Value || 0);
           typeValueCount += utxoValue;
           usedWallet[address].UTXO[utxoId] = utxoData;
 
@@ -3806,16 +4160,21 @@ async function buildNewTX(buildTXInfo, userAccount) {
     tx.TXID = await getTXID(tx);
     tx.Size = getTXSize(tx);
 
-    // 交易签名
-    if (tx.TXInputsNormal.length > 0) {
-      const firstInputAddr = tx.TXInputsNormal[0].FromAddress;
-      const addrData = addressMsg[firstInputAddr];
-      const privKeyHex = addrData?.privHex || addrData?.wPrivateKey || '';
 
-      if (privKeyHex) {
-        tx.UserSignature = await getTXUserSignature(tx, privKeyHex);
+    // 交易签名 - 使用 Account 的主公私钥，而不是子地址的密钥
+    if (tx.TXInputsNormal.length > 0) {
+      // ✓ 使用 Account 的主密钥，不是子地址的密钥
+      const accountPrivHex = userAccount.keys?.privHex || '';
+      const accountPubXHex = userAccount.keys?.pubXHex || '';
+      const accountPubYHex = userAccount.keys?.pubYHex || '';
+
+      if (accountPrivHex) {
+        tx.UserSignature = await getTXUserSignature(tx, accountPrivHex, accountPubXHex, accountPubYHex);
+      } else {
+        console.warn('Account 主密钥未找到，无法签名交易');
       }
     }
+
 
     return tx;
   } catch (err) {
@@ -3823,3 +4182,88 @@ async function buildNewTX(buildTXInfo, userAccount) {
     throw err;
   }
 }
+
+// Wallet Structure Toggle Animation & Logic
+document.addEventListener('DOMContentLoaded', () => {
+  const walletStructToggle = document.getElementById('walletStructToggle');
+  const walletStructBox = document.getElementById('walletStructBox');
+
+  if (walletStructToggle && walletStructBox) {
+    // Remove any existing listeners by cloning (optional, but safe)
+    const newBtn = walletStructToggle.cloneNode(true);
+    walletStructToggle.parentNode.replaceChild(newBtn, walletStructToggle);
+
+    newBtn.addEventListener('click', () => {
+      const isExpanded = walletStructBox.classList.contains('expanded');
+
+      if (isExpanded) {
+        walletStructBox.classList.remove('expanded');
+        newBtn.innerHTML = '展开账户结构体';
+        // Wait for transition to finish before hiding
+        setTimeout(() => {
+          if (!walletStructBox.classList.contains('expanded')) {
+            walletStructBox.classList.add('hidden');
+          }
+        }, 500);
+      } else {
+        walletStructBox.classList.remove('hidden');
+        // Force reflow to enable transition
+        void walletStructBox.offsetWidth;
+        walletStructBox.classList.add('expanded');
+        newBtn.innerHTML = '收起账户结构体';
+
+        // Ensure content is up to date
+        if (typeof updateWalletStruct === 'function') {
+          updateWalletStruct();
+        }
+      }
+    });
+  }
+});
+
+// UTXO Detail Modal Logic
+window.showUtxoDetail = (addrKey, utxoKey) => {
+  const u = loadUser();
+  if (!u || !u.wallet || !u.wallet.addressMsg) return;
+
+  const addrData = u.wallet.addressMsg[addrKey];
+  if (!addrData || !addrData.utxos) return;
+
+  const utxoData = addrData.utxos[utxoKey];
+  if (!utxoData) return;
+
+  // Create modal if not exists
+  let modal = document.getElementById('utxoDetailModal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'utxoDetailModal';
+    modal.className = 'utxo-modal';
+    modal.innerHTML = `
+      <div class="utxo-modal-content">
+        <div class="utxo-modal-header">
+          <h3 class="utxo-modal-title"><span>💎</span> UTXO 详情</h3>
+          <button class="utxo-modal-close" onclick="window.closeUtxoModal()">×</button>
+        </div>
+        <div class="utxo-modal-body" id="utxoModalBody"></div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on click outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) window.closeUtxoModal();
+    });
+  }
+
+  const body = document.getElementById('utxoModalBody');
+  body.innerHTML = `<pre style="font-family:monospace;font-size:12px;color:#334155;white-space:pre-wrap;word-break:break-all;">${JSON.stringify(utxoData, null, 2)}</pre>`;
+
+  // Force reflow
+  void modal.offsetWidth;
+  modal.classList.add('active');
+};
+
+window.closeUtxoModal = () => {
+  const modal = document.getElementById('utxoDetailModal');
+  if (modal) modal.classList.remove('active');
+};
