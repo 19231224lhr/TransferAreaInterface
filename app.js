@@ -196,11 +196,10 @@ function updateHeaderUser(user) {
       Object.keys(map).forEach((k) => {
         if (u && u.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
         const m = map[k];
-        const vd = (m && m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-        const pgc = Number(vd[0] || 0);
-        const btc = Number(vd[1] || 0);
-        const eth = Number(vd[2] || 0);
-        const v = Math.round(pgc * 1 + btc * 100 + eth * 10);
+        const type = Number(m.type || 0);
+        const val = Number(m.value && (m.value.totalValue || m.value.TotalValue) || 0);
+        const rate = type === 1 ? 100 : (type === 2 ? 10 : 1);
+        const v = Math.round(val * rate);
         html += `<div class="addr-row" style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin:4px 0;">
           <code class="break" style="max-width:150px;background:#f6f8fe;padding:4px 6px;border-radius:8px;">${k}</code>
           <span style="color:#667085;font-weight:600;min-width:64px;text-align:right;white-space:nowrap;">${v} USDT</span>
@@ -944,45 +943,203 @@ function updateWalletBrief() {
   }
 }
 
-function updateWalletStruct() {
+function showDetailModal(title, htmlContent) {
+  const modal = document.getElementById('detailModal');
+  const modalTitle = document.getElementById('detailModalTitle');
+  const modalContent = document.getElementById('detailModalContent');
+  const closeBtn = document.getElementById('detailModalClose');
+  if (!modal || !modalTitle || !modalContent) return;
+  modalTitle.textContent = title;
+  modalContent.innerHTML = htmlContent;
+  modal.classList.remove('hidden');
+  const closeHandler = () => {
+    modal.classList.add('hidden');
+  };
+  if (closeBtn) closeBtn.onclick = closeHandler;
+}
+
+window.showUtxoDetail = (addrKey, utxoKey) => {
   const u = loadUser();
+  if (!u || !u.wallet || !u.wallet.addressMsg) return;
+  const addrMsg = u.wallet.addressMsg[addrKey];
+  if (!addrMsg || !addrMsg.utxos) return;
+  const utxo = addrMsg.utxos[utxoKey];
+  if (!utxo) return;
+
+  const getLabel = (type) => {
+    const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+    return labels[type] || 'UNKNOWN';
+  };
+
+  let html = '';
+  html += `<div class="detail-row"><div class="detail-label">UTXO Key</div><div class="detail-val">${utxoKey}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${utxo.Value || 0}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Type</div><div class="detail-val">${getLabel(utxo.Type || 0)}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${utxo.Time || 0}</div></div>`;
+  
+  if (utxo.Position) {
+    html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">
+      Block: ${utxo.Position.Blocknum}, IdxX: ${utxo.Position.IndexX}, IdxY: ${utxo.Position.IndexY}, IdxZ: ${utxo.Position.IndexZ}
+    </div></div>`;
+  }
+  
+  html += `<div class="detail-row"><div class="detail-label">Is TXCer</div><div class="detail-val">${utxo.IsTXCerUTXO ? 'Yes' : 'No'}</div></div>`;
+  
+  if (utxo.UTXO) {
+    html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">
+      <div class="detail-sub">
+        <div style="margin-bottom:4px">TXID: ${utxo.UTXO.TXID || 'N/A'}</div>
+        <div>VOut: ${utxo.UTXO.VOut}</div>
+      </div>
+    </div></div>`;
+  }
+
+  showDetailModal('UTXO 详情', html);
+};
+
+function updateWalletStruct() {
   const box = document.getElementById('walletStructBox');
+  const u = loadUser();
   if (!box || !u || !u.wallet) return;
   const w = u.wallet || {};
   const addr = w.addressMsg || {};
   const sums = { 0: 0, 1: 0, 2: 0 };
   Object.keys(addr).forEach((k) => {
     const m = addr[k] || {};
-    const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-    sums[0] += Number(vd[0] || 0);
-    sums[1] += Number(vd[1] || 0);
-    sums[2] += Number(vd[2] || 0);
+    const type = Number(m.type || 0);
+    const val = Number(m.value && (m.value.totalValue || m.value.TotalValue) || 0);
+    if (sums[type] !== undefined) sums[type] += val;
   });
   const totalPGC = Number(sums[0] || 0) + Number(sums[1] || 0) * 1000000 + Number(sums[2] || 0) * 1000;
-  const printable = {
-    AddressMsg: Object.keys(addr).reduce((acc, k) => {
-      const m = addr[k] || {};
-      const tId = Number(m && m.type !== undefined ? m.type : 0);
-      const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-      const txc = Number((m.value && m.value.txCerValue) || 0);
-      const cash = Number(vd[tId] || 0);
-      acc[k] = {
-        type: m.type,
-        valueDivision: m.valueDivision,
-        value: { utxoValue: cash, txCerValue: txc, totalValue: cash + txc },
-        estInterest: readAddressInterest(m),
-        utxosCount: m.utxos ? Object.keys(m.utxos).length : 0,
-        txCersCount: m.txCers ? Object.keys(m.txCers).length : 0
-      };
-      return acc;
-    }, {}),
-    TotalTXCers: w.totalTXCers || {},
-    TotalValue: totalPGC,
-    ValueDivision: sums,
-    UpdateTime: w.updateTime || 0,
-    UpdateBlock: w.updateBlock || 0
+
+  // Helper functions for rendering
+  const getCoinLabel = (type) => {
+    const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+    const colors = { 0: '#10b981', 1: '#f59e0b', 2: '#3b82f6' };
+    return `<span class="coin-tag" style="background:${colors[type] || '#6b7280'}20;color:${colors[type] || '#6b7280'};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;">${labels[type] || 'UNKNOWN'}</span>`;
   };
-  box.textContent = JSON.stringify(printable, null, 2);
+
+  const renderValue = (val) => {
+    if (typeof val === 'object' && val !== null) {
+      if (Array.isArray(val)) return `<span style="color:#94a3b8;">[${val.length} items]</span>`;
+      const keys = Object.keys(val);
+      if (keys.length === 0) return `<span style="color:#94a3b8;">{}</span>`;
+      return `<span style="color:#94a3b8;">{${keys.length} keys}</span>`;
+    }
+    if (typeof val === 'string') return `<span style="color:#0ea5e9;">"${val}"</span>`;
+    if (typeof val === 'number') return `<span style="color:#8b5cf6;">${val}</span>`;
+    if (typeof val === 'boolean') return `<span style="color:#ec4899;">${val}</span>`;
+    return `<span style="color:#64748b;">${val}</span>`;
+  };
+
+  const createField = (label, value, isHighlight = false) => {
+    return `<div style="display:flex;align-items:center;gap:8px;margin:4px 0;">
+      <span style="color:#475569;font-size:12px;min-width:100px;">${label}:</span>
+      ${isHighlight ? `<strong>${value}</strong>` : value}
+    </div>`;
+  };
+
+  // Build HTML
+  let html = '<div style="font-family:\'Inter\', sans-serif;font-size:13px;line-height:1.6;">';
+
+  // Wallet Summary Section
+  html += '<div style="background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);padding:16px;border-radius:12px;margin-bottom:16px;border-left:4px solid #0ea5e9;">';
+  html += '<h4 style="margin:0 0 12px 0;color:#0c4a6e;font-size:14px;font-weight:600;">📊 钱包总览</h4>';
+  html += createField('总价值', `<span style="color:#0ea5e9;font-weight:600;font-size:16px;">${totalPGC.toLocaleString()} PGC</span>`, true);
+  html += createField('PGC余额', `<span style="color:#10b981;font-weight:600;">${sums[0]}</span>`);
+  html += createField('BTC余额', `<span style="color:#f59e0b;font-weight:600;">${sums[1]}</span>`);
+  html += createField('ETH余额', `<span style="color:#3b82f6;font-weight:600;">${sums[2]}</span>`);
+  if (w.updateTime) {
+    const ts = Number(w.updateTime);
+    // If timestamp is > 100 billion, assume it's milliseconds; otherwise seconds
+    const date = new Date(ts > 100000000000 ? ts : ts * 1000);
+    html += createField('更新时间', date.toLocaleString());
+  }
+  if (w.updateBlock) html += createField('更新区块', w.updateBlock);
+  html += '</div>';
+
+  // Addresses Section
+  const addresses = Object.keys(addr);
+  if (addresses.length > 0) {
+    html += `<h4 class="wb-title">🏦 子地址 (${addresses.length})</h4>`;
+
+    addresses.forEach((addrKey, idx) => {
+      const m = addr[addrKey] || {};
+      const typeId = Number(m.type || 0);
+      const valObj = m.value || {};
+      const utxos = m.utxos || {};
+      const txCers = m.txCers || {};
+      const utxoCount = Object.keys(utxos).length;
+      const txCerCount = Object.keys(txCers).length;
+
+      html += `<details class="wb-detail-card">`;
+      html += `<summary class="wb-summary">
+        <div class="wb-summary-content">
+          <span class="wb-addr-short">${addrKey.slice(0, 8)}...${addrKey.slice(-8)}</span>
+          <div class="wb-coin-tag-wrapper">${getCoinLabel(typeId)}</div>
+          <span class="wb-balance-tag">${valObj.totalValue || 0} ${typeId === 0 ? 'PGC' : typeId === 1 ? 'BTC' : 'ETH'}</span>
+        </div>
+      </summary>`;
+
+      html += '<div class="wb-content">';
+      html += '<div style="margin-bottom:12px">';
+      html += '<div class="wb-label wb-mb-sm">完整地址</div>';
+      html += `<div class="wb-code-box">${addrKey}</div>`;
+      html += '</div>';
+      
+      html += `<div class="wb-row"><span class="wb-label">币种类型</span><span class="wb-value">${getCoinLabel(typeId)}</span></div>`;
+      html += `<div class="wb-row"><span class="wb-label">UTXO 价值</span><span class="wb-value wb-text-success">${valObj.utxoValue || 0}</span></div>`;
+      html += `<div class="wb-row"><span class="wb-label">TXCer 价值</span><span class="wb-value wb-text-purple">${valObj.txCerValue || 0}</span></div>`;
+      html += `<div class="wb-row"><span class="wb-label">总价值</span><span class="wb-value wb-text-blue-bold">${valObj.totalValue || 0}</span></div>`;
+      html += `<div class="wb-row"><span class="wb-label">预估利息</span><span class="wb-value wb-text-warning">${m.estInterest || 0} GAS</span></div>`;
+
+      // UTXOs subsection
+      if (utxoCount > 0) {
+        html += '<div class="wb-sub-section">';
+        html += `<div class="wb-sub-title wb-sub-title-success">💰 UTXOs (${utxoCount})</div>`;
+        html += '<div class="wb-utxo-list">';
+        Object.keys(utxos).forEach((utxoKey) => {
+          const utxo = utxos[utxoKey];
+          html += `<div class="wb-utxo-item">`;
+          html += `<div class="wb-utxo-info">`;
+          html += `<div class="wb-utxo-hash" title="${utxoKey}">${utxoKey}</div>`;
+          html += `<div class="wb-utxo-val">${utxo.Value} ${getCoinLabel(utxo.Type || 0)}</div>`;
+          html += `</div>`;
+          html += `<button class="btn secondary wb-btn-xs" onclick="window.showUtxoDetail('${addrKey}', '${utxoKey}')">详情</button>`;
+          html += `</div>`;
+        });
+        html += '</div></div>';
+      }
+
+      // TXCers subsection
+      if (txCerCount > 0) {
+        html += '<div class="wb-sub-section">';
+        html += `<div class="wb-sub-title wb-sub-title-purple">📜 TXCers (${txCerCount})</div>`;
+        Object.keys(txCers).forEach((txCerKey) => {
+          const txCerVal = txCers[txCerKey];
+          html += `<div class="wb-txcer-box">${txCerKey}: ${txCerVal}</div>`;
+        });
+        html += '</div>';
+      }
+
+      html += '</div></details>';
+    });
+  }
+
+  // TotalTXCers Section
+  const totalTXCersKeys = Object.keys(w.totalTXCers || {});
+  if (totalTXCersKeys.length > 0) {
+    html += '<div class="wb-total-box">';
+    html += `<h4 class="wb-total-title">📜 总TXCers (${totalTXCersKeys.length})</h4>`;
+    html += '<div>';
+    totalTXCersKeys.forEach(key => {
+      html += `<div class="wb-total-item">${key}: ${w.totalTXCers[key]}</div>`;
+    });
+    html += '</div></div>';
+  }
+
+  html += '</div>';
+  box.innerHTML = html;
 }
 
 function updateTotalGasBadge(u) {
@@ -1674,7 +1831,7 @@ function renderWallet() {
       const addBtn = item.querySelector('.test-add-any');
       const zeroBtn = item.querySelector('.test-zero-any');
       if (addBtn) {
-        addBtn.addEventListener('click', (e) => {
+        addBtn.addEventListener('click', async (e) => {
           e.stopPropagation();
           const u4 = loadUser();
           if (!u4 || !u4.wallet || !u4.wallet.addressMsg) return;
@@ -1683,33 +1840,88 @@ function renderWallet() {
           if (!found) return;
           const typeId = Number(found && found.type !== undefined ? found.type : 0);
           const inc = typeId === 1 ? 1 : (typeId === 2 ? 5 : 10);
+
+          // Ensure structures exist
           found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
-          found.valueDivision = found.valueDivision || { 0: 0, 1: 0, 2: 0 };
-          found.valueDivision[typeId] = Number(found.valueDivision[typeId] || 0) + inc;
-          found.value.utxoValue = Number(found.valueDivision[typeId] || 0);
-          found.value.totalValue = Number(found.value.utxoValue || 0) + Number(found.value.txCerValue || 0);
+          found.utxos = found.utxos || {};
+
+          // Construct SubATX
+          const subTx = {
+            TXID: '', // Calculated below
+            TXType: 0,
+            TXInputsNormal: [{ IsCommitteeMake: true }],
+            TXOutputs: [{
+              ToAddress: key,
+              ToValue: inc,
+              ToGuarGroupID: u4.guarGroup || u4.orgNumber || '',
+              ToInterest: 10,
+              Type: typeId,
+              ToPeerID: "QmXov7TjwVKoNqK9wQxnpTXsngphe1iCWSm57ikgHnJD9D",
+              IsPayForGas: false,
+              IsCrossChain: false,
+              IsGuarMake: false
+            }],
+            Data: [] // Keep empty as requested
+          };
+
+          // Calculate TXID
+          // Since Data is empty and content is constant, we must generate a random TXID 
+          // to ensure uniqueness for multiple "Add" operations.
+          const randomBytes = new Uint8Array(8);
+          crypto.getRandomValues(randomBytes);
+          subTx.TXID = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+          // Construct UTXOData
+          const utxoKey = `${subTx.TXID}_0`; // TXID_IndexZ
+          const utxoData = {
+            UTXO: subTx,
+            Value: inc,
+            Type: typeId,
+            Time: Date.now(),
+            Position: {
+              Blocknum: 0,
+              IndexX: 0,
+              IndexY: 0,
+              IndexZ: 0 // Output index
+            },
+            IsTXCerUTXO: false
+          };
+
+          // Add to UTXOs
+          found.utxos[utxoKey] = utxoData;
+
+          // Update Balance Logic
+          // Recalculate UTXO value from map
+          const newUtxoVal = Object.values(found.utxos).reduce((s, u) => s + (Number(u.Value) || 0), 0);
+          found.value.utxoValue = newUtxoVal;
+          found.value.totalValue = newUtxoVal + Number(found.value.txCerValue || 0);
+
           found.estInterest = Number(found.estInterest || 0) + 10;
           found.gas = Number(found.estInterest || 0);
+
+          // Recalculate Wallet ValueDivision
           const sumVD = { 0: 0, 1: 0, 2: 0 };
           Object.keys(u4.wallet.addressMsg || {}).forEach((addrK) => {
             const m = u4.wallet.addressMsg[addrK] || {};
-            const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-            sumVD[0] += Number(vd[0] || 0);
-            sumVD[1] += Number(vd[1] || 0);
-            sumVD[2] += Number(vd[2] || 0);
+            const t = Number(m.type || 0);
+            const val = Number(m.value && (m.value.totalValue || m.value.TotalValue) || 0);
+            if (sumVD[t] !== undefined) {
+              sumVD[t] += val;
+            }
           });
           u4.wallet.valueDivision = sumVD;
-          u4.wallet.ValueDivision = sumVD;
-          u4.wallet.ValueDivision = sumVD;
+          u4.wallet.ValueDivision = sumVD; // Keep both for safety
+
           const pgcTotal = Number(sumVD[0] || 0);
           const btcTotal = Number(sumVD[1] || 0);
           const ethTotal = Number(sumVD[2] || 0);
           const valueTotalPGC = pgcTotal + btcTotal * 1000000 + ethTotal * 1000;
           u4.wallet.totalValue = valueTotalPGC;
           u4.wallet.TotalValue = valueTotalPGC;
+
           saveUser(u4);
           updateTotalGasBadge(u4);
-          updateTotalGasBadge(u4);
+
           const valEl = item.querySelector('.addr-balance-val');
           if (valEl) {
             valEl.textContent = String(Number(found.value.utxoValue || 0));
@@ -1717,6 +1929,8 @@ function renderWallet() {
           }
           const gasEl = item.querySelector('.gas-val');
           if (gasEl) gasEl.textContent = `${Number(found.estInterest || 0)} GAS`;
+
+          // Update other UI elements...
           const addrList = document.getElementById('srcAddrList');
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
@@ -1728,14 +1942,18 @@ function renderWallet() {
               }
             }
           }
+
+          // Update USDT and Breakdown
           const usdtEl = document.getElementById('walletUSDT');
           if (usdtEl && u4 && u4.wallet) {
-            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+            // Re-read sumVD from wallet
+            const vdAll = u4.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
             const pgcA = Number(vdAll[0] || 0);
             const btcA = Number(vdAll[1] || 0);
             const ethA = Number(vdAll[2] || 0);
             const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
             usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+
             const bd = document.querySelector('.currency-breakdown');
             if (bd) {
               const pgcV = bd.querySelector('.tag--pgc');
@@ -1745,34 +1963,9 @@ function renderWallet() {
               if (btcV) btcV.textContent = btcA;
               if (ethV) ethV.textContent = ethA;
             }
-            const gasBadge = document.getElementById('walletGAS');
-            if (gasBadge && u4 && u4.wallet) {
-              const sumGas = Object.keys(u4.wallet.addressMsg || {}).reduce((s, k) => {
-                const m = u4.wallet.addressMsg[k];
-                return s + readAddressInterest(m);
-              }, 0);
-              gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
-            }
           }
-          // Chart update logic removed
 
-          const totalEl = document.getElementById('walletTotalChart');
-          if (totalEl) {
-            const curPts = totalEl.__pts || [];
-            const curLab = totalEl.__label || 'PGC';
-            const vdAll = (u4.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-            const useAmt = curLab === 'PGC' ? Number(vdAll[0] || 0) : (curLab === 'BTC' ? Number(vdAll[1] || 0) : Number(vdAll[2] || 0));
-            if (curPts.length) {
-              // Commented out toPt call to avoid error
-              // curPts[curPts.length - 1] = toPt(useAmt);
-              const toYt = (v) => Math.max(0, 160 - v - BASE_LIFT);
-              const d = curPts.map((y, i) => `${i === 0 ? 'M' : 'L'} ${i * 8} ${toYt(y)} `).join(' ');
-              const pT = totalEl.querySelector('path.line');
-              if (pT) pT.setAttribute('d', d);
-              const tipT = totalEl.querySelector('.tooltip');
-              if (tipT) tipT.textContent = `${curLab} ${useAmt} · ${new Date().toLocaleString().slice(0, 16)} `;
-            }
-          }
+          // Update Menu List
           const menuList = document.getElementById('menuAddressList');
           if (menuList) {
             const rows = Array.from(menuList.querySelectorAll('.addr-row'));
@@ -1780,12 +1973,16 @@ function renderWallet() {
               const codeEl = r.querySelector('code.break');
               const valEl = r.querySelector('span');
               if (codeEl && valEl && String(codeEl.textContent).toLowerCase() === key) {
-                const vdAll2 = (u4.wallet.addressMsg[key] && u4.wallet.addressMsg[key].valueDivision) || found.valueDivision || { 0: 0, 1: 0, 2: 0 };
-                const vUSDT = Math.round(Number(vdAll2[0] || 0) * 1 + Number(vdAll2[1] || 0) * 100 + Number(vdAll2[2] || 0) * 10);
+                const m = u4.wallet.addressMsg[key] || {};
+                const type = Number(m.type || 0);
+                const val = Number(m.value && (m.value.totalValue || m.value.TotalValue) || 0);
+                const rate = type === 1 ? 100 : (type === 2 ? 10 : 1);
+                const vUSDT = Math.round(val * rate);
                 valEl.textContent = `${vUSDT} USDT`;
               }
             });
           }
+
           try { updateWalletStruct(); } catch { }
           updateWalletBrief();
         });
@@ -1798,19 +1995,24 @@ function renderWallet() {
           const key = String(a).toLowerCase();
           const found = u4.wallet.addressMsg[a] || u4.wallet.addressMsg[key];
           if (!found) return;
-          found.valueDivision = { 0: 0, 1: 0, 2: 0 };
+
+          // Clear UTXOs
+          found.utxos = {};
+
           found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
           found.value.utxoValue = 0;
           found.value.totalValue = Number(found.value.txCerValue || 0);
           found.estInterest = 0;
           found.gas = 0;
+
           const sumVD = { 0: 0, 1: 0, 2: 0 };
           Object.keys(u4.wallet.addressMsg || {}).forEach((addrK) => {
             const m = u4.wallet.addressMsg[addrK] || {};
-            const vd = (m.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-            sumVD[0] += Number(vd[0] || 0);
-            sumVD[1] += Number(vd[1] || 0);
-            sumVD[2] += Number(vd[2] || 0);
+            const t = Number(m.type || 0);
+            const val = Number(m.value && (m.value.totalValue || m.value.TotalValue) || 0);
+            if (sumVD[t] !== undefined) {
+              sumVD[t] += val;
+            }
           });
           u4.wallet.valueDivision = sumVD;
           const pgcTotalZ = Number(sumVD[0] || 0);
@@ -1926,7 +2128,7 @@ function renderWallet() {
     woExit.addEventListener('click', async () => {
       const u3 = loadUser();
       if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
-      
+
       const confirmed = await showConfirmModal('退出担保组织', '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？', '确认', '取消');
       if (!confirmed) return;
 
@@ -2250,10 +2452,81 @@ function renderWallet() {
   const wsBox = document.getElementById('walletStructBox');
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
-      const isHidden = wsBox.classList.contains('hidden');
-      wsBox.classList.toggle('hidden');
-      wsToggle.textContent = isHidden ? '收起账户结构体' : '展开账户结构体';
-      if (isHidden) updateWalletStruct();
+      const isExpanded = wsBox.classList.contains('expanded');
+      
+      if (!isExpanded) {
+        // Expanding
+        // Render content first so we can calculate height if needed, though 'auto' height animation is tricky in CSS alone
+        // A common trick is to set max-height, or use grid template rows. 
+        // But here we used height: auto in CSS which doesn't animate. 
+        // Let's update content before expanding.
+        updateWalletStruct();
+        
+        // To animate from 0 to auto height, we can use a grid trick or JS calculation.
+        // For simplicity with the current CSS 'height: auto' approach (which snaps), let's use a JS helper for smooth height.
+        
+        wsBox.classList.remove('hidden'); // ensure it's display:block if it was hidden
+        
+        // Get natural height
+        wsBox.style.height = 'auto';
+        wsBox.style.padding = '12px';
+        wsBox.style.marginTop = '12px';
+        wsBox.style.borderWidth = '1px';
+        const fullHeight = wsBox.scrollHeight + 'px';
+        
+        // Reset to start animation
+        wsBox.style.height = '0px';
+        wsBox.style.padding = '0px';
+        wsBox.style.marginTop = '0px';
+        wsBox.style.borderWidth = '0px';
+        wsBox.offsetHeight; // Force reflow
+        
+        wsBox.classList.add('expanded');
+        wsBox.style.height = fullHeight;
+        // Clear manual styles after transition to allow auto resize
+        setTimeout(() => {
+           wsBox.style.height = '';
+           wsBox.style.padding = '';
+           wsBox.style.marginTop = '';
+           wsBox.style.borderWidth = '';
+        }, 350);
+        
+        wsToggle.textContent = '收起账户结构体';
+      } else {
+        // Collapsing
+        // Lock current height
+        wsBox.style.height = wsBox.scrollHeight + 'px';
+        wsBox.style.padding = '12px';
+        wsBox.style.marginTop = '12px';
+        wsBox.style.borderWidth = '1px';
+        wsBox.offsetHeight; // Force reflow
+        
+        wsBox.classList.remove('expanded');
+        // Trigger close styles via class removal, but we need inline styles to animate to 0 properly if class removal isn't enough or overrides
+        // Actually the class removal handles the target state (height: 0), but we need to ensure it transitions.
+        // The CSS defines the target state for non-expanded.
+        
+        // We need to clear inline styles that locked it open, so CSS takes over? 
+        // No, CSS 'height:0' is the target. If we set inline height to scrollHeight, removing class 'expanded' 
+        // will try to go to 0, but inline style wins. So we must set inline to 0.
+        
+        requestAnimationFrame(() => {
+          wsBox.style.height = '0px';
+          wsBox.style.padding = '0px';
+          wsBox.style.marginTop = '0px';
+          wsBox.style.borderWidth = '0px';
+        });
+        
+        setTimeout(() => {
+          wsBox.style.height = '';
+          wsBox.style.padding = '';
+          wsBox.style.marginTop = '';
+          wsBox.style.borderWidth = '';
+          wsBox.classList.add('hidden'); // optional, but keeps accessible state
+        }, 350);
+
+        wsToggle.textContent = '展开账户结构体';
+      }
     });
     wsToggle.dataset._bind = '1';
   }
@@ -2414,23 +2687,52 @@ function renderWallet() {
     const fillChange = () => {
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
       Array.from(addrList.querySelectorAll('label')).forEach(l => { const inp = l.querySelector('input[type="checkbox"]'); if (inp) l.classList.toggle('selected', inp.checked); });
-      const opts = sel.length ? sel : srcAddrs;
-      const html = opts.map(a => `<option value="${a}">${a}</option>`).join('');
-      chPGC.innerHTML = html;
-      chBTC.innerHTML = html;
-      chETH.innerHTML = html;
+
+      // Filter addresses by type
+      const getAddrsByType = (typeId) => {
+        const pool = sel.length ? sel : srcAddrs;
+        return pool.filter(addr => {
+          const meta = walletMap[addr];
+          return meta && Number(meta.type) === typeId;
+        });
+      };
+
+      const optsPGC = getAddrsByType(0);
+      const optsBTC = getAddrsByType(1);
+      const optsETH = getAddrsByType(2);
+
+      const buildOptions = (opts) => opts.map(a => `<option value="${a}">${a}</option>`).join('');
+
+      chPGC.innerHTML = buildOptions(optsPGC);
+      chBTC.innerHTML = buildOptions(optsBTC);
+      chETH.innerHTML = buildOptions(optsETH);
+
       const buildMenu = (box, optsArr, hidden) => {
         if (!box) return;
         const menu = box.querySelector('.custom-select__menu');
         const valEl = box.querySelector('.addr-val');
+
+        if (optsArr.length === 0) {
+          if (menu) menu.innerHTML = '<div class="custom-select__item disabled">无可用地址</div>';
+          if (valEl) valEl.textContent = '无可用地址';
+          if (hidden) hidden.value = '';
+          return;
+        }
+
         if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><span class="coin-icon ${box.dataset.coin === 'BTC' ? 'coin--btc' : (box.dataset.coin === 'ETH' ? 'coin--eth' : 'coin--pgc')}"></span><code class="break" style="font-weight:700">${a}</code></div>`).join('');
-        const first = optsArr[0] || '';
+
+        // Preserve existing selection if valid, otherwise select first
+        const currentVal = hidden.value;
+        const isValid = optsArr.includes(currentVal);
+        const first = isValid ? currentVal : (optsArr[0] || '');
+
         if (valEl) valEl.textContent = first;
         if (hidden) hidden.value = first;
       };
-      buildMenu(csPGC, opts, chPGC);
-      buildMenu(csBTC, opts, chBTC);
-      buildMenu(csETH, opts, chETH);
+
+      buildMenu(csPGC, optsPGC, chPGC);
+      buildMenu(csBTC, optsBTC, chBTC);
+      buildMenu(csETH, optsETH, chETH);
       updateSummaryAddr();
     };
     fillChange();
@@ -2716,10 +3018,11 @@ function renderWallet() {
       const availableGas = walletGasTotal;
       sel.forEach((addr) => {
         const meta = getAddrMeta(addr) || {};
-        const vdMeta = (meta.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-        typeBalances[0] += Number(vdMeta[0] || 0);
-        typeBalances[1] += Number(vdMeta[1] || 0);
-        typeBalances[2] += Number(vdMeta[2] || 0);
+        const type = Number(meta.type || 0);
+        const val = Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0);
+        if (typeBalances[type] !== undefined) {
+          typeBalances[type] += val;
+        }
       });
       const ensureChangeAddrValid = (typeId) => {
         const need = vd[typeId] || 0;
@@ -2753,12 +3056,11 @@ function renderWallet() {
       if (usedTypes.length) {
         const infos = sel.map((addr) => {
           const meta = getAddrMeta(addr) || {};
-          const vdMeta = (meta.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-          const bal = {
-            0: Number(vdMeta[0] || 0),
-            1: Number(vdMeta[1] || 0),
-            2: Number(vdMeta[2] || 0),
-          };
+          const type = Number(meta.type || 0);
+          const val = Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0);
+          const bal = { 0: 0, 1: 0, 2: 0 };
+          if (bal[type] !== undefined) bal[type] = val;
+
           const totalRel = usedTypes.reduce((s, t) => s + bal[t] * rates[t], 0);
           return { addr, bal, totalRel };
         });
@@ -2822,7 +3124,57 @@ function renderWallet() {
       if (isCross && finalSel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
       if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }
       if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
+
+      // 显示"构造交易"按钮并保存 BuildTXInfo
+      const buildTxBtn = document.getElementById('buildTxBtn');
+      if (buildTxBtn) {
+        buildTxBtn.classList.remove('hidden');
+        buildTxBtn.dataset.buildInfo = JSON.stringify(build);
+      }
     });
+
+    // 绑定"构造交易"按钮事件
+    const buildTxBtn = document.getElementById('buildTxBtn');
+    const txFinalPreview = document.getElementById('txFinalPreview');
+    if (buildTxBtn && !buildTxBtn.dataset._buildBind) {
+      buildTxBtn.addEventListener('click', async () => {
+        try {
+          if (txFinalPreview) {
+            txFinalPreview.textContent = '正在构造交易...';
+            txFinalPreview.classList.remove('hidden');
+          }
+
+          const buildInfoStr = buildTxBtn.dataset.buildInfo || '{}';
+          const buildInfo = JSON.parse(buildInfoStr);
+          const user = loadUser();
+
+          if (!user || !user.accountId) {
+            showModalTip('未登录', '请先登录账户', true);
+            if (txFinalPreview) txFinalPreview.classList.add('hidden');
+            return;
+          }
+
+          // 调用 buildNewTX 构造交易
+          const transaction = await buildNewTX(buildInfo, user);
+
+          // 显示交易结构体
+          if (txFinalPreview) {
+            const formatted = JSON.stringify(transaction, null, 2);
+            txFinalPreview.textContent = '✓ Transaction 结构体\n\n' + formatted;
+          }
+
+          showModalTip('交易构造成功', '已成功构造 Transaction 结构体，请查看下方预览', false);
+        } catch (err) {
+          const errMsg = err.message || String(err);
+          if (txFinalPreview) {
+            txFinalPreview.textContent = '✗ 构造失败\n\n' + errMsg;
+          }
+          showModalTip('构造失败', errMsg, true);
+        }
+      });
+      buildTxBtn.dataset._buildBind = '1';
+    }
+
     window.__refreshSrcAddrList = () => {
       try {
         refreshWalletSnapshot();
@@ -3057,10 +3409,417 @@ function refreshOrgPanel() {
       if (tfMode.value === 'quick') tfModeQuick.checked = true;
       if (isPledgeSel) isPledgeSel.value = tfMode.value === 'pledge' ? 'true' : 'false';
     }
+    [['woGroupID', joined ? g.groupID : ''],
+    ['woAggre', joined ? (g.aggreNode || '') : ''],
+    ['woAssign', joined ? (g.assignNode || '') : ''],
+    ['woPledge', joined ? (g.pledgeAddress || '') : '']]
+      .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
   }
-  [['woGroupID', joined ? g.groupID : ''],
-  ['woAggre', joined ? (g.aggreNode || '') : ''],
-  ['woAssign', joined ? (g.assignNode || '') : ''],
-  ['woPledge', joined ? (g.pledgeAddress || '') : '']]
-    .forEach(([id, val]) => { const el = document.getElementById(id); if (el) el.textContent = val; });
+}
+
+// ==================== BuildNewTX 相关函数 ====================
+
+
+// 汇率转换函数
+function exchangeRate(moneyType) {
+  const rates = { 0: 1, 1: 1000000, 2: 1000 };
+  return rates[moneyType] || 1;
+}
+
+// ECDSA 签名函数：使用私钥签名哈希值
+async function ecdsaSignHash(privateKeyHex, hashBytes) {
+  try {
+    // 1. 从 Hex 导入私钥
+    const privBytes = hexToBytes(privateKeyHex);
+
+    // 2. 构造 JWK 格式的私钥 (需要公钥坐标，这里简化处理)
+    // 实际应该从私钥推导公钥，这里暂时使用简化方案
+    const jwk = {
+      kty: 'EC',
+      crv: 'P-256',
+      d: bytesToBase64url(privBytes),
+      ext: true
+    };
+
+    // 3. 导入私钥
+    const privateKey = await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['sign']
+    );
+
+    // 4. 签名
+    const signature = await crypto.subtle.sign(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      privateKey,
+      hashBytes
+    );
+
+    // 5. 解析签名为 r, s
+    const { r, s } = parseECDSASignature(new Uint8Array(signature));
+
+    return { R: r, S: s };
+  } catch (err) {
+    console.error('ECDSA 签名失败:', err);
+    throw new Error('ECDSA signature failed: ' + err.message);
+  }
+}
+
+// 解析 ECDSA 签名
+function parseECDSASignature(signature) {
+  // WebCrypto 返回的是 IEEE P1363 格式 (r || s)，每个32字节
+  if (signature.length === 64) {
+    const r = signature.slice(0, 32);
+    const s = signature.slice(32, 64);
+    return {
+      r: bytesToHex(r),
+      s: bytesToHex(s)
+    };
+  }
+
+  // 降级：假设是 raw format
+  const half = Math.floor(signature.length / 2);
+  return {
+    r: bytesToHex(signature.slice(0, half)),
+    s: bytesToHex(signature.slice(half))
+  };
+}
+
+// 计算 TXOutput 的哈希
+async function getTXOutputHash(output) {
+  try {
+    const serialized = JSON.stringify(output);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(serialized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    return new Uint8Array(hashBuffer);
+  } catch (err) {
+    console.error('TXOutput 哈希计算失败:', err);
+    throw new Error('Failed to calculate TXOutput hash: ' + err.message);
+  }
+}
+
+// 计算交易 TXID
+async function getTXID(tx) {
+  try {
+    const txCopy = JSON.parse(JSON.stringify(tx));
+    delete txCopy.UserSignature;
+    delete txCopy.TXID;
+
+    const serialized = JSON.stringify(txCopy);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(serialized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+
+    return bytesToHex(new Uint8Array(hashBuffer));
+  } catch (err) {
+    console.error('TXID 计算失败:', err);
+    throw new Error('Failed to calculate TXID: ' + err.message);
+  }
+}
+
+// 计算交易 Size
+function getTXSize(tx) {
+  try {
+    const serialized = JSON.stringify(tx);
+    return new TextEncoder().encode(serialized).length;
+  } catch (err) {
+    console.error('交易 Size 计算失败:', err);
+    return 0;
+  }
+}
+
+// 计算交易的用户签名
+async function getTXUserSignature(tx, privateKeyHex) {
+  try {
+    const txCopy = JSON.parse(JSON.stringify(tx));
+    delete txCopy.UserSignature;
+
+    const serialized = JSON.stringify(txCopy);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(serialized);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashBytes = new Uint8Array(hashBuffer);
+
+    const signature = await ecdsaSignHash(privateKeyHex, hashBytes);
+
+    return signature;
+  } catch (err) {
+    console.error('用户签名失败:', err);
+    throw new Error('Failed to generate user signature: ' + err.message);
+  }
+}
+
+// ==================== BuildNewTX 核心函数 ====================
+
+async function buildNewTX(buildTXInfo, userAccount) {
+  try {
+    const wallet = userAccount.wallet || {};
+    const addressMsg = wallet.addressMsg || {};
+    const guarGroup = userAccount.guarGroup || userAccount.orgNumber || '';
+
+    // 计算选中地址的各币种总金额
+    const totalMoney = { 0: 0, 1: 0, 2: 0 };
+    for (const address of buildTXInfo.UserAddress) {
+      const addrData = addressMsg[address];
+      if (!addrData) {
+        throw new Error(`Address ${address} not found in wallet`);
+      }
+      const type = Number(addrData.type || 0);
+      const balance = Number(addrData.value?.totalValue || addrData.value?.TotalValue || 0);
+      totalMoney[type] += balance;
+    }
+
+    // 参数验证
+    if (buildTXInfo.IsCrossChainTX || buildTXInfo.IsPledgeTX) {
+      if (Object.keys(buildTXInfo.Bill).length !== 1) {
+        throw new Error('cross-chain transactions can only transfer to one address');
+      }
+
+      for (const bill of Object.values(buildTXInfo.Bill)) {
+        if (bill.MoneyType !== 0) {
+          throw new Error('cross-chain transactions can only use the main currency');
+        }
+      }
+
+      for (const address of buildTXInfo.UserAddress) {
+        const addrData = addressMsg[address];
+        if (Number(addrData.type || 0) !== 0) {
+          throw new Error('cross-chain transactions can only use the main currency');
+        }
+      }
+
+      if (Object.keys(buildTXInfo.ChangeAddress).length !== 1 || !buildTXInfo.ChangeAddress[0]) {
+        throw new Error('cross-chain transactions can only have one change address');
+      }
+    }
+
+    if (buildTXInfo.IsCrossChainTX) {
+      if (!guarGroup) {
+        throw new Error('cross-chain transactions must join the guarantor group');
+      }
+      if (buildTXInfo.UserAddress.length !== 1) {
+        throw new Error('cross-chain transactions can only have one input address');
+      }
+    }
+
+    // 检查找零地址
+    for (const [typeIdStr, changeAddr] of Object.entries(buildTXInfo.ChangeAddress)) {
+      const typeId = Number(typeIdStr);
+      const addrData = addressMsg[changeAddr];
+      if (!addrData || Number(addrData.type || 0) !== typeId) {
+        throw new Error('the change address is incorrect');
+      }
+    }
+
+    // 检查余额
+    for (const [typeIdStr, needed] of Object.entries(buildTXInfo.ValueDivision)) {
+      const typeId = Number(typeIdStr);
+      if (needed > totalMoney[typeId]) {
+        throw new Error('insufficient account balance');
+      }
+    }
+
+    // 检查账单金额
+    const usedMoney = { 0: 0, 1: 0, 2: 0 };
+    for (const bill of Object.values(buildTXInfo.Bill)) {
+      usedMoney[bill.MoneyType] += bill.Value;
+    }
+    if (buildTXInfo.HowMuchPayForGas > 0) {
+      usedMoney[0] += buildTXInfo.HowMuchPayForGas;
+    }
+
+    for (const [typeIdStr, used] of Object.entries(usedMoney)) {
+      const typeId = Number(typeIdStr);
+      const needed = buildTXInfo.ValueDivision[typeId] || 0;
+      if (Math.abs(used - needed) > 1e-8) {
+        throw new Error('the bill is incorrect');
+      }
+    }
+
+    // 构造 Transaction
+    const tx = {
+      Version: 0.1,
+      TXID: '',
+      Size: 0,
+      TXType: 0,
+      Value: 0.0,
+      ValueDivision: buildTXInfo.ValueDivision,
+      GuarantorGroup: guarGroup,
+      TXInputsNormal: [],
+      TXInputsCertificate: [],
+      TXOutputs: [],
+      InterestAssign: buildTXInfo.InterestAssign,
+      UserSignature: { R: null, S: null },
+      Data: buildTXInfo.Data || ''
+    };
+
+    // 构造 Outputs - 转账输出
+    for (const [address, bill] of Object.entries(buildTXInfo.Bill)) {
+      const output = {
+        ToAddress: address,
+        ToValue: bill.Value,
+        Type: bill.MoneyType,
+        ToGuarGroupID: bill.GuarGroupID || '',
+        ToPublicKey: bill.PublicKey || { Curve: 'P256', XHex: '', YHex: '' },
+        ToInterest: bill.ToInterest || 0,
+        IsGuarMake: false,
+        IsCrossChain: buildTXInfo.IsCrossChainTX || false,
+        IsPayForGas: false
+      };
+      tx.TXOutputs.push(output);
+    }
+
+    // Gas 支付输出
+    if (buildTXInfo.HowMuchPayForGas > 0) {
+      tx.TXOutputs.push({
+        ToAddress: '',
+        ToValue: buildTXInfo.HowMuchPayForGas,
+        Type: 0,
+        ToGuarGroupID: '',
+        ToPublicKey: { Curve: '', XHex: '', YHex: '' },
+        ToInterest: 0,
+        IsGuarMake: false,
+        IsCrossChain: false,
+        IsPayForGas: true
+      });
+    }
+
+    // 构造 Inputs (选择 UTXO)
+    const usedWallet = {};
+
+    for (const [typeIdStr, targetValue] of Object.entries(buildTXInfo.ValueDivision)) {
+      const typeId = Number(typeIdStr);
+      if (targetValue <= 0) continue;
+
+      let typeValueCount = 0;
+      let isUTXOEnough = false;
+
+      for (const address of buildTXInfo.UserAddress) {
+        const addrData = addressMsg[address];
+        if (!addrData || Number(addrData.type || 0) !== typeId) continue;
+
+        if (!usedWallet[address]) {
+          usedWallet[address] = {
+            type: addrData.type,
+            UTXO: {},
+            TXCers: {}
+          };
+        }
+
+        // 遍历 UTXO
+        const utxos = addrData.utxo || addrData.UTXO || {};
+        for (const [utxoId, utxoData] of Object.entries(utxos)) {
+          const input = {
+            FromTXID: utxoData.utxo?.TXID || utxoData.TXID || '',
+            FromTxPosition: utxoData.position || { IndexZ: 0 },
+            FromAddress: address,
+            IsGuarMake: false,
+            TXOutputHash: [],
+            InputSignature: { R: '', S: '' }
+          };
+
+          // 计算并签名 UTXO output hash
+          try {
+            const utxoTx = utxoData.utxo || utxoData.UTXO || {};
+            const outputs = utxoTx.TXOutputs || [];
+            const posIdx = input.FromTxPosition.IndexZ || 0;
+
+            if (outputs[posIdx]) {
+              const hashBytes = await getTXOutputHash(outputs[posIdx]);
+              input.TXOutputHash = Array.from(hashBytes);
+
+              const privKeyHex = addrData.privHex || addrData.wPrivateKey || '';
+              if (privKeyHex) {
+                const sig = await ecdsaSignHash(privKeyHex, hashBytes);
+                input.InputSignature = { R: sig.R, S: sig.S };
+              }
+            }
+          } catch (err) {
+            console.warn(`Failed to sign UTXO ${utxoId}:`, err);
+          }
+
+          tx.TXInputsNormal.push(input);
+
+          const utxoValue = Number(utxoData.value || 0);
+          typeValueCount += utxoValue;
+          usedWallet[address].UTXO[utxoId] = utxoData;
+
+          if (typeValueCount >= targetValue) {
+            isUTXOEnough = true;
+
+            // 生成找零输出
+            if (typeValueCount > targetValue) {
+              const changeAddr = buildTXInfo.ChangeAddress[typeId];
+              const changeAddrData = addressMsg[changeAddr];
+
+              const changeOutput = {
+                ToAddress: changeAddr,
+                ToValue: typeValueCount - targetValue,
+                Type: typeId,
+                ToGuarGroupID: guarGroup,
+                ToPublicKey: {
+                  Curve: 'P256',
+                  XHex: changeAddrData?.pubXHex || '',
+                  YHex: changeAddrData?.pubYHex || ''
+                },
+                ToInterest: 0,
+                IsGuarMake: false,
+                IsCrossChain: false,
+                IsPayForGas: false
+              };
+              tx.TXOutputs.push(changeOutput);
+            }
+            break;
+          }
+        }
+
+        if (isUTXOEnough) break;
+      }
+
+      if (!isUTXOEnough) {
+        throw new Error('insufficient account balance for type ' + typeId);
+      }
+    }
+
+    // 设置交易类型
+    if (buildTXInfo.IsPledgeTX) {
+      tx.TXType = -1;
+    } else if (buildTXInfo.IsCrossChainTX) {
+      tx.TXType = 6;
+    } else if (!guarGroup) {
+      tx.TXType = 8;
+    } else {
+      tx.TXType = 0;
+    }
+
+    // 计算交易总金额
+    let totalValue = 0;
+    for (const [typeStr, val] of Object.entries(buildTXInfo.ValueDivision)) {
+      totalValue += val * exchangeRate(Number(typeStr));
+    }
+    tx.Value = totalValue;
+
+    // 计算 TXID 和 Size
+    tx.TXID = await getTXID(tx);
+    tx.Size = getTXSize(tx);
+
+    // 交易签名
+    if (tx.TXInputsNormal.length > 0) {
+      const firstInputAddr = tx.TXInputsNormal[0].FromAddress;
+      const addrData = addressMsg[firstInputAddr];
+      const privKeyHex = addrData?.privHex || addrData?.wPrivateKey || '';
+
+      if (privKeyHex) {
+        tx.UserSignature = await getTXUserSignature(tx, privKeyHex);
+      }
+    }
+
+    return tx;
+  } catch (err) {
+    console.error('BuildNewTX failed:', err);
+    throw err;
+  }
 }

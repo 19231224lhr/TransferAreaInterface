@@ -6,6 +6,78 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>简洁钱包前端 - 钱包操作</title>
   <link rel="stylesheet" href="/style.css?v=20251125_fix2" />
+  <link rel="stylesheet" href="/wallet_struct_styles.css" />
+  <style>
+    /* Fix for Wallet Structure Toggle Button */
+    #walletStructToggle {
+      width: 100%;
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      padding: 14px 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 16px;
+    }
+    #walletStructToggle:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+    }
+    #walletStructToggle:active {
+      transform: translateY(0);
+    }
+    /* Ensure detail modal styles are present */
+    .detail-content {
+      max-height: 60vh;
+      overflow-y: auto;
+      background: #f8fafc;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    .detail-row {
+      display: flex;
+      margin-bottom: 8px;
+      border-bottom: 1px dashed #e2e8f0;
+      padding-bottom: 8px;
+    }
+    .detail-row:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+    .detail-label {
+      width: 120px;
+      flex-shrink: 0;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .detail-val {
+      flex: 1;
+      color: #334155;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      word-break: break-all;
+    }
+    .detail-sub {
+      margin-top: 4px;
+      background: #fff;
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+  </style>
 </head>
 
 <body>
@@ -459,8 +531,8 @@
             </div>
           </div>
           <div class="pane" id="walletStructPane">
-            <button id="walletStructToggle" class="btn secondary">展开账户结构体</button>
-            <pre id="walletStructBox" class="result hidden struct-box" aria-live="polite"></pre>
+            <button id="walletStructToggle" class="btn primary full-width" style="justify-content: center;">展开账户结构体</button>
+            <div id="walletStructBox" class="wb-clean-box hidden"></div>
           </div>
           <div id="walletAddrList" class="addr-list"></div>
         </div>
@@ -562,9 +634,13 @@
                 </div>
               </div>
               <div class="actions"><button id="tfSendBtn" class="btn primary" aria-label="生成交易结构体">生成交易结构体</button>
+                <button id="buildTxBtn" class="btn success hidden" aria-label="构造交易">构造交易</button>
               </div>
               <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
               <pre id="txPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;"
+                aria-live="polite"></pre>
+              <pre id="txFinalPreview" class="result hidden"
+                style="white-space:pre-wrap;word-break:break-word;margin-top:12px;border-left:4px solid #10b981;background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);"
                 aria-live="polite"></pre>
             </div>
           </div>
@@ -718,6 +794,15 @@
         <div class="actions actions--split">
           <button id="addrCancelBtn" class="btn secondary">取消</button>
           <button id="addrOkBtn" class="btn primary">确认</button>
+        </div>
+      </div>
+    </div>
+    <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="dialog" style="max-width: 600px; width: 90%;">
+        <h3 id="detailModalTitle">详细信息</h3>
+        <div id="detailModalContent" class="detail-content"></div>
+        <div class="actions">
+          <button id="detailModalClose" class="btn primary">关闭</button>
         </div>
       </div>
     </div>
