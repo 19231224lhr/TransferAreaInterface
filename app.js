@@ -1053,20 +1053,20 @@ function updateWalletStruct() {
   // Build HTML
   let html = '<div class="wb-inner-wrapper">';
 
-  // Account Overview Section - 账户总览
-  html += '<div style="background:linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);padding:16px;border-radius:12px;margin-bottom:16px;border-left:4px solid #f59e0b;max-width:100%;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0, 0, 0, 0.05);">';
-  html += '<h4 style="margin:0 0 16px 0;color:#92400e;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;"><span>👤</span> 账户总览</h4>';
+  // Account Overview Section - 账户总览 (New Design)
+  html += '<div class="wb-account-card">';
+  html += '<h4 class="wb-account-header"><span>👤</span> 账户总览</h4>';
 
   // Account ID Card
-  html += '<div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;border:1px solid rgba(245,158,11,0.2);">';
-  html += '<div style="color:#92400e;font-size:12px;margin-bottom:4px;">Account ID</div>';
-  html += `<div style="color:#d97706;font-size:24px;font-weight:700;letter-spacing:1px;font-family:monospace;">${u.accountId || '未设置'}</div>`;
+  html += '<div class="wb-account-id-box">';
+  html += '<div class="wb-account-id-label">Account ID</div>';
+  html += `<div class="wb-account-id-val">${u.accountId || '未设置'}</div>`;
   html += '</div>';
 
   // Main Address Row
-  html += '<div style="background:rgba(255,255,255,0.4);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);">';
-  html += '<div style="color:#78350f;font-size:11px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><span>🏠</span> 主地址</div>';
-  html += `<div style="color:#92400e;font-family:monospace;font-size:10px;word-break:break-all;overflow-wrap:break-word;line-height:1.4;">${u.address || '未设置'}</div>`;
+  html += '<div class="wb-info-row">';
+  html += '<div class="wb-info-label"><span>🏠</span> 主地址</div>';
+  html += `<div class="wb-info-val">${u.address || '未设置'}</div>`;
   html += '</div>';
 
   // 获取担保组织信息 - 优先从 localStorage 读取
@@ -1095,28 +1095,26 @@ function updateWalletStruct() {
   }
 
   if (guarantorInfo && guarantorInfo.groupID) {
-    html += '<details style="margin-bottom:12px;background:rgba(255,255,255,0.4);border-radius:8px;border:1px solid rgba(245,158,11,0.1);overflow:hidden;">';
-    html += '<summary style="cursor:pointer;padding:10px;color:#047857;font-size:12px;font-weight:600;user-select:none;display:flex;align-items:center;gap:6px;background:rgba(16,185,129,0.05);"><span>🛡️</span> 担保组织信息</summary>';
-    html += '<div style="padding:10px;font-size:11px;border-top:1px solid rgba(16,185,129,0.1);">';
-
+    html += '<div class="wb-guar-box">';
+    html += '<div class="wb-guar-header"><span>🛡️</span> 担保组织信息</div>';
+    
     // Grid for Group Info
-    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">';
-    html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">GroupID</div><code style="color:#047857;font-weight:600;background:rgba(16,185,129,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.groupID}</code></div>`;
+    html += '<div class="wb-guar-grid">';
+    html += `<div class="wb-guar-item"><div class="wb-guar-label">GroupID</div><div class="wb-guar-val">${guarantorInfo.groupID}</div></div>`;
     if (guarantorInfo.aggreNode) {
-      html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">AggreNode</div><code style="color:#0369a1;background:rgba(14,165,233,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.aggreNode}</code></div>`;
+      html += `<div class="wb-guar-item"><div class="wb-guar-label">AggreNode</div><div class="wb-guar-val">${guarantorInfo.aggreNode}</div></div>`;
     }
-    html += '</div>';
+    html += '</div>'; // End Grid 1
 
     if (guarantorInfo.assignNode) {
-      html += `<div style="margin-bottom:8px;"><div style="color:#065f46;font-size:10px;margin-bottom:2px;">AssignNode</div><code style="color:#0369a1;background:rgba(14,165,233,0.1);padding:2px 4px;border-radius:4px;">${guarantorInfo.assignNode}</code></div>`;
+      html += `<div class="wb-guar-item" style="margin-top:8px;"><div class="wb-guar-label">AssignNode</div><div class="wb-guar-val">${guarantorInfo.assignNode}</div></div>`;
     }
     if (guarantorInfo.pledgeAddress) {
-      html += `<div><div style="color:#065f46;font-size:10px;margin-bottom:2px;">Pledge Address</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#92400e;display:block;background:rgba(245,158,11,0.1);padding:4px;border-radius:4px;">${guarantorInfo.pledgeAddress}</code></div>`;
+      html += `<div class="wb-guar-item" style="margin-top:8px;"><div class="wb-guar-label">Pledge Address</div><div class="wb-guar-val" style="font-size:10px;word-break:break-all;">${guarantorInfo.pledgeAddress}</div></div>`;
     }
     html += '</div>';
-    html += '</details>';
   } else {
-    html += '<div style="background:rgba(255,255,255,0.4);border-radius:8px;padding:10px;margin-bottom:12px;border:1px solid rgba(245,158,11,0.1);display:flex;justify-content:space-between;align-items:center;">';
+    html += '<div class="wb-info-row" style="display:flex;justify-content:space-between;align-items:center;">';
     html += '<span style="color:#78350f;font-size:12px;font-weight:600;">🛡️ 担保组织</span>';
     html += '<span style="color:#6b7280;font-size:12px;">未加入</span>';
     html += '</div>';
@@ -1127,9 +1125,9 @@ function updateWalletStruct() {
   const pubXHex = u.keys?.pubXHex || '';
   const pubYHex = u.keys?.pubYHex || '';
   if (privHex || pubXHex || pubYHex) {
-    html += '<details style="background:rgba(255,255,255,0.4);border-radius:8px;border:1px solid rgba(245,158,11,0.1);overflow:hidden;">';
-    html += '<summary style="cursor:pointer;padding:10px;color:#92400e;font-size:12px;font-weight:600;user-select:none;display:flex;align-items:center;gap:6px;background:rgba(245,158,11,0.05);"><span>🔑</span> 查看账户密钥</summary>';
-    html += '<div style="padding:10px;max-width:100%;overflow:hidden;border-top:1px solid rgba(245,158,11,0.1);">';
+    html += '<details class="wb-key-box">';
+    html += '<summary class="wb-key-summary"><span>🔑</span> 查看账户密钥</summary>';
+    html += '<div class="wb-key-content">';
     if (privHex) {
       html += '<div style="margin-bottom:8px;padding:8px;background:rgba(254,242,242,0.8);border-left:3px solid #ef4444;border-radius:4px;max-width:100%;overflow:hidden;">';
       html += '<div style="color:#991b1b;font-size:11px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><span>⚠️</span> 私钥 (请勿泄露)</div>';
@@ -1147,35 +1145,35 @@ function updateWalletStruct() {
   }
   html += '</div>';
 
-  // Wallet Summary Section - 钱包总览
-  html += '<div style="background:linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);padding:16px;border-radius:12px;margin-bottom:16px;border-left:4px solid #0ea5e9;">';
-  html += '<h4 style="margin:0 0 16px 0;color:#0c4a6e;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;"><span>📊</span> 钱包总览</h4>';
+  // Wallet Summary Section - 钱包总览 (New Design)
+  html += '<div class="wb-wallet-card">';
+  html += '<h4 class="wb-wallet-header"><span>📊</span> 钱包总览</h4>';
 
   // Total Value Card
-  html += '<div style="background:rgba(255,255,255,0.6);border-radius:10px;padding:12px;margin-bottom:12px;text-align:center;border:1px solid rgba(14,165,233,0.2);">';
-  html += '<div style="color:#64748b;font-size:12px;margin-bottom:4px;">总价值估算</div>';
-  html += `<div style="color:#0ea5e9;font-size:24px;font-weight:700;letter-spacing:-0.5px;">${totalPGC.toLocaleString()} <span style="font-size:14px;font-weight:600;">PGC</span></div>`;
+  html += '<div class="wb-total-val-box">';
+  html += '<div class="wb-total-label">总价值估算</div>';
+  html += `<div class="wb-total-num">${totalPGC.toLocaleString()} <span style="font-size:14px;font-weight:600;">PGC</span></div>`;
   html += '</div>';
 
   // Asset Grid
-  html += '<div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;margin-bottom:12px;">';
+  html += '<div class="wb-asset-grid">';
 
   // PGC
-  html += '<div style="background:rgba(16,185,129,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(16,185,129,0.2);">';
-  html += '<div style="color:#059669;font-size:11px;font-weight:600;margin-bottom:2px;">PGC</div>';
-  html += `<div style="color:#047857;font-weight:700;font-size:14px;">${sums[0]}</div>`;
+  html += '<div class="wb-asset-item wb-asset-pgc">';
+  html += '<div class="wb-asset-label">PGC</div>';
+  html += `<div class="wb-asset-val">${sums[0]}</div>`;
   html += '</div>';
 
   // BTC
-  html += '<div style="background:rgba(245,158,11,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(245,158,11,0.2);">';
-  html += '<div style="color:#d97706;font-size:11px;font-weight:600;margin-bottom:2px;">BTC</div>';
-  html += `<div style="color:#b45309;font-weight:700;font-size:14px;">${sums[1]}</div>`;
+  html += '<div class="wb-asset-item wb-asset-btc">';
+  html += '<div class="wb-asset-label">BTC</div>';
+  html += `<div class="wb-asset-val">${sums[1]}</div>`;
   html += '</div>';
 
   // ETH
-  html += '<div style="background:rgba(59,130,246,0.1);border-radius:8px;padding:8px;text-align:center;border:1px solid rgba(59,130,246,0.2);">';
-  html += '<div style="color:#2563eb;font-size:11px;font-weight:600;margin-bottom:2px;">ETH</div>';
-  html += `<div style="color:#1d4ed8;font-weight:700;font-size:14px;">${sums[2]}</div>`;
+  html += '<div class="wb-asset-item wb-asset-eth">';
+  html += '<div class="wb-asset-label">ETH</div>';
+  html += `<div class="wb-asset-val">${sums[2]}</div>`;
   html += '</div>';
 
   html += '</div>'; // End Grid
