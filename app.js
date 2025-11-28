@@ -2788,9 +2788,14 @@ function renderWallet() {
     const hasOrg = !!String(currentOrgId || '').trim();
     if (tfModeQuick && tfModeQuick.parentNode) {
       const quickLabel = tfModeQuick.parentNode;
-      const last = quickLabel.lastChild;
-      if (last && last.nodeType === 3) {
-        last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+      const span = quickLabel.querySelector('.segment-content');
+      if (span) {
+        span.textContent = hasOrg ? '快速转账' : '普通交易';
+      } else {
+        const last = quickLabel.lastChild;
+        if (last && last.nodeType === 3) {
+          last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+        }
       }
     }
     if (!hasOrg) {
@@ -3577,9 +3582,14 @@ function refreshOrgPanel() {
   const hasOrg = joined;
   if (tfModeQuick && tfModeQuick.parentNode) {
     const quickLabel = tfModeQuick.parentNode;
-    const last = quickLabel.lastChild;
-    if (last && last.nodeType === 3) {
-      last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+    const span = quickLabel.querySelector('.segment-content');
+    if (span) {
+      span.textContent = hasOrg ? '快速转账' : '普通交易';
+    } else {
+      const last = quickLabel.lastChild;
+      if (last && last.nodeType === 3) {
+        last.textContent = hasOrg ? ' 快速转账' : ' 普通交易';
+      }
     }
   }
   if (tfMode && tfModeQuick) {

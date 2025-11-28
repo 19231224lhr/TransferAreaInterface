@@ -12,49 +12,55 @@
     .detail-content {
       max-height: 60vh;
       overflow-y: auto;
-      background: #f8fafc;
-      padding: 16px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
-      margin-bottom: 24px;
-    }
+      <html lang="zh-CN"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><title>简洁钱包前端 - 钱包操作</title><link rel="stylesheet" href="/style.css?v=20251125_fix2" /><link rel="stylesheet" href="/wallet_struct_styles.css?v=2" /><style>
 
-    .detail-row {
-      display: flex;
-      margin-bottom: 8px;
-      border-bottom: 1px dashed #e2e8f0;
-      padding-bottom: 8px;
-    }
+      /* Ensure detail modal styles are present */
+      .detail-content {
+        max-height: 60vh;
+        overflow-y: auto;
+        background: #f8fafc;
+        padding: 16px;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 24px;
+      }
 
-    .detail-row:last-child {
-      border-bottom: none;
-      margin-bottom: 0;
-      padding-bottom: 0;
-    }
+      .detail-row {
+        display: flex;
+        margin-bottom: 8px;
+        border-bottom: 1px dashed #e2e8f0;
+        padding-bottom: 8px;
+      }
 
-    .detail-label {
-      width: 120px;
-      flex-shrink: 0;
-      color: #64748b;
-      font-size: 13px;
-      font-weight: 500;
-    }
+      .detail-row:last-child {
+        border-bottom: none;
+        margin-bottom: 0;
+        padding-bottom: 0;
+      }
 
-    .detail-val {
-      flex: 1;
-      color: #334155;
-      font-family: 'JetBrains Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      word-break: break-all;
-    }
+      .detail-label {
+        width: 120px;
+        flex-shrink: 0;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 500;
+      }
 
-    .detail-sub {
-      margin-top: 4px;
-      background: #fff;
-      padding: 8px;
-      border-radius: 4px;
-      border: 1px solid #e2e8f0;
-    }
+      .detail-val {
+        flex: 1;
+        color: #334155;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+        font-size: 13px;
+        word-break: break-all;
+      }
+
+      .detail-sub {
+        margin-top: 4px;
+        background: #fff;
+        padding: 8px;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+      }
   </style>
 </head>
 
@@ -575,12 +581,21 @@
               <div class="tx-section" role="group" aria-labelledby="optHead">
                 <div class="tx-subhead" id="optHead">交易选项</div>
                 <div class="tx-options">
-                  <div class="opt-row opt-row--modes">
-                    <label>交易形式</label>
-                    <div class="opt-mode">
-                      <label><input type="radio" name="tfModeChoice" id="tfModeQuick" value="quick"> 快速转账</label>
-                      <label><input type="radio" name="tfModeChoice" id="tfModeCross" value="cross"> 跨链转账</label>
-                      <label><input type="radio" name="tfModeChoice" id="tfModePledge" value="pledge"> 质押交易</label>
+                  <div class="opt-group">
+                    <label class="opt-group-label">交易形式</label>
+                    <div class="opt-mode-segmented">
+                      <label class="segment-item">
+                        <input type="radio" name="tfModeChoice" id="tfModeQuick" value="quick" checked>
+                        <span class="segment-content">快速转账</span>
+                      </label>
+                      <label class="segment-item">
+                        <input type="radio" name="tfModeChoice" id="tfModeCross" value="cross">
+                        <span class="segment-content">跨链转账</span>
+                      </label>
+                      <label class="segment-item">
+                        <input type="radio" name="tfModeChoice" id="tfModePledge" value="pledge">
+                        <span class="segment-content">质押交易</span>
+                      </label>
                     </div>
                     <select id="tfMode" class="input" style="display:none">
                       <option value="quick" selected>快速转账</option>
@@ -588,19 +603,32 @@
                       <option value="pledge">质押交易</option>
                     </select>
                   </div>
-                  <div class="opt-row opt-row--inline">
-                    <div class="opt-field opt-field--gas">
-                      <label>额外Gas兑换</label>
-                      <input id="extraGasPGC" class="input" type="number" placeholder="输入PGC" value="0" />
+                  
+                  <div class="opt-row-modern">
+                    <div class="opt-input-modern">
+                      <label for="extraGasPGC">额外Gas兑换</label>
+                      <div class="input-wrapper">
+                        <input id="extraGasPGC" class="input-clean" type="number" placeholder="0" value="0" />
+                        <span class="input-suffix">PGC</span>
+                      </div>
                     </div>
-                    <div class="opt-field opt-field--gas">
-                      <label>交易Gas</label>
-                      <input id="txGasInput" class="input" type="number" placeholder="交易Gas" value="1" />
+                    
+                    <div class="opt-input-modern">
+                      <label for="txGasInput">交易Gas</label>
+                      <div class="input-wrapper">
+                        <input id="txGasInput" class="input-clean" type="number" placeholder="1" value="1" />
+                        <span class="input-suffix">Gas</span>
+                      </div>
                     </div>
-                    <label class="opt-switch">
-                      <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
-                      <span>PreTXCer</span>
-                    </label>
+
+                    <div class="opt-toggle-modern">
+                      <label class="toggle-switch">
+                        <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
+                        <span class="toggle-slider"></span>
+                      </label>
+                      <span class="toggle-label">PreTXCer</span>
+                    </div>
+                    
                     <select id="useTXCer" class="input" style="display:none">
                       <option value="true" selected>是</option>
                       <option value="false">否</option>
@@ -626,29 +654,28 @@
           <div class="pane pane--org">
             <h3>担保组织信息</h3>
             <div id="woCard" class="org-card">
-              <div class="grid">
-                <div>
-                  <h3>GroupID</h3>
-                  <code id="woGroupID"></code>
+              <div class="org-grid">
+                <div class="org-field">
+                  <span class="org-label">GroupID</span>
+                  <code id="woGroupID" class="org-value"></code>
                 </div>
-                <div>
-                  <h3>AggreNode</h3>
-                  <code id="woAggre"></code>
+                <div class="org-field">
+                  <span class="org-label">AggreNode</span>
+                  <code id="woAggre" class="org-value"></code>
                 </div>
-              </div>
-              <div class="grid">
-                <div>
-                  <h3>AssignNode</h3>
-                  <code id="woAssign"></code>
+                <div class="org-field">
+                  <span class="org-label">AssignNode</span>
+                  <code id="woAssign" class="org-value"></code>
                 </div>
-                <div>
-                  <h3>PledgeAddress</h3>
-                  <code id="woPledge" class="break"></code>
+                <div class="org-field full-width">
+                  <span class="org-label">PledgeAddress</span>
+                  <code id="woPledge" class="org-value break"></code>
                 </div>
               </div>
               <div class="actions">
                 <button id="woExitBtn" class="btn secondary">退出担保组织</button>
               </div>
+              <div class="org-bg-deco"></div>
             </div>
             <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
               <div class="empty-icon">
@@ -676,6 +703,103 @@
             </div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section class="card hidden" id="importNextCard">
+      <pre id="txFinalPreview" class="result hidden"
+        style="white-space:pre-wrap;word-break:break-word;margin-top:12px;border-left:4px solid #10b981;background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);"
+        aria-live="polite"></pre>
+      </div>
+      </div>
+      <div class="pane pane--org">
+        <h3>担保组织信息</h3>
+        <div id="woCard" class="org-card">
+          <div class="grid">
+            <div>
+              <h3>GroupID</h3>
+              <code id="woGroupID"></code>
+            </div>
+            <div>
+              <h3>AggreNode</h3>
+              <code id="woAggre"></code>
+            </div>
+          </div>
+          <div class="grid">
+            <div>
+              <h3>AssignNode</h3>
+              <code id="woAssign"></code>
+            </div>
+            <div>
+              <h3>PledgeAddress</h3>
+              <code id="woPledge" class="break"></code>
+            </div>
+          </div>
+          <div class="actions">
+            <button id="woExitBtn" class="btn secondary">退出担保组织</button>
+          </div>
+        </div>
+        <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
+          <div class="empty-icon">
+            <svg viewBox="0 0 64 64" aria-hidden="true">
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                  aria-live="polite"></pre>
+          </div>
+        </div>
+        <div class="pane pane--org">
+          <h3>担保组织信息</h3>
+          <div id="woCard" class="org-card">
+            <div class="grid">
+              <div>
+                <h3>GroupID</h3>
+                <code id="woGroupID"></code>
+              </div>
+              <div>
+                <h3>AggreNode</h3>
+                <code id="woAggre"></code>
+              </div>
+            </div>
+            <div class="grid">
+              <div>
+                <h3>AssignNode</h3>
+                <code id="woAssign"></code>
+              </div>
+              <div>
+                <h3>PledgeAddress</h3>
+                <code id="woPledge" class="break"></code>
+              </div>
+            </div>
+            <div class="actions">
+              <button id="woExitBtn" class="btn secondary">退出担保组织</button>
+            </div>
+          </div>
+          <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
+            <div class="empty-icon">
+              <svg viewBox="0 0 64 64" aria-hidden="true">
+                <defs>
+                  <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+                    <stop offset="0" stop-color="#0ea5e9" />
+                    <stop offset="1" stop-color="#38bdf8" />
+                  </linearGradient>
+                </defs>
+                <path d="M32 6l18 7v14c0 12-9 23-18 28-9-5-18-16-18-28V13l18-7z" fill="url(#g1)" />
+                <circle cx="32" cy="26" r="9" fill="#fff" opacity=".22" />
+                <path d="M40 24l-10 10-4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" opacity=".85" />
+              </svg>
+            </div>
+            <div class="empty-text">你没有加入担保组织，无法享受福利与加速等服务</div>
+            <div class="empty-glow"><span class="dot dot--big"></span><span class="dot"></span><span
+                class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
+                class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
+                class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+            <div class="actions">
+              <button id="woJoinBtn" class="btn primary">加入担保组织</button>
+            </div>
+          </div>
+        </div>
+      </div>
       </div>
     </section>
 

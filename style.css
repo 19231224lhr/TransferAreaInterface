@@ -1764,70 +1764,118 @@ code:hover {
 
 .pane--org .org-card {
   position: relative;
-  border: none;
-  border-radius: 12px;
-  padding: 14px 16px;
-  background: radial-gradient(closest-side, rgba(14, 165, 233, .06), rgba(14, 165, 233, 0)), linear-gradient(180deg, #ffffff, #f8fafc);
-  background-size: 200% 200%, 100% 100%;
-  background-position: 0% 50%, 50% 50%;
-  animation: orgBgFlow 14s ease-in-out infinite;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, .08);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(240, 249, 255, 0.6) 100%);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 10px 30px -5px rgba(14, 165, 233, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  overflow: hidden;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
 }
 
-.pane--org .org-card::before,
-.pane--org .org-card::after {
-  content: "";
+.pane--org .org-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px -5px rgba(14, 165, 233, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.org-bg-deco {
   position: absolute;
+  top: -60px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(255, 255, 255, 0) 70%);
   border-radius: 50%;
-  filter: blur(28px);
-  opacity: .35;
   pointer-events: none;
+  z-index: 0;
+  animation: pulse 4s ease-in-out infinite;
 }
 
-.pane--org .org-card::before {
-  width: 180px;
-  height: 180px;
-  left: -40px;
-  top: -20px;
-  background: radial-gradient(closest-side, rgba(14, 165, 233, .45), rgba(14, 165, 233, 0));
-  animation: drift 12s ease-in-out infinite, spinSlow 26s linear infinite;
-}
-
-.pane--org .org-card::after {
-  width: 220px;
-  height: 220px;
-  right: -40px;
-  bottom: -30px;
-  background: radial-gradient(closest-side, rgba(99, 102, 241, .35), rgba(99, 102, 241, 0));
-  animation: drift 14s ease-in-out infinite reverse, spinSlow 30s linear infinite reverse;
-}
-
-.pane--org #woCard .grid {
+.org-grid {
+  display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
 }
 
-.pane--org #woCard .grid>div {
-  background: transparent;
-  border: none;
-  border-radius: 10px;
-  padding: 10px 12px;
-  box-shadow: none;
+.org-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
 }
 
-.pane--org #woCard h3 {
-  margin: 0 0 6px;
-  font-size: 13px;
+.org-field.full-width {
+  grid-column: span 2;
+}
+
+.org-label {
+  font-size: 12px;
   color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 
-.pane--org #woCard code {
-  background: linear-gradient(180deg, #f7fafc, #eef2f7);
-  border: none;
-  color: #0f172a;
+.org-label::before {
+  content: '';
+  display: block;
+  width: 4px;
+  height: 4px;
+  background: #0ea5e9;
+  border-radius: 50%;
+}
+
+.org-value {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
+  color: #0f172a;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.org-value:hover {
+  background: #fff;
+  border-color: #bae6fd;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
+  transform: scale(1.01);
+  color: #0284c7;
+}
+
+.pane--org .org-card .actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.8);
+}
+
+.pane--org .org-card .btn.secondary {
+  background: rgba(255, 255, 255, 0.8);
+  color: #ef4444;
+  border: 1px solid #fecaca;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.05);
+  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 8px;
+}
+
+.pane--org .org-card .btn.secondary:hover {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+  transform: translateY(-1px);
 }
 
 .pane--org .org-card--empty {
@@ -1835,25 +1883,6 @@ code:hover {
   box-shadow: none;
   border: none;
   padding: 16px;
-}
-
-.pane--org .org-card .actions {
-  position: static;
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
-}
-
-.pane--org .org-card .btn.secondary {
-  background: linear-gradient(135deg, #ffffff, #f0f9ff);
-  color: #0369a1;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
-}
-
-.pane--org .org-card .btn.secondary:hover {
-  background: linear-gradient(135deg, #ffffff, #eaf6ff);
-  transform: translateY(-1px);
 }
 
 .pane--org #woCard .grid:first-of-type {
@@ -3512,200 +3541,200 @@ code:hover {
 .tx-options {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
+  padding: 8px 0;
 }
 
-.opt-row {
+.opt-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opt-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+/* Segmented Control for Modes */
+.opt-mode-segmented {
+  display: flex;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 12px;
+  position: relative;
+  gap: 4px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.segment-item {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.segment-item input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.segment-content {
+  display: block;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.segment-item input[type="radio"]:checked + .segment-content {
+  background: #fff;
+  color: #0ea5e9;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-color: rgba(14, 165, 233, 0.1);
+  transform: scale(1.02);
+}
+
+.segment-item:hover .segment-content {
+  color: #334155;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.segment-item input[type="radio"]:checked:hover + .segment-content {
+  color: #0284c7;
+  background: #fff;
+}
+
+/* Modern Input Row */
+.opt-row-modern {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 24px;
   flex-wrap: wrap;
 }
 
-.opt-row>label {
-  font-weight: 700;
-  color: #334155;
-  min-width: 70px;
-}
-
-.opt-row--modes {
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  gap: 12px;
-}
-
-.opt-row--modes>label {
-  flex: 0 0 auto;
-  order: 0;
-}
-
-.opt-row--modes .opt-mode {
-  order: 1;
-}
-
-.opt-row--modes .opt-field--txgas {
-  order: 2;
-  margin: 0 auto;
-}
-
-.opt-row--modes .opt-field--extragas {
-  order: 3;
-}
-
-.opt-row--modes .opt-field--gas:has(#txGasInput) {
-  order: 2;
-  margin: 0 auto;
-}
-
-.opt-row--modes .opt-field--gas:has(#extraGasPGC) {
-  order: 3;
-}
-
-.opt-row--modes .opt-switch {
-  order: 4;
-  margin-left: auto;
-}
-
-.opt-row--inline {
-  justify-content: space-between;
-  align-items: flex-end;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-
-.opt-row--inline .opt-field {
-  flex: 1 1 30%;
-  min-width: 160px;
-}
-
-.opt-field {
+.opt-input-modern {
   display: flex;
   flex-direction: column;
   gap: 6px;
+  flex: 1;
+  min-width: 120px;
 }
 
-.opt-field label {
-  font-weight: 700;
-  color: #334155;
+.opt-input-modern label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 2px;
 }
 
-#extraGasPGC::-webkit-outer-spin-button,
-#extraGasPGC::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-#extraGasPGC {
-  -moz-appearance: textfield;
-}
-
-.opt-field--gas {
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
-}
-
-.opt-field--gas label {
-  white-space: nowrap;
-}
-
-.opt-field--gas .input[type="number"] {
-  width: 64px;
-  max-width: 64px;
-  margin-top: 0;
-}
-
-.opt-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 700;
-  color: #334155;
-  flex: 0 0 auto;
-}
-
-.opt-switch input[type="checkbox"] {
-  appearance: none;
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid #94a3b8;
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, .08);
-}
-
-.opt-switch input[type="checkbox"]:checked {
-  background: linear-gradient(135deg, #60a5fa, #0ea5e9);
-  border-color: #60a5fa;
-}
-
-.opt-switch input[type="checkbox"]:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, .25);
-}
-
-.opt-mode {
+.input-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  justify-content: flex-start;
-  width: 100%;
-  max-width: none;
-  flex-wrap: wrap;
-}
-
-.opt-mode label {
-  color: #0f172a;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0;
-  border: none;
+  background: #fff;
+  border: 1px solid #e2e8f0;
   border-radius: 10px;
-  background: transparent;
-  box-shadow: none;
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
-.opt-mode label:hover {
-  box-shadow: none;
+.input-wrapper:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
-.opt-mode label input[type="radio"] {
-  appearance: none;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid #93c5fd;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, .7);
-}
-
-.opt-mode label input[type="radio"]:checked {
-  background: linear-gradient(135deg, #60a5fa, #0ea5e9);
-  border-color: #60a5fa;
-}
-
-.opt-mode label input[type="radio"]:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(96, 165, 250, .25);
-}
-
-.opt-field .input[type="number"] {
+.input-clean {
   width: 100%;
-  min-width: 0;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #0f172a;
+  font-family: inherit;
+  outline: none;
 }
 
-.opt-row--inline .opt-field:last-child .input[type="number"] {
-  max-width: 140px;
+.input-suffix {
+  padding-right: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  pointer-events: none;
 }
 
-.tx-options .opt-field--gas .input[type="number"] {
-  width: 64px;
-  max-width: 64px;
-  margin-top: 0;
+/* Modern Toggle Switch */
+.opt-toggle-modern {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 20px; /* Align with inputs */
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #cbd5e1;
+  transition: .3s;
+  border-radius: 24px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #0ea5e9;
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+/* Remove old styles if needed or override */
+.opt-row--modes, .opt-row--inline {
+  display: none; /* Hide old structures if they still exist in DOM, but we replaced HTML */
 }
 
 
