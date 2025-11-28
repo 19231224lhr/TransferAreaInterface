@@ -3821,6 +3821,7 @@ code:hover {
   position: relative;
   overflow: hidden;
   margin-bottom: 20px;
+  transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, padding 0.3s ease, margin-bottom 0.3s ease;
 }
 
 .wallet-overview-card::before {

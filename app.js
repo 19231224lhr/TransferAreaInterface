@@ -2104,7 +2104,7 @@ function renderWallet() {
           found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
           found.utxos = found.utxos || {};
 
-          // Construct SubATX
+          // Construct SubATX - 必须包含完整的 ToPublicKey 以便后续计算 TXOutputHash
           const subTx = {
             TXID: '', // Calculated below
             TXType: 0,
@@ -2113,6 +2113,11 @@ function renderWallet() {
               ToAddress: key,
               ToValue: inc,
               ToGuarGroupID: u4.guarGroup || u4.orgNumber || '',
+              ToPublicKey: {
+                Curve: 'P256',
+                XHex: found.pubXHex || '',
+                YHex: found.pubYHex || ''
+              },
               ToInterest: 10,
               Type: typeId,
               ToPeerID: "QmXov7TjwVKoNqK9wQxnpTXsngphe1iCWSm57ikgHnJD9D",
@@ -2709,6 +2714,7 @@ function renderWallet() {
   }
   const wsToggle = document.getElementById('walletStructToggle');
   const wsBox = document.getElementById('walletStructBox');
+  const walletOverviewCard = document.querySelector('.wallet-overview-card');
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
       const isExpanded = wsBox.classList.contains('expanded');
@@ -2717,6 +2723,19 @@ function renderWallet() {
         updateWalletStruct();
         wsBox.classList.remove('hidden');
 
+        // 平滑隐藏钱包总览卡片
+        if (walletOverviewCard) {
+          walletOverviewCard.style.opacity = '0';
+          walletOverviewCard.style.transform = 'translateY(-10px)';
+          walletOverviewCard.style.maxHeight = '0';
+          walletOverviewCard.style.padding = '0';
+          walletOverviewCard.style.marginBottom = '0';
+          walletOverviewCard.style.overflow = 'hidden';
+          setTimeout(() => {
+            walletOverviewCard.style.display = 'none';
+          }, 300);
+        }
+
         // Force reflow to ensure transition runs from collapsed state
         wsBox.offsetHeight;
 
@@ -2724,6 +2743,18 @@ function renderWallet() {
         wsToggle.textContent = '收起账户结构体';
       } else {
         wsBox.classList.remove('expanded');
+
+        // 平滑显示钱包总览卡片
+        if (walletOverviewCard) {
+          walletOverviewCard.style.display = '';
+          walletOverviewCard.offsetHeight; // Force reflow
+          walletOverviewCard.style.opacity = '';
+          walletOverviewCard.style.transform = '';
+          walletOverviewCard.style.maxHeight = '';
+          walletOverviewCard.style.padding = '';
+          walletOverviewCard.style.marginBottom = '';
+          walletOverviewCard.style.overflow = '';
+        }
 
         // Wait for transition to finish before hiding (optional, but good practice)
         setTimeout(() => {
@@ -3644,12 +3675,14 @@ function exchangeRate(moneyType) {
 }
 
 // ECDSA 签名函数：使用私钥签名哈希值
-async function ecdsaSignHash(privateKeyHex, hashBytes, pubXHex = null, pubYHex = null) {
+// ECDSA 签名原始数据（WebCrypto 会自动计算 SHA-256 然后签名）
+// 这与 Go 的 ecdsa.Sign(rand, key, sha256(data)) 等效
+async function ecdsaSignData(privateKeyHex, data, pubXHex = null, pubYHex = null) {
   try {
     // 1. 从 Hex 导入私钥
     const privBytes = hexToBytes(privateKeyHex);
 
-    // 2. 构造 JWK 格式的私钥（需要公钥坐标 x, y）
+    // 2. 构造 JWK 格式的私钥
     const jwk = {
       kty: 'EC',
       crv: 'P-256',
@@ -3674,7 +3707,61 @@ async function ecdsaSignHash(privateKeyHex, hashBytes, pubXHex = null, pubYHex =
       ['sign']
     );
 
+    // 4. 签名 - WebCrypto 会自动计算 SHA-256(data) 然后签名
+    // 这与 Go 的 ecdsa.Sign(rand, key, sha256(data)) 等效
+    const signature = await crypto.subtle.sign(
+      { name: 'ECDSA', hash: 'SHA-256' },
+      privateKey,
+      data
+    );
+
+    // 5. 解析签名为 r, s
+    const { r, s } = parseECDSASignature(new Uint8Array(signature));
+
+    return { R: r, S: s };
+  } catch (err) {
+    console.error('ECDSA 签名失败:', err);
+    throw new Error('ECDSA signature failed: ' + err.message);
+  }
+}
+
+// ECDSA 签名已计算的哈希值（用于 UTXO Output 签名等场景）
+// 注意：WebCrypto 不支持直接签名预计算的哈希，它会再次哈希
+// 所以这个函数实际上会导致双重哈希，仅用于需要签名哈希值的特殊场景
+async function ecdsaSignHash(privateKeyHex, hashBytes, pubXHex = null, pubYHex = null) {
+  try {
+    // 1. 从 Hex 导入私钥
+    const privBytes = hexToBytes(privateKeyHex);
+
+    // 2. 构造 JWK 格式的私钥（需要公钥坐标 x, y）
+    const jwk = {
+      kty: 'EC',
+      crv: 'P-256',
+      d: bytesToBase64url(privBytes),
+      ext: true
+    };
+
+    // 如果提供了公钥坐标，添加到 JWK 中
+    if (pubXHex && pubYHex) {
+      const pubXBytes = hexToBytes(pubXHex);
+      const pubYBytes = hexToBytes(pubYHex);
+      jwk.x = bytesToBase64url(pubXBytes);
+      jwk.y = bytesToBase64url(pubYHex);
+    }
+
+    // 3. 导入私钥
+    const privateKey = await crypto.subtle.importKey(
+      'jwk',
+      jwk,
+      { name: 'ECDSA', namedCurve: 'P-256' },
+      false,
+      ['sign']
+    );
+
     // 4. 签名
+    // ⚠️ 注意：WebCrypto 会对 hashBytes 再做一次 SHA-256！
+    // 如果 hashBytes 已经是哈希值，结果将是 sign(SHA256(hash))，不是 sign(hash)
+    // 这是 WebCrypto 的限制，无法绕过
     const signature = await crypto.subtle.sign(
       { name: 'ECDSA', hash: 'SHA-256' },
       privateKey,
@@ -3752,7 +3839,7 @@ function mapToBackend(data, type) {
     const txOutputs = (data.TXOutputs || []).filter(o => !o.IsGuarMake).map(o => mapToBackend(o, 'TXOutput'));
 
     // Handle nulls for empty slices
-    const inputsCert = (!data.TXInputsCertificate || data.TXInputsCertificate.length === 0) ? null : data.TXInputsCertificate;
+    const inputsCert = (!data.TXInputsCertificate || data.TXInputsCertificate.length === 0) ? null : data.TXInputsCertificate.map(i => mapToBackend(i, 'TXInputNormal'));
     const dataField = (!data.Data || data.Data.length === 0) ? null : toBase64(new Uint8Array(data.Data));
 
     return {
@@ -3804,10 +3891,14 @@ function mapToBackend(data, type) {
 
   if (type === 'PublicKeyNew') {
     if (!data) return { CurveName: "", X: null, Y: null }; // Zero value
+    const xHex = data.XHex || data.X;
+    const yHex = data.YHex || data.Y;
+    const xDecimal = hexToDecimal(xHex);
+    const yDecimal = hexToDecimal(yHex);
     return {
       CurveName: data.CurveName || data.Curve || "",
-      X: "@@BIGINT@@" + hexToDecimal(data.XHex || data.X),
-      Y: "@@BIGINT@@" + hexToDecimal(data.YHex || data.Y)
+      X: xDecimal ? "@@BIGINT@@" + xDecimal : null,
+      Y: yDecimal ? "@@BIGINT@@" + yDecimal : null
     };
   }
 
@@ -3858,10 +3949,15 @@ function serializeStruct(data, type, excludeFields = []) {
   return new TextEncoder().encode(json);
 }
 
+// 获取 TXOutput 的序列化数据（用于签名）
+function getTXOutputSerializedData(output) {
+  return serializeStruct(output, 'TXOutput');
+}
+
 // 计算 TXOutput 的哈希
 async function getTXOutputHash(output) {
   try {
-    const data = serializeStruct(output, 'TXOutput');
+    const data = getTXOutputSerializedData(output);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     return new Uint8Array(hashBuffer);
   } catch (err) {
@@ -3870,10 +3966,15 @@ async function getTXOutputHash(output) {
   }
 }
 
+// 计算交易哈希 (Internal) - 返回序列化数据用于签名
+function getTXSerializedData(tx) {
+  // Exclude fields: Size, NewValue, UserSignature, TXType
+  return serializeStruct(tx, 'Transaction', ['Size', 'NewValue', 'UserSignature', 'TXType']);
+}
+
 // 计算交易哈希 (Internal)
 async function getTXHash(tx) {
-  // Exclude fields: Size, NewValue, UserSignature, TXType
-  const data = serializeStruct(tx, 'Transaction', ['Size', 'NewValue', 'UserSignature', 'TXType']);
+  const data = getTXSerializedData(tx);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   return new Uint8Array(hashBuffer);
 }
@@ -3903,8 +4004,19 @@ function getTXSize(tx) {
 // 计算交易的用户签名
 async function getTXUserSignature(tx, privateKeyHex, pubXHex = null, pubYHex = null) {
   try {
-    const hashBytes = await getTXHash(tx);
-    const signature = await ecdsaSignHash(privateKeyHex, hashBytes, pubXHex, pubYHex);
+    // Save TXID and clear it for hash calculation to match backend logic
+    // Backend calculates signature BEFORE setting TXID, so TXID is empty string during signing
+    const originalTXID = tx.TXID;
+    tx.TXID = "";
+
+    // 获取序列化数据（WebCrypto 会自动计算 SHA-256）
+    const serializedData = getTXSerializedData(tx);
+
+    // Restore TXID
+    tx.TXID = originalTXID;
+
+    // 传入原始序列化数据，ecdsaSignData 内部会进行 SHA-256 哈希然后签名
+    const signature = await ecdsaSignData(privateKeyHex, serializedData, pubXHex, pubYHex);
     return signature;
   } catch (err) {
     console.error('用户签名失败:', err);
@@ -4088,14 +4200,30 @@ async function buildNewTX(buildTXInfo, userAccount) {
             const posIdx = input.FromTxPosition.IndexZ || 0;
 
             if (outputs[posIdx]) {
-              const hashBytes = await getTXOutputHash(outputs[posIdx]);
+              // 补充 UTXO output 中可能缺失的 ToPublicKey
+              const outputForHash = { ...outputs[posIdx] };
+              if (!outputForHash.ToPublicKey || (!outputForHash.ToPublicKey.XHex && !outputForHash.ToPublicKey.X)) {
+                // 如果 output 的目标地址是当前地址，从账户信息补充公钥
+                if (outputForHash.ToAddress === address && addrData.pubXHex && addrData.pubYHex) {
+                  outputForHash.ToPublicKey = {
+                    Curve: 'P256',
+                    XHex: addrData.pubXHex,
+                    YHex: addrData.pubYHex
+                  };
+                }
+              }
+              // 获取序列化数据和哈希
+              const serializedData = getTXOutputSerializedData(outputForHash);
+              const hashBytes = await getTXOutputHash(outputForHash);
               input.TXOutputHash = Array.from(hashBytes);
 
               const privKeyHex = addrData.privHex || addrData.wPrivateKey || '';
               if (privKeyHex) {
                 const pubXHex = addrData.pubXHex || '';
                 const pubYHex = addrData.pubYHex || '';
-                const sig = await ecdsaSignHash(privKeyHex, hashBytes, pubXHex, pubYHex);
+                // 传入原始序列化数据，让 WebCrypto 自动计算 SHA-256 后签名
+                // 这与 Go 的 ecdsa.Sign(key, SHA256(data)) 等效
+                const sig = await ecdsaSignData(privKeyHex, serializedData, pubXHex, pubYHex);
                 input.InputSignature = { R: sig.R, S: sig.S };
               }
             }
