@@ -638,6 +638,201 @@
   opacity: 1;
   padding: 12px;
   margin-top: 12px;
+  align-items: center;
+  gap: 6px;
+}
+
+.wb-utxo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wb-utxo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  gap: 10px;
+}
+
+.wb-utxo-item:hover {
+  background: #fff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .02);
+}
+
+.wb-utxo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wb-utxo-hash {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-utxo-val {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.wb-btn-xs {
+  padding: 2px 8px;
+  font-size: 11px;
+  height: 24px;
+  line-height: 1;
+  min-width: auto;
+}
+
+/* New Styles for TXCers */
+.wb-txcer-box {
+  background: #faf5ff;
+  border: 1px solid #e9d5ff;
+  color: #7e22ce;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  word-break: break-all;
+  margin-bottom: 6px;
+}
+
+.wb-total-box {
+  background: #fef3f2;
+  padding: 12px;
+  border-radius: 10px;
+  border-left: 4px solid #ef4444;
+  margin-top: 12px;
+}
+
+.wb-total-title {
+  margin: 0 0 8px 0;
+  color: #7f1d1d;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.wb-total-item {
+  font-size: 11px;
+  color: #7f1d1d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 2px 0;
+}
+
+/* Utility classes for text colors and spacing */
+.wb-mb-sm {
+  margin-bottom: 4px;
+}
+
+.wb-text-success {
+  color: #10b981;
+}
+
+.wb-text-purple {
+  color: #8b5cf6;
+}
+
+.wb-text-blue-bold {
+  color: #0ea5e9;
+  font-weight: 700;
+}
+
+.wb-text-warning {
+  color: #f59e0b;
+}
+
+.wb-sub-title-success {
+  color: #16a34a;
+}
+
+.wb-sub-title-purple {
+  color: #9333ea;
+}
+
+/* Overwrite default pre styles and add CSS Grid animation */
+#walletStructBox.wb-clean-box {
+  white-space: normal;
+  font-family: inherit;
+
+  /* CSS Grid Animation styles */
+  display: grid;
+  grid-template-rows: 0fr;
+
+  /* Reset JS height if any */
+  height: auto;
+
+  opacity: 0;
+  overflow: hidden;
+  padding: 0;
+  margin-top: 0;
+  border: 0 solid #e2e8f0;
+  background: #f8fafc;
+
+  transition:
+    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#walletStructBox.wb-clean-box.expanded {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  padding: 12px;
+  margin-top: 12px;
+  border-width: 1px;
+}
+
+.wb-inner-wrapper {
+  min-height: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Animation for Raw JSON Box */
+.wb-json-box {
+  white-space: pre-wrap;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  color: #334155;
+  overflow: hidden;
+
+  /* Collapsed state */
+  height: 0;
+  opacity: 0;
+  padding: 0;
+  margin-top: 0;
+  border: 0 solid #e2e8f0;
+  background: #f8fafc;
+  border-radius: 8px;
+
+  transition:
+    height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease-out,
+    padding 0.35s ease,
+    margin 0.35s ease,
+    border-width 0.35s ease;
+}
+
+.wb-json-box.expanded {
+  height: auto;
+  opacity: 1;
+  padding: 12px;
+  margin-top: 12px;
   border-width: 1px;
 }
 
@@ -645,15 +840,14 @@
 
 /* 1. Container Card Style */
 #walletStructPane {
-  background: #fff;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, .06);
-  margin-top: 24px;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  margin-top: 16px;
   position: relative;
-  overflow: hidden;
-  /* Clip content for rounded corners */
-  border: 1px solid #e2e8f0;
+  overflow: visible;
+  border: none;
 }
 
 /* 2. Toggle Button Optimization */
@@ -662,7 +856,7 @@
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: white;
   border: none;
-  padding: 14px 20px;
+  padding: 12px 20px;
   font-size: 14px;
   font-weight: 600;
   border-radius: 10px;
@@ -673,8 +867,7 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  margin-top: 0;
-  /* Removed top margin for even spacing */
+  margin: 0;
 }
 
 #walletStructToggle:hover {
@@ -689,17 +882,14 @@
 
 /* 3. Expanded Box Full Width Optimization */
 #walletStructBox.wb-clean-box.expanded {
-  margin-top: 20px;
-  margin-left: -20px;
-  margin-right: -20px;
-  margin-bottom: -20px;
-  width: calc(100% + 40px);
-  border-radius: 0;
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
+  margin-top: 12px;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 0;
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
   background: #f8fafc;
-  padding: 20px;
-  /* Add padding back to content */
-  box-shadow: inset 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
