@@ -1176,7 +1176,7 @@
    代码块样式
    ======================================== */
 
-code:not(.new-info-value):not(.new-key-value):not(.import-info-value):not(.import-key-value) {
+code:not(.new-info-value):not(.new-key-value):not(.import-info-value):not(.import-key-value):not(.login-result-value) {
   display: inline-block;
   background: #f3f4f6;
   padding: 8px 10px;
@@ -1189,7 +1189,7 @@ code:not(.new-info-value):not(.new-key-value):not(.import-info-value):not(.impor
   transition: transform .14s ease, box-shadow .14s ease;
 }
 
-code:not(.new-info-value):not(.new-key-value):not(.import-info-value):not(.import-key-value):hover {
+code:not(.new-info-value):not(.new-key-value):not(.import-info-value):not(.import-key-value):not(.login-result-value):hover {
   transform: translateY(-1px);
   box-shadow: 0 6px 18px rgba(17, 24, 39, .12), 0 0 18px rgba(17, 24, 39, .12);
 }

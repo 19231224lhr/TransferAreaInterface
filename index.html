@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="/css/toast.css?v=20251201" />
   <link rel="stylesheet" href="/css/entry.css?v=20251201" />
   <link rel="stylesheet" href="/css/new-user.css?v=20251201" />
+  <link rel="stylesheet" href="/css/login.css?v=20251201" />
   <link rel="stylesheet" href="/css/wallet.css?v=20251201" />
   <link rel="stylesheet" href="/css/transaction.css?v=20251201" />
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251201" />
@@ -663,51 +664,176 @@
       </main>
     </section>
 
-    <section class="card hidden" id="loginCard">
-      <div class="card-header">
-        <h2>登录账户</h2>
+    <!-- 登录账户页面 - 无框设计 -->
+    <section class="hidden login-page" id="loginCard">
+      <!-- 页面级背景粒子 -->
+      <div class="login-page-particles">
+        <span></span><span></span><span></span><span></span><span></span>
       </div>
-      <p class="tip">使用私钥登录账户，系统将恢复账户ID、地址与公钥信息</p>
-      <div class="grid">
-        <div>
-          <h3>私钥（Hex）</h3>
-          <input id="loginPrivHex" class="input" type="text" placeholder="请输入私钥 Hex" />
+
+      <!-- 返回按钮 -->
+      <button class="login-back-btn" id="loginBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>返回</span>
+      </button>
+
+      <!-- 页面标题区 -->
+      <header class="login-page-header">
+        <div class="login-page-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+            <polyline points="10 17 15 12 10 7"/>
+            <line x1="15" y1="12" x2="3" y2="12"/>
+          </svg>
+          <div class="login-page-icon-glow"></div>
         </div>
-        <div>
-          <h3>操作</h3>
-          <button id="loginBtn" class="btn secondary">登录</button>
+        <h1 class="login-page-title">登录账户</h1>
+        <p class="login-page-subtitle">使用私钥安全登录，恢复您的账户信息</p>
+      </header>
+
+      <!-- 主内容区 -->
+      <main class="login-page-main">
+        <!-- 登录表单卡片 -->
+        <div class="login-form-card">
+          <div class="login-input-group">
+            <label class="login-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+              <span>私钥（Hex）</span>
+            </label>
+            <div class="login-input-wrapper">
+              <input id="loginPrivHex" class="login-input" type="password" placeholder="请输入您的私钥 Hex..." autocomplete="off" />
+              <button type="button" class="login-toggle-visibility" id="loginToggleVisibility">
+                <svg class="eye-open hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                  <circle cx="12" cy="12" r="3"/>
+                </svg>
+                <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                  <line x1="1" y1="1" x2="23" y2="23"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button id="loginBtn" class="login-submit-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            <span>安全登录</span>
+          </button>
         </div>
-      </div>
-      <div id="loginLoader" class="loader hidden">
-        <span class="spinner"></span>
-        <span>正在登录...</span>
-      </div>
-      <div id="loginResult" class="result hidden">
-        <div class="grid">
-          <div>
-            <h3>Account ID</h3>
-            <code id="loginAccountId"></code>
+
+        <!-- 安全提示 -->
+        <div class="login-tip-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span>请确保在安全的环境中输入私钥，切勿泄露给他人</span>
+        </div>
+
+        <!-- 加载动画 -->
+        <div id="loginLoader" class="login-loader hidden">
+          <div class="login-loader-ring">
+            <span class="ring-dot"></span>
+            <span class="ring-dot"></span>
+            <span class="ring-dot"></span>
           </div>
-          <div>
-            <h3>主地址</h3>
-            <code id="loginAddress"></code>
+          <div class="login-loader-text">
+            <span>正在验证身份</span>
+            <span class="loader-dots"><i></i><i></i><i></i></span>
           </div>
         </div>
-        <div class="grid">
-          <div>
-            <h3>私钥（Hex）</h3>
-            <code id="loginPrivOut" class="break"></code>
+
+        <!-- 登录结果展示 -->
+        <div id="loginResult" class="login-result hidden">
+          <!-- 成功标识 -->
+          <div class="login-success-header">
+            <div class="login-success-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h3>登录成功</h3>
           </div>
-          <div>
-            <h3>公钥（X / Y Hex）</h3>
-            <code id="loginPubX" class="break"></code>
-            <code id="loginPubY" class="break"></code>
+
+          <!-- 账户信息网格 -->
+          <div class="login-result-grid">
+            <div class="login-result-item">
+              <div class="login-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Account ID</span>
+              </div>
+              <code id="loginAccountId" class="login-result-value"></code>
+            </div>
+            <div class="login-result-item">
+              <div class="login-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>主地址</span>
+              </div>
+              <code id="loginAddress" class="login-result-value"></code>
+            </div>
+          </div>
+
+          <!-- 密钥信息 -->
+          <div class="login-result-keys">
+            <div class="login-result-item login-result-item--private collapsed" id="loginPrivContainer">
+              <div class="login-result-label login-result-label--clickable">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <span>私钥（Hex）</span>
+                <span class="login-warning-badge">敏感信息</span>
+                <svg class="login-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <code id="loginPrivOut" class="login-result-value login-result-value--secret"></code>
+            </div>
+            <div class="login-result-item">
+              <div class="login-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 5 5"/>
+                </svg>
+                <span>公钥（X / Y Hex）</span>
+              </div>
+              <code id="loginPubX" class="login-result-value"></code>
+              <code id="loginPubY" class="login-result-value"></code>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="login-actions">
+            <button id="loginCancelBtn" class="login-cancel-btn hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+              <span>重新登录</span>
+            </button>
+            <button id="loginNextBtn" class="login-next-btn hidden">
+              <span>进入钱包管理</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="5" y1="12" x2="19" y2="12"/>
+                <polyline points="12 5 19 12 12 19"/>
+              </svg>
+            </button>
           </div>
         </div>
-      </div>
-      <div class="actions">
-        <button id="loginNextBtn" class="btn primary hidden">进入生成钱包</button>
-      </div>
+      </main>
     </section>
 
     <!-- 导入钱包卡片：默认隐藏，导入后显示账户详细信息 -->

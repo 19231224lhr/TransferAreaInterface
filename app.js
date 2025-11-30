@@ -765,6 +765,107 @@ if (importToggleVisibility && importPrivHexInput) {
   });
 }
 
+// 重置登录页面到初始状态的辅助函数
+function resetLoginPageState() {
+  const formCard = document.querySelector('.login-form-card');
+  const tipBlock = document.querySelector('.login-tip-block');
+  const resultEl = document.getElementById('loginResult');
+  const loader = document.getElementById('loginLoader');
+  const nextBtn = document.getElementById('loginNextBtn');
+  const cancelBtn = document.getElementById('loginCancelBtn');
+  const inputEl = document.getElementById('loginPrivHex');
+  
+  // 重置所有动效类
+  if (formCard) {
+    formCard.classList.remove('collapsed', 'collapsing', 'expanding');
+  }
+  if (tipBlock) {
+    tipBlock.classList.remove('collapsed', 'collapsing', 'expanding');
+  }
+  if (resultEl) {
+    resultEl.classList.add('hidden');
+    resultEl.classList.remove('collapsing', 'expanding', 'reveal');
+  }
+  if (loader) {
+    loader.classList.add('hidden');
+    loader.classList.remove('collapsed', 'collapsing');
+  }
+  if (nextBtn) nextBtn.classList.add('hidden');
+  if (cancelBtn) cancelBtn.classList.add('hidden');
+  
+  // 清空输入
+  if (inputEl) {
+    inputEl.value = '';
+    inputEl.type = 'password';
+  }
+  
+  // 重置眼睛图标状态 - 初始状态是闭眼显示（密码隐藏）
+  const eyeOpen = document.querySelector('#loginToggleVisibility .eye-open');
+  const eyeClosed = document.querySelector('#loginToggleVisibility .eye-closed');
+  if (eyeOpen) eyeOpen.classList.add('hidden');
+  if (eyeClosed) eyeClosed.classList.remove('hidden');
+  
+  // 重置私钥折叠状态
+  const privContainer = document.getElementById('loginPrivContainer');
+  if (privContainer) {
+    privContainer.classList.add('collapsed');
+  }
+}
+
+// 登录页面 - 返回按钮
+const loginBackBtn = document.getElementById('loginBackBtn');
+if (loginBackBtn) {
+  loginBackBtn.addEventListener('click', () => {
+    const loginCard = document.getElementById('loginCard');
+    const welcomeCard = document.getElementById('welcomeCard');
+    
+    // 重置登录页面状态
+    resetLoginPageState();
+    
+    if (loginCard && welcomeCard) {
+      loginCard.classList.add('hidden');
+      welcomeCard.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
+    }
+  });
+}
+
+// 登录页面 - 私钥可见性切换
+const loginToggleVisibility = document.getElementById('loginToggleVisibility');
+const loginPrivHexInput = document.getElementById('loginPrivHex');
+if (loginToggleVisibility && loginPrivHexInput) {
+  loginToggleVisibility.addEventListener('click', () => {
+    const eyeOpen = loginToggleVisibility.querySelector('.eye-open');
+    const eyeClosed = loginToggleVisibility.querySelector('.eye-closed');
+    if (loginPrivHexInput.type === 'password') {
+      // 当前隐藏 -> 显示明文
+      loginPrivHexInput.type = 'text';
+      if (eyeOpen) eyeOpen.classList.remove('hidden');
+      if (eyeClosed) eyeClosed.classList.add('hidden');
+    } else {
+      // 当前显示 -> 隐藏
+      loginPrivHexInput.type = 'password';
+      if (eyeOpen) eyeOpen.classList.add('hidden');
+      if (eyeClosed) eyeClosed.classList.remove('hidden');
+    }
+  });
+}
+
+// 登录页面 - 私钥折叠切换
+const loginPrivContainer = document.getElementById('loginPrivContainer');
+if (loginPrivContainer) {
+  const labelClickable = loginPrivContainer.querySelector('.login-result-label--clickable');
+  if (labelClickable) {
+    labelClickable.addEventListener('click', () => {
+      loginPrivContainer.classList.toggle('collapsed');
+    });
+  }
+}
+
 const welcomeCard = document.getElementById('welcomeCard');
 const entryCard = document.getElementById('entryCard');
 const newUserCard = document.getElementById('newUserCard');
@@ -820,7 +921,7 @@ function showCard(card) {
   if (recPane2) recPane2.classList.remove('collapsed');
   const gs2 = document.getElementById('groupSearch');
   if (gs2) gs2.value = '';
-  const allCards = document.querySelectorAll('.card');
+  const allCards = document.querySelectorAll('.card, .login-page, .entry-page, .import-page, .welcome-hero');
   allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
@@ -2090,44 +2191,198 @@ if (loginBtn) {
   loginBtn.addEventListener('click', async () => {
     const inputEl = document.getElementById('loginPrivHex');
     const priv = inputEl.value.trim();
-    if (!priv) { alert('请输入私钥 Hex'); inputEl.focus(); return; }
+    
+    // 验证：使用 toast 替代 alert
+    if (!priv) { 
+      showErrorToast('请输入您的私钥 Hex 字符串', '输入不完整'); 
+      inputEl.focus(); 
+      return; 
+    }
     const normalized = priv.replace(/^0x/i, '');
-    if (!/^[0-9a-fA-F]{64}$/.test(normalized)) { alert('私钥格式不正确：需为 64 位十六进制字符串'); inputEl.focus(); return; }
+    if (!/^[0-9a-fA-F]{64}$/.test(normalized)) { 
+      showErrorToast('私钥需为 64 位十六进制字符串（可带 0x 前缀）', '格式错误'); 
+      inputEl.focus(); 
+      return; 
+    }
+    
     loginBtn.disabled = true;
+    
     try {
+      const formCard = document.querySelector('.login-form-card');
+      const tipBlock = document.querySelector('.login-tip-block');
       const loader = document.getElementById('loginLoader');
       const resultEl = document.getElementById('loginResult');
       const nextBtn = document.getElementById('loginNextBtn');
+      const cancelBtn = document.getElementById('loginCancelBtn');
+      
+      // 隐藏之前的结果
       if (resultEl) resultEl.classList.add('hidden');
       if (nextBtn) nextBtn.classList.add('hidden');
+      if (cancelBtn) cancelBtn.classList.add('hidden');
+      
+      // 表单和提示收起动效
+      if (formCard) {
+        formCard.classList.add('collapsing');
+      }
+      if (tipBlock) {
+        tipBlock.classList.add('collapsing');
+      }
+      
+      // 等待收起动效完成后显示加载器
+      await wait(400);
+      
+      if (formCard) {
+        formCard.classList.remove('collapsing');
+        formCard.classList.add('collapsed');
+      }
+      if (tipBlock) {
+        tipBlock.classList.remove('collapsing');
+        tipBlock.classList.add('collapsed');
+      }
+      
+      // 显示加载器
       if (loader) loader.classList.remove('hidden');
+      
       const t0 = Date.now();
       const data = await importFromPrivHex(priv);
       const elapsed = Date.now() - t0;
-      if (elapsed < 1000) await wait(1000 - elapsed);
-      if (loader) loader.classList.add('hidden');
+      if (elapsed < 800) await wait(800 - elapsed);
+      
+      // 加载器收起
+      if (loader) {
+        loader.classList.add('collapsing');
+        await wait(300);
+        loader.classList.remove('collapsing');
+        loader.classList.add('hidden', 'collapsed');
+      }
+      
+      // 显示结果 - 展开动效
       const resultEl2 = document.getElementById('loginResult');
       if (resultEl2) {
-        resultEl2.classList.remove('hidden');
-        resultEl2.classList.remove('fade-in');
-        resultEl2.classList.remove('reveal');
-        requestAnimationFrame(() => resultEl2.classList.add('reveal'));
+        resultEl2.classList.remove('hidden', 'collapsed');
+        resultEl2.classList.add('expanding');
+        // 动效完成后移除 class
+        setTimeout(() => resultEl2.classList.remove('expanding'), 600);
       }
+      
       document.getElementById('loginAccountId').textContent = data.accountId || '';
       document.getElementById('loginAddress').textContent = data.address || '';
       document.getElementById('loginPrivOut').textContent = data.privHex || normalized;
       document.getElementById('loginPubX').textContent = data.pubXHex || '';
       document.getElementById('loginPubY').textContent = data.pubYHex || '';
+      
+      // 确保私钥区域默认折叠
+      const privContainer = document.getElementById('loginPrivContainer');
+      if (privContainer) {
+        privContainer.classList.add('collapsed');
+      }
+      
       saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex, flowOrigin: 'login' });
-      if (nextBtn) nextBtn.classList.remove('hidden');
+      
+      // 显示操作按钮
+      if (cancelBtn) {
+        cancelBtn.classList.remove('hidden');
+      }
+      if (nextBtn) {
+        nextBtn.classList.remove('hidden');
+      }
+      
+      showSuccessToast('账户信息已成功恢复', '登录成功');
+      
     } catch (e) {
-      alert('登录失败：' + e.message);
+      // 错误处理：恢复表单状态
+      const formCard = document.querySelector('.login-form-card');
+      const tipBlock = document.querySelector('.login-tip-block');
+      const loader = document.getElementById('loginLoader');
+      
+      if (loader) {
+        loader.classList.add('hidden');
+        loader.classList.remove('collapsing', 'collapsed');
+      }
+      
+      // 恢复表单显示
+      if (formCard) {
+        formCard.classList.remove('collapsing', 'collapsed');
+        formCard.classList.add('expanding');
+        setTimeout(() => formCard.classList.remove('expanding'), 500);
+      }
+      if (tipBlock) {
+        tipBlock.classList.remove('collapsing', 'collapsed');
+        tipBlock.classList.add('expanding');
+        setTimeout(() => tipBlock.classList.remove('expanding'), 400);
+      }
+      
+      showErrorToast(e.message || '无法识别该私钥，请检查输入是否正确', '登录失败');
       console.error(e);
     } finally {
       loginBtn.disabled = false;
     }
   });
 }
+
+// 登录页面取消按钮 - 重置到初始状态
+const loginCancelBtn = document.getElementById('loginCancelBtn');
+if (loginCancelBtn) {
+  loginCancelBtn.addEventListener('click', async () => {
+    const formCard = document.querySelector('.login-form-card');
+    const tipBlock = document.querySelector('.login-tip-block');
+    const resultEl = document.getElementById('loginResult');
+    const loader = document.getElementById('loginLoader');
+    const nextBtn = document.getElementById('loginNextBtn');
+    const cancelBtn = document.getElementById('loginCancelBtn');
+    const inputEl = document.getElementById('loginPrivHex');
+    
+    // 结果区域收起
+    if (resultEl && !resultEl.classList.contains('hidden')) {
+      resultEl.classList.add('collapsing');
+      await wait(400);
+      resultEl.classList.remove('collapsing');
+      resultEl.classList.add('hidden');
+    }
+    
+    // 隐藏按钮
+    if (nextBtn) nextBtn.classList.add('hidden');
+    if (cancelBtn) cancelBtn.classList.add('hidden');
+    
+    // 恢复加载器状态
+    if (loader) {
+      loader.classList.add('hidden');
+      loader.classList.remove('collapsed', 'collapsing');
+    }
+    
+    // 表单展开
+    if (formCard) {
+      formCard.classList.remove('collapsed', 'collapsing');
+      formCard.classList.add('expanding');
+      setTimeout(() => formCard.classList.remove('expanding'), 500);
+    }
+    
+    // 提示展开
+    if (tipBlock) {
+      tipBlock.classList.remove('collapsed', 'collapsing');
+      tipBlock.classList.add('expanding');
+      setTimeout(() => tipBlock.classList.remove('expanding'), 400);
+    }
+    
+    // 清空输入
+    if (inputEl) {
+      inputEl.value = '';
+      inputEl.type = 'password';
+    }
+    
+    // 重置眼睛图标状态 - 初始状态是闭眼显示（密码隐藏）
+    const eyeOpen = document.querySelector('#loginToggleVisibility .eye-open');
+    const eyeClosed = document.querySelector('#loginToggleVisibility .eye-closed');
+    if (eyeOpen) eyeOpen.classList.add('hidden');
+    if (eyeClosed) eyeClosed.classList.remove('hidden');
+    
+    // 清除保存的用户数据
+    localStorage.removeItem('utxo_user');
+    
+    showInfoToast('请重新输入私钥进行登录', '已重置');
+  });
+}
+
 if (loginNextBtn) {
   loginNextBtn.addEventListener('click', () => {
     window.__skipExitConfirm = true;
