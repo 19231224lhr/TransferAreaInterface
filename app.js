@@ -701,7 +701,11 @@ if (importBackBtn) {
       importCard.classList.add('hidden');
       entryCard.classList.remove('hidden');
       updateWalletBrief(); // 更新钱包列表
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   });
 }
@@ -711,11 +715,15 @@ const entryBackBtn = document.getElementById('entryBackBtn');
 if (entryBackBtn) {
   entryBackBtn.addEventListener('click', () => {
     const entryCard = document.getElementById('entryCard');
-    const welcomeCard = document.getElementById('welcomeCard');
-    if (entryCard && welcomeCard) {
+    const newUserCard = document.getElementById('newUserCard');
+    if (entryCard && newUserCard) {
       entryCard.classList.add('hidden');
-      welcomeCard.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      newUserCard.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   });
 }
@@ -725,12 +733,15 @@ const newBackBtn = document.getElementById('newBackBtn');
 if (newBackBtn) {
   newBackBtn.addEventListener('click', () => {
     const newUserCard = document.getElementById('newUserCard');
-    const entryCard = document.getElementById('entryCard');
-    if (newUserCard && entryCard) {
+    const welcomeCard = document.getElementById('welcomeCard');
+    if (newUserCard && welcomeCard) {
       newUserCard.classList.add('hidden');
-      entryCard.classList.remove('hidden');
-      updateWalletBrief(); // 更新钱包列表
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      welcomeCard.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'instant' });
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   });
 }
@@ -813,8 +824,12 @@ function showCard(card) {
   allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
-  // 滚动到页面顶部
-  window.scrollTo({ top: 0, behavior: 'instant' });
+  // 滚动到页面顶部 - 使用 requestAnimationFrame 确保 DOM 更新后再滚动
+  requestAnimationFrame(() => {
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  });
   // 轻微过渡动画
   card.classList.remove('fade-in');
   requestAnimationFrame(() => card.classList.add('fade-in'));
@@ -901,8 +916,7 @@ function router() {
     case '/new':
       resetOrgSelectionForNewUser();
       showCard(newUserCard);
-      // 滚动到页面顶部
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // 滚动到页面顶部 (showCard 已包含 scrollTo，此处为兜底)
       // 如果尚未生成，则自动生成一次
       const resultEl = document.getElementById('result');
       if (resultEl && resultEl.classList.contains('hidden')) {
