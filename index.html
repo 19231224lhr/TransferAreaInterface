@@ -386,30 +386,116 @@
     </section>
 
     <section class="card hidden" id="entryCard">
-      <div class="card-header">
-        <h2>生成或导入钱包</h2>
+      <!-- 动态背景装饰 -->
+      <div class="entry-card-bg">
+        <div class="entry-orb entry-orb--1"></div>
+        <div class="entry-orb entry-orb--2"></div>
+        <div class="entry-particles">
+          <span></span><span></span><span></span><span></span>
+        </div>
       </div>
-      <p id="entryImportSuggest" class="tip">建议导入已有钱包；若您已加入担保组织，未导入也可继续。</p>
-      <div class="actions">
-        <button id="createWalletBtn" class="btn primary">新建钱包</button>
-        <button id="importWalletBtn" class="btn secondary">导入钱包</button>
-      </div>
-      <p class="tip">每次新建或导入都会加入到当前账户的钱包列表</p>
-      <div class="entry-layout">
-        <div class="entry-left">
-          <div class="grid">
-            <h3 class="metric-title">已添加钱包数 <code id="walletCount"></code></h3>
+
+      <!-- 主内容区 -->
+      <div class="entry-card-content">
+        <!-- 标题区域 -->
+        <div class="entry-header">
+          <div class="entry-header-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="6" width="20" height="12" rx="2"/>
+              <circle cx="12" cy="12" r="2"/>
+              <path d="M6 12h.01M18 12h.01"/>
+            </svg>
           </div>
-          <ol id="walletBriefList" class="result list list--ordered hidden"></ol>
-          <div class="actions">
-            <button id="briefToggleBtn" class="btn secondary hidden">展开更多</button>
-          </div>
-          <p id="walletEmptyTip" class="tip tip--warn hidden">请先添加至少一个钱包地址</p>
+          <h2 class="entry-header-title">钱包管理</h2>
+          <p class="entry-header-subtitle" id="entryImportSuggest">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
         </div>
 
-      </div>
-      <div class="actions">
-        <button id="entryNextBtn" class="btn primary">下一步</button>
+        <!-- 操作按钮区 -->
+        <div class="entry-action-cards">
+          <button id="createWalletBtn" class="entry-action-card entry-action-card--create">
+            <div class="entry-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 8v8M8 12h8"/>
+              </svg>
+            </div>
+            <div class="entry-action-info">
+              <h4>新建钱包</h4>
+              <p>生成全新的密钥对</p>
+            </div>
+            <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+
+          <button id="importWalletBtn" class="entry-action-card entry-action-card--import">
+            <div class="entry-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+            </div>
+            <div class="entry-action-info">
+              <h4>导入钱包</h4>
+              <p>使用已有私钥导入</p>
+            </div>
+            <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- 提示信息 -->
+        <p class="entry-tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 16v-4M12 8h.01"/>
+          </svg>
+          每次新建或导入都会加入到当前账户的钱包列表
+        </p>
+
+        <!-- 钱包统计区 -->
+        <div class="entry-wallet-stats">
+          <div class="entry-stats-header">
+            <div class="entry-stats-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                <polyline points="17 21 17 13 7 13 7 21"/>
+                <polyline points="7 3 7 8 15 8"/>
+              </svg>
+            </div>
+            <div class="entry-stats-info">
+              <span class="entry-stats-label">已添加钱包</span>
+              <span class="entry-stats-count" id="walletCount">0</span>
+            </div>
+          </div>
+          <ol id="walletBriefList" class="entry-wallet-list hidden"></ol>
+          <button id="briefToggleBtn" class="entry-toggle-btn hidden">
+            <span>展开更多</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9"/>
+            </svg>
+          </button>
+          <div id="walletEmptyTip" class="entry-empty-tip hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>请先添加至少一个钱包地址</span>
+          </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="entry-footer">
+          <button id="entryNextBtn" class="entry-next-btn" disabled>
+            <span>继续下一步</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
       </div>
     </section>
 
@@ -1159,13 +1245,30 @@
       </div>
     </div>
     <div id="actionOverlay" class="overlay overlay--modern hidden">
-      <div class="overlay-loader">
-        <div class="overlay-loader-visual">
-          <div class="loader-dot"></div>
-          <div class="loader-dot"></div>
-          <div class="loader-dot"></div>
+      <div class="overlay-loader" id="unifiedActionCard">
+        <!-- 加载状态 -->
+        <div class="unified-loading" id="unifiedLoading">
+          <div class="overlay-loader-visual">
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+            <div class="loader-dot"></div>
+          </div>
+          <span id="actionOverlayText" class="overlay-loader-text">正在处理...</span>
         </div>
-        <span id="actionOverlayText" class="overlay-loader-text">正在处理...</span>
+        <!-- 成功状态 -->
+        <div class="unified-success hidden" id="unifiedSuccess">
+          <div class="success-icon-wrap">
+            <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+          <h3 class="success-title" id="unifiedTitle">操作成功</h3>
+          <p class="success-text" id="unifiedText">已完成本次操作</p>
+          <div class="success-actions">
+            <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden">取消</button>
+            <button id="unifiedOkBtn" class="unified-btn unified-btn--primary">好的</button>
+          </div>
+        </div>
       </div>
     </div>
     <div id="confirmSkipModal" class="modal hidden" role="dialog" aria-modal="true">

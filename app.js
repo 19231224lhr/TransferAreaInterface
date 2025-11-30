@@ -266,12 +266,106 @@ function saveUser(user) {
     console.warn('保存本地用户信息失败', e);
   }
 }
+
+// ============================================
+// 统一操作反馈组件 API
+// ============================================
+
+/**
+ * 显示加载状态
+ * @param {string} text - 加载提示文本
+ */
+function showUnifiedLoading(text) {
+  const overlay = document.getElementById('actionOverlay');
+  const loading = document.getElementById('unifiedLoading');
+  const success = document.getElementById('unifiedSuccess');
+  const textEl = document.getElementById('actionOverlayText');
+  
+  if (textEl) textEl.textContent = text || '正在处理...';
+  if (loading) loading.classList.remove('hidden');
+  if (success) success.classList.add('hidden');
+  if (overlay) overlay.classList.remove('hidden');
+}
+
+/**
+ * 切换到成功状态（从加载状态平滑过渡）
+ * @param {string} title - 成功标题
+ * @param {string} text - 成功描述
+ * @param {Function} onOk - 确认按钮回调
+ * @param {Function} onCancel - 取消按钮回调（可选，传入则显示取消按钮）
+ */
+function showUnifiedSuccess(title, text, onOk, onCancel) {
+  const loading = document.getElementById('unifiedLoading');
+  const success = document.getElementById('unifiedSuccess');
+  const titleEl = document.getElementById('unifiedTitle');
+  const textEl = document.getElementById('unifiedText');
+  const okBtn = document.getElementById('unifiedOkBtn');
+  const cancelBtn = document.getElementById('unifiedCancelBtn');
+  
+  if (titleEl) titleEl.textContent = title || '操作成功';
+  if (textEl) textEl.textContent = text || '';
+  
+  // 隐藏加载，显示成功
+  if (loading) loading.classList.add('hidden');
+  if (success) {
+    success.classList.remove('hidden');
+    // 重新触发动画
+    success.style.animation = 'none';
+    success.offsetHeight; // 触发 reflow
+    success.style.animation = '';
+  }
+  
+  // 处理取消按钮
+  if (cancelBtn) {
+    if (onCancel) {
+      cancelBtn.classList.remove('hidden');
+      cancelBtn.onclick = () => {
+        hideUnifiedOverlay();
+        onCancel();
+      };
+    } else {
+      cancelBtn.classList.add('hidden');
+      cancelBtn.onclick = null;
+    }
+  }
+  
+  // 处理确认按钮
+  if (okBtn) {
+    okBtn.onclick = () => {
+      hideUnifiedOverlay();
+      if (onOk) onOk();
+    };
+  }
+}
+
+/**
+ * 隐藏统一反馈组件
+ */
+function hideUnifiedOverlay() {
+  const overlay = document.getElementById('actionOverlay');
+  const loading = document.getElementById('unifiedLoading');
+  const success = document.getElementById('unifiedSuccess');
+  
+  if (overlay) overlay.classList.add('hidden');
+  // 重置状态
+  if (loading) loading.classList.remove('hidden');
+  if (success) success.classList.add('hidden');
+}
+
+// 保留旧API兼容性，但重定向到统一组件
 function getActionModalElements() {
-  const modal = document.getElementById('actionModal');
-  const titleEl = document.getElementById('actionTitle');
-  const textEl = document.getElementById('actionText');
-  const okEl = document.getElementById('actionOkBtn');
-  const cancelEl = document.getElementById('actionCancelBtn');
+  const modal = document.getElementById('actionOverlay');
+  const titleEl = document.getElementById('unifiedTitle');
+  const textEl = document.getElementById('unifiedText');
+  const okEl = document.getElementById('unifiedOkBtn');
+  const cancelEl = document.getElementById('unifiedCancelBtn');
+  
+  // 准备显示成功状态
+  const loading = document.getElementById('unifiedLoading');
+  const success = document.getElementById('unifiedSuccess');
+  if (loading) loading.classList.add('hidden');
+  if (success) success.classList.remove('hidden');
+  
   if (cancelEl) {
     cancelEl.classList.add('hidden');
     cancelEl.onclick = null;
@@ -279,6 +373,16 @@ function getActionModalElements() {
   return { modal, titleEl, textEl, okEl, cancelEl };
 }
 function showModalTip(title, html, isError) {
+  const loading = document.getElementById('unifiedLoading');
+  const success = document.getElementById('unifiedSuccess');
+  if (loading) loading.classList.add('hidden');
+  if (success) {
+    success.classList.remove('hidden');
+    success.style.animation = 'none';
+    success.offsetHeight;
+    success.style.animation = '';
+  }
+  
   const { modal, titleEl, textEl, okEl } = getActionModalElements();
   if (titleEl) titleEl.textContent = title || '';
   if (textEl) {
@@ -286,7 +390,13 @@ function showModalTip(title, html, isError) {
     textEl.innerHTML = html || '';
   }
   if (modal) modal.classList.remove('hidden');
-  const handler = () => { modal.classList.add('hidden'); okEl && okEl.removeEventListener('click', handler); };
+  const handler = () => { 
+    modal.classList.add('hidden'); 
+    // 重置状态
+    if (loading) loading.classList.remove('hidden');
+    if (success) success.classList.add('hidden');
+    okEl && okEl.removeEventListener('click', handler); 
+  };
   okEl && okEl.addEventListener('click', handler);
 }
 function showConfirmModal(title, html, okText, cancelText) {
@@ -858,10 +968,10 @@ window.addEventListener('popstate', (e) => {
 async function addNewSubWallet() {
   const u = loadUser();
   if (!u || !u.accountId) { alert('请先登录或注册账户'); return; }
-  const ov = document.getElementById('actionOverlay');
-  const ovt = document.getElementById('actionOverlayText');
-  if (ovt) ovt.textContent = '正在新增钱包地址...';
-  if (ov) ov.classList.remove('hidden');
+  
+  // 使用统一加载组件
+  showUnifiedLoading('正在新增钱包地址...');
+  
   try {
     const t0 = Date.now();
     const keyPair = await crypto.subtle.generateKey(
@@ -898,17 +1008,15 @@ async function addNewSubWallet() {
       requestAnimationFrame(() => updateWalletBrief());
       setTimeout(() => updateWalletBrief(), 0);
     } catch { }
-    const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
-    if (title) title.textContent = '新增钱包成功';
-    if (text) text.textContent = '已新增一个钱包地址';
-    if (modal) modal.classList.remove('hidden');
-    const handler = () => { modal.classList.add('hidden'); try { renderWallet(); updateWalletBrief(); } catch { } ok && ok.removeEventListener('click', handler); };
-    ok && ok.addEventListener('click', handler);
+    
+    // 使用统一成功组件（从加载状态平滑过渡）
+    showUnifiedSuccess('新增钱包成功', '已新增一个钱包地址', () => {
+      try { renderWallet(); updateWalletBrief(); } catch { }
+    });
   } catch (e) {
+    hideUnifiedOverlay();
     alert('新增地址失败：' + (e && e.message ? e.message : e));
     console.error(e);
-  } finally {
-    if (ov) ov.classList.add('hidden');
   }
 }
 if (createWalletBtn && !createWalletBtn.dataset._bind) {
@@ -941,17 +1049,20 @@ function updateWalletBrief() {
         const ori = u2 && u2.wallet && u2.wallet.addressMsg && u2.wallet.addressMsg[addr] && u2.wallet.addressMsg[addr].origin ? u2.wallet.addressMsg[addr].origin : '';
         return ori === 'created' ? { label: '新建', cls: 'origin--created' } : (ori === 'imported' ? { label: '导入', cls: 'origin--imported' } : { label: '未知', cls: 'origin--unknown' });
       };
-      brief.classList.add('list');
       const items = addrs.map(a => {
         const o = originOf(a);
-        return `<li class=\"brief-item\" data-addr=\"${a}\"><div class=\"brief-content\"><span class=\"addr-text\">${a}</span><span class=\"origin-badge ${o.cls}\">${o.label}</span><button class=\"brief-del\" title=\"删除\">×</button></div></li>`;
+        return `<li data-addr="${a}"><span class="wallet-addr">${a}</span><span class="origin-badge ${o.cls}">${o.label}</span></li>`;
       }).join('');
       brief.innerHTML = items;
       // 折叠超过3项
       const toggleBtn = document.getElementById('briefToggleBtn');
       if (addrs.length > 3) {
         brief.classList.add('collapsed');
-        if (toggleBtn) { toggleBtn.classList.remove('hidden'); toggleBtn.textContent = '展开更多'; }
+        if (toggleBtn) { 
+          toggleBtn.classList.remove('hidden'); 
+          toggleBtn.querySelector('span').textContent = '展开更多';
+          toggleBtn.classList.remove('expanded');
+        }
       } else {
         brief.classList.remove('collapsed');
         if (toggleBtn) toggleBtn.classList.add('hidden');
@@ -1437,8 +1548,16 @@ if (briefToggleBtn && !briefToggleBtn.dataset._bind) {
     const list = document.getElementById('walletBriefList');
     if (!list) return;
     const collapsed = list.classList.contains('collapsed');
-    if (collapsed) { list.classList.remove('collapsed'); briefToggleBtn.textContent = '收起'; }
-    else { list.classList.add('collapsed'); briefToggleBtn.textContent = '展开更多'; }
+    const spanEl = briefToggleBtn.querySelector('span');
+    if (collapsed) { 
+      list.classList.remove('collapsed'); 
+      if (spanEl) spanEl.textContent = '收起';
+      briefToggleBtn.classList.add('expanded');
+    } else { 
+      list.classList.add('collapsed'); 
+      if (spanEl) spanEl.textContent = '展开更多';
+      briefToggleBtn.classList.remove('expanded');
+    }
   });
   briefToggleBtn.dataset._bind = '1';
 }
