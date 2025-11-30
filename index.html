@@ -385,31 +385,37 @@
       </div>
     </section>
 
-    <section class="card hidden" id="entryCard">
-      <!-- 动态背景装饰 -->
-      <div class="entry-card-bg">
-        <div class="entry-orb entry-orb--1"></div>
-        <div class="entry-orb entry-orb--2"></div>
-        <div class="entry-particles">
-          <span></span><span></span><span></span><span></span>
-        </div>
+    <!-- 钱包管理页面 - 无框设计 -->
+    <section class="hidden entry-page" id="entryCard">
+      <!-- 页面级背景粒子 -->
+      <div class="entry-page-particles">
+        <span></span><span></span><span></span><span></span><span></span>
       </div>
 
-      <!-- 主内容区 -->
-      <div class="entry-card-content">
-        <!-- 标题区域 -->
-        <div class="entry-header">
-          <div class="entry-header-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="6" width="20" height="12" rx="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <path d="M6 12h.01M18 12h.01"/>
-            </svg>
-          </div>
-          <h2 class="entry-header-title">钱包管理</h2>
-          <p class="entry-header-subtitle" id="entryImportSuggest">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
-        </div>
+      <!-- 返回按钮 -->
+      <button class="entry-back-btn" id="entryBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>返回</span>
+      </button>
 
+      <!-- 页面标题区 -->
+      <header class="entry-page-header">
+        <div class="entry-page-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="6" width="20" height="12" rx="2"/>
+            <circle cx="12" cy="12" r="2"/>
+            <path d="M6 12h.01M18 12h.01"/>
+          </svg>
+          <div class="entry-page-icon-glow"></div>
+        </div>
+        <h1 class="entry-page-title">钱包管理</h1>
+        <p class="entry-page-subtitle" id="entryImportSuggest">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
+      </header>
+
+      <!-- 主内容区 -->
+      <main class="entry-page-main">
         <!-- 操作按钮区 -->
         <div class="entry-action-cards">
           <button id="createWalletBtn" class="entry-action-card entry-action-card--create">
@@ -447,27 +453,27 @@
         </div>
 
         <!-- 提示信息 -->
-        <p class="entry-tip">
+        <div class="entry-tip-block">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 16v-4M12 8h.01"/>
           </svg>
-          每次新建或导入都会加入到当前账户的钱包列表
-        </p>
+          <span>每次新建或导入都会加入到当前账户的钱包列表</span>
+        </div>
 
-        <!-- 钱包统计区 -->
-        <div class="entry-wallet-stats">
-          <div class="entry-stats-header">
-            <div class="entry-stats-icon">
+        <!-- 钱包列表区 -->
+        <div class="entry-wallet-block">
+          <div class="entry-wallet-header">
+            <div class="entry-wallet-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
                 <polyline points="17 21 17 13 7 13 7 21"/>
                 <polyline points="7 3 7 8 15 8"/>
               </svg>
             </div>
-            <div class="entry-stats-info">
-              <span class="entry-stats-label">已添加钱包</span>
-              <span class="entry-stats-count" id="walletCount">0</span>
+            <div class="entry-wallet-info">
+              <span class="entry-wallet-label">已添加钱包</span>
+              <span class="entry-wallet-count" id="walletCount">0</span>
             </div>
           </div>
           <ol id="walletBriefList" class="entry-wallet-list hidden"></ol>
@@ -488,7 +494,7 @@
         </div>
 
         <!-- 底部操作 -->
-        <div class="entry-footer">
+        <div class="entry-page-actions">
           <button id="entryNextBtn" class="entry-next-btn" disabled>
             <span>继续下一步</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -496,140 +502,150 @@
             </svg>
           </button>
         </div>
-      </div>
+      </main>
     </section>
 
-        <!-- 新建用户卡片：默认隐藏，点击"新建钱包"后显示并生成信息 -->
-    <section class="card hidden" id="newUserCard">
-      <!-- 动态背景装饰 -->
-      <div class="new-card-bg">
-        <div class="bg-orb bg-orb--1"></div>
-        <div class="bg-orb bg-orb--2"></div>
-        <div class="bg-orb bg-orb--3"></div>
-        <div class="bg-particles">
-          <span></span><span></span><span></span><span></span><span></span>
-          <span></span><span></span><span></span><span></span><span></span>
-        </div>
-        <div class="bg-grid"></div>
+    <!-- 新建钱包页面 - 无框设计 -->
+    <section class="hidden new-page" id="newUserCard">
+      <!-- 页面级背景粒子 -->
+      <div class="new-page-particles">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
 
-      <!-- 主内容区 -->
-      <div class="new-card-content">
-        <!-- 标题区域 -->
-        <div class="new-card-header">
-          <div class="header-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-            </svg>
-          </div>
-          <h2 class="header-title">创建新账户</h2>
-          <p class="header-subtitle">安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅</p>
-        </div>
+      <!-- 返回按钮 -->
+      <button class="new-back-btn" id="newBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>返回</span>
+      </button>
 
+      <!-- 页面标题区 -->
+      <header class="new-page-header">
+        <div class="new-page-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          <div class="new-page-icon-glow"></div>
+        </div>
+        <h1 class="new-page-title">创建新钱包</h1>
+        <p class="new-page-subtitle">安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅</p>
+      </header>
+
+      <!-- 主内容区 -->
+      <main class="new-page-main">
         <!-- 加载动画 -->
         <div id="newLoader" class="new-loader hidden">
-          <div class="loader-ring">
-            <div class="ring-segment"></div>
-            <div class="ring-segment"></div>
-            <div class="ring-segment"></div>
+          <div class="new-loader-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
           </div>
-          <div class="loader-text">
+          <div class="new-loader-text">
             <span>正在生成密钥</span>
-            <span class="loader-dots"><i></i><i></i><i></i></span>
+            <span class="new-loader-dots"><i></i><i></i><i></i></span>
           </div>
         </div>
 
         <!-- 结果展示区 -->
         <div id="result" class="new-result hidden">
-          <div class="result-header">
-            <div class="success-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
+          <!-- 成功标识 -->
+          <div class="new-result-success">
+            <div class="new-success-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
               </svg>
             </div>
             <h3>钱包创建成功</h3>
           </div>
 
-          <div class="result-grid">
-            <div class="result-item result-item--id">
-              <div class="result-label">
+          <!-- 信息网格 -->
+          <div class="new-result-cards">
+            <div class="new-info-card">
+              <div class="new-info-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                   <circle cx="12" cy="7" r="4"/>
                 </svg>
                 <span>Account ID</span>
               </div>
-              <code id="accountId" class="result-value"></code>
+              <code id="accountId" class="new-info-value"></code>
             </div>
 
-            <div class="result-item result-item--address">
-              <div class="result-label">
+            <div class="new-info-card">
+              <div class="new-info-label">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                   <circle cx="12" cy="10" r="3"/>
                 </svg>
                 <span>主地址</span>
               </div>
-              <code id="address" class="result-value"></code>
+              <code id="address" class="new-info-value"></code>
             </div>
           </div>
 
-          <div class="result-grid result-grid--keys">
-            <div class="result-item result-item--private result-item--collapsed" id="privateKeyItem">
-              <div class="result-label result-label--clickable" id="privateKeyToggle">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
-                </svg>
-                <span>私钥（Hex）</span>
-                <span class="warning-badge">请勿泄露</span>
-                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- 密钥区域 -->
+          <div class="new-keys-section">
+            <div class="new-key-card new-key-card--private new-key-card--collapsed" id="privateKeyItem">
+              <div class="new-key-header" id="privateKeyToggle">
+                <div class="new-key-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                  </svg>
+                  <span>私钥（Hex）</span>
+                  <span class="new-warning-badge">请勿泄露</span>
+                </div>
+                <svg class="new-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"/>
                 </svg>
               </div>
-              <code id="privHex" class="result-value result-value--secret"></code>
+              <code id="privHex" class="new-key-value"></code>
             </div>
 
-            <div class="result-item result-item--public">
-              <div class="result-label">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-                </svg>
-                <span>公钥（X / Y Hex）</span>
+            <div class="new-key-card new-key-card--public">
+              <div class="new-key-header">
+                <div class="new-key-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                  <span>公钥（X / Y Hex）</span>
+                </div>
               </div>
-              <code id="pubX" class="result-value"></code>
-              <code id="pubY" class="result-value"></code>
+              <code id="pubX" class="new-key-value"></code>
+              <code id="pubY" class="new-key-value"></code>
             </div>
           </div>
 
-          <div class="result-warning">
+          <!-- 警告提示 -->
+          <div class="new-result-tip">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
             </svg>
             <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
           </div>
         </div>
 
         <!-- 操作按钮 -->
-        <div class="new-actions">
-          <button id="createBtn" class="new-btn new-btn--secondary">
+        <div class="new-page-actions">
+          <button id="createBtn" class="new-action-btn new-action-btn--secondary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="23 4 23 10 17 10"/>
               <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
             </svg>
             <span>重新生成</span>
           </button>
-          <button id="newNextBtn" class="new-btn new-btn--primary">
-            <span>进入生成钱包</span>
+          <button id="newNextBtn" class="new-action-btn new-action-btn--primary">
+            <span>添加到钱包列表</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"/>
               <polyline points="12 5 19 12 12 19"/>
             </svg>
           </button>
         </div>
-      </div>
+      </main>
     </section>
 
     <section class="card hidden" id="loginCard">
@@ -680,54 +696,206 @@
     </section>
 
     <!-- 导入钱包卡片：默认隐藏，导入后显示账户详细信息 -->
-    <section class="card hidden" id="importCard">
-      <div class="card-header">
-        <h2>导入钱包</h2>
+    <!-- 导入钱包页面 - 全新设计 -->
+    <!-- 导入钱包页面 - 无框全屏式设计 -->
+    <section class="hidden import-page" id="importCard">
+      <!-- 页面级背景粒子 -->
+      <div class="import-page-particles">
+        <span></span><span></span><span></span><span></span><span></span><span></span>
       </div>
-      <p class="tip">请输入私钥（Hex）以导入钱包。系统会根据私钥恢复公钥与地址并显示账户信息。</p>
-      <div class="grid">
-        <div>
-          <h3>私钥（Hex）</h3>
-          <input id="importPrivHex" class="input" type="text" placeholder="请输入私钥 Hex" />
-          <p class="tip tip--warn">注意：请确认私钥来源可信，并谨慎保存。</p>
+
+      <!-- 返回按钮 -->
+      <button class="import-back-btn" id="importBackBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        <span>返回</span>
+      </button>
+
+      <!-- 页面标题区 -->
+      <header class="import-page-header">
+        <div class="import-page-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <div class="import-page-icon-glow"></div>
         </div>
-        <div>
-          <h3>操作</h3>
-          <button id="importBtn" class="btn secondary">导入钱包</button>
+        <h1 class="import-page-title">导入钱包</h1>
+        <p class="import-page-subtitle">通过私钥恢复您的钱包地址，安全快捷</p>
+      </header>
+
+      <!-- 主内容区 -->
+      <main class="import-page-main">
+        <!-- 输入区块 -->
+        <div class="import-block import-block--input">
+          <div class="import-block-header">
+            <div class="import-block-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+              </svg>
+            </div>
+            <div class="import-block-title">
+              <span>私钥（Hex）</span>
+              <span class="import-security-badge">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0110 0v4"/>
+                </svg>
+                安全输入
+              </span>
+            </div>
+          </div>
+          <div class="import-input-wrapper">
+            <input id="importPrivHex" class="import-input" type="password" placeholder="请输入 64 位十六进制私钥" autocomplete="off" spellcheck="false" />
+            <button type="button" class="import-toggle-visibility" id="importToggleVisibility" title="切换显示/隐藏">
+              <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+              <svg class="eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                <line x1="1" y1="1" x2="23" y2="23"/>
+              </svg>
+            </button>
+          </div>
+          <p class="import-input-hint">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="12" y1="16" x2="12" y2="12"/>
+              <line x1="12" y1="8" x2="12.01" y2="8"/>
+            </svg>
+            <span>支持带 0x 前缀或纯 64 位十六进制格式</span>
+          </p>
         </div>
-      </div>
-      <div id="importLoader" class="loader hidden">
-        <span class="spinner"></span>
-        <span>正在导入...</span>
-      </div>
-      <div id="importResult" class="result hidden">
-        <div class="grid">
-          <div>
-            <h3>Account ID</h3>
-            <code id="importAccountId"></code>
+
+        <!-- 安全提醒 -->
+        <div class="import-block import-block--warning">
+          <div class="import-warning-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            </svg>
           </div>
-          <div>
-            <h3>主地址</h3>
-            <code id="importAddress"></code>
+          <div class="import-warning-text">
+            <strong>安全提醒</strong>
+            <p>请确保您在安全的环境中输入私钥，私钥将仅存储在本地浏览器中。</p>
           </div>
         </div>
-        <div class="grid">
-          <div>
-            <h3>私钥（Hex）</h3>
-            <code id="importPrivHexOut" class="break"></code>
-            <p class="tip">勿泄露！仅演示用途，生产环境请安全存储。</p>
+
+        <!-- 加载动画 -->
+        <div id="importLoader" class="import-loader hidden">
+          <div class="import-loader-spinner">
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
+            <div class="spinner-ring"></div>
           </div>
-          <div>
-            <h3>公钥（X / Y Hex）</h3>
-            <code id="importPubX" class="break"></code>
-            <code id="importPubY" class="break"></code>
+          <div class="import-loader-text">
+            <span>正在验证并导入</span>
+            <span class="import-loader-dots"><i></i><i></i><i></i></span>
           </div>
         </div>
-        <p class="tip tip--warn">已成功导入，请妥善保存关键信息。</p>
-      </div>
-      <div class="actions actions--split">
-        <button id="importNextBtn" class="btn primary hidden">下一步</button>
-      </div>
+
+        <!-- 结果展示区 -->
+        <div id="importResult" class="import-result hidden">
+          <!-- 成功标识 -->
+          <div class="import-result-success">
+            <div class="import-success-check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+            <h3>钱包导入成功</h3>
+          </div>
+
+          <!-- 信息网格 -->
+          <div class="import-result-cards">
+            <div class="import-info-card">
+              <div class="import-info-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                <span>Account ID</span>
+              </div>
+              <code id="importAccountId" class="import-info-value"></code>
+            </div>
+
+            <div class="import-info-card">
+              <div class="import-info-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                <span>主地址</span>
+              </div>
+              <code id="importAddress" class="import-info-value"></code>
+            </div>
+          </div>
+
+          <!-- 密钥区域 -->
+          <div class="import-keys-section">
+            <div class="import-key-card import-key-card--private import-key-card--collapsed" id="importPrivateKeyItem">
+              <div class="import-key-header" id="importPrivateKeyToggle">
+                <div class="import-key-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                  </svg>
+                  <span>私钥（Hex）</span>
+                  <span class="import-warning-badge">请勿泄露</span>
+                </div>
+                <svg class="import-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
+              </div>
+              <code id="importPrivHexOut" class="import-key-value"></code>
+            </div>
+
+            <div class="import-key-card import-key-card--public">
+              <div class="import-key-header">
+                <div class="import-key-label">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0110 0v4"/>
+                  </svg>
+                  <span>公钥（X / Y Hex）</span>
+                </div>
+              </div>
+              <code id="importPubX" class="import-key-value"></code>
+              <code id="importPubY" class="import-key-value"></code>
+            </div>
+          </div>
+
+          <!-- 警告提示 -->
+          <div class="import-result-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="import-page-actions">
+          <button id="importBtn" class="import-action-btn import-action-btn--primary" data-mode="wallet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>导入钱包</span>
+          </button>
+          <button id="importNextBtn" class="import-action-btn import-action-btn--secondary hidden">
+            <span>继续下一步</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </main>
     </section>
 
     <!-- 下一步：空白页面占位 -->
@@ -1244,6 +1412,10 @@
         <span>正在申请加入担保组织...</span>
       </div>
     </div>
+
+    <!-- 自定义 Toast 提示组件 -->
+    <div id="toastContainer" class="toast-container"></div>
+
     <div id="actionOverlay" class="overlay overlay--modern hidden">
       <div class="overlay-loader" id="unifiedActionCard">
         <!-- 加载状态 -->

@@ -6,6 +6,72 @@
 try { window.addEventListener('error', function (e) { var m = String((e && e.message) || ''); var f = String((e && e.filename) || ''); if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) { if (e.preventDefault) e.preventDefault(); return true; } }, true); } catch (_) { }
 try { window.addEventListener('unhandledrejection', function () { }, true); } catch (_) { }
 
+// ========================================
+// 自定义 Toast 提示组件
+// ========================================
+function showToast(message, type = 'info', title = '', duration = 3500) {
+  const container = document.getElementById('toastContainer');
+  if (!container) return;
+
+  // 根据类型设置默认标题
+  const defaultTitles = {
+    error: '错误',
+    success: '成功',
+    warning: '警告',
+    info: '提示'
+  };
+
+  // 根据类型设置图标
+  const icons = {
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>',
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+    info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>'
+  };
+
+  const toast = document.createElement('div');
+  toast.className = `toast toast--${type}`;
+  toast.innerHTML = `
+    <div class="toast-icon">${icons[type] || icons.info}</div>
+    <div class="toast-content">
+      <p class="toast-title">${title || defaultTitles[type] || '提示'}</p>
+      <p class="toast-message">${message}</p>
+    </div>
+    <button class="toast-close" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+  `;
+
+  // 关闭按钮事件
+  const closeBtn = toast.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => removeToast(toast));
+
+  container.appendChild(toast);
+
+  // 自动移除
+  if (duration > 0) {
+    setTimeout(() => removeToast(toast), duration);
+  }
+
+  return toast;
+}
+
+function removeToast(toast) {
+  if (!toast || toast.classList.contains('toast--exiting')) return;
+  toast.classList.add('toast--exiting');
+  setTimeout(() => {
+    if (toast.parentNode) toast.parentNode.removeChild(toast);
+  }, 300);
+}
+
+// 便捷方法
+const showErrorToast = (message, title = '') => showToast(message, 'error', title);
+const showSuccessToast = (message, title = '') => showToast(message, 'success', title);
+const showWarningToast = (message, title = '') => showToast(message, 'warning', title);
+const showInfoToast = (message, title = '') => showToast(message, 'info', title);
+
 const base64urlToBytes = (b64url) => {
   // 转换 base64url -> base64
   const b64 = b64url.replace(/-/g, '+').replace(/_/g, '/');
@@ -612,7 +678,77 @@ const privateKeyToggle = document.getElementById('privateKeyToggle');
 const privateKeyItem = document.getElementById('privateKeyItem');
 if (privateKeyToggle && privateKeyItem) {
   privateKeyToggle.addEventListener('click', () => {
-    privateKeyItem.classList.toggle('result-item--collapsed');
+    privateKeyItem.classList.toggle('new-result-item--collapsed');
+  });
+}
+
+// 导入钱包页面 - 私钥折叠/展开交互
+const importPrivateKeyToggle = document.getElementById('importPrivateKeyToggle');
+const importPrivateKeyItem = document.getElementById('importPrivateKeyItem');
+if (importPrivateKeyToggle && importPrivateKeyItem) {
+  importPrivateKeyToggle.addEventListener('click', () => {
+    importPrivateKeyItem.classList.toggle('import-key-card--collapsed');
+  });
+}
+
+// 导入钱包页面 - 返回按钮
+const importBackBtn = document.getElementById('importBackBtn');
+if (importBackBtn) {
+  importBackBtn.addEventListener('click', () => {
+    const importCard = document.getElementById('importCard');
+    const entryCard = document.getElementById('entryCard');
+    if (importCard && entryCard) {
+      importCard.classList.add('hidden');
+      entryCard.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+}
+
+// Entry 页面 - 返回按钮
+const entryBackBtn = document.getElementById('entryBackBtn');
+if (entryBackBtn) {
+  entryBackBtn.addEventListener('click', () => {
+    const entryCard = document.getElementById('entryCard');
+    const welcomeCard = document.getElementById('welcomeCard');
+    if (entryCard && welcomeCard) {
+      entryCard.classList.add('hidden');
+      welcomeCard.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+}
+
+// 新建钱包页面 - 返回按钮
+const newBackBtn = document.getElementById('newBackBtn');
+if (newBackBtn) {
+  newBackBtn.addEventListener('click', () => {
+    const newUserCard = document.getElementById('newUserCard');
+    const entryCard = document.getElementById('entryCard');
+    if (newUserCard && entryCard) {
+      newUserCard.classList.add('hidden');
+      entryCard.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  });
+}
+
+// 导入钱包页面 - 密码可见性切换
+const importToggleVisibility = document.getElementById('importToggleVisibility');
+const importPrivHexInput = document.getElementById('importPrivHex');
+if (importToggleVisibility && importPrivHexInput) {
+  importToggleVisibility.addEventListener('click', () => {
+    const eyeOpen = importToggleVisibility.querySelector('.eye-open');
+    const eyeClosed = importToggleVisibility.querySelector('.eye-closed');
+    if (importPrivHexInput.type === 'password') {
+      importPrivHexInput.type = 'text';
+      if (eyeOpen) eyeOpen.classList.add('hidden');
+      if (eyeClosed) eyeClosed.classList.remove('hidden');
+    } else {
+      importPrivHexInput.type = 'password';
+      if (eyeOpen) eyeOpen.classList.remove('hidden');
+      if (eyeClosed) eyeClosed.classList.add('hidden');
+    }
   });
 }
 
@@ -1839,14 +1975,14 @@ if (importBtn) {
     const inputEl = document.getElementById('importPrivHex');
     const priv = inputEl.value.trim();
     if (!priv) {
-      alert('请输入私钥 Hex');
+      showErrorToast('请输入私钥 Hex', '输入错误');
       inputEl.focus();
       return;
     }
     // 简单校验：允许带 0x 前缀；去前缀后必须是 64 位十六进制
     const normalized = priv.replace(/^0x/i, '');
     if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-      alert('私钥格式不正确：需为 64 位十六进制字符串');
+      showErrorToast('私钥格式不正确：需为 64 位十六进制字符串', '格式错误');
       inputEl.focus();
       return;
     }
@@ -1855,17 +1991,24 @@ if (importBtn) {
       const loader = document.getElementById('importLoader');
       const resultEl = document.getElementById('importResult');
       const importNextBtn = document.getElementById('importNextBtn');
+      const inputSection = document.querySelector('.import-input-section');
       if (importNextBtn) importNextBtn.classList.add('hidden');
       if (resultEl) resultEl.classList.add('hidden');
-      if (loader && mode === 'account') loader.classList.remove('hidden');
-      const ov = document.getElementById('actionOverlay');
-      const ovt = document.getElementById('actionOverlayText');
-      if (mode === 'wallet') { if (ovt) ovt.textContent = '正在导入钱包地址...'; if (ov) ov.classList.remove('hidden'); }
+      
+      // 显示加载状态
+      if (mode === 'account') {
+        if (inputSection) inputSection.classList.add('hidden');
+        if (loader) loader.classList.remove('hidden');
+      } else {
+        showUnifiedLoading('正在导入钱包地址...');
+      }
+      
       const t0 = Date.now();
       const data = await importFromPrivHex(priv);
       const elapsed = Date.now() - t0;
       if (elapsed < 1000) await wait(1000 - elapsed);
       if (loader) loader.classList.add('hidden');
+      
       if (mode === 'account') {
         resultEl.classList.remove('hidden');
         resultEl.classList.remove('fade-in');
@@ -1878,44 +2021,37 @@ if (importBtn) {
         document.getElementById('importPubY').textContent = data.pubYHex || '';
         saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex });
         if (importNextBtn) importNextBtn.classList.remove('hidden');
+        // 确保私钥默认折叠
+        const importPrivateKeyItem = document.getElementById('importPrivateKeyItem');
+        if (importPrivateKeyItem) importPrivateKeyItem.classList.add('import-result-item--collapsed');
       } else {
         const u2 = loadUser();
-        if (!u2 || !u2.accountId) { alert('请先登录或注册账户'); return; }
-        if (ov) ov.classList.add('hidden');
+        if (!u2 || !u2.accountId) { 
+          hideUnifiedOverlay();
+          showErrorToast('请先登录或注册账户', '操作失败'); 
+          return; 
+        }
         const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
         const addr = (data.address || '').toLowerCase();
         if (!addr) {
-          const { modal: modalE, titleEl: titleE, textEl: textE, okEl: okE } = getActionModalElements();
-          if (titleE) titleE.textContent = '导入失败';
-          if (textE) { textE.textContent = '无法解析地址'; textE.classList.add('tip--error'); }
-          if (modalE) modalE.classList.remove('hidden');
-          const handlerE = () => { modalE.classList.add('hidden'); okE && okE.removeEventListener('click', handlerE); };
-          if (okE) okE.addEventListener('click', handlerE);
+          showUnifiedSuccess('导入失败', '无法解析地址', () => {});
           return;
         }
         const exists = (acc.wallet && acc.wallet.addressMsg && acc.wallet.addressMsg[addr]) || (u2.address && String(u2.address).toLowerCase() === addr);
         if (exists) {
-          const { modal: modalE, titleEl: titleE, textEl: textE, okEl: okE } = getActionModalElements();
-          if (titleE) titleE.textContent = '导入失败';
-          if (textE) { textE.textContent = '该公钥地址已存在，不能重复导入'; textE.classList.add('tip--error'); }
-          if (modalE) modalE.classList.remove('hidden');
-          const handlerE = () => { modalE.classList.add('hidden'); okE && okE.removeEventListener('click', handlerE); };
-          if (okE) okE.addEventListener('click', handlerE);
+          showUnifiedSuccess('导入失败', '该公钥地址已存在，不能重复导入', () => {});
           return;
         }
         if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported', privHex: (data.privHex || normalized) };
         saveUser(acc);
         updateWalletBrief();
-        const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
-        if (title) title.textContent = '导入钱包成功';
-        if (text) text.textContent = '已导入一个钱包地址';
-        if (text) text.classList.remove('tip--error');
-        if (modal) modal.classList.remove('hidden');
-        const handler = () => { modal.classList.add('hidden'); ok.removeEventListener('click', handler); routeTo('#/entry'); };
-        if (ok) ok.addEventListener('click', handler);
+        showUnifiedSuccess('导入钱包成功', '已导入一个钱包地址', () => {
+          routeTo('#/entry');
+        });
       }
     } catch (err) {
-      alert('导入失败：' + err.message);
+      hideUnifiedOverlay();
+      showErrorToast('导入失败：' + err.message, '系统错误');
       console.error(err);
     } finally {
       importBtn.disabled = false;
