@@ -642,6 +642,8 @@ function router() {
     case '/new':
       resetOrgSelectionForNewUser();
       showCard(newUserCard);
+      // 滚动到页面顶部
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       // 如果尚未生成，则自动生成一次
       const resultEl = document.getElementById('result');
       if (resultEl && resultEl.classList.contains('hidden')) {
@@ -2714,7 +2716,6 @@ function renderWallet() {
   }
   const wsToggle = document.getElementById('walletStructToggle');
   const wsBox = document.getElementById('walletStructBox');
-  const walletOverviewCard = document.querySelector('.wallet-overview-card');
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
       const isExpanded = wsBox.classList.contains('expanded');
@@ -2723,19 +2724,6 @@ function renderWallet() {
         updateWalletStruct();
         wsBox.classList.remove('hidden');
 
-        // 平滑隐藏钱包总览卡片
-        if (walletOverviewCard) {
-          walletOverviewCard.style.opacity = '0';
-          walletOverviewCard.style.transform = 'translateY(-10px)';
-          walletOverviewCard.style.maxHeight = '0';
-          walletOverviewCard.style.padding = '0';
-          walletOverviewCard.style.marginBottom = '0';
-          walletOverviewCard.style.overflow = 'hidden';
-          setTimeout(() => {
-            walletOverviewCard.style.display = 'none';
-          }, 300);
-        }
-
         // Force reflow to ensure transition runs from collapsed state
         wsBox.offsetHeight;
 
@@ -2743,18 +2731,6 @@ function renderWallet() {
         wsToggle.textContent = '收起账户结构体';
       } else {
         wsBox.classList.remove('expanded');
-
-        // 平滑显示钱包总览卡片
-        if (walletOverviewCard) {
-          walletOverviewCard.style.display = '';
-          walletOverviewCard.offsetHeight; // Force reflow
-          walletOverviewCard.style.opacity = '';
-          walletOverviewCard.style.transform = '';
-          walletOverviewCard.style.maxHeight = '';
-          walletOverviewCard.style.padding = '';
-          walletOverviewCard.style.marginBottom = '';
-          walletOverviewCard.style.overflow = '';
-        }
 
         // Wait for transition to finish before hiding (optional, but good practice)
         setTimeout(() => {
@@ -4318,44 +4294,6 @@ async function buildNewTX(buildTXInfo, userAccount) {
     throw err;
   }
 }
-
-// Wallet Structure Toggle Animation & Logic
-document.addEventListener('DOMContentLoaded', () => {
-  const walletStructToggle = document.getElementById('walletStructToggle');
-  const walletStructBox = document.getElementById('walletStructBox');
-
-  if (walletStructToggle && walletStructBox) {
-    // Remove any existing listeners by cloning (optional, but safe)
-    const newBtn = walletStructToggle.cloneNode(true);
-    walletStructToggle.parentNode.replaceChild(newBtn, walletStructToggle);
-
-    newBtn.addEventListener('click', () => {
-      const isExpanded = walletStructBox.classList.contains('expanded');
-
-      if (isExpanded) {
-        walletStructBox.classList.remove('expanded');
-        newBtn.innerHTML = '展开账户结构体';
-        // Wait for transition to finish before hiding
-        setTimeout(() => {
-          if (!walletStructBox.classList.contains('expanded')) {
-            walletStructBox.classList.add('hidden');
-          }
-        }, 500);
-      } else {
-        walletStructBox.classList.remove('hidden');
-        // Force reflow to enable transition
-        void walletStructBox.offsetWidth;
-        walletStructBox.classList.add('expanded');
-        newBtn.innerHTML = '收起账户结构体';
-
-        // Ensure content is up to date
-        if (typeof updateWalletStruct === 'function') {
-          updateWalletStruct();
-        }
-      }
-    });
-  }
-});
 
 // UTXO Detail Modal Logic
 window.showUtxoDetail = (addrKey, utxoKey) => {
