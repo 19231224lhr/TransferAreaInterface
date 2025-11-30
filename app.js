@@ -497,6 +497,15 @@ createBtn.addEventListener('click', (evt) => {
 });
 createBtn.addEventListener('click', handleCreate);
 
+// 私钥折叠/展开交互
+const privateKeyToggle = document.getElementById('privateKeyToggle');
+const privateKeyItem = document.getElementById('privateKeyItem');
+if (privateKeyToggle && privateKeyItem) {
+  privateKeyToggle.addEventListener('click', () => {
+    privateKeyItem.classList.toggle('result-item--collapsed');
+  });
+}
+
 const welcomeCard = document.getElementById('welcomeCard');
 const entryCard = document.getElementById('entryCard');
 const newUserCard = document.getElementById('newUserCard');
@@ -556,6 +565,8 @@ function showCard(card) {
   allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
+  // 滚动到页面顶部
+  window.scrollTo({ top: 0, behavior: 'instant' });
   // 轻微过渡动画
   card.classList.remove('fade-in');
   requestAnimationFrame(() => card.classList.add('fade-in'));

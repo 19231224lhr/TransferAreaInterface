@@ -440,39 +440,6 @@
           <p class="header-subtitle">安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅</p>
         </div>
 
-        <!-- 功能特性卡片 -->
-        <div class="feature-cards">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </div>
-            <h4>本地加密</h4>
-            <p>密钥在浏览器本地生成，绝不上传服务器</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-              </svg>
-            </div>
-            <h4>安全可靠</h4>
-            <p>采用国际标准加密算法，确保资产安全</p>
-          </div>
-          <div class="feature-card">
-            <div class="feature-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-              </svg>
-            </div>
-            <h4>全球通用</h4>
-            <p>兼容主流区块链网络，一键接入生态</p>
-          </div>
-        </div>
-
         <!-- 加载动画 -->
         <div id="newLoader" class="new-loader hidden">
           <div class="loader-ring">
@@ -523,13 +490,16 @@
           </div>
 
           <div class="result-grid result-grid--keys">
-            <div class="result-item result-item--private">
-              <div class="result-label">
+            <div class="result-item result-item--private result-item--collapsed" id="privateKeyItem">
+              <div class="result-label result-label--clickable" id="privateKeyToggle">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
                 </svg>
                 <span>私钥（Hex）</span>
                 <span class="warning-badge">请勿泄露</span>
+                <svg class="toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"/>
+                </svg>
               </div>
               <code id="privHex" class="result-value result-value--secret"></code>
             </div>
@@ -1188,10 +1158,14 @@
         <span>正在申请加入担保组织...</span>
       </div>
     </div>
-    <div id="actionOverlay" class="overlay hidden">
-      <div class="loader">
-        <span class="spinner"></span>
-        <span id="actionOverlayText">正在处理...</span>
+    <div id="actionOverlay" class="overlay overlay--modern hidden">
+      <div class="overlay-loader">
+        <div class="overlay-loader-visual">
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+          <div class="loader-dot"></div>
+        </div>
+        <span id="actionOverlayText" class="overlay-loader-text">正在处理...</span>
       </div>
     </div>
     <div id="confirmSkipModal" class="modal hidden" role="dialog" aria-modal="true">
