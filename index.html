@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="/css/base.css?v=20251201" />
   <link rel="stylesheet" href="/css/animations.css?v=20251201" />
   <link rel="stylesheet" href="/css/utilities.css?v=20251201" />
-  <link rel="stylesheet" href="/css/components.css?v=20251201" />
-  <link rel="stylesheet" href="/css/header.css?v=20251201" />
+  <link rel="stylesheet" href="/css/components.css?v=20251201b" />
+  <link rel="stylesheet" href="/css/header.css?v=20251201f" />
   <link rel="stylesheet" href="/css/welcome.css?v=20251201" />
   <link rel="stylesheet" href="/css/toast.css?v=20251201" />
   <link rel="stylesheet" href="/css/entry.css?v=20251201" />
@@ -99,10 +99,11 @@
       <div id="userBar" class="user-bar">
         <button id="userButton" class="user-button" aria-label="用户信息">
           <div class="user-avatar" id="userAvatar">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg class="avatar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
             </svg>
+            <img class="avatar-img hidden" src="/assets/avatar.png" alt="用户头像">
           </div>
           <span id="userLabel" class="user-label">未登录</span>
           <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -110,37 +111,129 @@
           </svg>
         </button>
         <div id="userMenu" class="user-menu hidden">
-          <div class="menu-item" id="menuAccountItem">
-            <span class="menu-label">Account ID</span>
-            <code id="menuAccountId" class="menu-value"></code>
-          </div>
-          <div class="menu-item" id="menuAddressItem">
-            <span class="menu-label">地址信息</span>
-            <code id="menuAddress" class="menu-value break"></code>
-            <div id="menuAddressPopup" class="menu-popup hidden">
-              <div id="menuAddressList"></div>
+          <!-- 用户信息头部 -->
+          <div class="menu-header">
+            <div class="menu-header-avatar" id="menuHeaderAvatar">
+              <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <img class="avatar-img hidden" src="/assets/avatar.png" alt="用户头像">
+            </div>
+            <div class="menu-header-info">
+              <span class="menu-header-title" id="menuHeaderTitle">Amiya</span>
+              <span class="menu-header-sub" id="menuHeaderSub">欢迎回来 👋</span>
             </div>
           </div>
-          <div class="menu-item hidden" id="menuOrgItem">
-            <span class="menu-label">担保组织</span>
-            <code id="menuOrg" class="menu-value break"></code>
+
+          <!-- 信息卡片区 -->
+          <div class="menu-cards">
+            <div class="menu-card" id="menuAccountItem">
+              <div class="menu-card-icon menu-card-icon--blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="16" rx="2"/>
+                  <line x1="7" y1="8" x2="17" y2="8"/>
+                  <line x1="7" y1="12" x2="13" y2="12"/>
+                </svg>
+              </div>
+              <div class="menu-card-content">
+                <span class="menu-card-label">账户 ID</span>
+                <code id="menuAccountId" class="menu-card-value"></code>
+              </div>
+            </div>
+
+            <div class="menu-card menu-card--clickable" id="menuAddressItem">
+              <div class="menu-card-icon menu-card-icon--green">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div class="menu-card-content">
+                <span class="menu-card-label">地址信息</span>
+                <code id="menuAddress" class="menu-card-value"></code>
+              </div>
+              <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <div id="menuAddressPopup" class="menu-popup hidden">
+                <div id="menuAddressList"></div>
+              </div>
+            </div>
+
+            <div class="menu-card hidden" id="menuOrgItem">
+              <div class="menu-card-icon menu-card-icon--purple">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+              </div>
+              <div class="menu-card-content">
+                <span class="menu-card-label">担保组织</span>
+                <code id="menuOrg" class="menu-card-value"></code>
+              </div>
+            </div>
+
+            <div class="menu-card menu-card--clickable hidden" id="menuBalanceItem">
+              <div class="menu-card-icon menu-card-icon--amber">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
+                  <path d="M12 18V6"/>
+                </svg>
+              </div>
+              <div class="menu-card-content">
+                <span class="menu-card-label">余额</span>
+                <code id="menuBalance" class="menu-card-value"></code>
+              </div>
+              <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+              </svg>
+              <div id="menuBalancePopup" class="menu-popup menu-balance-popup hidden">
+                <div class="balance-breakdown">
+                  <div class="balance-item">
+                    <span class="balance-dot balance-dot--pgc"></span>
+                    <span class="balance-label">PGC</span>
+                    <span id="menuBalancePGC" class="balance-amount">0</span>
+                  </div>
+                  <div class="balance-item">
+                    <span class="balance-dot balance-dot--btc"></span>
+                    <span class="balance-label">BTC</span>
+                    <span id="menuBalanceBTC" class="balance-amount">0</span>
+                  </div>
+                  <div class="balance-item">
+                    <span class="balance-dot balance-dot--eth"></span>
+                    <span class="balance-label">ETH</span>
+                    <span id="menuBalanceETH" class="balance-amount">0</span>
+                  </div>
+                </div>
+                <div class="balance-tip">汇率: 1 PGC = 1 USDT, 1 BTC = 100 USDT, 1 ETH = 10 USDT</div>
+              </div>
+            </div>
           </div>
-          <div class="menu-item hidden" id="menuBalanceItem">
-            <span class="menu-label">余额</span>
-            <code id="menuBalance" class="menu-value"></code>
-          </div>
+
+          <!-- 未登录状态 -->
           <div id="menuEmpty" class="menu-empty hidden">
-            <span class="menu-empty__icon">🔐</span>
-            <div class="menu-empty__text">尚未登录<br><span style="opacity:0.7;font-size:12px;">请先创建或导入钱包</span></div>
+            <div class="menu-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </div>
+            <div class="menu-empty-text">尚未登录</div>
+            <div class="menu-empty-hint">请先创建或导入账户</div>
           </div>
-          <div class="menu-sep"></div>
-          <button id="logoutBtn" class="menu-action">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+          <!-- 退出按钮 -->
+          <button id="logoutBtn" class="menu-logout-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
               <polyline points="16 17 21 12 16 7"/>
               <line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            退出登录
+            <span>退出登录</span>
           </button>
         </div>
       </div>

@@ -202,28 +202,40 @@ function loadUser() {
 function updateHeaderUser(user) {
   const labelEl = document.getElementById('userLabel');
   const avatarEl = document.getElementById('userAvatar');
-  const menuAccountEl = document.getElementById('menuAccountId');
   const menuAddrEl = document.getElementById('menuAddress');
-  const menuAccountItem = document.getElementById('menuAccountItem');
   const menuAddressItem = document.getElementById('menuAddressItem');
+  const menuAccountItem = document.getElementById('menuAccountItem');
+  const menuAccountIdEl = document.getElementById('menuAccountId');
   const menuOrgItem = document.getElementById('menuOrgItem');
   const menuBalanceItem = document.getElementById('menuBalanceItem');
   const menuOrgEl = document.getElementById('menuOrg');
   const menuBalanceEl = document.getElementById('menuBalance');
   const menuAddrPopup = document.getElementById('menuAddressPopup');
   const menuAddrList = document.getElementById('menuAddressList');
+  const menuBalancePopup = document.getElementById('menuBalancePopup');
+  const menuBalancePGC = document.getElementById('menuBalancePGC');
+  const menuBalanceBTC = document.getElementById('menuBalanceBTC');
+  const menuBalanceETH = document.getElementById('menuBalanceETH');
   const menuEmpty = document.getElementById('menuEmpty');
   const logoutEl = document.getElementById('logoutBtn');
+  const menuHeader = document.querySelector('.menu-header');
+  const menuCards = document.querySelector('.menu-cards');
+  const menuHeaderAvatar = document.getElementById('menuHeaderAvatar');
   if (!labelEl || !avatarEl) return; // header 不存在时忽略
   if (user && user.accountId) {
-    labelEl.textContent = user.accountId;
-    // 头像保持固定，不再随ID变化
-    avatarEl.textContent = '👤';
+    // 显示用户名而不是 Account ID
+    labelEl.textContent = 'Amiya';
+    // 登录后显示自定义头像
     avatarEl.classList.add('avatar--active');
+    if (menuHeaderAvatar) menuHeaderAvatar.classList.add('avatar--active');
+    // 显示头部和卡片区
+    if (menuHeader) menuHeader.classList.remove('hidden');
+    if (menuCards) menuCards.classList.remove('hidden');
+    // 显示 Account ID 卡片
     if (menuAccountItem) menuAccountItem.classList.remove('hidden');
+    if (menuAccountIdEl) menuAccountIdEl.textContent = user.accountId;
     if (menuAddressItem) menuAddressItem.classList.remove('hidden');
     const mainAddr = user.address || (user.wallet && Object.keys(user.wallet.addressMsg || {})[0]) || '';
-    if (menuAccountEl) menuAccountEl.textContent = user.accountId || '';
     const subMap = (user.wallet && user.wallet.addressMsg) || {};
     const addrCount = Object.keys(subMap).length;
     if (menuAddrEl) menuAddrEl.textContent = addrCount + ' 个地址';
@@ -231,39 +243,63 @@ function updateHeaderUser(user) {
     if (menuOrgItem) menuOrgItem.classList.remove('hidden');
     if (menuBalanceItem) menuBalanceItem.classList.remove('hidden');
     if (menuOrgEl) menuOrgEl.textContent = computeCurrentOrgId() || '暂未加入担保组织';
-    if (menuBalanceEl) menuBalanceEl.textContent = (typeof user.balance === 'number' ? user.balance : 0) + ' BTC';
+    
+    // 计算各币种余额
+    const vd = (user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+    const pgc = Number(vd[0] || 0);
+    const btc = Number(vd[1] || 0);
+    const eth = Number(vd[2] || 0);
+    const totalUsdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
+    
+    if (menuBalanceEl) menuBalanceEl.textContent = totalUsdt + ' USDT';
+    if (menuBalancePGC) menuBalancePGC.textContent = pgc;
+    if (menuBalanceBTC) menuBalanceBTC.textContent = btc;
+    if (menuBalanceETH) menuBalanceETH.textContent = eth;
+    if (menuBalancePopup) menuBalancePopup.classList.add('hidden');
+    
     if (menuOrgEl) menuOrgEl.classList.remove('code-waiting');
     if (menuEmpty) menuEmpty.classList.add('hidden');
     if (logoutEl) {
       logoutEl.disabled = false;
-      logoutEl.classList.remove('menu-action--disabled');
-      logoutEl.textContent = '退出登录';
+      logoutEl.classList.remove('hidden');
     }
   } else {
     labelEl.textContent = '未登录';
-    avatarEl.textContent = '👤';
+    // 未登录时移除头像激活状态
     avatarEl.classList.remove('avatar--active');
+    if (menuHeaderAvatar) menuHeaderAvatar.classList.remove('avatar--active');
+    // 隐藏头部和卡片区
+    if (menuHeader) menuHeader.classList.add('hidden');
+    if (menuCards) menuCards.classList.add('hidden');
     if (menuAccountItem) menuAccountItem.classList.add('hidden');
+    if (menuAccountIdEl) menuAccountIdEl.textContent = '';
     if (menuAddressItem) menuAddressItem.classList.add('hidden');
-    if (menuAccountEl) menuAccountEl.textContent = '';
     if (menuAddrEl) menuAddrEl.textContent = '';
     if (menuOrgItem) menuOrgItem.classList.add('hidden');
     if (menuBalanceItem) menuBalanceItem.classList.add('hidden');
     if (menuOrgEl) menuOrgEl.textContent = '';
     if (menuBalanceEl) menuBalanceEl.textContent = '';
+    if (menuBalancePGC) menuBalancePGC.textContent = '0';
+    if (menuBalanceBTC) menuBalanceBTC.textContent = '0';
+    if (menuBalanceETH) menuBalanceETH.textContent = '0';
+    if (menuBalancePopup) menuBalancePopup.classList.add('hidden');
     if (menuOrgEl) menuOrgEl.classList.add('code-waiting');
     if (menuEmpty) menuEmpty.classList.remove('hidden');
     if (logoutEl) {
       logoutEl.disabled = true;
-      logoutEl.classList.add('menu-action--disabled');
-      logoutEl.textContent = '等待登录';
+      logoutEl.classList.add('hidden');
     }
     if (menuAddrList) menuAddrList.innerHTML = '';
     if (menuAddrPopup) menuAddrPopup.classList.add('hidden');
   }
+  // 地址点击事件绑定
   if (menuAddressItem && !menuAddressItem.dataset._bind) {
     menuAddressItem.addEventListener('click', (e) => {
       e.stopPropagation();
+      // 关闭余额弹窗
+      const balancePopup = document.getElementById('menuBalancePopup');
+      if (balancePopup) balancePopup.classList.add('hidden');
+      
       const u = loadUser();
       const popup = document.getElementById('menuAddressPopup');
       const list = document.getElementById('menuAddressList');
@@ -289,6 +325,21 @@ function updateHeaderUser(user) {
     const popup = document.getElementById('menuAddressPopup');
     if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
     menuAddressItem.dataset._bind = '1';
+  }
+  // 余额点击事件绑定
+  if (menuBalanceItem && !menuBalanceItem.dataset._bind) {
+    menuBalanceItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 关闭地址弹窗
+      const addrPopup = document.getElementById('menuAddressPopup');
+      if (addrPopup) addrPopup.classList.add('hidden');
+      
+      const popup = document.getElementById('menuBalancePopup');
+      if (popup) popup.classList.toggle('hidden');
+    });
+    const popup = document.getElementById('menuBalancePopup');
+    if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
+    menuBalanceItem.dataset._bind = '1';
   }
 }
 function saveUser(user) {
@@ -2416,10 +2467,22 @@ if (userButton) {
     const menu = document.getElementById('userMenu');
     if (menu) menu.classList.toggle('hidden');
   });
-  document.addEventListener('click', () => {
+  // 点击菜单外部时关闭菜单
+  document.addEventListener('click', (e) => {
     const menu = document.getElementById('userMenu');
-    if (menu) menu.classList.add('hidden');
+    const userBar = document.getElementById('userBar');
+    // 如果点击在菜单或用户栏内部，不关闭
+    if (menu && userBar && !userBar.contains(e.target)) {
+      menu.classList.add('hidden');
+    }
   });
+  // 阻止菜单内部点击冒泡（防止关闭）
+  const userMenu = document.getElementById('userMenu');
+  if (userMenu) {
+    userMenu.addEventListener('click', (e) => {
+      e.stopPropagation();
+    });
+  }
   // 初始渲染用户栏
   updateHeaderUser(loadUser());
   updateOrgDisplay();

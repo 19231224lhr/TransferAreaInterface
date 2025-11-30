@@ -449,82 +449,67 @@
 }
 
 .login-loader-ring {
-  position: relative;
-  width: 52px;
-  height: 52px;
-  margin-bottom: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
 }
 
 .login-loader-ring .ring-dot {
-  position: absolute;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  will-change: opacity, transform;
-  animation: loginDotPulse 1.2s ease-in-out infinite;
+  animation: loginDotBounce 1.4s ease-in-out infinite;
 }
 
 .login-loader-ring .ring-dot:nth-child(1) {
-  top: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+  background: #0ea5e9;
   animation-delay: 0s;
 }
 
 .login-loader-ring .ring-dot:nth-child(2) {
-  bottom: 4px;
-  right: 4px;
-  background: linear-gradient(135deg, #6366f1, #818cf8);
-  animation-delay: 0.2s;
+  background: #6366f1;
+  animation-delay: 0.15s;
 }
 
 .login-loader-ring .ring-dot:nth-child(3) {
-  bottom: 4px;
-  left: 4px;
-  background: linear-gradient(135deg, #8b5cf6, #a78bfa);
-  animation-delay: 0.4s;
+  background: #8b5cf6;
+  animation-delay: 0.3s;
 }
 
-@keyframes loginDotPulse {
-  0%, 100% { opacity: 0.4; transform: scale(0.8) translateX(-50%); }
-  50% { opacity: 1; transform: scale(1.15) translateX(-50%); }
-}
-
-.login-loader-ring .ring-dot:nth-child(2),
-.login-loader-ring .ring-dot:nth-child(3) {
-  animation-name: loginDotPulseNoTranslate;
-}
-
-@keyframes loginDotPulseNoTranslate {
-  0%, 100% { opacity: 0.4; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.15); }
+@keyframes loginDotBounce {
+  0%, 80%, 100% { 
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+  40% { 
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .login-loader-text {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 16px;
-  font-weight: 600;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 500;
   color: #64748b;
 }
 
 .login-loader-text .loader-dots {
   display: flex;
-  gap: 4px;
-  margin-left: 4px;
+  gap: 3px;
+  margin-left: 2px;
 }
 
 .login-loader-text .loader-dots i {
-  width: 5px;
-  height: 5px;
+  width: 4px;
+  height: 4px;
   border-radius: 50%;
-  background: #64748b;
-  animation: loginDotsAnim 1.2s ease-in-out infinite;
+  background: #94a3b8;
+  animation: loginDotsAnim 1.4s ease-in-out infinite;
 }
 
 .login-loader-text .loader-dots i:nth-child(1) { animation-delay: 0s; }
@@ -532,8 +517,8 @@
 .login-loader-text .loader-dots i:nth-child(3) { animation-delay: 0.4s; }
 
 @keyframes loginDotsAnim {
-  0%, 100% { opacity: 0.3; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.1); }
+  0%, 80%, 100% { opacity: 0.3; }
+  40% { opacity: 1; }
 }
 
 /* ========================================
