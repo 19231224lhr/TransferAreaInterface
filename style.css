@@ -28,7 +28,7 @@ body {
   gap: 80px;
   align-items: center;
   min-height: 100vh;
-  padding: 100px 8% 60px;
+  padding: 80px 8% 40px;
   margin: 0;
   background: transparent;
   overflow: hidden;
@@ -184,7 +184,7 @@ body:has(.welcome-hero:not(.hidden)) {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
   animation: contentSlideIn 0.8s ease-out 0.2s both;
 }
 
@@ -204,12 +204,12 @@ body:has(.welcome-hero:not(.hidden)) {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  margin-top: 50px;
+  padding: 6px 14px;
+  margin-top: 20px;
   background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1));
   border: 1px solid rgba(14, 165, 233, 0.2);
   border-radius: 50px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #0ea5e9;
   width: fit-content;
@@ -248,9 +248,9 @@ body:has(.welcome-hero:not(.hidden)) {
 .welcome-title {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   margin: 0;
-  font-size: 56px;
+  font-size: 48px;
   font-weight: 800;
   line-height: 1.1;
   letter-spacing: -0.03em;
@@ -279,8 +279,8 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 .welcome-subtitle {
-  font-size: 18px;
-  line-height: 1.6;
+  font-size: 16px;
+  line-height: 1.5;
   color: #64748b;
   max-width: 420px;
   margin: 0;
@@ -289,13 +289,13 @@ body:has(.welcome-hero:not(.hidden)) {
 /* 特性卡片 */
 .feature-cards {
   display: flex;
-  gap: 16px;
-  margin-top: 8px;
+  gap: 12px;
+  margin-top: 4px;
 }
 
 .feature-card {
   flex: 1;
-  padding: 24px;
+  padding: 16px;
   background: linear-gradient(
     145deg,
     rgba(255, 255, 255, 0.85) 0%,
