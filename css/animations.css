@@ -1,0 +1,710 @@
+/**
+ * ========================================
+ * 动画样式模块 - animations.css
+ * 包含：所有通用关键帧动画定义
+ * ========================================
+ */
+
+/* ========================================
+   基础动画 - 淡入淡出
+   ======================================== */
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   缩放动画
+   ======================================== */
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes scaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ========================================
+   滑动动画
+   ======================================== */
+
+@keyframes slideInUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInDown {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* ========================================
+   旋转动画
+   ======================================== */
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotateReverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   脉冲动画
+   ======================================== */
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 12px rgba(14, 165, 233, 0);
+  }
+}
+
+@keyframes pulseSoft {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.1); }
+  50% { transform: scale(1); }
+  75% { transform: scale(1.1); }
+}
+
+/* ========================================
+   浮动动画
+   ======================================== */
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -15px, 0);
+  }
+}
+
+@keyframes floatX {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(10px);
+  }
+}
+
+@keyframes drift {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  25% {
+    transform: translate3d(10px, -10px, 0) rotate(2deg);
+  }
+  50% {
+    transform: translate3d(0, -15px, 0) rotate(0deg);
+  }
+  75% {
+    transform: translate3d(-10px, -10px, 0) rotate(-2deg);
+  }
+}
+
+/* ========================================
+   光球漂浮动画 (用于背景装饰)
+   ======================================== */
+
+@keyframes orbFloat {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translate3d(30px, -20px, 0) scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes orbDrift1 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(40px, 30px, 0); }
+}
+
+@keyframes orbDrift2 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-30px, -40px, 0); }
+}
+
+@keyframes orbDrift3 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-25px, 20px, 0); }
+}
+
+/* ========================================
+   粒子动画
+   ======================================== */
+
+@keyframes particleFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: translateY(-20px) scale(1.1);
+    opacity: 0.6;
+  }
+}
+
+@keyframes particleRise {
+  0% {
+    transform: translateY(100%) scale(0);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes particleTwinkle {
+  0%, 100% {
+    opacity: 0.2;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* ========================================
+   加载动画
+   ======================================== */
+
+@keyframes dotBounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1);
+  }
+}
+
+@keyframes dotPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes dotJump {
+  0%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes spinnerDash {
+  0% {
+    stroke-dasharray: 1, 200;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -35px;
+  }
+  100% {
+    stroke-dasharray: 89, 200;
+    stroke-dashoffset: -124px;
+  }
+}
+
+@keyframes barProgress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* ========================================
+   闪烁动画
+   ======================================== */
+
+@keyframes blink {
+  0%, 50%, 100% { opacity: 1; }
+  25%, 75% { opacity: 0; }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(14, 165, 233, 0.5);
+  }
+}
+
+@keyframes textGlow {
+  0%, 100% {
+    text-shadow: 0 0 10px rgba(14, 165, 233, 0.3);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+  }
+}
+
+/* ========================================
+   弹跳动画
+   ======================================== */
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% {
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes jello {
+  0%, 100% { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.25, 0.75, 1); }
+  40% { transform: scale3d(0.75, 1.25, 1); }
+  50% { transform: scale3d(1.15, 0.85, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.05, 0.95, 1); }
+}
+
+@keyframes rubberBand {
+  0% { transform: scale3d(1, 1, 1); }
+  30% { transform: scale3d(1.25, 0.75, 1); }
+  40% { transform: scale3d(0.75, 1.25, 1); }
+  50% { transform: scale3d(1.15, 0.85, 1); }
+  65% { transform: scale3d(0.95, 1.05, 1); }
+  75% { transform: scale3d(1.05, 0.95, 1); }
+  100% { transform: scale3d(1, 1, 1); }
+}
+
+/* ========================================
+   摇晃动画
+   ======================================== */
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-5deg); }
+  75% { transform: rotate(5deg); }
+}
+
+@keyframes swing {
+  0%, 100% { transform: rotate(0deg); }
+  20% { transform: rotate(15deg); }
+  40% { transform: rotate(-10deg); }
+  60% { transform: rotate(5deg); }
+  80% { transform: rotate(-5deg); }
+}
+
+/* ========================================
+   进度条动画
+   ======================================== */
+
+@keyframes progressIndeterminate {
+  0% {
+    left: -35%;
+    right: 100%;
+  }
+  60% {
+    left: 100%;
+    right: -90%;
+  }
+  100% {
+    left: 100%;
+    right: -90%;
+  }
+}
+
+@keyframes progressStripes {
+  0% { background-position: 1rem 0; }
+  100% { background-position: 0 0; }
+}
+
+/* ========================================
+   渐变流动动画
+   ======================================== */
+
+@keyframes gradientFlow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes rainbowFlow {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+
+/* ========================================
+   打字机效果
+   ======================================== */
+
+@keyframes typing {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+@keyframes blinkCursor {
+  0%, 50% { border-color: transparent; }
+  51%, 100% { border-color: #0ea5e9; }
+}
+
+/* ========================================
+   成功/错误动画
+   ======================================== */
+
+@keyframes checkmark {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes errorShake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+  20%, 40%, 60%, 80% { transform: translateX(8px); }
+}
+
+@keyframes successPop {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   工具类 - 动画应用
+   ======================================== */
+
+.animate-fadeIn { animation: fadeIn 0.3s ease-out both; }
+.animate-fadeInUp { animation: fadeInUp 0.4s ease-out both; }
+.animate-fadeInDown { animation: fadeInDown 0.4s ease-out both; }
+.animate-scaleIn { animation: scaleIn 0.3s ease-out both; }
+.animate-popIn { animation: popIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.animate-bounceIn { animation: bounceIn 0.5s ease-out both; }
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-bounce { animation: bounce 1s infinite; }
+.animate-shake { animation: shake 0.5s ease-in-out; }
+
+
+/* 动画延迟 */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* 动画持续时间 */
+.animate-duration-fast { animation-duration: 0.2s; }
+.animate-duration-normal { animation-duration: 0.3s; }
+.animate-duration-slow { animation-duration: 0.5s; }
+.animate-duration-slower { animation-duration: 0.8s; }
+
+/* ========================================
+   Reveal 动画
+   ======================================== */
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(.98);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.reveal {
+  animation: reveal .45s cubic-bezier(.2, .7, .2, 1) both;
+}
+
+/* ========================================
+   空状态动画
+   ======================================== */
+
+@keyframes breath {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+@keyframes shimmerSmooth {
+  0% {
+    left: -150%;
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.7;
+  }
+  70% {
+    opacity: 0.7;
+  }
+  100% {
+    left: 150%;
+    opacity: 0;
+  }
+}
+
+/* 减少动画 (针对用户偏好设置) */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ========================================
+   Flash 闪电动画 (用于 bolt)
+   ======================================== */
+@keyframes flash {
+  0%, 100% {
+    opacity: 0.3;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   Orbit 轨道动画
+   ======================================== */
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(60px) rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg) translateX(60px) rotate(-360deg);
+  }
+}
+
+/* ========================================
+   Breathe 呼吸动画
+   ======================================== */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+}
+
+/* ========================================
+   OrgBgFlow 背景流动动画
+   ======================================== */
+@keyframes orgBgFlow {
+  0% {
+    background-position: 0% 50%, 50% 50%;
+  }
+  50% {
+    background-position: 100% 50%, 50% 50%;
+  }
+  100% {
+    background-position: 0% 50%, 50% 50%;
+  }
+}

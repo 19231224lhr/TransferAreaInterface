@@ -678,7 +678,7 @@ const privateKeyToggle = document.getElementById('privateKeyToggle');
 const privateKeyItem = document.getElementById('privateKeyItem');
 if (privateKeyToggle && privateKeyItem) {
   privateKeyToggle.addEventListener('click', () => {
-    privateKeyItem.classList.toggle('new-result-item--collapsed');
+    privateKeyItem.classList.toggle('new-key-card--collapsed');
   });
 }
 
@@ -700,6 +700,7 @@ if (importBackBtn) {
     if (importCard && entryCard) {
       importCard.classList.add('hidden');
       entryCard.classList.remove('hidden');
+      updateWalletBrief(); // 更新钱包列表
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });
@@ -728,6 +729,7 @@ if (newBackBtn) {
     if (newUserCard && entryCard) {
       newUserCard.classList.add('hidden');
       entryCard.classList.remove('hidden');
+      updateWalletBrief(); // 更新钱包列表
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });

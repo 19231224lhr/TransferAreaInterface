@@ -1,0 +1,1075 @@
+/**
+ * ========================================
+ * 钱包管理页面样式模块 - entry.css
+ * 包含：Entry Card, 无框入口页面设计
+ * ========================================
+ */
+
+/* ============================================
+   Entry Card - 钱包管理页面全新设计
+   ============================================ */
+
+#entryCard {
+  position: relative;
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+/* 动态背景 */
+#entryCard .entry-card-bg {
+  position: absolute;
+  inset: -40px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+#entryCard .entry-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  will-change: transform;
+}
+
+#entryCard .entry-orb--1 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.25) 0%, rgba(14, 165, 233, 0.05) 40%, transparent 70%);
+  top: -60px;
+  left: -80px;
+  animation: entryOrbFloat1 18s ease-in-out infinite;
+}
+
+#entryCard .entry-orb--2 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, rgba(139, 92, 246, 0.05) 40%, transparent 70%);
+  bottom: -40px;
+  right: -60px;
+  animation: entryOrbFloat2 22s ease-in-out infinite;
+}
+
+@keyframes entryOrbFloat1 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(20px, 15px, 0); }
+}
+
+@keyframes entryOrbFloat2 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-15px, -10px, 0); }
+}
+
+#entryCard .entry-particles {
+  position: absolute;
+  inset: 0;
+}
+
+#entryCard .entry-particles span {
+  position: absolute;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.4);
+  will-change: opacity;
+  animation: entryParticleGlow 5s ease-in-out infinite;
+}
+
+#entryCard .entry-particles span:nth-child(1) { top: 20%; left: 15%; animation-delay: 0s; }
+#entryCard .entry-particles span:nth-child(2) { top: 30%; right: 20%; animation-delay: 1.25s; }
+#entryCard .entry-particles span:nth-child(3) { top: 60%; left: 10%; animation-delay: 2.5s; }
+#entryCard .entry-particles span:nth-child(4) { top: 75%; right: 15%; animation-delay: 3.75s; }
+
+@keyframes entryParticleGlow {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
+
+/* 主内容区 */
+#entryCard .entry-card-content {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 50%,
+    rgba(241, 245, 249, 0.85) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 20px 60px rgba(14, 165, 233, 0.1),
+    0 8px 30px rgba(139, 92, 246, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  animation: entryCardEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes entryCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 标题区域 */
+#entryCard .entry-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+#entryCard .entry-header-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 16px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 30px rgba(14, 165, 233, 0.25);
+}
+
+#entryCard .entry-header-icon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+#entryCard .entry-header-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  background: linear-gradient(135deg, #1e293b 0%, #0ea5e9 60%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+#entryCard .entry-header-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 400;
+}
+
+/* 操作按钮卡片 */
+#entryCard .entry-action-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+#entryCard .entry-action-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.7));
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+
+#entryCard .entry-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+#entryCard .entry-action-card--create .entry-action-icon {
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+}
+
+#entryCard .entry-action-card--import .entry-action-icon {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+}
+
+#entryCard .entry-action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.2);
+}
+
+#entryCard .entry-action-icon svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+#entryCard .entry-action-info {
+  flex: 1;
+  min-width: 0;
+}
+
+#entryCard .entry-action-info h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+#entryCard .entry-action-info p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+}
+
+#entryCard .entry-action-arrow {
+  width: 20px;
+  height: 20px;
+  color: #94a3b8;
+  flex-shrink: 0;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+#entryCard .entry-action-card:hover .entry-action-arrow {
+  transform: translateX(4px);
+  color: #0ea5e9;
+}
+
+/* 提示信息 */
+#entryCard .entry-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #64748b;
+  margin: 0 0 24px;
+  padding: 12px 16px;
+  background: rgba(14, 165, 233, 0.04);
+  border-radius: 10px;
+}
+
+#entryCard .entry-tip svg {
+  width: 16px;
+  height: 16px;
+  color: #0ea5e9;
+  flex-shrink: 0;
+}
+
+/* 钱包统计区 */
+#entryCard .entry-wallet-stats {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.8), rgba(241, 245, 249, 0.6));
+  border: 1px solid rgba(14, 165, 233, 0.08);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+#entryCard .entry-stats-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+#entryCard .entry-stats-icon {
+  width: 42px;
+  height: 42px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#entryCard .entry-stats-icon svg {
+  width: 22px;
+  height: 22px;
+  color: #0ea5e9;
+}
+
+#entryCard .entry-stats-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#entryCard .entry-stats-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #475569;
+}
+
+#entryCard .entry-stats-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 10px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+/* 钱包列表 */
+#entryCard .entry-wallet-list {
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: list-item;
+}
+
+#entryCard .entry-wallet-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(14, 165, 233, 0.08);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #334155;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+#entryCard .entry-wallet-list li::before {
+  content: counter(list-item);
+  counter-increment: list-item;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+#entryCard .entry-wallet-list .wallet-addr {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#entryCard .entry-wallet-list .origin-badge {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+#entryCard .entry-wallet-list.hidden {
+  display: none;
+}
+
+#entryCard .entry-wallet-list.collapsed li:nth-child(n+4) {
+  display: none;
+}
+
+/* 展开按钮 */
+#entryCard .entry-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  background: transparent;
+  border: 1px dashed rgba(14, 165, 233, 0.2);
+  border-radius: 10px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#entryCard .entry-toggle-btn:hover {
+  background: rgba(14, 165, 233, 0.04);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: #0ea5e9;
+}
+
+#entryCard .entry-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+#entryCard .entry-toggle-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+#entryCard .entry-toggle-btn.hidden {
+  display: none;
+}
+
+/* 空状态提示 */
+#entryCard .entry-empty-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.04));
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 12px;
+}
+
+#entryCard .entry-empty-tip svg {
+  width: 20px;
+  height: 20px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+#entryCard .entry-empty-tip span {
+  font-size: 13px;
+  font-weight: 500;
+  color: #92400e;
+}
+
+#entryCard .entry-empty-tip.hidden {
+  display: none;
+}
+
+/* 底部操作 */
+#entryCard .entry-footer {
+  display: flex;
+  justify-content: center;
+}
+
+#entryCard .entry-next-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 36px;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(14, 165, 233, 0.25);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#entryCard .entry-next-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 40px rgba(14, 165, 233, 0.3);
+}
+
+#entryCard .entry-next-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+#entryCard .entry-next-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+#entryCard .entry-next-btn:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  #entryCard .entry-card-content {
+    padding: 28px 20px;
+  }
+  
+  #entryCard .entry-action-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  #entryCard .entry-header-title {
+    font-size: 24px;
+  }
+}
+
+/* ========================================
+   钱包管理页面 - 无框全屏式设计
+   ======================================== */
+
+/* 页面容器 */
+.entry-page {
+  position: relative;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+  animation: entryPageEnter 0.5s ease-out both;
+}
+
+@keyframes entryPageEnter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 页面级背景粒子 */
+.entry-page-particles {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+}
+
+.entry-page-particles span {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.35), rgba(139, 92, 246, 0.35));
+  border-radius: 50%;
+  animation: entryFloatParticle 18s infinite ease-in-out;
+}
+
+.entry-page-particles span:nth-child(1) { left: 10%; top: 18%; animation-delay: 0s; }
+.entry-page-particles span:nth-child(2) { left: 82%; top: 22%; animation-delay: 2.5s; }
+.entry-page-particles span:nth-child(3) { left: 25%; top: 65%; animation-delay: 5s; }
+.entry-page-particles span:nth-child(4) { left: 72%; top: 75%; animation-delay: 1.5s; }
+.entry-page-particles span:nth-child(5) { left: 45%; top: 45%; animation-delay: 3.5s; }
+
+@keyframes entryFloatParticle {
+  0%, 100% { transform: translateY(0) scale(1); opacity: 0.3; }
+  50% { transform: translateY(-25px) scale(1.15); opacity: 0.55; }
+}
+
+/* 返回按钮 */
+.entry-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.entry-back-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke: #64748b;
+  transition: transform 0.3s ease;
+}
+
+.entry-back-btn:hover {
+  background: rgba(255, 255, 255, 0.9);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.entry-back-btn:hover svg {
+  stroke: #3b82f6;
+  transform: translateX(-3px);
+}
+
+/* 页面标题区 */
+.entry-page-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: entryHeaderEnter 0.6s ease-out both;
+  animation-delay: 0.1s;
+}
+
+@keyframes entryHeaderEnter {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.entry-page-icon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.3), 0 6px 16px rgba(139, 92, 246, 0.2);
+  animation: entryIconFloat 4s ease-in-out infinite;
+}
+
+@keyframes entryIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.entry-page-icon-glow {
+  position: absolute;
+  inset: -16px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.18) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: entryGlowPulse 4s ease-in-out infinite;
+}
+
+@keyframes entryGlowPulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.75; transform: scale(1.08); }
+}
+
+.entry-page-icon svg {
+  width: 40px;
+  height: 40px;
+  stroke: white;
+  stroke-width: 1.8;
+  position: relative;
+  z-index: 1;
+}
+
+.entry-page-title {
+  font-size: 32px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #1e3a5f 0%, #3b82f6 50%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 0 0 10px;
+  letter-spacing: -0.3px;
+  animation: entryTitleFloat 4s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes entryTitleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.entry-page-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 主内容区 */
+.entry-page-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* 操作按钮卡片 - 重新设计 */
+.entry-page .entry-action-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  animation: entryBlockEnter 0.5s ease-out both;
+  animation-delay: 0.15s;
+}
+
+@keyframes entryBlockEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.entry-page .entry-action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 20px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+.entry-page .entry-action-card:hover {
+  background: rgba(255, 255, 255, 0.85);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.12);
+}
+
+.entry-page .entry-action-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-page .entry-action-card--create .entry-action-icon {
+  background: linear-gradient(135deg, #06b6d4, #3b82f6);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.25);
+}
+
+.entry-page .entry-action-card--import .entry-action-icon {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.25);
+}
+
+.entry-page .entry-action-icon svg {
+  width: 28px;
+  height: 28px;
+  stroke: white;
+}
+
+.entry-page .entry-action-info h4 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.entry-page .entry-action-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.entry-page .entry-action-arrow {
+  display: none;
+}
+
+/* 提示信息块 */
+.entry-tip-block {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 16px 24px;
+  background: rgba(59, 130, 246, 0.06);
+  border: 1px solid rgba(59, 130, 246, 0.12);
+  border-radius: 14px;
+  font-size: 14px;
+  color: #475569;
+  animation: entryBlockEnter 0.5s ease-out both;
+  animation-delay: 0.2s;
+}
+
+.entry-tip-block svg {
+  width: 18px;
+  height: 18px;
+  stroke: #3b82f6;
+  flex-shrink: 0;
+}
+
+/* 钱包列表块 */
+.entry-wallet-block {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 20px;
+  padding: 24px;
+  animation: entryBlockEnter 0.5s ease-out both;
+  animation-delay: 0.25s;
+}
+
+.entry-wallet-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.entry-wallet-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-wallet-icon svg {
+  width: 24px;
+  height: 24px;
+  stroke: #3b82f6;
+}
+
+.entry-wallet-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.entry-wallet-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #475569;
+}
+
+.entry-wallet-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 10px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+/* 钱包列表 */
+.entry-page .entry-wallet-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  counter-reset: list-item;
+}
+
+.entry-page .entry-wallet-list li,
+.entry-page .entry-wallet-list .brief-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.entry-page .entry-wallet-list li:hover,
+.entry-page .entry-wallet-list .brief-item:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.entry-page .entry-wallet-list li::before,
+.entry-page .entry-wallet-list .brief-item::before {
+  content: counter(list-item);
+  counter-increment: list-item;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 8px;
+}
+
+.entry-page .entry-wallet-list .wallet-addr {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: #1e293b;
+}
+
+.entry-page .entry-wallet-list.collapsed li:nth-child(n+4) {
+  display: none;
+}
+
+.entry-page .brief-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.entry-page .addr-text {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 13px;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.entry-page .origin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 12px;
+}
+
+.entry-page .origin--created {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.entry-page .origin--imported {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+/* 展开按钮 */
+.entry-page .entry-toggle-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 12px;
+  margin-top: 12px;
+  background: transparent;
+  border: 1px dashed rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.entry-page .entry-toggle-btn:hover {
+  background: rgba(59, 130, 246, 0.05);
+  border-color: rgba(59, 130, 246, 0.3);
+  color: #3b82f6;
+}
+
+.entry-page .entry-toggle-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.3s ease;
+}
+
+.entry-page .entry-toggle-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+.entry-page .entry-toggle-btn.hidden {
+  display: none;
+}
+
+.entry-page .entry-wallet-list.hidden {
+  display: none;
+}
+
+/* 空状态提示 */
+.entry-page .entry-empty-tip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 20px;
+  margin-top: 16px;
+  background: rgba(251, 191, 36, 0.06);
+  border: 1px solid rgba(251, 191, 36, 0.15);
+  border-radius: 12px;
+  font-size: 14px;
+  color: #92400e;
+}
+
+.entry-page .entry-empty-tip svg {
+  width: 20px;
+  height: 20px;
+  stroke: #f59e0b;
+}
+
+.entry-page .entry-empty-tip.hidden {
+  display: none;
+}
+
+/* 底部操作 */
+.entry-page-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 8px;
+  animation: entryBlockEnter 0.5s ease-out both;
+  animation-delay: 0.3s;
+}
+
+.entry-page .entry-next-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 18px 48px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3), 0 4px 12px rgba(139, 92, 246, 0.2);
+}
+
+.entry-page .entry-next-btn:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 40px rgba(59, 130, 246, 0.35), 0 6px 16px rgba(139, 92, 246, 0.25);
+}
+
+.entry-page .entry-next-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+}
+
+.entry-page .entry-next-btn svg {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.3s ease;
+}
+
+.entry-page .entry-next-btn:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .entry-page {
+    padding: 16px 16px 48px;
+  }
+
+  .entry-page .entry-action-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .entry-page .entry-action-card {
+    flex-direction: row;
+    text-align: left;
+    padding: 20px;
+  }
+
+  .entry-page .entry-action-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .entry-page-title {
+    font-size: 26px;
+  }
+}

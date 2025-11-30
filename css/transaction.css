@@ -1,0 +1,1505 @@
+/**
+ * ========================================
+ * 交易表单样式模块 - transaction.css
+ * 包含：交易表单、账单列表、交易记录
+ * ========================================
+ */
+
+/* ========================================
+   交易表单容器
+   ======================================== */
+
+.tx-form {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 32px;
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  box-shadow: 
+    0 10px 40px rgba(14, 165, 233, 0.08),
+    0 4px 16px rgba(139, 92, 246, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.tx-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.08);
+}
+
+.tx-form-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tx-form-title svg {
+  width: 24px;
+  height: 24px;
+  color: #0ea5e9;
+}
+
+.tx-form-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.1);
+  padding: 5px 12px;
+  border-radius: 20px;
+}
+
+/* ========================================
+   表单区块
+   ======================================== */
+
+.tx-section {
+  margin-bottom: 24px;
+}
+
+.tx-section:last-child {
+  margin-bottom: 0;
+}
+
+.tx-section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.tx-section-label svg {
+  width: 16px;
+  height: 16px;
+  color: #0ea5e9;
+}
+
+.tx-section-label .required {
+  color: #ef4444;
+  margin-left: 2px;
+}
+
+/* 输入框样式 */
+.tx-input {
+  width: 100%;
+  padding: 16px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.9) 0%,
+    rgba(248, 250, 252, 0.85) 100%
+  );
+  border: 2px solid rgba(14, 165, 233, 0.12);
+  border-radius: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+.tx-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.tx-input:focus {
+  border-color: rgba(14, 165, 233, 0.4);
+  box-shadow: 
+    0 0 0 4px rgba(14, 165, 233, 0.08),
+    0 4px 16px rgba(14, 165, 233, 0.1);
+}
+
+.tx-input:hover:not(:focus) {
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+/* 地址输入 - 等宽字体 */
+.tx-input--address {
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+/* 金额输入 */
+.tx-amount-wrapper {
+  position: relative;
+}
+
+.tx-input--amount {
+  padding-right: 80px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.tx-amount-unit {
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  background: rgba(14, 165, 233, 0.08);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
+/* 快捷金额按钮 */
+.tx-amount-presets {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.tx-preset-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tx-preset-btn:hover {
+  background: rgba(14, 165, 233, 0.08);
+  border-color: rgba(14, 165, 233, 0.3);
+  color: #0ea5e9;
+}
+
+.tx-preset-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+}
+
+/* 备注输入 */
+.tx-input--memo {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* ========================================
+   手续费选择
+   ======================================== */
+
+.tx-fee-section {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.03), rgba(139, 92, 246, 0.02));
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(14, 165, 233, 0.08);
+}
+
+.tx-fee-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.tx-fee-option {
+  text-align: center;
+  padding: 16px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(14, 165, 233, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.tx-fee-option:hover {
+  border-color: rgba(14, 165, 233, 0.25);
+}
+
+.tx-fee-option.active {
+  border-color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.05);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.12);
+}
+
+.tx-fee-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 6px;
+}
+
+.tx-fee-value {
+  font-size: 16px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 4px;
+}
+
+.tx-fee-time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* ========================================
+   交易摘要
+   ======================================== */
+
+.tx-summary {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.04) 0%,
+    rgba(139, 92, 246, 0.02) 100%
+  );
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  margin-top: 24px;
+}
+
+.tx-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.06);
+}
+
+.tx-summary-row:last-child {
+  border-bottom: none;
+  padding-top: 14px;
+  margin-top: 4px;
+}
+
+.tx-summary-label {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.tx-summary-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tx-summary-row:last-child .tx-summary-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tx-summary-row:last-child .tx-summary-value {
+  font-size: 18px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================
+   提交按钮
+   ======================================== */
+
+.tx-submit-btn {
+  width: 100%;
+  padding: 18px 32px;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 28px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 
+    0 10px 30px rgba(14, 165, 233, 0.3),
+    0 5px 15px rgba(139, 92, 246, 0.2);
+}
+
+.tx-submit-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, #38bdf8, #a78bfa);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tx-submit-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 
+    0 15px 40px rgba(14, 165, 233, 0.35),
+    0 8px 20px rgba(139, 92, 246, 0.25);
+}
+
+.tx-submit-btn:hover::before {
+  opacity: 1;
+}
+
+.tx-submit-btn svg {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+.tx-submit-btn span {
+  position: relative;
+  z-index: 1;
+}
+
+.tx-submit-btn:hover svg {
+  transform: translateX(4px);
+}
+
+.tx-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.tx-submit-btn:disabled:hover {
+  box-shadow: 
+    0 10px 30px rgba(14, 165, 233, 0.3),
+    0 5px 15px rgba(139, 92, 246, 0.2);
+}
+
+/* ========================================
+   账单列表
+   ======================================== */
+
+.bill-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bill-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.bill-list-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bill-list-title svg {
+  width: 22px;
+  height: 22px;
+  color: #0ea5e9;
+}
+
+.bill-filter {
+  display: flex;
+  gap: 8px;
+}
+
+.bill-filter-btn {
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(14, 165, 233, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.bill-filter-btn:hover {
+  background: rgba(14, 165, 233, 0.05);
+  border-color: rgba(14, 165, 233, 0.2);
+}
+
+.bill-filter-btn.active {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  color: white;
+  border-color: transparent;
+}
+
+/* ========================================
+   交易详情模态框
+   ======================================== */
+
+.tx-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.tx-detail-modal.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.tx-detail-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.tx-detail-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 560px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(248, 250, 252, 0.95) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 24px;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  box-shadow: 
+    0 25px 80px rgba(14, 165, 233, 0.15),
+    0 10px 40px rgba(139, 92, 246, 0.1);
+  overflow: hidden;
+  transform: translateY(20px) scale(0.95);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tx-detail-modal.active .tx-detail-content {
+  transform: translateY(0) scale(1);
+}
+
+.tx-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 28px;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+}
+
+.tx-detail-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.tx-detail-title svg {
+  width: 22px;
+  height: 22px;
+  color: #0ea5e9;
+}
+
+.tx-detail-close {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(14, 165, 233, 0.15);
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.tx-detail-close svg {
+  width: 18px;
+  height: 18px;
+  color: #64748b;
+}
+
+.tx-detail-close:hover {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  border-color: transparent;
+}
+
+.tx-detail-close:hover svg {
+  color: white;
+}
+
+.tx-detail-body {
+  padding: 24px 28px;
+}
+
+/* 交易详情行 */
+.tx-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(14, 165, 233, 0.06);
+}
+
+.tx-detail-row:last-child {
+  border-bottom: none;
+}
+
+.tx-detail-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.tx-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-all;
+}
+
+.tx-detail-value--hash {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 12px;
+}
+
+.tx-detail-value--income {
+  color: #10b981;
+}
+
+.tx-detail-value--expense {
+  color: #f43f5e;
+}
+
+/* ========================================
+   空状态
+   ======================================== */
+
+.bill-empty {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.bill-empty-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(139, 92, 246, 0.08));
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bill-empty-icon svg {
+  width: 40px;
+  height: 40px;
+  color: #94a3b8;
+}
+
+.bill-empty-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px;
+}
+
+.bill-empty-desc {
+  font-size: 14px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ========================================
+   原始交易表单样式 (从 style.css 补充)
+   ======================================== */
+
+.tx-form {
+  gap: .5rem;
+}
+
+.tx-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: .6rem .75rem;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .06);
+  transition: padding .16s ease;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.tx-section.has-open {
+  z-index: 5000;
+  overflow: visible;
+}
+
+.tx-section.tx-change .tx-change-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.tx-section.tx-change .tx-change-head .summary-value {
+  display: none;
+}
+
+.tx-section.tx-change.collapsed .tx-grid-3 {
+  max-height: 0;
+  opacity: 0;
+  margin-top: 0;
+  pointer-events: none;
+}
+
+.tx-section.tx-change.collapsed .tx-change-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  cursor: pointer;
+}
+
+.tx-section.tx-change .tx-grid-3 {
+  margin-top: 6px;
+  max-height: 500px;
+  opacity: 1;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.tx-section.tx-change.collapsed .tx-change-head .summary-value {
+  display: inline;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.tx-change-head .summary-value {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.tx-subhead {
+  font-weight: 800;
+  font-size: 16px;
+  background: linear-gradient(90deg, #0ea5e9, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  letter-spacing: .3px;
+  margin-bottom: 8px;
+}
+
+.tx-addr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+.tx-addr-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.tx-addr-list::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.tx-addr-list::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #cbd5e1, #94a3b8);
+  border-radius: 3px;
+}
+
+.tx-addr-list::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #94a3b8, #64748b);
+}
+
+.src-addr-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #ffffff, #f8fafc);
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.src-addr-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(180deg, #0ea5e9, #6366f1);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.src-addr-item:hover {
+  border-color: #cbd5e1;
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
+}
+
+.src-addr-item:hover::before {
+  opacity: 0.6;
+}
+
+.src-addr-item input[type="checkbox"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.addr-check {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border: 2px solid #cbd5e1;
+  border-radius: 4px;
+  background: #ffffff;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.addr-check::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.15s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.src-addr-item input[type="checkbox"]:checked~.addr-check {
+  background: linear-gradient(135deg, #0ea5e9, #6366f1);
+  border-color: #0ea5e9;
+}
+
+.src-addr-item input[type="checkbox"]:checked~.addr-check::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.src-addr-item.selected {
+  border-color: #0ea5e9;
+  background: linear-gradient(135deg, #f0f9ff, #eff6ff);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+.src-addr-item.selected::before {
+  opacity: 1;
+}
+
+.addr-short {
+  flex: 1;
+  font-family: 'Consolas', 'Monaco', monospace;
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  letter-spacing: 0.3px;
+}
+
+.addr-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 12px;
+  transition: all 0.2s ease;
+}
+
+.addr-amount.coin--pgc {
+  background: linear-gradient(135deg, rgba(34, 211, 238, 0.12), rgba(34, 211, 238, 0.08));
+  color: #0891b2;
+  border: 1px solid rgba(34, 211, 238, 0.2);
+}
+
+.addr-amount.coin--btc {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.08));
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.addr-amount.coin--eth {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.08));
+  color: #4f46e5;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.coin-symbol {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.amount-val {
+  min-width: 20px;
+  text-align: right;
+}
+
+.src-addr-item:hover .addr-amount {
+  transform: scale(1.05);
+}
+
+.tx-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+/* ========================================
+   Bill Item 账单卡片样式（紧凑版）
+   ======================================== */
+
+.bill-list {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  max-height: none;
+  overflow: visible;
+  scrollbar-width: none;
+}
+
+.bill-list::-webkit-scrollbar {
+  display: none;
+}
+
+.bill-item {
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+  padding: .6rem;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, .95) 0%, rgba(255, 255, 255, .85) 35%, rgba(255, 255, 255, .6) 55%, rgba(255, 255, 255, 0) 70%), 
+              radial-gradient(closest-side at 0% 0%, rgba(239, 68, 68, .28) 0%, rgba(239, 68, 68, .12) 50%, rgba(239, 68, 68, 0) 100%), 
+              radial-gradient(closest-side at 100% 100%, rgba(245, 158, 11, .28) 0%, rgba(245, 158, 11, .12) 50%, rgba(245, 158, 11, 0) 100%), 
+              linear-gradient(135deg, #fff5f5 0%, #ffe9e6 48%, #fff7ed 100%);
+  border: none;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
+  transition: all .16s ease;
+  position: relative;
+  overflow: hidden;
+  background-size: 300% 300%;
+  animation: orgBgFlow 18s ease-in-out infinite;
+}
+
+.bill-item::before,
+.bill-item::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(28px);
+  opacity: .12;
+  pointer-events: none;
+}
+
+.bill-item::before {
+  width: 150px;
+  height: 150px;
+  left: -40px;
+  top: -30px;
+  background: radial-gradient(closest-side, rgba(239, 68, 68, .22) 0%, rgba(239, 68, 68, .12) 40%, rgba(239, 68, 68, 0) 100%);
+  animation: drift 14s ease-in-out infinite;
+}
+
+.bill-item::after {
+  width: 170px;
+  height: 170px;
+  right: -50px;
+  bottom: -40px;
+  background: radial-gradient(closest-side, rgba(245, 158, 11, .22) 0%, rgba(245, 158, 11, .12) 40%, rgba(245, 158, 11, 0) 100%);
+  animation: drift 16s ease-in-out infinite reverse;
+}
+
+.bill-item .input {
+  height: 32px;
+}
+
+.bill-remove {
+  min-width: 80px;
+}
+
+/* ========================================
+   地址选择器样式
+   ======================================== */
+
+.cs-addr .custom-select__menu {
+  border-radius: 12px;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, .14);
+  z-index: 2001;
+}
+
+.cs-addr .custom-select__item .coin-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.cs-addr .addr-val {
+  font-weight: 700;
+}
+
+.addr-row {
+  display: grid;
+  grid-template-columns: 3.8rem 1fr;
+  align-items: center;
+  gap: .3rem;
+  padding-right: 16px;
+}
+
+.addr-row > label {
+  font-weight: 700;
+  color: #334155;
+}
+
+.addr-row .cs-addr {
+  width: 100%;
+  max-width: 380px;
+  justify-self: start;
+  margin-right: 12px;
+}
+
+/* ========================================
+   交易选项样式
+   ======================================== */
+
+.tx-options {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 8px 0;
+}
+
+.opt-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.opt-group-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+/* Segmented Control for Modes */
+.opt-mode-segmented {
+  display: flex;
+  background: linear-gradient(145deg, #e8eef5 0%, #f1f5f9 100%);
+  padding: 5px;
+  border-radius: 14px;
+  position: relative;
+  gap: 6px;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06), 
+              inset 0 -1px 2px rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.segment-item {
+  flex: 1;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+  -webkit-tap-highlight-color: transparent;
+  z-index: 1;
+}
+
+.segment-item input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.segment-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+  background: transparent;
+  position: relative;
+  overflow: hidden;
+}
+
+.segment-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(56, 189, 248, 0.05));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  border-radius: 10px;
+}
+
+.segment-item:hover .segment-content::before {
+  opacity: 1;
+}
+
+.segment-item input[type="radio"]:checked + .segment-content {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  color: #0ea5e9;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15), 
+              0 2px 4px rgba(0, 0, 0, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  border-color: rgba(14, 165, 233, 0.2);
+  transform: translateY(-1px);
+}
+
+.segment-item input[type="radio"]:checked + .segment-content::before {
+  opacity: 0;
+}
+
+.segment-item input[type="radio"]:checked + .segment-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 3px;
+  background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+  border-radius: 3px 3px 0 0;
+}
+
+.segment-item:hover .segment-content {
+  color: #334155;
+}
+
+.segment-item input[type="radio"]:checked:hover + .segment-content {
+  color: #0284c7;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+  transform: translateY(-1px);
+}
+
+.segment-item input[type="radio"]:focus-visible + .segment-content {
+  outline: 2px solid rgba(14, 165, 233, 0.4);
+  outline-offset: 2px;
+}
+
+/* Modern Input Row */
+.opt-row-modern {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.opt-input-modern {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.opt-input-modern label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-left: 2px;
+}
+
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.input-wrapper:focus-within {
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 960px) {
+  .tx-addr-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .tx-grid-3 {
+    grid-template-columns: 1fr;
+  }
+  
+  .addr-row .cs-addr {
+    max-width: 100%;
+    margin-right: 0;
+  }
+  
+  .bill-row {
+    grid-template-columns: 4.5rem 1fr;
+    gap: .4rem;
+  }
+  
+  .bill-grid {
+    gap: .5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tx-form {
+    padding: 24px 20px;
+    border-radius: 20px;
+  }
+  
+  .tx-fee-options {
+    grid-template-columns: 1fr;
+  }
+  
+  .tx-detail-content {
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+}
+
+/* ========================================
+   Bill Grid 账单网格布局
+   ======================================== */
+
+.bill-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .6rem;
+  width: 100%;
+}
+
+.bill-row {
+  display: grid;
+  grid-template-columns: 4.5rem 1fr;
+  gap: .5rem;
+  align-items: center;
+}
+
+.bill-row.bill-row--full {
+  grid-column: 1 / span 2;
+}
+
+.bill-row.bill-row--addr {
+  align-items: center;
+}
+
+.bill-label {
+  font-size: .85rem;
+  color: #334155;
+  font-weight: 600;
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  letter-spacing: .2px;
+  white-space: nowrap;
+}
+
+.bill-item .input {
+  min-height: 2rem;
+  line-height: 1.4;
+  padding: .4rem .6rem;
+  transition: padding .16s ease, min-height .16s ease;
+}
+
+/* Custom Select 在 bill-item 中的样式 */
+.bill-item .custom-select {
+  width: 100%;
+  min-height: 2rem;
+  padding: .4rem .6rem;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, .4);
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .06) inset, 0 2px 8px rgba(15, 23, 42, .05);
+}
+
+.bill-item .custom-select:hover {
+  border-color: rgba(148, 163, 184, .5);
+}
+
+.bill-item .custom-select.open {
+  border-color: rgba(14, 165, 233, .5);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, .15);
+}
+
+.bill-item .custom-select__menu {
+  min-width: 120px;
+}
+
+.bill-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.bill-actions.bill-actions--full {
+  grid-column: 1 / span 2;
+}
+
+.bill-actions .btn {
+  width: 100%;
+}
+
+.bill-remove {
+  min-width: 6rem;
+}
+
+/* Bill 地址输入区域 */
+.bill-addr-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  width: 100%;
+}
+
+.bill-addr-input-wrap .input {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.bill-addr-lookup {
+  appearance: none;
+  border: 1px solid #fca5a5;
+  background: linear-gradient(135deg, #ef4444, #f97316);
+  color: #ffffff;
+  padding: 0;
+  height: 1.8rem;
+  width: 1.8rem;
+  line-height: 1;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px rgba(239, 68, 68, .35);
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bill-addr-lookup svg {
+  width: 14px;
+  height: 14px;
+}
+
+.bill-addr-lookup:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 8px 18px rgba(239, 68, 68, .45);
+}
+
+.bill-addr-lookup:active {
+  filter: brightness(.97);
+  box-shadow: 0 4px 10px rgba(239, 68, 68, .35);
+}
+
+.bill-addr-lookup.is-loading svg {
+  opacity: 0;
+}
+
+.bill-addr-lookup.is-loading::before {
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, .55);
+  border-top-color: #ffffff;
+  border-right-color: #ffffff;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: addrLookupSpin .8s linear infinite;
+}
+
+@keyframes addrLookupSpin {
+  to { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* Bill Item 交互状态 */
+.bill-item:hover {
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
+  transform: translateY(-1px);
+}
+
+.bill-item:focus-within {
+  border: 1px solid #bae6fd;
+  outline: none;
+  box-shadow: 0 8px 20px rgba(14, 165, 233, .16);
+}
+
+/* TX Head Row */
+.tx-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px;
+  margin-bottom: 8px;
+}
+
+.tx-head-row .tx-subhead {
+  display: inline-flex;
+  align-items: center;
+  line-height: 24px;
+  margin: 0;
+}
+
+/* Add Bill 按钮 */
+#addBillBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  min-width: 52px;
+  margin: 0;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #60a5fa, #0ea5e9);
+  color: #fff;
+  border: 1px solid #7dd3fc;
+  box-shadow: 0 6px 16px rgba(14, 165, 233, .22);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 24px;
+}
+
+#addBillBtn:hover {
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: 0 10px 22px rgba(14, 165, 233, .28);
+  filter: brightness(1.05);
+}
+
+#addBillBtn:active {
+  transform: translateY(0) scale(.98);
+  box-shadow: 0 5px 14px rgba(14, 165, 233, .24);
+}
+
+/* Danger 按钮禁用状态 */
+.btn.danger:disabled {
+  background: linear-gradient(135deg, #fee2e2, #fecaca);
+  color: #fff;
+  cursor: not-allowed;
+  box-shadow: none;
+  border-color: #fca5a5;
+  opacity: .92;
+}
+
+/* TX Form 输入框样式 */
+.tx-form .input {
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid rgba(226, 232, 240, .22);
+  border-radius: 10px;
+  padding: .35rem .6rem;
+  font-size: 14px;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .06) inset, 0 2px 8px rgba(15, 23, 42, .05);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .06s ease;
+  margin-top: 0;
+}
+
+.tx-form .input::placeholder {
+  color: #94a3b8;
+}
+
+.tx-form .input:hover {
+  border-color: rgba(148, 163, 184, .35);
+  box-shadow: 0 2px 8px rgba(15, 23, 42, .08) inset, 0 3px 10px rgba(15, 23, 42, .06);
+}
+
+.tx-form .input:focus-visible {
+  outline: 2px solid #0ea5e9;
+  outline-offset: 2px;
+  border-color: rgba(147, 197, 253, .75);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, .18), 0 2px 10px rgba(14, 165, 233, .12) inset;
+}
+
+.tx-form select.input {
+  appearance: none;
+  height: 32px;
+  padding-right: 28px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .08);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23334155' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 12px;
+}
+
+.tx-form select.input:hover {
+  box-shadow: 0 8px 20px rgba(15, 23, 42, .1);
+}

@@ -1,0 +1,51 @@
+/**
+ * ========================================
+ * 基础样式模块 - base.css
+ * 包含：重置样式、全局变量、基础布局
+ * ========================================
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Microsoft Yahei', sans-serif;
+  color: #1f2937;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%);
+  background-attachment: fixed;
+  min-width: 100vw;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 16px;
+  padding-top: 56px; /* 为固定导航栏预留空间 */
+}
+
+/* 首页时容器全宽（仅当 welcome-hero 可见时） */
+.container:has(.welcome-hero:not(.hidden)) {
+  max-width: 100%;
+  padding: 0;
+  padding-top: 0; /* 首页已在 welcome-hero 中处理 */
+}
+
+/* 通用隐藏类 */
+.hidden {
+  display: none !important;
+}
+
+/* 页脚样式 */
+.footer {
+  margin: 28px 0;
+  text-align: center;
+  color: #6b7280;
+}
