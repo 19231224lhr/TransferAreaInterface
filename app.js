@@ -4403,3 +4403,76 @@ window.closeUtxoModal = () => {
   const modal = document.getElementById('utxoDetailModal');
   if (modal) modal.classList.remove('active');
 };
+
+// ========== 智能导航栏 - 滚动方向检测 ==========
+(function() {
+  const header = document.querySelector('.header');
+  if (!header) return;
+  
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+  const scrollDelta = 8; // 滚动变化超过8px才判断方向
+  
+  function isHomePage() {
+    const welcomeHero = document.querySelector('.welcome-hero');
+    return welcomeHero && !welcomeHero.classList.contains('hidden');
+  }
+  
+  function updateHeader() {
+    const currentScrollY = window.scrollY;
+    const delta = currentScrollY - lastScrollY;
+    
+    // 首页始终显示导航栏
+    if (isHomePage()) {
+      header.classList.add('header--visible');
+      lastScrollY = currentScrollY;
+      ticking = false;
+      return;
+    }
+    
+    // 其他页面的逻辑：
+    // 1. 页面顶部 - 显示导航栏
+    // 2. 向下滚动 - 隐藏导航栏
+    // 3. 向上滚动 - 显示导航栏
+    
+    if (currentScrollY <= 10) {
+      // 页面顶部，显示导航栏
+      header.classList.add('header--visible');
+    } else if (delta > scrollDelta) {
+      // 向下滚动，隐藏导航栏
+      header.classList.remove('header--visible');
+    } else if (delta < -scrollDelta) {
+      // 向上滚动，显示导航栏
+      header.classList.add('header--visible');
+    }
+    // delta 很小时保持当前状态
+    
+    lastScrollY = currentScrollY;
+    ticking = false;
+  }
+  
+  window.addEventListener('scroll', function() {
+    if (!ticking) {
+      requestAnimationFrame(updateHeader);
+      ticking = true;
+    }
+  }, { passive: true });
+  
+  // 监听页面变化（hash变化时重新检测）
+  window.addEventListener('hashchange', function() {
+    setTimeout(function() {
+      lastScrollY = window.scrollY;
+      if (isHomePage() || window.scrollY <= 10) {
+        header.classList.add('header--visible');
+      }
+    }, 100);
+  });
+  
+  // 初始状态：首页和顶部都显示
+  setTimeout(function() {
+    if (isHomePage() || window.scrollY <= 10) {
+      header.classList.add('header--visible');
+    }
+    lastScrollY = window.scrollY;
+  }, 100);
+})();

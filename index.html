@@ -66,12 +66,38 @@
 
 <body>
   <header class="header">
-    <div class="container">
-      <h1>UTXO快速转账钱包</h1>
+    <div class="header-inner">
+      <!-- Logo 区域 -->
+      <div class="header-logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="url(#logoGrad)" stroke-width="1.5" fill="none"/>
+            <path d="M12 6l6 3v6l-6 3-6-3V9l6-3z" fill="url(#logoGrad)" opacity="0.2"/>
+            <circle cx="12" cy="12" r="3" fill="url(#logoGrad)"/>
+            <defs>
+              <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#0ea5e9"/>
+                <stop offset="100%" style="stop-color:#8b5cf6"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <span class="logo-text">UTXO Wallet</span>
+      </div>
+
+      <!-- 用户区域 -->
       <div id="userBar" class="user-bar">
         <button id="userButton" class="user-button" aria-label="用户信息">
-          <span class="avatar" id="userAvatar">👤</span>
+          <div class="user-avatar" id="userAvatar">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
           <span id="userLabel" class="user-label">未登录</span>
+          <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"/>
+          </svg>
         </button>
         <div id="userMenu" class="user-menu hidden">
           <div class="menu-item" id="menuAccountItem"
@@ -110,27 +136,256 @@
   </header>
 
   <main class="container">
-    <section class="card" id="welcomeCard">
-      <div class="card-header">
-        <h2>欢迎使用 UTXO 钱包</h2>
+    <!-- SVG 渐变定义 -->
+    <svg width="0" height="0" style="position:absolute">
+      <defs>
+        <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#0ea5e9"/>
+          <stop offset="100%" style="stop-color:#06b6d4"/>
+        </linearGradient>
+        <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8b5cf6"/>
+          <stop offset="100%" style="stop-color:#a78bfa"/>
+        </linearGradient>
+        <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#f59e0b"/>
+          <stop offset="100%" style="stop-color:#fbbf24"/>
+        </linearGradient>
+        <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#10b981"/>
+          <stop offset="100%" style="stop-color:#34d399"/>
+        </linearGradient>
+      </defs>
+    </svg>
+    
+    <!-- 全新现代化首页 -->
+    <section class="welcome-hero" id="welcomeCard">
+      <!-- 动态背景 -->
+      <div class="welcome-bg">
+        <div class="welcome-gradient-orb orb-1"></div>
+        <div class="welcome-gradient-orb orb-2"></div>
+        <div class="welcome-gradient-orb orb-3"></div>
+        <div class="welcome-gradient-orb orb-4"></div>
+        <div class="welcome-grid-pattern"></div>
       </div>
-      <div class="welcome-splash" aria-hidden="true"></div>
-      <div class="hero-left reveal">
-        <div class="tiles">
-          <div class="tile"><span>✨</span></div>
-          <div class="tile"><span>🔐</span></div>
-          <div class="tile"><span>🚀</span></div>
-          <div class="tile"><span>💎</span></div>
-          <div class="tile"><span>🌈</span></div>
+      
+      <!-- 浮动粒子 -->
+      <div class="welcome-particles">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+        <div class="particle p6"></div>
+      </div>
+
+      <!-- 主内容区 -->
+      <div class="welcome-content">
+        <!-- 徽章 -->
+        <div class="welcome-badge">
+          <span class="badge-dot"></span>
+          <span>安全 · 快速 · 去中心化</span>
         </div>
-        <div class="hero-content">
-          <strong>从这里开始你的账户之旅</strong>
-          <p class="tip">请选择登录或注册账户，随后进入钱包生成或导入</p>
+
+        <!-- 标题区 -->
+        <h1 class="welcome-title">
+          <span class="title-line">开启您的</span>
+          <span class="title-highlight">数字资产之旅</span>
+        </h1>
+
+        <p class="welcome-subtitle">
+          基于 UTXO 模型的新一代区块链钱包，为您提供安全可靠的资产管理体验
+        </p>
+
+        <!-- 特性卡片 -->
+        <div class="feature-cards">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <h3>安全保障</h3>
+            <p>本地加密存储，私钥永不上传</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              </svg>
+            </div>
+            <h3>极速转账</h3>
+            <p>优化的 UTXO 算法，秒级确认</p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+            </div>
+            <h3>跨链互通</h3>
+            <p>支持多链资产，一站式管理</p>
+          </div>
+        </div>
+
+        <!-- 操作按钮 -->
+        <div class="welcome-actions">
+          <button id="registerAccountBtn" class="welcome-btn welcome-btn-primary">
+            <span>立即开始</span>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+          <button id="loginAccountBtn" class="welcome-btn welcome-btn-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+              <polyline points="10 17 15 12 10 7"/>
+              <line x1="15" y1="12" x2="3" y2="12"/>
+            </svg>
+            <span>已有账户？登录</span>
+          </button>
+        </div>
+
+        <!-- 底部装饰 -->
+        <div class="welcome-footer-info">
+          <div class="info-item">
+            <span class="info-number">100K+</span>
+            <span class="info-label">活跃用户</span>
+          </div>
+          <div class="info-divider"></div>
+          <div class="info-item">
+            <span class="info-number">$2.5B</span>
+            <span class="info-label">交易总额</span>
+          </div>
+          <div class="info-divider"></div>
+          <div class="info-item">
+            <span class="info-number">99.9%</span>
+            <span class="info-label">安全保障</span>
+          </div>
         </div>
       </div>
-      <div class="actions">
-        <button id="loginAccountBtn" class="btn secondary flow">登录</button>
-        <button id="registerAccountBtn" class="btn primary flow">注册账户</button>
+
+      <!-- 右侧3D卡片装饰 -->
+      <div class="welcome-visual">
+        <div class="visual-card">
+          <div class="card-shine"></div>
+          <div class="card-content">
+            <div class="card-logo">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#cardGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                  <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#0ea5e9"/>
+                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                  </linearGradient>
+                </defs>
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                <line x1="1" y1="10" x2="23" y2="10"/>
+              </svg>
+            </div>
+            <div class="card-number">•••• •••• •••• 4242</div>
+            <div class="card-info">
+              <div class="card-holder">
+                <span class="label">持卡人</span>
+                <span class="value">UTXO WALLET</span>
+              </div>
+              <div class="card-expiry">
+                <span class="label">有效期</span>
+                <span class="value">∞</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- 装饰性浮动元素 -->
+        <div class="floating-decorations">
+          <!-- 迷你钱包卡片 -->
+          <div class="deco-item deco-wallet">
+            <div class="wallet-inner">
+              <div class="wallet-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
+                  <path d="M1 10h22"/>
+                  <circle cx="18" cy="15" r="2"/>
+                </svg>
+              </div>
+              <div class="wallet-amount">+128.5</div>
+            </div>
+          </div>
+          
+          <!-- NFT艺术卡片 -->
+          <div class="deco-item deco-nft">
+            <div class="nft-inner">
+              <div class="nft-image">
+                <div class="nft-gradient"></div>
+                <div class="nft-pattern"></div>
+              </div>
+              <div class="nft-info">
+                <span class="nft-name">CryptoArt</span>
+                <span class="nft-price">2.5 ETH</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 加密币圆形 -->
+          <div class="deco-item deco-coin">
+            <div class="coin-inner">
+              <div class="coin-symbol">₿</div>
+              <div class="coin-shine"></div>
+            </div>
+          </div>
+          
+          <!-- 数据图表卡 -->
+          <div class="deco-item deco-chart">
+            <div class="chart-inner">
+              <div class="chart-bars">
+                <span style="height: 40%"></span>
+                <span style="height: 65%"></span>
+                <span style="height: 45%"></span>
+                <span style="height: 80%"></span>
+                <span style="height: 55%"></span>
+              </div>
+              <div class="chart-trend">↗ 12.5%</div>
+            </div>
+          </div>
+          
+          <!-- 区块链立方体 -->
+          <div class="deco-item deco-cube">
+            <div class="cube-container">
+              <div class="cube-3d">
+                <div class="cube-face front"></div>
+                <div class="cube-face back"></div>
+                <div class="cube-face right"></div>
+                <div class="cube-face left"></div>
+                <div class="cube-face top"></div>
+                <div class="cube-face bottom"></div>
+              </div>
+              <div class="cube-shadow"></div>
+            </div>
+          </div>
+          
+          <!-- 以太坊标志 -->
+          <div class="deco-item deco-eth">
+            <div class="eth-inner">
+              <svg viewBox="0 0 32 32" fill="none">
+                <path d="M16 2L6 16.5L16 22L26 16.5L16 2Z" fill="url(#ethGrad1)"/>
+                <path d="M16 2L6 16.5L16 12.5V2Z" fill="url(#ethGrad2)" opacity="0.6"/>
+                <path d="M16 24L6 18L16 30L26 18L16 24Z" fill="url(#ethGrad1)"/>
+                <defs>
+                  <linearGradient id="ethGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#627eea"/>
+                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                  </linearGradient>
+                  <linearGradient id="ethGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#627eea"/>
+                    <stop offset="100%" style="stop-color:#4f46e5"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
