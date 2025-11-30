@@ -28,7 +28,7 @@ body {
   max-width: 960px;
   margin: 0 auto;
   padding: 0 16px;
-  padding-top: 56px; /* 为固定导航栏预留空间 */
+  padding-top: 88px; /* 为固定导航栏预留空间 (header 高度约 72px + 额外间距) */
 }
 
 /* 首页时容器全宽（仅当 welcome-hero 可见时） */

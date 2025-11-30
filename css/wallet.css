@@ -14,6 +14,7 @@
   grid-template-columns: 360px minmax(0, 1fr);
   gap: 20px;
   align-items: start;
+  margin-top: 8px;
 }
 
 @media (max-width: 1024px) {
@@ -1845,6 +1846,7 @@
   font-weight: 800;
   color: #1e293b;
   margin: 0 0 16px 0;
+  padding-top: 8px;
   display: flex;
   align-items: center;
   gap: 12px;
