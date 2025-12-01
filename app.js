@@ -1963,7 +1963,7 @@ function doSearchById() {
   } else {
     const list = GROUP_LIST.filter(x => x.groupID.includes(q)).slice(0, 6);
     if (list.length) {
-      groupSuggest.innerHTML = list.map(x => `<div class="item" data-id="${x.groupID}"><span>${x.groupID}</span><span>${x.aggreNode} / ${x.assignNode}</span></div>`).join('');
+      groupSuggest.innerHTML = list.map(x => `<div class="item" data-id="${x.groupID}"><span class="suggest-id"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="suggest-id-text">${x.groupID}</span></span><span class="suggest-nodes"><span class="node-badge aggre">${x.aggreNode}</span><span class="node-badge assign">${x.assignNode}</span></span><span class="suggest-arrow">→</span></div>`).join('');
       groupSuggest.classList.remove('hidden');
     }
   }
@@ -1983,7 +1983,7 @@ if (groupSearch) {
     }
     const list = GROUP_LIST.filter(g => g.groupID.includes(q)).slice(0, 6);
     if (list.length === 0) { groupSuggest.classList.add('hidden'); return; }
-    groupSuggest.innerHTML = list.map(g => `<div class="item" data-id="${g.groupID}"><span>${g.groupID}</span><span>${g.aggreNode} / ${g.assignNode}</span></div>`).join('');
+    groupSuggest.innerHTML = list.map(g => `<div class="item" data-id="${g.groupID}"><span class="suggest-id"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg><span class="suggest-id-text">${g.groupID}</span></span><span class="suggest-nodes"><span class="node-badge aggre">${g.aggreNode}</span><span class="node-badge assign">${g.assignNode}</span></span><span class="suggest-arrow">→</span></div>`).join('');
     groupSuggest.classList.remove('hidden');
   });
   groupSearch.addEventListener('keydown', (e) => {

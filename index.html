@@ -1194,23 +1194,25 @@
                 <p class="join-option-desc">为您自动匹配最优组织</p>
               </div>
             </div>
-            <div class="join-org-info">
-              <div class="join-org-grid">
-                <div class="join-org-item">
-                  <span class="join-org-label">Group ID</span>
-                  <span class="join-org-value" id="recGroupID">10000000</span>
-                </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Aggre Node</span>
-                  <span class="join-org-value" id="recAggre">39012088</span>
-                </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Assign Node</span>
-                  <span class="join-org-value" id="recAssign">17770032</span>
-                </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Pledge Address</span>
-                  <span class="join-org-value" id="recPledge">5bd548d7...bef5dd09</span>
+            <div class="join-option-content">
+              <div class="join-org-info">
+                <div class="join-org-grid">
+                  <div class="join-org-item">
+                    <span class="join-org-label">Group ID</span>
+                    <span class="join-org-value" id="recGroupID">10000000</span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Aggre Node</span>
+                    <span class="join-org-value" id="recAggre">39012088</span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Assign Node</span>
+                    <span class="join-org-value" id="recAssign">17770032</span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Pledge Address</span>
+                    <span class="join-org-value" id="recPledge">5bd548d76dcb3f9db1d213db01464406bef5dd09</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1237,33 +1239,37 @@
                 <p class="join-option-desc">输入组织编号查找</p>
               </div>
             </div>
-            <div class="join-search-box">
-              <input id="groupSearch" class="join-search-input" type="text" placeholder="输入担保组织编号..." />
-            </div>
-            <div id="groupSuggest" class="suggest hidden"></div>
-            <div id="searchResult" class="join-org-info hidden">
-              <div class="join-org-grid">
-                <div class="join-org-item">
-                  <span class="join-org-label">Group ID</span>
-                  <span class="join-org-value" id="srGroupID"></span>
+            <div class="join-option-content">
+              <div class="join-search-wrapper">
+                <div class="join-search-box">
+                  <input id="groupSearch" class="join-search-input" type="text" placeholder="输入担保组织编号..." autocomplete="off" />
                 </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Aggre Node</span>
-                  <span class="join-org-value" id="srAggre"></span>
-                </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Assign Node</span>
-                  <span class="join-org-value" id="srAssign"></span>
-                </div>
-                <div class="join-org-item">
-                  <span class="join-org-label">Pledge Address</span>
-                  <span class="join-org-value" id="srPledge"></span>
+                <div id="groupSuggest" class="suggest hidden"></div>
+              </div>
+              <div id="searchResult" class="join-org-info hidden">
+                <div class="join-org-grid">
+                  <div class="join-org-item">
+                    <span class="join-org-label">Group ID</span>
+                    <span class="join-org-value" id="srGroupID"></span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Aggre Node</span>
+                    <span class="join-org-value" id="srAggre"></span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Assign Node</span>
+                    <span class="join-org-value" id="srAssign"></span>
+                  </div>
+                  <div class="join-org-item">
+                    <span class="join-org-label">Pledge Address</span>
+                    <span class="join-org-value" id="srPledge"></span>
+                  </div>
                 </div>
               </div>
-            </div>
-            <div id="searchEmpty" class="join-search-empty">
-              <div class="join-search-empty-icon">🔍</div>
-              <div class="join-search-empty-text">输入组织编号开始搜索</div>
+              <div id="searchEmpty" class="join-search-empty">
+                <div class="join-search-empty-icon">🔍</div>
+                <div class="join-search-empty-text">输入组织编号开始搜索</div>
+              </div>
             </div>
             <button id="joinSearchBtn" class="join-option-action" disabled>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
