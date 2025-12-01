@@ -1133,160 +1133,303 @@
       </main>
     </section>
 
-    <!-- 下一步：空白页面占位 -->
+    <!-- 下一步：加入担保组织 - 全新左右布局设计 -->
     <section class="card hidden" id="nextCard">
-      <!-- 动态背景 -->
-      <div class="join-card-bg">
-        <div class="bg-orb bg-orb--1"></div>
-        <div class="bg-orb bg-orb--2"></div>
-        <div class="bg-orb bg-orb--3"></div>
-      </div>
-
-      <!-- 主内容区 -->
-      <div class="join-card-content">
-        <!-- 标题区域 -->
-        <div class="join-header">
-          <div class="join-header-icon">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-          </div>
-          <h1 class="join-header-title">加入担保组织</h1>
-          <p class="join-header-subtitle">选择一个担保组织以获得更稳定的交易服务与账户保障</p>
-        </div>
-
-        <!-- 特性展示 -->
-        <div class="join-features">
-          <div class="join-feature">
-            <div class="join-feature-icon">⚡</div>
-            <span class="join-feature-text">加速交易确认</span>
-          </div>
-          <div class="join-feature">
-            <div class="join-feature-icon">🔒</div>
-            <span class="join-feature-text">跨区保障权益</span>
-          </div>
-          <div class="join-feature">
-            <div class="join-feature-icon">🧭</div>
-            <span class="join-feature-text">个性化地址管理</span>
-          </div>
-          <div class="join-feature">
-            <div class="join-feature-icon">📊</div>
-            <span class="join-feature-text">利息收益统计</span>
-          </div>
-        </div>
-
-        <!-- 选项卡片区 -->
-        <div class="join-options">
-          <!-- 系统推荐 -->
-          <div class="join-option-card join-option-card--recommend" id="recPane">
-            <span class="join-option-badge">推荐</span>
-            <div class="join-option-header">
-              <div class="join-option-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+      <div class="join-page">
+        <!-- 左侧：品牌展示区 -->
+        <aside class="join-sidebar">
+          <div class="join-sidebar-content">
+            <!-- Logo 区域 -->
+            <div class="join-brand">
+              <div class="join-brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                 </svg>
               </div>
-              <div>
-                <h3 class="join-option-title">系统推荐</h3>
-                <p class="join-option-desc">为您自动匹配最优组织</p>
-              </div>
+              <h1 class="join-brand-title">加入担保组织</h1>
+              <p class="join-brand-desc">获得更稳定的交易服务与全方位账户保障</p>
             </div>
-            <div class="join-option-content">
-              <div class="join-org-info">
-                <div class="join-org-grid">
-                  <div class="join-org-item">
-                    <span class="join-org-label">Group ID</span>
-                    <span class="join-org-value" id="recGroupID">10000000</span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Aggre Node</span>
-                    <span class="join-org-value" id="recAggre">39012088</span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Assign Node</span>
-                    <span class="join-org-value" id="recAssign">17770032</span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Pledge Address</span>
-                    <span class="join-org-value" id="recPledge">5bd548d76dcb3f9db1d213db01464406bef5dd09</span>
-                  </div>
+
+            <!-- 特性列表 -->
+            <div class="join-benefits">
+              <div class="join-benefit">
+                <div class="join-benefit-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                  </svg>
+                </div>
+                <div class="join-benefit-text">
+                  <h4>加速交易确认</h4>
+                  <p>享受优先确认通道，交易更快完成</p>
+                </div>
+              </div>
+              <div class="join-benefit">
+                <div class="join-benefit-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                  </svg>
+                </div>
+                <div class="join-benefit-text">
+                  <h4>跨区保障权益</h4>
+                  <p>多区域联保机制，资产更加安全</p>
+                </div>
+              </div>
+              <div class="join-benefit">
+                <div class="join-benefit-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                  </svg>
+                </div>
+                <div class="join-benefit-text">
+                  <h4>个性化地址</h4>
+                  <p>支持自定义地址标签与管理</p>
+                </div>
+              </div>
+              <div class="join-benefit">
+                <div class="join-benefit-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="20" x2="12" y2="10"/>
+                    <line x1="18" y1="20" x2="18" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="16"/>
+                  </svg>
+                </div>
+                <div class="join-benefit-text">
+                  <h4>收益统计</h4>
+                  <p>清晰的利息收益与交易分析</p>
                 </div>
               </div>
             </div>
-            <button id="joinRecBtn" class="join-option-action">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-              加入此组织
-            </button>
-          </div>
 
-          <!-- 搜索组织 -->
-          <div class="join-option-card join-option-card--search">
-            <div class="join-option-header">
-              <div class="join-option-icon">
+            <!-- 底部装饰 -->
+            <div class="join-sidebar-footer">
+              <div class="join-stats">
+                <div class="join-stat">
+                  <span class="join-stat-value">99.9%</span>
+                  <span class="join-stat-label">服务可用性</span>
+                </div>
+                <div class="join-stat">
+                  <span class="join-stat-value">24/7</span>
+                  <span class="join-stat-label">全天候保障</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右侧：操作区域 -->
+        <main class="join-main">
+          <div class="join-main-content">
+            <!-- 标签页切换 -->
+            <div class="join-tabs">
+              <button class="join-tab join-tab--active" data-tab="recommend">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span>系统推荐</span>
+              </button>
+              <button class="join-tab" data-tab="search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8"/>
                   <line x1="21" y1="21" x2="16.65" y2="16.65"/>
                 </svg>
-              </div>
-              <div>
-                <h3 class="join-option-title">搜索组织</h3>
-                <p class="join-option-desc">输入组织编号查找</p>
-              </div>
+                <span>搜索组织</span>
+              </button>
             </div>
-            <div class="join-option-content">
-              <div class="join-search-wrapper">
-                <div class="join-search-box">
-                  <input id="groupSearch" class="join-search-input" type="text" placeholder="输入担保组织编号..." autocomplete="off" />
-                </div>
-                <div id="groupSuggest" class="suggest hidden"></div>
-              </div>
-              <div id="searchResult" class="join-org-info hidden">
-                <div class="join-org-grid">
-                  <div class="join-org-item">
-                    <span class="join-org-label">Group ID</span>
-                    <span class="join-org-value" id="srGroupID"></span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Aggre Node</span>
-                    <span class="join-org-value" id="srAggre"></span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Assign Node</span>
-                    <span class="join-org-value" id="srAssign"></span>
-                  </div>
-                  <div class="join-org-item">
-                    <span class="join-org-label">Pledge Address</span>
-                    <span class="join-org-value" id="srPledge"></span>
-                  </div>
-                </div>
-              </div>
-              <div id="searchEmpty" class="join-search-empty">
-                <div class="join-search-empty-icon">🔍</div>
-                <div class="join-search-empty-text">输入组织编号开始搜索</div>
-              </div>
-            </div>
-            <button id="joinSearchBtn" class="join-option-action" disabled>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                <polyline points="22 4 12 14.01 9 11.01"/>
-              </svg>
-              加入此组织
-            </button>
-          </div>
-        </div>
 
-        <!-- 跳过选项 -->
-        <div class="join-skip-section">
-          <div class="join-skip-divider">
-            <span>或者</span>
+            <!-- 推荐面板 -->
+            <div class="join-panel join-panel--recommend" id="recPane">
+              <div class="join-panel-header">
+                <span class="join-panel-badge">推荐</span>
+                <h2 class="join-panel-title">为您匹配的最优组织</h2>
+                <p class="join-panel-desc">系统已根据网络状况为您选择最佳担保组织</p>
+              </div>
+
+              <div class="join-org-card">
+                <!-- 组织头部 - 突出显示 Group ID -->
+                <div class="join-org-header">
+                  <div class="join-org-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <div class="join-org-identity">
+                    <span class="join-org-id" id="recGroupID">10000000</span>
+                    <span class="join-org-type">担保组织</span>
+                  </div>
+                  <div class="join-org-status">
+                    <span class="status-dot"></span>
+                    <span>在线</span>
+                  </div>
+                </div>
+                <!-- 组织详情 -->
+                <div class="join-org-details">
+                  <div class="join-org-detail">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Aggre Node</label>
+                      <span id="recAggre">39012088</span>
+                    </div>
+                  </div>
+                  <div class="join-org-detail">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Assign Node</label>
+                      <span id="recAssign">17770032</span>
+                    </div>
+                  </div>
+                  <div class="join-org-detail join-org-detail--full">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Pledge Address</label>
+                      <span class="mono" id="recPledge">5bd548d76dcb3f9db1d213db01464406bef5dd09</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button id="joinRecBtn" class="join-submit-btn">
+                <span>加入此组织</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 搜索面板 -->
+            <div class="join-panel join-panel--search hidden" id="searchPane">
+              <div class="join-panel-header">
+                <h2 class="join-panel-title">搜索担保组织</h2>
+                <p class="join-panel-desc">输入组织编号查找特定担保组织</p>
+              </div>
+
+              <div class="join-search-area">
+                <div class="join-search-field">
+                  <svg class="join-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                  <input id="groupSearch" type="text" placeholder="输入担保组织编号..." autocomplete="off" />
+                </div>
+                <div id="groupSuggest" class="join-suggest hidden"></div>
+              </div>
+
+              <!-- 搜索结果 -->
+              <div id="searchResult" class="join-org-card hidden">
+                <!-- 组织头部 - 突出显示 Group ID -->
+                <div class="join-org-header">
+                  <div class="join-org-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                      <circle cx="9" cy="7" r="4"/>
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    </svg>
+                  </div>
+                  <div class="join-org-identity">
+                    <span class="join-org-id" id="srGroupID"></span>
+                    <span class="join-org-type">担保组织</span>
+                  </div>
+                  <div class="join-org-status">
+                    <span class="status-dot"></span>
+                    <span>在线</span>
+                  </div>
+                </div>
+                <!-- 组织详情 -->
+                <div class="join-org-details">
+                  <div class="join-org-detail">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Aggre Node</label>
+                      <span id="srAggre"></span>
+                    </div>
+                  </div>
+                  <div class="join-org-detail">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Assign Node</label>
+                      <span id="srAssign"></span>
+                    </div>
+                  </div>
+                  <div class="join-org-detail join-org-detail--full">
+                    <div class="detail-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      </svg>
+                    </div>
+                    <div class="detail-content">
+                      <label>Pledge Address</label>
+                      <span class="mono" id="srPledge"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 空状态 -->
+              <div id="searchEmpty" class="join-empty-state">
+                <div class="join-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="11" cy="11" r="8"/>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  </svg>
+                </div>
+                <p>输入组织编号开始搜索</p>
+              </div>
+
+              <button id="joinSearchBtn" class="join-submit-btn" disabled>
+                <span>加入此组织</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- 跳过选项 -->
+            <div class="join-skip">
+              <button id="skipJoinBtn" class="join-skip-btn">
+                <span>暂不加入担保组织</span>
+              </button>
+            </div>
           </div>
-          <button id="skipJoinBtn" class="join-skip-btn">暂不加入担保组织</button>
+        </main>
+      </div>
+
+      <!-- 加载遮罩 -->
+      <div id="joinOverlay" class="join-overlay hidden">
+        <div class="join-overlay-content">
+          <div class="join-spinner"></div>
+          <p>正在加入担保组织...</p>
         </div>
       </div>
     </section>

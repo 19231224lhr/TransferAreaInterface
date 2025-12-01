@@ -1919,8 +1919,28 @@ if (entryNextBtn) {
 const groupSearch = document.getElementById('groupSearch');
 const groupSuggest = document.getElementById('groupSuggest');
 const recPane = document.getElementById('recPane');
+const searchPane = document.getElementById('searchPane');
 const joinSearchBtn = document.getElementById('joinSearchBtn');
 const joinRecBtn = document.getElementById('joinRecBtn');
+
+// 标签页切换逻辑
+const joinTabs = document.querySelectorAll('.join-tab');
+joinTabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    const target = tab.getAttribute('data-tab');
+    // 更新标签状态
+    joinTabs.forEach(t => t.classList.remove('join-tab--active'));
+    tab.classList.add('join-tab--active');
+    // 切换面板
+    if (target === 'recommend') {
+      if (recPane) recPane.classList.remove('hidden');
+      if (searchPane) searchPane.classList.add('hidden');
+    } else {
+      if (recPane) recPane.classList.add('hidden');
+      if (searchPane) searchPane.classList.remove('hidden');
+    }
+  });
+});
 
 function showGroupInfo(g) {
   currentSelectedGroup = g;
@@ -1951,7 +1971,6 @@ function showGroupInfo(g) {
     if (searchEmpty) searchEmpty.classList.add('hidden');
   }
   if (joinSearchBtn) joinSearchBtn.disabled = false;
-  if (recPane) recPane.classList.add('collapsed');
 }
 
 function doSearchById() {
@@ -1978,7 +1997,6 @@ if (groupSearch) {
       if (sr) sr.classList.add('hidden');
       if (searchEmpty) searchEmpty.classList.remove('hidden');
       if (joinSearchBtn) joinSearchBtn.disabled = true;
-      if (recPane) recPane.classList.remove('collapsed');
       return;
     }
     const list = GROUP_LIST.filter(g => g.groupID.includes(q)).slice(0, 6);
