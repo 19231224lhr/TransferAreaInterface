@@ -31,6 +31,19 @@
   box-shadow: 
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
+  /* 进场动画 - 简洁优雅 */
+  animation: pageSlideIn 0.4s ease-out both;
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ========================================

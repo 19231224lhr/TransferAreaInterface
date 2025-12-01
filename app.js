@@ -972,10 +972,13 @@ function showCard(card) {
   if (recPane2) recPane2.classList.remove('collapsed');
   const gs2 = document.getElementById('groupSearch');
   if (gs2) gs2.value = '';
-  const allCards = document.querySelectorAll('.card, .login-page, .entry-page, .import-page, .welcome-hero');
+  const allCards = document.querySelectorAll('.card, .welcome-hero, #entryCard, #loginCard, #importCard, #newUserCard');
   allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
+  // 确保内部页面容器也显示
+  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page');
+  if (innerPage) innerPage.classList.remove('hidden');
   // 滚动到页面顶部 - 使用 requestAnimationFrame 确保 DOM 更新后再滚动
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
