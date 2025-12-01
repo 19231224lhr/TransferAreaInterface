@@ -1,0 +1,681 @@
+/**
+ * ========================================
+ * 加入担保组织页面样式 - join-group.css
+ * 全新现代化设计，与 new-user 页面风格一致
+ * ========================================
+ */
+
+/* ========================================
+   页面容器
+   ======================================== */
+
+#nextCard,
+#importNextCard {
+  position: relative;
+  max-width: 1000px;
+  margin: 16px auto;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+/* 动态背景装饰 */
+.join-card-bg {
+  position: absolute;
+  inset: -60px;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+/* 漂浮的光球 */
+.join-card-bg .bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.3;
+  will-change: transform;
+}
+
+.join-card-bg .bg-orb--1 {
+  width: 320px;
+  height: 320px;
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.05) 40%, transparent 70%);
+  top: -100px;
+  right: -80px;
+  animation: joinOrbFloat1 22s ease-in-out infinite;
+}
+
+.join-card-bg .bg-orb--2 {
+  width: 280px;
+  height: 280px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.18) 0%, rgba(14, 165, 233, 0.04) 40%, transparent 70%);
+  top: 50%;
+  left: -100px;
+  animation: joinOrbFloat2 26s ease-in-out infinite;
+}
+
+.join-card-bg .bg-orb--3 {
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, rgba(139, 92, 246, 0.03) 40%, transparent 70%);
+  bottom: -40px;
+  right: 20%;
+  animation: joinOrbFloat3 20s ease-in-out infinite;
+}
+
+@keyframes joinOrbFloat1 {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-25px, 30px, 0) rotate(5deg); }
+}
+
+@keyframes joinOrbFloat2 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(30px, -20px, 0); }
+}
+
+@keyframes joinOrbFloat3 {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-20px, -15px, 0); }
+}
+
+/* ========================================
+   主内容区
+   ======================================== */
+
+.join-card-content {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 50%,
+    rgba(241, 245, 249, 0.85) 100%
+  );
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 32px;
+  padding: 48px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 
+    0 25px 80px rgba(34, 197, 94, 0.1),
+    0 10px 40px rgba(14, 165, 233, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+  animation: joinCardEnter 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes joinCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   标题区域
+   ======================================== */
+
+.join-header {
+  text-align: center;
+  margin-bottom: 40px;
+  animation: joinHeaderIn 0.6s ease-out 0.15s both;
+}
+
+@keyframes joinHeaderIn {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.join-header-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, #22c55e, #0ea5e9);
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 12px 35px rgba(34, 197, 94, 0.25),
+    0 4px 12px rgba(14, 165, 233, 0.15);
+  animation: iconPulse 3s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { box-shadow: 0 12px 35px rgba(34, 197, 94, 0.25), 0 4px 12px rgba(14, 165, 233, 0.15); }
+  50% { box-shadow: 0 16px 45px rgba(34, 197, 94, 0.35), 0 6px 18px rgba(14, 165, 233, 0.2); }
+}
+
+.join-header-icon svg {
+  width: 36px;
+  height: 36px;
+  color: white;
+}
+
+.join-header-title {
+  font-size: 32px;
+  font-weight: 800;
+  margin: 0 0 10px;
+  background: linear-gradient(135deg, #1e293b 0%, #22c55e 60%, #0ea5e9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.join-header-subtitle {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0;
+  font-weight: 500;
+}
+
+/* ========================================
+   特性展示区
+   ======================================== */
+
+.join-features {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 36px;
+  animation: joinFeaturesIn 0.6s ease-out 0.25s both;
+}
+
+@keyframes joinFeaturesIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.join-feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.7) 0%, rgba(248,250,252,0.5) 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.join-feature:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.join-feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 20px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(14, 165, 233, 0.1));
+}
+
+.join-feature-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+  line-height: 1.4;
+}
+
+/* ========================================
+   选项卡片区
+   ======================================== */
+
+.join-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.join-option-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.7) 100%);
+  border-radius: 24px;
+  padding: 28px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: optionCardIn 0.5s ease-out both;
+  overflow: hidden;
+}
+
+.join-option-card:nth-child(1) { animation-delay: 0.3s; }
+.join-option-card:nth-child(2) { animation-delay: 0.4s; }
+
+@keyframes optionCardIn {
+  from { opacity: 0; transform: translateY(30px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.join-option-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  padding: 2px;
+  background: linear-gradient(135deg, transparent, transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+
+.join-option-card:hover::before,
+.join-option-card.active::before {
+  opacity: 1;
+}
+
+.join-option-card--recommend::before {
+  background: linear-gradient(135deg, #22c55e, #0ea5e9);
+}
+
+.join-option-card--search::before {
+  background: linear-gradient(135deg, #8b5cf6, #ec4899);
+}
+
+.join-option-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+.join-option-card.active {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+}
+
+/* 推荐标签 */
+.join-option-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  padding: 5px 12px;
+  background: linear-gradient(135deg, #22c55e, #10b981);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.join-option-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.join-option-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.join-option-card--recommend .join-option-icon {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(14, 165, 233, 0.1));
+}
+
+.join-option-card--search .join-option-icon {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(236, 72, 153, 0.1));
+}
+
+.join-option-icon svg {
+  width: 26px;
+  height: 26px;
+}
+
+.join-option-card--recommend .join-option-icon svg {
+  color: #22c55e;
+}
+
+.join-option-card--search .join-option-icon svg {
+  color: #8b5cf6;
+}
+
+.join-option-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.join-option-desc {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* 组织信息展示 */
+.join-org-info {
+  background: linear-gradient(135deg, rgba(248,250,252,0.8) 0%, rgba(241,245,249,0.6) 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.join-org-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.join-org-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.join-org-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.join-org-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  word-break: break-all;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.8);
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+/* 搜索输入框 */
+.join-search-box {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+}
+
+.join-search-input {
+  flex: 1;
+  padding: 14px 18px;
+  font-size: 15px;
+  border: 2px solid rgba(226, 232, 240, 0.8);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1e293b;
+  transition: all 0.3s ease;
+  outline: none;
+  position: relative;
+  z-index: 10;
+}
+
+.join-search-input:focus {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.join-search-input::placeholder {
+  color: #94a3b8;
+}
+
+.join-search-btn {
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.join-search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
+}
+
+.join-search-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* 搜索结果为空时 */
+.join-search-empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: #94a3b8;
+}
+
+.join-search-empty-icon {
+  font-size: 40px;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.join-search-empty-text {
+  font-size: 14px;
+}
+
+/* 选项卡片底部按钮 */
+.join-option-action {
+  width: 100%;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.join-option-card--recommend .join-option-action {
+  background: linear-gradient(135deg, #22c55e, #10b981);
+  color: white;
+}
+
+.join-option-card--recommend .join-option-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(34, 197, 94, 0.35);
+}
+
+.join-option-card--search .join-option-action {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+}
+
+.join-option-card--search .join-option-action:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.35);
+}
+
+.join-option-action:disabled {
+  background: linear-gradient(135deg, #cbd5e1, #94a3b8);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.join-option-action svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* ========================================
+   跳过按钮
+   ======================================== */
+
+.join-skip-section {
+  text-align: center;
+  padding-top: 8px;
+  animation: skipIn 0.5s ease-out 0.5s both;
+}
+
+@keyframes skipIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.join-skip-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.join-skip-divider::before,
+.join-skip-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.3), transparent);
+}
+
+.join-skip-divider span {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.join-skip-btn {
+  padding: 12px 32px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: 2px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.join-skip-btn:hover {
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+/* ========================================
+   加载状态
+   ======================================== */
+
+.join-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.join-loading-spinner {
+  width: 48px;
+  height: 48px;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.join-loading-spinner::before,
+.join-loading-spinner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid transparent;
+}
+
+.join-loading-spinner::before {
+  border-top-color: #22c55e;
+  animation: spinnerRotate 1s linear infinite;
+}
+
+.join-loading-spinner::after {
+  border-bottom-color: #0ea5e9;
+  animation: spinnerRotate 1s linear infinite reverse;
+  inset: 6px;
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}
+
+.join-loading-text {
+  font-size: 15px;
+  font-weight: 500;
+  color: #64748b;
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 900px) {
+  .join-card-content {
+    padding: 32px 24px;
+    border-radius: 24px;
+  }
+
+  .join-header-title {
+    font-size: 26px;
+  }
+
+  .join-features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .join-options {
+    grid-template-columns: 1fr;
+  }
+
+  .join-org-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .join-card-content {
+    padding: 24px 16px;
+  }
+
+  .join-features {
+    grid-template-columns: 1fr;
+  }
+
+  .join-header-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .join-header-title {
+    font-size: 22px;
+  }
+}

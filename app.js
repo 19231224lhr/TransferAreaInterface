@@ -1947,6 +1947,8 @@ function showGroupInfo(g) {
     sr.classList.remove('hidden');
     sr.classList.remove('reveal');
     requestAnimationFrame(() => sr.classList.add('reveal'));
+    const searchEmpty = document.getElementById('searchEmpty');
+    if (searchEmpty) searchEmpty.classList.add('hidden');
   }
   if (joinSearchBtn) joinSearchBtn.disabled = false;
   if (recPane) recPane.classList.add('collapsed');
@@ -1972,7 +1974,9 @@ if (groupSearch) {
     if (!q) {
       groupSuggest.classList.add('hidden');
       const sr = document.getElementById('searchResult');
+      const searchEmpty = document.getElementById('searchEmpty');
       if (sr) sr.classList.add('hidden');
+      if (searchEmpty) searchEmpty.classList.remove('hidden');
       if (joinSearchBtn) joinSearchBtn.disabled = true;
       if (recPane) recPane.classList.remove('collapsed');
       return;
