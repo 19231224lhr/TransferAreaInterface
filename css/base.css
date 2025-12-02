@@ -33,9 +33,9 @@ body {
 
 /* 首页时容器全宽（仅当 welcome-hero 可见时） */
 .container:has(.welcome-hero:not(.hidden)) {
-  max-width: 100%;
-  padding: 0;
-  padding-top: 0; /* 首页已在 welcome-hero 中处理 */
+  max-width: 100% !important;
+  padding: 0 !important;
+  padding-top: 0 !important; /* 首页不需要顶部间距，header悬浮在内容上 */
 }
 
 /* 通用隐藏类 */

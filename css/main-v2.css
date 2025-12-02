@@ -132,11 +132,18 @@
   max-width: none !important;
 }
 
-/* 重置 container 限制 - 允许全宽 */
-.container:has(#walletCard) {
+/* 重置 container 限制 - 仅当钱包页面可见时 */
+.container:has(#walletCard:not(.hidden)) {
   max-width: 100% !important;
   padding: 0 !important;
   padding-top: 72px !important;
+}
+
+/* 首页时不需要顶部padding - header悬浮在页面上方 */
+.container:has(.welcome-hero:not(.hidden)) {
+  max-width: 100% !important;
+  padding: 0 !important;
+  padding-top: 0 !important;
 }
 
 /* ========================================
