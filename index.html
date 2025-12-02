@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203c" />
   
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1795,55 +1795,79 @@
       <div class="main-v2">
         <div class="main-v2-container">
           <div class="main-grid">
-            <!-- 左侧钱包面板 -->
+            <!-- 左侧钱包面板（整合资产+地址） -->
             <div class="wallet-panel">
-              <!-- 资产概览卡片 - 深色主题 -->
+              <!-- 资产概览 -->
               <div class="asset-overview">
                 <div class="asset-overview-content">
                   <div class="asset-header">
-                    <div class="asset-header-left">
-                      <div class="asset-logo">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
-                          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
-                          <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"></path>
-                        </svg>
+                    <!-- 头部顶行：标题 + 操作按钮 -->
+                    <div class="asset-header-top">
+                      <div class="asset-header-left">
+                        <div class="asset-logo">
+                          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                            <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"></path>
+                          </svg>
+                        </div>
+                        <div class="asset-title-group">
+                          <h2>我的钱包</h2>
+                          <span>安全管理数字资产</span>
+                        </div>
                       </div>
-                      <div class="asset-title-group">
-                        <h2>我的钱包</h2>
-                        <span>安全管理您的数字资产</span>
+                      <div class="asset-actions">
+                        <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新" aria-label="刷新余额">
+                          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                            <path d="M23 4v6h-6"></path>
+                            <path d="M1 20v-6h6"></path>
+                            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                          </svg>
+                        </button>
+                        <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建" aria-label="新建地址">
+                          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                          </svg>
+                        </button>
+                        <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入" aria-label="导入地址">
+                          <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                          </svg>
+                        </button>
                       </div>
                     </div>
-                    <div class="asset-actions">
-                      <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新余额" aria-label="刷新余额">
-                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                          <path d="M23 4v6h-6"></path>
-                          <path d="M1 20v-6h6"></path>
-                          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                        </svg>
-                      </button>
-                      <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建地址" aria-label="新建地址">
-                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                          <line x1="12" y1="5" x2="12" y2="19"></line>
-                          <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                      </button>
-                      <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入地址" aria-label="导入地址">
-                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
-                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                          <polyline points="7 10 12 15 17 10"></polyline>
-                          <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
-                      </button>
+                    <!-- 总资产显示 -->
+                    <div class="total-balance">
+                      <div class="total-balance-label">总资产估值</div>
+                      <div class="total-balance-value">
+                        <span id="walletUSDT" class="total-balance-amount animate-number">0</span>
+                        <span class="total-balance-unit">USDT</span>
+                      </div>
                     </div>
-                  </div>
-                  
-                  <!-- 总资产显示 -->
-                  <div class="total-balance">
-                    <div class="total-balance-label">总资产估值</div>
-                    <div class="total-balance-value">
-                      <span id="walletUSDT" class="total-balance-amount animate-number">0</span>
-                      <span class="total-balance-unit">USDT</span>
+                    
+                    <!-- 余额曲线图 -->
+                    <div class="balance-chart" id="balanceChart">
+                      <svg class="balance-chart-svg" viewBox="0 0 320 70" preserveAspectRatio="none">
+                        <defs>
+                          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
+                            <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                          </linearGradient>
+                        </defs>
+                        <path id="chartFill" class="chart-gradient-fill" fill="url(#chartGradient)"/>
+                        <path id="chartLine" class="chart-line"/>
+                        <g id="chartDots"></g>
+                      </svg>
+                      <div class="chart-time-labels">
+                        <span class="chart-time-label">7天前</span>
+                        <span class="chart-time-label">5天前</span>
+                        <span class="chart-time-label">3天前</span>
+                        <span class="chart-time-label">今天</span>
+                      </div>
+                      <div class="chart-tooltip" id="chartTooltip"></div>
                     </div>
                   </div>
                   

@@ -2795,36 +2795,54 @@ function renderWallet() {
       const gas0 = readAddressInterest(meta);
       const coinType = typeId0 === 1 ? 'BTC' : (typeId0 === 2 ? 'ETH' : 'PGC');
       const coinClass = typeId0 === 1 ? 'btc' : (typeId0 === 2 ? 'eth' : 'pgc');
+      // 截断地址显示
+      const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
 
       item.innerHTML = `
-        <div class="addr-card-header">
-          <div class="addr-type-badge type--${coinClass}">${coinType}</div>
-          <div class="addr-ops-container"></div>
-        </div>
-        <div class="addr-card-address">
-          <code class="addr-hash" title="${a}">${a}</code>
-        </div>
-        <div class="addr-card-body">
-          <div class="addr-balance-container">
-            <span class="addr-balance-val ${amtCash0 > 0 ? 'active' : ''}">${amtCash0}</span>
-            <span class="addr-balance-unit">${coinType}</span>
+        <div class="addr-card-summary">
+          <div class="addr-card-avatar coin--${coinClass}">${coinType}</div>
+          <div class="addr-card-main">
+            <span class="addr-card-hash" title="${a}">${shortAddr}</span>
+            <span class="addr-card-balance">${amtCash0} ${coinType}</span>
           </div>
-          <div class="addr-gas-info">
-            <span class="gas-icon">⛽</span>
-            <span class="gas-val">${gas0} GAS</span>
+          <div class="addr-card-arrow">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
           </div>
         </div>
-        <div class="addr-card-actions">
-          <button class="action-btn btn-add test-add-any" title="增加余额">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            <span>增加</span>
-          </button>
-          <button class="action-btn btn-zero test-zero-any" title="清空余额">
-            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-            <span>清空</span>
-          </button>
+        <div class="addr-card-detail">
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">完整地址</span>
+            <span class="addr-detail-value">${a.slice(0, 20)}...</span>
+          </div>
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">余额</span>
+            <span class="addr-detail-value">${amtCash0} ${coinType}</span>
+          </div>
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">GAS</span>
+            <span class="addr-detail-value gas">${gas0}</span>
+          </div>
+          <div class="addr-card-actions">
+            <button class="addr-action-btn addr-action-btn--primary btn-add test-add-any" title="增加余额">
+              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+              增加
+            </button>
+            <button class="addr-action-btn addr-action-btn--secondary btn-zero test-zero-any" title="清空余额">
+              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+              清空
+            </button>
+            <div class="addr-ops-container"></div>
+          </div>
         </div>
       `;
+      // 添加点击展开/收起功能
+      const summaryEl = item.querySelector('.addr-card-summary');
+      if (summaryEl) {
+        summaryEl.addEventListener('click', (e) => {
+          e.stopPropagation();
+          item.classList.toggle('expanded');
+        });
+      }
       list.appendChild(item);
       const metaEl = item.querySelector('.addr-ops-container');
       if (metaEl) {
@@ -3541,6 +3559,138 @@ function renderWallet() {
   if (uChart) {
     updateWalletChart(uChart);
     startChartAnimation();
+  }
+
+  // ========================================
+  // V6 简洁余额曲线图 (balanceChart)
+  // ========================================
+  window.updateBalanceChart = (user) => {
+    const chartEl = document.getElementById('balanceChart');
+    if (!chartEl) return;
+
+    const svg = chartEl.querySelector('.balance-chart-svg');
+    const lineEl = document.getElementById('chartLine');
+    const fillEl = document.getElementById('chartFill');
+    const dotsEl = document.getElementById('chartDots');
+    const tooltip = document.getElementById('chartTooltip');
+
+    if (!svg || !lineEl || !fillEl || !dotsEl) return;
+
+    // 获取历史数据，如果没有则生成模拟数据
+    let history = (user && user.wallet && user.wallet.history) || [];
+    
+    // 如果没有历史数据，生成过去7天的模拟数据
+    if (history.length < 2) {
+      const now = Date.now();
+      const dayMs = 24 * 60 * 60 * 1000;
+      const vd = (user && user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+      const currentVal = Math.round(Number(vd[0] || 0) * 1 + Number(vd[1] || 0) * 100 + Number(vd[2] || 0) * 10);
+      
+      history = [];
+      for (let i = 7; i >= 0; i--) {
+        const t = now - i * dayMs;
+        // 生成平滑波动的历史数据
+        const variation = Math.sin(i * 0.8) * 15 + Math.random() * 10 - 5;
+        const v = Math.max(0, Math.round(currentVal * (0.85 + i * 0.02) + variation));
+        history.push({ t, v });
+      }
+      // 确保最后一个点是当前值
+      history[history.length - 1].v = currentVal;
+    }
+
+    // 取最近8个点用于显示
+    const displayHistory = history.slice(-8);
+    
+    // 计算值范围
+    const values = displayHistory.map(h => h.v);
+    const minVal = Math.min(...values);
+    const maxVal = Math.max(...values);
+    const range = maxVal - minVal || 1;
+    const padding = range * 0.15;
+
+    // SVG 尺寸
+    const width = 320;
+    const height = 70;
+    const padX = 10;
+    const padY = 8;
+
+    // 坐标转换
+    const toX = (i) => padX + (i / (displayHistory.length - 1)) * (width - padX * 2);
+    const toY = (v) => padY + (1 - (v - minVal + padding) / (range + padding * 2)) * (height - padY * 2);
+
+    // 生成平滑曲线路径 (使用贝塞尔曲线)
+    const points = displayHistory.map((h, i) => ({ x: toX(i), y: toY(h.v), v: h.v, t: h.t }));
+    
+    let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+    
+    for (let i = 1; i < points.length; i++) {
+      const prev = points[i - 1];
+      const curr = points[i];
+      // 使用二次贝塞尔曲线实现平滑效果
+      const cpX = (prev.x + curr.x) / 2;
+      pathD += ` Q ${cpX.toFixed(1)},${prev.y.toFixed(1)} ${cpX.toFixed(1)},${((prev.y + curr.y) / 2).toFixed(1)}`;
+      pathD += ` T ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
+    }
+
+    // 填充区域路径
+    const fillD = `${pathD} L ${points[points.length - 1].x.toFixed(1)},${height - padY} L ${points[0].x.toFixed(1)},${height - padY} Z`;
+
+    // 更新路径
+    lineEl.setAttribute('d', pathD);
+    fillEl.setAttribute('d', fillD);
+
+    // 生成数据点
+    dotsEl.innerHTML = points.map((p, i) => {
+      const isLast = i === points.length - 1;
+      return `<circle 
+        cx="${p.x.toFixed(1)}" 
+        cy="${p.y.toFixed(1)}" 
+        r="${isLast ? 4 : 3}" 
+        class="${isLast ? 'chart-dot-current' : 'chart-dot'}"
+        data-value="${p.v}"
+        data-time="${p.t}"
+      />`;
+    }).join('');
+
+    // 绑定悬浮提示事件
+    if (!svg.dataset._bindChart) {
+      svg.addEventListener('mousemove', (e) => {
+        const rect = svg.getBoundingClientRect();
+        const x = (e.clientX - rect.left) * (width / rect.width);
+        
+        // 找最近的点
+        let closest = points[0];
+        let minDist = Infinity;
+        points.forEach(p => {
+          const dist = Math.abs(p.x - x);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = p;
+          }
+        });
+
+        if (tooltip && minDist < 30) {
+          const date = new Date(closest.t);
+          const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
+          tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${dateStr}`;
+          tooltip.classList.add('visible');
+          tooltip.style.left = `${closest.x}px`;
+          tooltip.style.top = `${closest.y - 30}px`;
+        }
+      });
+
+      svg.addEventListener('mouseleave', () => {
+        if (tooltip) tooltip.classList.remove('visible');
+      });
+
+      svg.dataset._bindChart = 'true';
+    }
+  };
+
+  // 初始化 V6 曲线图
+  const uBalanceChart = loadUser();
+  if (uBalanceChart) {
+    updateBalanceChart(uBalanceChart);
   }
 
   const usdtEl = document.getElementById('walletUSDT');
