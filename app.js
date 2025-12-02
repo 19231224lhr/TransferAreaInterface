@@ -3220,13 +3220,26 @@ function renderWallet() {
   const woCard = document.getElementById('woCard');
   const woEmpty = document.getElementById('woEmpty');
   const woExit = document.getElementById('woExitBtn');
+  const woActions = document.getElementById('woActions');
   const joinBtn = document.getElementById('woJoinBtn');
+  const orgStatusBadge = document.getElementById('orgStatusBadge');
   const g = getJoinedGroup();
   const joined = !!(g && g.groupID);
   if (woCard) woCard.classList.toggle('hidden', !joined);
   if (woExit) woExit.classList.toggle('hidden', !joined);
+  if (woActions) woActions.classList.toggle('hidden', !joined);
   if (woEmpty) woEmpty.classList.toggle('hidden', joined);
   if (joinBtn) joinBtn.classList.toggle('hidden', joined);
+  // V2版本 - 更新状态徽章
+  if (orgStatusBadge) {
+    if (joined) {
+      orgStatusBadge.textContent = '已加入';
+      orgStatusBadge.className = 'org-status-badge org-status-badge--active';
+    } else {
+      orgStatusBadge.textContent = '未加入';
+      orgStatusBadge.className = 'org-status-badge org-status-badge--inactive';
+    }
+  }
   [['woGroupID', joined ? g.groupID : ''],
   ['woAggre', joined ? (g.aggreNode || '') : ''],
   ['woAssign', joined ? (g.assignNode || '') : ''],
@@ -3537,7 +3550,23 @@ function renderWallet() {
     const btc = Number(vd[1] || 0);
     const eth = Number(vd[2] || 0);
     const usdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
-    usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+    
+    // V2版本 - 直接更新数字
+    if (usdtEl.classList.contains('animate-number')) {
+      usdtEl.textContent = usdt.toLocaleString();
+    } else {
+      usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+    }
+    
+    // V2版本 - 通过ID更新币种余额
+    const walletPGC = document.getElementById('walletPGC');
+    const walletBTC = document.getElementById('walletBTC');
+    const walletETH = document.getElementById('walletETH');
+    if (walletPGC) walletPGC.textContent = pgc.toLocaleString();
+    if (walletBTC) walletBTC.textContent = btc.toLocaleString();
+    if (walletETH) walletETH.textContent = eth.toLocaleString();
+    
+    // 旧版本兼容 - 通过类选择器更新
     const totalTags2 = document.querySelector('.currency-breakdown');
     if (totalTags2) {
       const pgcV = totalTags2.querySelector('.tag--pgc');
@@ -3553,39 +3582,165 @@ function renderWallet() {
         const m = u.wallet.addressMsg[k];
         return s + readAddressInterest(m);
       }, 0);
-      gasBadge2.innerHTML = `<span class="amt">${sumGas2.toLocaleString()}</span><span class="unit">GAS</span>`;
+      // V2版本 - 直接更新数字
+      if (gasBadge2.classList.contains('animate-number')) {
+        gasBadge2.textContent = sumGas2.toLocaleString();
+      } else {
+        gasBadge2.innerHTML = `<span class="amt">${sumGas2.toLocaleString()}</span><span class="unit">GAS</span>`;
+      }
     }
   }
   const wsToggle = document.getElementById('walletStructToggle');
   const wsBox = document.getElementById('walletStructBox');
+  const wsContent = wsToggle?.closest('.struct-section')?.querySelector('.struct-content');
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
-      const isExpanded = wsBox.classList.contains('expanded');
+      const isExpanded = wsToggle.classList.contains('expanded');
 
       if (!isExpanded) {
         updateWalletStruct();
         wsBox.classList.remove('hidden');
-
-        // Force reflow to ensure transition runs from collapsed state
-        wsBox.offsetHeight;
-
+        
+        // V2版本的折叠动画
+        if (wsContent) {
+          wsContent.classList.add('expanded');
+        }
         wsBox.classList.add('expanded');
-        wsToggle.textContent = '收起账户结构体';
+        wsToggle.classList.add('expanded');
+        
+        // 更新按钮文字
+        const textSpan = wsToggle.querySelector('span');
+        if (textSpan) textSpan.textContent = '收起账户结构体';
+        else wsToggle.textContent = '收起账户结构体';
       } else {
+        if (wsContent) {
+          wsContent.classList.remove('expanded');
+        }
         wsBox.classList.remove('expanded');
+        wsToggle.classList.remove('expanded');
 
-        // Wait for transition to finish before hiding (optional, but good practice)
         setTimeout(() => {
           if (!wsBox.classList.contains('expanded')) {
             wsBox.classList.add('hidden');
           }
         }, 300);
 
-        wsToggle.textContent = '展开账户结构体';
+        const textSpan = wsToggle.querySelector('span');
+        if (textSpan) textSpan.textContent = '展开账户结构体';
+        else wsToggle.textContent = '展开账户结构体';
       }
     });
     wsToggle.dataset._bind = '1';
   }
+  
+  // V2 Main Page - 高级选项折叠
+  const optionsToggle = document.getElementById('optionsToggle');
+  const optionsContent = document.getElementById('optionsContent');
+  if (optionsToggle && optionsContent && !optionsToggle.dataset._bind) {
+    optionsToggle.addEventListener('click', () => {
+      const isExpanded = optionsToggle.classList.contains('expanded');
+      if (isExpanded) {
+        optionsToggle.classList.remove('expanded');
+        optionsContent.classList.remove('expanded');
+      } else {
+        optionsToggle.classList.add('expanded');
+        optionsContent.classList.add('expanded');
+      }
+    });
+    optionsToggle.dataset._bind = '1';
+  }
+  
+  // V2 Main Page - 地址管理卡片折叠
+  const addressHeader = document.getElementById('addressHeader');
+  if (addressHeader && !addressHeader.dataset._bind) {
+    addressHeader.addEventListener('click', (e) => {
+      // 避免点击按钮时触发折叠
+      if (e.target.closest('.address-action-btn')) return;
+      addressHeader.classList.toggle('collapsed');
+    });
+    addressHeader.dataset._bind = '1';
+  }
+  
+  // V2 Main Page - 交易模式切换
+  const modeTabsContainer = document.querySelector('.transfer-mode-tabs');
+  if (modeTabsContainer && !modeTabsContainer.dataset._bind) {
+    modeTabsContainer.addEventListener('click', (e) => {
+      const tab = e.target.closest('.transfer-mode-tab') || e.target.closest('.mode-tab');
+      if (!tab) return;
+      
+      // 移除所有 active
+      modeTabsContainer.querySelectorAll('.transfer-mode-tab, .mode-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      
+      // 同步到隐藏的select
+      const mode = tab.dataset.mode;
+      const tfModeSelect = document.getElementById('tfMode');
+      const isPledgeSelect = document.getElementById('isPledge');
+      
+      if (tfModeSelect) tfModeSelect.value = mode;
+      if (isPledgeSelect) isPledgeSelect.value = mode === 'pledge' ? 'true' : 'false';
+      
+      // 也同步到原来的radio buttons (如果存在)
+      const radios = document.querySelectorAll('input[name="tfModeChoice"]');
+      radios.forEach(r => {
+        r.checked = r.value === mode;
+      });
+    });
+    modeTabsContainer.dataset._bind = '1';
+  }
+  
+  // V2 Main Page - openCreateAddrBtn2 同步功能
+  const openCreateAddrBtn2 = document.getElementById('openCreateAddrBtn2');
+  const openCreateAddrBtn = document.getElementById('openCreateAddrBtn');
+  if (openCreateAddrBtn2 && openCreateAddrBtn && !openCreateAddrBtn2.dataset._bind) {
+    openCreateAddrBtn2.addEventListener('click', () => {
+      openCreateAddrBtn.click();
+    });
+    openCreateAddrBtn2.dataset._bind = '1';
+  }
+  
+  // V2 Main Page - 数字动画效果
+  window.animateNumber = (element, targetValue, duration = 500) => {
+    if (!element) return;
+    
+    const startValue = parseFloat(element.textContent) || 0;
+    const startTime = performance.now();
+    
+    element.classList.add('updating');
+    
+    const animate = (currentTime) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // easeOutQuart
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      const currentValue = startValue + (targetValue - startValue) * easeProgress;
+      
+      element.textContent = currentValue.toLocaleString(undefined, {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 2
+      });
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        element.classList.remove('updating');
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  };
+  
+  // V2 Main Page - 更新地址数量显示
+  const updateAddrCount = () => {
+    const addrCount = document.getElementById('addrCount');
+    const u = loadUser();
+    if (addrCount && u && u.wallet && u.wallet.addressMsg) {
+      const count = Object.keys(u.wallet.addressMsg).length;
+      addrCount.textContent = `${count} 个地址`;
+    }
+  };
+  updateAddrCount();
   const qtBtn = document.getElementById('qtSendBtn');
   if (qtBtn && !qtBtn.dataset._bind) {
     qtBtn.addEventListener('click', () => {
@@ -4246,7 +4401,7 @@ function renderWallet() {
     tfBtn.dataset._bind = '1';
   }
 
-  const openCreateAddrBtn = document.getElementById('openCreateAddrBtn');
+  const openCreateAddrBtnModal = document.getElementById('openCreateAddrBtn');
   const openImportAddrBtn = document.getElementById('openImportAddrBtn');
   const addrModal = document.getElementById('addrModal');
   const addrTitle = document.getElementById('addrModalTitle');
@@ -4282,8 +4437,8 @@ function renderWallet() {
     if (addrModal) addrModal.classList.add('hidden');
     setAddrError('');
   };
-  if (openCreateAddrBtn) {
-    openCreateAddrBtn.onclick = () => showAddrModal('create');
+  if (openCreateAddrBtnModal) {
+    openCreateAddrBtnModal.onclick = () => showAddrModal('create');
   }
   if (openImportAddrBtn) {
     openImportAddrBtn.onclick = () => showAddrModal('import');

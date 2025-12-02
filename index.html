@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203" />
   
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1791,255 +1792,351 @@
     </section>
 
     <section class="card hidden" id="walletCard">
-      <div class="wallet-layout">
-        <div class="wallet-left wallet-left--legend">
-          <div class="addr-head">
-            <h3 class="section-title">我的钱包</h3>
-          </div>
-          <div class="wallet-overview-card">
-            <div class="overview-header">
-              <span class="overview-title">总资产估值</span>
-              <div class="overview-actions">
-                <button id="refreshWalletBtn" class="icon-btn" aria-label="刷新余额" title="刷新余额">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M23 4v6h-6"></path>
-                    <path d="M1 20v-6h6"></path>
-                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-                  </svg>
-                </button>
-                <button id="openCreateAddrBtn" class="icon-btn" aria-label="新建地址" title="新建地址">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                  </svg>
-                </button>
-                <button id="openImportAddrBtn" class="icon-btn" aria-label="导入地址" title="导入地址">
-                  <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            <div class="main-balance">
-              <span id="walletUSDT" class="balance-value"><span class="amt">0</span><span
-                  class="unit">USDT</span></span>
-            </div>
-
-            <div class="currency-breakdown">
-              <div class="currency-item">
-                <span class="c-label"><span class="dot dot--pgc"></span>PGC</span>
-                <span class="c-val tag--pgc">0</span>
-              </div>
-              <div class="currency-item">
-                <span class="c-label"><span class="dot dot--btc"></span>BTC</span>
-                <span class="c-val tag--btc">0</span>
-              </div>
-              <div class="currency-item">
-                <span class="c-label"><span class="dot dot--eth"></span>ETH</span>
-                <span class="c-val tag--eth">0</span>
-              </div>
-            </div>
-
-            <div class="gas-info">
-              <span class="gas-label">累计利息收益</span>
-              <span id="walletGAS" class="gas-value"><span class="amt">0</span><span class="unit">GAS</span></span>
-            </div>
-
-            <div class="chart-container">
-              <div id="walletTotalChart" class="addr-chart addr-chart--overview"></div>
-            </div>
-          </div>
-          <div class="pane pane--tight" id="walletStructPane">
-            <button id="walletStructToggle" class="btn primary full-width"
-              style="justify-content: center;">展开账户结构体</button>
-            <pre id="walletStructBox" class="result hidden struct-box" aria-live="polite"></pre>
-          </div>
-          <div id="walletAddrList" class="addr-list"></div>
-        </div>
-        <div class="wallet-right">
-          <div class="pane pane--legend" role="region" aria-labelledby="txFormTitle">
-            <h3 id="txFormTitle" class="section-title">转账交易</h3>
-            <div class="form tx-form" role="form" aria-describedby="txFormTitle">
-              <div class="tx-section" role="group" aria-labelledby="srcAddrHead">
-                <div class="tx-subhead" id="srcAddrHead">选择来源地址</div>
-                <div id="srcAddrList" class="tx-addr-list" role="list"></div>
-              </div>
-              <div class="tx-section" role="group" aria-labelledby="billHead">
-                <div class="tx-head-row">
-                  <div class="tx-subhead" id="billHead">添加转账账单</div><button id="addBillBtn" class="btn success btn--sm"
-                    aria-label="添加一笔账单">+</button>
-                </div>
-                <div id="billList" class="bill-list" role="list"></div>
-
-              </div>
-              <div class="tx-section tx-change collapsed" role="group" aria-labelledby="changeHead">
-                <div class="tx-change-head" id="changeSummary">
-                  <div class="tx-subhead" id="changeHead">找零地址</div><span id="changeAddrText"
-                    class="summary-value"></span>
-                </div>
-                <div class="tx-grid-3 tx-grid--stack" role="group" aria-label="按币种设置找零地址">
-                  <div class="addr-row">
-                    <label>PGC</label>
-                    <select id="chAddrPGC" class="input" style="display:none"></select>
-                    <div id="csChPGC" class="input custom-select cs-addr" role="button" aria-label="PGC 找零地址"
-                      data-coin="PGC">
-                      <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="addr-val"
-                          style="margin-left:6px;color:#334155"></span></span>
-                      <span class="custom-select__arrow">▾</span>
-                      <div class="custom-select__menu"></div>
+      <div class="main-v2">
+        <div class="main-v2-container">
+          <div class="main-grid">
+            <!-- 左侧钱包面板 -->
+            <div class="wallet-panel">
+              <!-- 资产概览卡片 - 深色主题 -->
+              <div class="asset-overview">
+                <div class="asset-overview-content">
+                  <div class="asset-header">
+                    <div class="asset-header-left">
+                      <div class="asset-logo">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                          <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                          <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"></path>
+                        </svg>
+                      </div>
+                      <div class="asset-title-group">
+                        <h2>我的钱包</h2>
+                        <span>安全管理您的数字资产</span>
+                      </div>
                     </div>
-                  </div>
-                  <div class="addr-row">
-                    <label>BTC</label>
-                    <select id="chAddrBTC" class="input" style="display:none"></select>
-                    <div id="csChBTC" class="input custom-select cs-addr" role="button" aria-label="BTC 找零地址"
-                      data-coin="BTC">
-                      <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span class="addr-val"
-                          style="margin-left:6px;color:#334155"></span></span>
-                      <span class="custom-select__arrow">▾</span>
-                      <div class="custom-select__menu"></div>
+                    <div class="asset-actions">
+                      <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新余额" aria-label="刷新余额">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                          <path d="M23 4v6h-6"></path>
+                          <path d="M1 20v-6h6"></path>
+                          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                        </svg>
+                      </button>
+                      <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建地址" aria-label="新建地址">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      </button>
+                      <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入地址" aria-label="导入地址">
+                        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </button>
                     </div>
-                  </div>
-                  <div class="addr-row">
-                    <label>ETH</label>
-                    <select id="chAddrETH" class="input" style="display:none"></select>
-                    <div id="csChETH" class="input custom-select cs-addr" role="button" aria-label="ETH 找零地址"
-                      data-coin="ETH">
-                      <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span class="addr-val"
-                          style="margin-left:6px;color:#334155"></span></span>
-                      <span class="custom-select__arrow">▾</span>
-                      <div class="custom-select__menu"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="tx-section" role="group" aria-labelledby="optHead">
-                <div class="tx-subhead" id="optHead">交易选项</div>
-                <div class="tx-options">
-                  <div class="opt-group">
-                    <label class="opt-group-label">交易形式</label>
-                    <div class="opt-mode-segmented">
-                      <label class="segment-item">
-                        <input type="radio" name="tfModeChoice" id="tfModeQuick" value="quick" checked>
-                        <span class="segment-content">快速转账</span>
-                      </label>
-                      <label class="segment-item">
-                        <input type="radio" name="tfModeChoice" id="tfModeCross" value="cross">
-                        <span class="segment-content">跨链转账</span>
-                      </label>
-                      <label class="segment-item">
-                        <input type="radio" name="tfModeChoice" id="tfModePledge" value="pledge">
-                        <span class="segment-content">质押交易</span>
-                      </label>
-                    </div>
-                    <select id="tfMode" class="input" style="display:none">
-                      <option value="quick" selected>快速转账</option>
-                      <option value="cross">跨链转账</option>
-                      <option value="pledge">质押交易</option>
-                    </select>
                   </div>
                   
-                  <div class="opt-row-modern">
-                    <div class="opt-input-modern">
-                      <label for="extraGasPGC">额外Gas兑换</label>
-                      <div class="input-wrapper">
-                        <input id="extraGasPGC" class="input-clean" type="number" placeholder="0" value="0" />
-                        <span class="input-suffix">PGC</span>
-                      </div>
+                  <!-- 总资产显示 -->
+                  <div class="total-balance">
+                    <div class="total-balance-label">总资产估值</div>
+                    <div class="total-balance-value">
+                      <span id="walletUSDT" class="total-balance-amount animate-number">0</span>
+                      <span class="total-balance-unit">USDT</span>
                     </div>
-                    
-                    <div class="opt-input-modern">
-                      <label for="txGasInput">交易Gas</label>
-                      <div class="input-wrapper">
-                        <input id="txGasInput" class="input-clean" type="number" placeholder="1" value="1" />
-                        <span class="input-suffix">Gas</span>
-                      </div>
+                  </div>
+                  
+                  <!-- 币种分布 -->
+                  <div class="coin-distribution">
+                    <div class="coin-card coin-card--pgc">
+                      <div class="coin-icon coin-icon--pgc">P</div>
+                      <div class="coin-name">PGC</div>
+                      <div id="walletPGC" class="coin-value animate-number">0</div>
                     </div>
-
-                    <div class="opt-toggle-modern">
-                      <label class="toggle-switch">
-                        <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
-                        <span class="toggle-slider"></span>
-                      </label>
-                      <span class="toggle-label">PreTXCer</span>
+                    <div class="coin-card coin-card--btc">
+                      <div class="coin-icon coin-icon--btc">B</div>
+                      <div class="coin-name">BTC</div>
+                      <div id="walletBTC" class="coin-value animate-number">0</div>
                     </div>
-                    
-                    <select id="useTXCer" class="input" style="display:none">
-                      <option value="true" selected>是</option>
-                      <option value="false">否</option>
-                    </select>
-                    <select id="isPledge" class="input" style="display:none">
-                      <option value="false" selected>否</option>
-                      <option value="true">是</option>
-                    </select>
+                    <div class="coin-card coin-card--eth">
+                      <div class="coin-icon coin-icon--eth">E</div>
+                      <div class="coin-name">ETH</div>
+                      <div id="walletETH" class="coin-value animate-number">0</div>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="actions"><button id="tfSendBtn" class="btn primary" aria-label="生成交易结构体">生成交易结构体</button>
-                <button id="buildTxBtn" class="btn success hidden" aria-label="构造交易">构造交易</button>
+              
+              <!-- 地址管理卡片 -->
+              <div class="address-card">
+                <div class="address-card-header" id="addressHeader">
+                  <div class="address-card-header-left">
+                    <div class="address-card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                      </svg>
+                    </div>
+                    <div class="address-card-title">
+                      <h3>地址管理</h3>
+                      <span class="address-card-count" id="addrCount">0 个地址</span>
+                    </div>
+                  </div>
+                  <div class="address-card-header-right">
+                    <button class="address-add-btn" id="openCreateAddrBtn2" aria-label="新建地址" title="新建地址">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <div class="address-collapse-btn">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="address-list-wrapper">
+                  <div id="walletAddrList" class="address-list"></div>
+                </div>
               </div>
+            </div>
+            
+            <!-- 右侧转账面板 -->
+            <div class="transfer-panel">
+              <div class="transfer-header">
+                <div class="transfer-header-left">
+                  <div class="transfer-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="22" y1="2" x2="11" y2="13"></line>
+                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                  </div>
+                  <div class="transfer-title">
+                    <h2>转账交易</h2>
+                    <span>快速安全的转账体验</span>
+                  </div>
+                </div>
+                
+                <!-- 交易模式切换 -->
+                <div class="transfer-mode-tabs">
+                  <button class="transfer-mode-tab active" data-mode="quick">快速转账</button>
+                  <button class="transfer-mode-tab" data-mode="cross">跨链转账</button>
+                  <button class="transfer-mode-tab" data-mode="pledge">质押交易</button>
+                </div>
+              </div>
+              
+              <!-- 转账流程 -->
+              <div class="transfer-flow">
+                <!-- From: 来源地址 -->
+                <div class="transfer-from">
+                  <div class="transfer-section-label">从 · FROM</div>
+                  <div id="srcAddrList" class="tx-addr-list" role="list"></div>
+                </div>
+                
+                <!-- 流程连接器 -->
+                <div class="transfer-connector">
+                  <div class="connector-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                  </div>
+                </div>
+                
+                <!-- To: 账单列表 -->
+                <div class="transfer-to">
+                  <div class="transfer-section-label">转至 · TO</div>
+                  <div id="billList" class="bill-list" role="list"></div>
+                  <button id="addBillBtn" class="add-bill-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    添加收款方
+                  </button>
+                </div>
+              </div>
+              
+              <!-- 转账选项 - 折叠区 -->
+              <div class="transfer-options">
+                <div class="options-toggle" id="optionsToggle">
+                  <span class="options-toggle-left">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3"></circle>
+                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    高级选项
+                  </span>
+                  <span class="options-toggle-arrow">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                  </span>
+                </div>
+                
+                <div class="options-content" id="optionsContent">
+                  <div class="options-grid">
+                    <div class="option-field">
+                      <label class="option-field-label" for="extraGasPGC">额外Gas兑换</label>
+                      <div class="option-input-wrapper">
+                        <input id="extraGasPGC" class="option-input" type="number" placeholder="0" value="0" />
+                        <span class="option-suffix">PGC</span>
+                      </div>
+                    </div>
+                    <div class="option-field">
+                      <label class="option-field-label" for="txGasInput">交易Gas</label>
+                      <div class="option-input-wrapper">
+                        <input id="txGasInput" class="option-input" type="number" placeholder="1" value="1" />
+                        <span class="option-suffix">Gas</span>
+                      </div>
+                    </div>
+                    <div class="option-field">
+                      <label class="option-field-label">PGC 找零地址</label>
+                      <select id="chAddrPGC" class="input" style="display:none"></select>
+                      <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="PGC">
+                        <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <div class="option-field">
+                      <label class="option-field-label">BTC 找零地址</label>
+                      <select id="chAddrBTC" class="input" style="display:none"></select>
+                      <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="BTC">
+                        <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <div class="option-field">
+                      <label class="option-field-label">ETH 找零地址</label>
+                      <select id="chAddrETH" class="input" style="display:none"></select>
+                      <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="ETH">
+                        <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                        <span class="custom-select__arrow">▾</span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <div class="option-field">
+                      <label class="option-field-label">PreTXCer</label>
+                      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                        <label class="toggle-switch">
+                          <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
+                          <span class="toggle-slider"></span>
+                        </label>
+                        <span style="font-size: 13px; color: var(--text-muted-light);">优先使用TXCer</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- 隐藏的原始表单字段 -->
+                  <select id="tfMode" class="input" style="display:none">
+                    <option value="quick" selected>快速转账</option>
+                    <option value="cross">跨链转账</option>
+                    <option value="pledge">质押交易</option>
+                  </select>
+                  <select id="useTXCer" class="input" style="display:none">
+                    <option value="true" selected>是</option>
+                    <option value="false">否</option>
+                  </select>
+                  <select id="isPledge" class="input" style="display:none">
+                    <option value="false" selected>否</option>
+                    <option value="true">是</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- 提交按钮 -->
+              <div class="transfer-submit">
+                <button id="tfSendBtn" class="submit-btn submit-btn--primary ripple" aria-label="生成交易结构体">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                  </svg>
+                  生成交易结构体
+                </button>
+                <button id="buildTxBtn" class="submit-btn submit-btn--secondary hidden" aria-label="构造交易">
+                  构造交易
+                </button>
+              </div>
+              
+              <!-- 错误提示 -->
               <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
-              <pre id="txPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;"
-                aria-live="polite"></pre>
-              <pre id="txFinalPreview" class="result hidden"
-                style="white-space:pre-wrap;word-break:break-word;margin-top:12px;border-left:4px solid #10b981;background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);"
-                aria-live="polite"></pre>
+              
+              <!-- 结果预览 -->
+              <pre id="txPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-lg);padding:var(--space-md);background:var(--surface-light-2);border-radius:var(--radius-sm);border:1px solid var(--surface-light-3);" aria-live="polite"></pre>
+              <pre id="txFinalPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-md);padding:var(--space-md);background:linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(52, 211, 153, 0.03));border-radius:var(--radius-sm);border-left:4px solid var(--coin-pgc);" aria-live="polite"></pre>
             </div>
-          </div>
-          <div class="pane pane--org">
-            <h3>担保组织信息</h3>
-            <div id="woCard" class="org-card">
-              <div class="org-grid">
-                <div class="org-field">
-                  <span class="org-label">GroupID</span>
-                  <code id="woGroupID" class="org-value"></code>
+            
+            <!-- 底部担保组织面板 -->
+            <div class="org-panel">
+              <div class="org-panel-header">
+                <div class="org-panel-header-left">
+                  <div class="org-panel-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </div>
+                  <div class="org-panel-title">
+                    <h3>担保组织</h3>
+                    <span>安全可靠的交易保障</span>
+                  </div>
                 </div>
-                <div class="org-field">
-                  <span class="org-label">AggreNode</span>
-                  <code id="woAggre" class="org-value"></code>
-                </div>
-                <div class="org-field">
-                  <span class="org-label">AssignNode</span>
-                  <code id="woAssign" class="org-value"></code>
-                </div>
-                <div class="org-field full-width">
-                  <span class="org-label">PledgeAddress</span>
-                  <code id="woPledge" class="org-value break"></code>
+                <span id="orgStatusBadge" class="org-status-badge org-status-badge--active">
+                  已加入
+                </span>
+              </div>
+              
+              <!-- 已加入状态 -->
+              <div id="woCard" class="org-panel-content">
+                <div class="org-info-grid">
+                  <div class="org-info-item">
+                    <span class="org-info-label">GroupID</span>
+                    <code id="woGroupID" class="org-info-value"></code>
+                  </div>
+                  <div class="org-info-item">
+                    <span class="org-info-label">AggreNode</span>
+                    <code id="woAggre" class="org-info-value"></code>
+                  </div>
+                  <div class="org-info-item">
+                    <span class="org-info-label">AssignNode</span>
+                    <code id="woAssign" class="org-info-value"></code>
+                  </div>
+                  <div class="org-info-item">
+                    <span class="org-info-label">PledgeAddress</span>
+                    <code id="woPledge" class="org-info-value"></code>
+                  </div>
                 </div>
               </div>
-              <div class="actions">
-                <button id="woExitBtn" class="btn secondary">退出担保组织</button>
+              <div class="org-panel-actions" id="woActions">
+                <button id="woExitBtn" class="org-action-btn org-action-btn--exit">退出担保组织</button>
               </div>
-              <div class="org-bg-deco"></div>
+              
+              <!-- 未加入状态 -->
+              <div id="woEmpty" class="org-empty-state hidden">
+                <div class="org-empty-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div class="org-empty-title">未加入担保组织</div>
+                <div class="org-empty-desc">加入担保组织可享受更安全的交易保障和专属福利服务</div>
+                <button id="woJoinBtn" class="org-action-btn org-action-btn--join">加入担保组织</button>
+              </div>
             </div>
-            <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
-              <div class="empty-icon">
-                <svg viewBox="0 0 64 64" aria-hidden="true">
-                  <defs>
-                    <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
-                      <stop offset="0" stop-color="#0ea5e9" />
-                      <stop offset="1" stop-color="#38bdf8" />
-                    </linearGradient>
-                  </defs>
-                  <path d="M32 6l18 7v14c0 12-9 23-18 28-9-5-18-16-18-28V13l18-7z" fill="url(#g1)" />
-                  <circle cx="32" cy="26" r="9" fill="#fff" opacity=".22" />
-                  <path d="M40 24l-10 10-4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round" opacity=".85" />
+            
+            <!-- 账户结构体区域 -->
+            <div class="struct-section" id="walletStructPane">
+              <button id="walletStructToggle" class="struct-toggle-btn">
+                <span>展开账户结构体</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
-              </div>
-              <div class="empty-text">你没有加入担保组织，无法享受福利与加速等服务</div>
-              <div class="empty-glow"><span class="dot dot--big"></span><span class="dot"></span><span
-                  class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
-                  class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
-                  class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-              <div class="actions">
-                <button id="woJoinBtn" class="btn primary">加入担保组织</button>
+              </button>
+              <div class="struct-content">
+                <pre id="walletStructBox" class="struct-code" aria-live="polite"></pre>
               </div>
             </div>
           </div>
@@ -2047,102 +2144,11 @@
       </div>
     </section>
 
-    <section class="card hidden" id="importNextCard">
-      <pre id="txFinalPreview" class="result hidden"
-        style="white-space:pre-wrap;word-break:break-word;margin-top:12px;border-left:4px solid #10b981;background:linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);"
-        aria-live="polite"></pre>
-      </div>
-      </div>
-      <div class="pane pane--org">
-        <h3>担保组织信息</h3>
-        <div id="woCard" class="org-card">
-          <div class="grid">
-            <div>
-              <h3>GroupID</h3>
-              <code id="woGroupID"></code>
-            </div>
-            <div>
-              <h3>AggreNode</h3>
-              <code id="woAggre"></code>
-            </div>
-          </div>
-          <div class="grid">
-            <div>
-              <h3>AssignNode</h3>
-              <code id="woAssign"></code>
-            </div>
-            <div>
-              <h3>PledgeAddress</h3>
-              <code id="woPledge" class="break"></code>
-            </div>
-          </div>
-          <div class="actions">
-            <button id="woExitBtn" class="btn secondary">退出担保组织</button>
-          </div>
-        </div>
-        <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
-          <div class="empty-icon">
-            <svg viewBox="0 0 64 64" aria-hidden="true">
-              <defs>
-                <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
-                  aria-live="polite"></pre>
-          </div>
-        </div>
-        <div class="pane pane--org">
-          <h3>担保组织信息</h3>
-          <div id="woCard" class="org-card">
-            <div class="grid">
-              <div>
-                <h3>GroupID</h3>
-                <code id="woGroupID"></code>
-              </div>
-              <div>
-                <h3>AggreNode</h3>
-                <code id="woAggre"></code>
-              </div>
-            </div>
-            <div class="grid">
-              <div>
-                <h3>AssignNode</h3>
-                <code id="woAssign"></code>
-              </div>
-              <div>
-                <h3>PledgeAddress</h3>
-                <code id="woPledge" class="break"></code>
-              </div>
-            </div>
-            <div class="actions">
-              <button id="woExitBtn" class="btn secondary">退出担保组织</button>
-            </div>
-          </div>
-          <div id="woEmpty" class="empty-pane org-card org-card--empty hidden">
-            <div class="empty-icon">
-              <svg viewBox="0 0 64 64" aria-hidden="true">
-                <defs>
-                  <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
-                    <stop offset="0" stop-color="#0ea5e9" />
-                    <stop offset="1" stop-color="#38bdf8" />
-                  </linearGradient>
-                </defs>
-                <path d="M32 6l18 7v14c0 12-9 23-18 28-9-5-18-16-18-28V13l18-7z" fill="url(#g1)" />
-                <circle cx="32" cy="26" r="9" fill="#fff" opacity=".22" />
-                <path d="M40 24l-10 10-4-4" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" opacity=".85" />
-              </svg>
-            </div>
-            <div class="empty-text">你没有加入担保组织，无法享受福利与加速等服务</div>
-            <div class="empty-glow"><span class="dot dot--big"></span><span class="dot"></span><span
-                class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
-                class="dot"></span><span class="dot dot--big"></span><span class="dot"></span><span
-                class="dot"></span><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-            <div class="actions">
-              <button id="woJoinBtn" class="btn primary">加入担保组织</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
-    </section>
+    <!-- 原始隐藏字段保留兼容性 -->
+    <div style="display:none;">
+      <div id="changeSummary"></div>
+      <span id="changeAddrText"></span>
+    </div>
 
     <section class="card hidden" id="importNextCard">
       <div class="card-header">
