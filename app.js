@@ -3130,7 +3130,9 @@ function renderWallet() {
             const ethA = Number(vdAll[2] || 0);
             const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
             usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
+            usdtEl.textContent = usdt.toLocaleString();
 
+            usdtEl.textContent = usdt.toLocaleString();
             const bd = document.querySelector('.currency-breakdown');
             if (bd) {
               const pgcV = bd.querySelector('.tag--pgc');
@@ -3713,17 +3715,23 @@ function renderWallet() {
     const maxVal = Math.max(...values);
     const range = maxVal - minVal;
     
-    // SVG 尺寸（固定比例）
-    const width = 320;
-    const height = 70;
-    const padX = 8;  // 减小左右边距，让曲线更长
-    const padY = 10;
+    // SVG 尺寸（自适应容器比例，拉满宽度）
+    const innerRect = chartInner?.getBoundingClientRect();
+    const containerW = innerRect?.width || chartEl.clientWidth || 320;
+    const containerH = innerRect?.height || chartEl.clientHeight || 56;
+    const viewBoxHeight = Math.round(containerH || 70);
+    const width = Math.max(320, Math.round(viewBoxHeight * (containerW / Math.max(1, containerH))));
+    const height = viewBoxHeight;
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+    const padX = 2;  // 进一步减小左右边距，拉满宽度
+    const padY = 6;
     const chartHeight = height - padY * 2;
     
-    // Y坐标计算 - 修复：曲线显示在偏下位置（留出上方空间）
-    // 曲线占据下半部分区域（从40%到95%的高度范围）
-    const chartTop = height * 0.40;  // 曲线区域从40%高度开始
-    const chartBottom = height * 0.92; // 曲线区域到92%高度结束
+    // Y坐标计算 - 在底部留出“轴线缓冲区”
+    // 曲线占据约80%的区域（从7%到86%的高度范围）
+    const chartTop = height * 0.07;  // 曲线区域从7%高度开始
+    const chartBottom = height * 0.86; // 曲线区域到86%高度结束
     const chartRange = chartBottom - chartTop;
     
     const toY = (v) => {
@@ -3812,16 +3820,28 @@ function renderWallet() {
     // 保存points到全局用于tooltip
     svg._chartPoints = points;
     svg._chartWidth = width;
+    svg._chartViewBoxWidth = width;
     
     // 绑定悬浮提示事件（只绑定一次）
-    if (!svg.dataset._bindChart) {
-      svg.addEventListener('mousemove', (e) => {
+      if (!svg.dataset._bindChart) {
+        let lastMoveTime = 0;
+        let rafId = null;
+        
+        const handleMouseMove = (e) => {
+          const now = Date.now();
+          if (now - lastMoveTime < 16) return; // 限制到约60fps
+          lastMoveTime = now;
+          
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(() => {
         const pts = svg._chartPoints || [];
         const svgWidth = svg._chartWidth || 320;
         if (pts.length === 0) return;
         
         const rect = svg.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (svgWidth / rect.width);
+        // 修复：使用viewBox宽度而不是svgWidth来计算鼠标位置
+        const viewBoxWidth = svg._chartViewBoxWidth || 320;
+        const x = (e.clientX - rect.left) * (viewBoxWidth / rect.width);
         
         let closest = pts[0];
         let minDist = Infinity;
@@ -3843,17 +3863,27 @@ function renderWallet() {
           const chartInner = chartEl.querySelector('.balance-chart-inner');
           if (chartInner) {
             const innerRect = chartInner.getBoundingClientRect();
-            const tooltipX = (closest.x / svgWidth) * innerRect.width;
+            // 修复：使用viewBox宽度而不是svgWidth来计算比例
+            const viewBoxWidth = svg._chartViewBoxWidth || 320;
+            const tooltipX = (closest.x / viewBoxWidth) * innerRect.width;
             const tooltipY = (closest.y / 70) * innerRect.height;
             tooltip.style.left = `${tooltipX}px`;
             tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
           }
-        }
-      });
+          }
+        });
+      };
 
-      svg.addEventListener('mouseleave', () => {
+      const handleMouseLeave = () => {
+        if (rafId) {
+          cancelAnimationFrame(rafId);
+          rafId = null;
+        }
         if (tooltip) tooltip.classList.remove('visible');
-      });
+      };
+
+      svg.addEventListener('mousemove', handleMouseMove, { passive: true });
+      svg.addEventListener('mouseleave', handleMouseLeave);
 
       svg.dataset._bindChart = 'true';
     }
@@ -3881,12 +3911,8 @@ function renderWallet() {
     const eth = Number(vd[2] || 0);
     const usdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
     
-    // V2版本 - 直接更新数字
-    if (usdtEl.classList.contains('animate-number')) {
-      usdtEl.textContent = usdt.toLocaleString();
-    } else {
-      usdtEl.innerHTML = `<span class="amt">${usdt.toLocaleString()}</span><span class="unit">USDT</span>`;
-    }
+    // 统一仅显示数字，不在内部追加单位
+    usdtEl.textContent = usdt.toLocaleString();
     
     // V2版本 - 通过ID更新币种余额
     const walletPGC = document.getElementById('walletPGC');

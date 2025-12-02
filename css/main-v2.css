@@ -204,7 +204,7 @@
 /* 资产头部 - 绿色主题 */
 .asset-header {
   background: var(--wallet-gradient);
-  padding: 20px 24px 16px;
+  padding: 20px 24px 10px; /* 增加下边距，让时间轴与绿色边框有间隙 */
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
@@ -337,20 +337,26 @@
 /* ========================================
    余额曲线图 - 修复版V3
    ======================================== */
+/* 图表内容区域 - 固定高度容器 */
 .balance-chart {
   margin-top: 10px;
+  margin-bottom: 0;
   position: relative;
   display: flex;
   flex-direction: column;
   overflow: visible;
+  width: 100%;
+  height: 84px; /* 拉高容器，让曲线更舒展 */
+  flex-shrink: 0;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(56, 189, 248, 0.03));
+  backdrop-filter: blur(4px);
+  z-index: 2;
 }
 
-/* 图表内容区域 - 固定高度容器 */
 .balance-chart-inner {
   position: relative;
-  width: 100%;
-  height: 65px;
-  flex-shrink: 0;
+  height: 100%;
 }
 
 .balance-chart-svg {
@@ -362,71 +368,99 @@
 
 /* 曲线渐变填充 */
 .chart-gradient-fill {
-  opacity: 0.25;
+  opacity: 0.3;
+  transition: opacity 0.3s ease;
 }
 
 /* 主曲线 */
 .chart-line {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.9);
-  stroke-width: 2.5;
+  stroke: rgba(255, 255, 255, 0.95);
+  stroke-width: 3;
   stroke-linecap: round;
   stroke-linejoin: round;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+  transition: all 0.3s ease;
 }
 
 /* 数据点 - 统一样式 */
 .chart-dot {
   fill: white;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
-  transition: r 0.2s ease;
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.2));
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
+  opacity: 0.8;
 }
 
 .chart-dot:hover {
   r: 5;
+  opacity: 1;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6));
 }
 
-/* 当前值点 - 不再使用动画，改为静态高亮 */
+/* 当前值点 - 优雅的脉动动画 */
 .chart-dot-current {
   fill: white;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.9));
+  animation: chartDotPulse 2s ease-in-out infinite;
+}
+
+@keyframes chartDotPulse {
+  0%, 100% {
+    r: 4;
+    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
+  }
+  50% {
+    r: 5;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 1));
+  }
 }
 
 /* 曲线图时间标签 */
 .chart-time-labels {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 3px; /* 与容器底部保持微小间距 */
   display: flex;
+  align-items: flex-end;
   justify-content: space-between;
-  padding: 6px 8px 0;
-  flex-shrink: 0;
+  padding: 0;
+  pointer-events: none;
 }
 
 .chart-time-label {
   font-size: 10px;
   color: rgba(255, 255, 255, 0.65);
   font-weight: 500;
-  line-height: 1.2;
+  line-height: 1.0; /* 贴近底部边框 */
 }
 
-/* 曲线图悬浮提示 */
+/* 曲线图悬浮提示 - 高级质感设计 */
 .chart-tooltip {
   position: absolute;
-  background: rgba(0, 0, 0, 0.85);
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.95), rgba(15, 23, 42, 0.95));
   color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 11px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
   font-weight: 500;
   pointer-events: none;
   opacity: 0;
-  transform: translateX(-50%);
-  transition: opacity 0.2s;
+  transform: translateX(-50%) translateY(-8px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 10;
   white-space: nowrap;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 
+              0 4px 12px rgba(0, 0, 0, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .chart-tooltip.visible {
   opacity: 1;
+  transform: translateX(-50%) translateY(0);
 }
 
 /* 币种分布 */
@@ -435,7 +469,10 @@
   grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   padding: 16px;
+  margin-top: 10px;
   background: var(--bg-card-solid);
+  position: relative;
+  z-index: 1; /* 确保币种区域在曲线图之下 */
 }
 
 .coin-card {
@@ -1699,7 +1736,7 @@
   }
   
   .balance-chart {
-    height: 60px;
+    height: 76px; /* 移动端也相应拉高 */
   }
   
   .coin-distribution {
