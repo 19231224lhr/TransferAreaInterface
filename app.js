@@ -182,6 +182,33 @@ function toAccount(basic, prev) {
   }
   return acc;
 }
+
+// Mini Toast 提示函数
+function showMiniToast(message, type = 'info') {
+  // 移除已存在的toast
+  const existing = document.querySelector('.mini-toast');
+  if (existing) existing.remove();
+  
+  const toast = document.createElement('div');
+  toast.className = `mini-toast mini-toast--${type}`;
+  toast.innerHTML = `
+    <span class="mini-toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+    <span class="mini-toast-text">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  
+  // 触发动画
+  requestAnimationFrame(() => {
+    toast.classList.add('show');
+  });
+  
+  // 1.5秒后消失
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 300);
+  }, 1500);
+}
+
 function loadUser() {
   try {
     const rawAcc = localStorage.getItem(STORAGE_KEY);
@@ -3048,13 +3075,37 @@ function renderWallet() {
           saveUser(u4);
           updateTotalGasBadge(u4);
 
-          const valEl = item.querySelector('.addr-balance-val');
-          if (valEl) {
-            valEl.textContent = String(Number(found.value.utxoValue || 0));
-            valEl.classList.add('active');
+          // 更新地址卡片上显示的余额
+          const coinType = typeId === 1 ? 'BTC' : (typeId === 2 ? 'ETH' : 'PGC');
+          const balanceEl = item.querySelector('.addr-card-balance');
+          if (balanceEl) {
+            balanceEl.textContent = `${Number(found.value.utxoValue || 0)} ${coinType}`;
           }
-          const gasEl = item.querySelector('.gas-val');
-          if (gasEl) gasEl.textContent = `${Number(found.estInterest || 0)} GAS`;
+          // 更新详情中的余额
+          const detailRows = item.querySelectorAll('.addr-detail-row');
+          detailRows.forEach(row => {
+            const label = row.querySelector('.addr-detail-label');
+            const value = row.querySelector('.addr-detail-value');
+            if (label && value) {
+              if (label.textContent === '余额') {
+                value.textContent = `${Number(found.value.utxoValue || 0)} ${coinType}`;
+              } else if (label.textContent === 'GAS') {
+                value.textContent = Number(found.estInterest || 0);
+              }
+            }
+          });
+          
+          // 显示Toast提示
+          showMiniToast(`+${inc} ${coinType}`, 'success');
+          
+          // 更新分类货币余额显示
+          const walletPGCEl = document.getElementById('walletPGC');
+          const walletBTCEl = document.getElementById('walletBTC');
+          const walletETHEl = document.getElementById('walletETH');
+          const vdUpdated = u4.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
+          if (walletPGCEl) walletPGCEl.textContent = Number(vdUpdated[0] || 0).toLocaleString();
+          if (walletBTCEl) walletBTCEl.textContent = Number(vdUpdated[1] || 0).toLocaleString();
+          if (walletETHEl) walletETHEl.textContent = Number(vdUpdated[2] || 0).toLocaleString();
 
           // Update other UI elements...
           const addrList = document.getElementById('srcAddrList');
@@ -3150,13 +3201,40 @@ function renderWallet() {
           saveUser(u4);
           updateTotalGasBadge(u4);
           updateTotalGasBadge(u4);
-          const valEl = item.querySelector('.addr-balance-val');
-          if (valEl) {
-            valEl.textContent = '0';
-            valEl.classList.remove('active');
+          
+          // 更新地址卡片上显示的余额
+          const typeIdZ = Number(found && found.type !== undefined ? found.type : 0);
+          const coinTypeZ = typeIdZ === 1 ? 'BTC' : (typeIdZ === 2 ? 'ETH' : 'PGC');
+          const balanceElZ = item.querySelector('.addr-card-balance');
+          if (balanceElZ) {
+            balanceElZ.textContent = `0 ${coinTypeZ}`;
           }
-          const gasEl = item.querySelector('.gas-val');
-          if (gasEl) gasEl.textContent = '0 GAS';
+          // 更新详情中的余额
+          const detailRowsZ = item.querySelectorAll('.addr-detail-row');
+          detailRowsZ.forEach(row => {
+            const label = row.querySelector('.addr-detail-label');
+            const value = row.querySelector('.addr-detail-value');
+            if (label && value) {
+              if (label.textContent === '余额') {
+                value.textContent = `0 ${coinTypeZ}`;
+              } else if (label.textContent === 'GAS') {
+                value.textContent = '0';
+              }
+            }
+          });
+          
+          // 显示Toast提示
+          showMiniToast('余额已清空', 'info');
+          
+          // 更新分类货币余额显示
+          const walletPGCElZ = document.getElementById('walletPGC');
+          const walletBTCElZ = document.getElementById('walletBTC');
+          const walletETHElZ = document.getElementById('walletETH');
+          const vdUpdatedZ = u4.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
+          if (walletPGCElZ) walletPGCElZ.textContent = Number(vdUpdatedZ[0] || 0).toLocaleString();
+          if (walletBTCElZ) walletBTCElZ.textContent = Number(vdUpdatedZ[1] || 0).toLocaleString();
+          if (walletETHElZ) walletETHElZ.textContent = Number(vdUpdatedZ[2] || 0).toLocaleString();
+          
           const addrList = document.getElementById('srcAddrList');
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
@@ -3562,13 +3640,13 @@ function renderWallet() {
   }
 
   // ========================================
-  // V7 简洁余额曲线图 (balanceChart) - 1分钟间隔
+  // V8 余额曲线图 - 完全修复版
+  // 修复问题：时间标签、圆点变形、余额为0凹陷、乱跳动画
   // ========================================
   
-  // 使用持久化存储历史数据，避免每次刷新重新生成
-  const CHART_HISTORY_KEY = 'wallet_balance_chart_history';
+  // 使用持久化存储历史数据
+  const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
   
-  // 从localStorage加载历史数据
   const loadChartHistory = () => {
     try {
       const data = localStorage.getItem(CHART_HISTORY_KEY);
@@ -3578,10 +3656,8 @@ function renderWallet() {
     }
   };
   
-  // 保存历史数据到localStorage
   const saveChartHistory = (history) => {
     try {
-      // 只保留最近10个点
       const trimmed = history.slice(-10);
       localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
     } catch (e) {}
@@ -3591,11 +3667,13 @@ function renderWallet() {
     const chartEl = document.getElementById('balanceChart');
     if (!chartEl) return;
 
+    const chartInner = chartEl.querySelector('.balance-chart-inner');
     const svg = chartEl.querySelector('.balance-chart-svg');
     const lineEl = document.getElementById('chartLine');
     const fillEl = document.getElementById('chartFill');
     const dotsEl = document.getElementById('chartDots');
     const tooltip = document.getElementById('chartTooltip');
+    const timeLabelsEl = document.getElementById('chartTimeLabels');
 
     if (!svg || !lineEl || !fillEl || !dotsEl) return;
 
@@ -3608,26 +3686,20 @@ function renderWallet() {
     // 加载持久化的历史数据
     let history = loadChartHistory();
     
-    // 如果没有历史数据或太旧，初始化
+    // 初始化或更新历史数据
     if (history.length === 0) {
-      // 创建初始历史数据：过去10分钟，使用当前值的轻微波动
+      // 创建初始历史数据：过去10分钟
       for (let i = 9; i >= 0; i--) {
         const t = now - i * minuteMs;
-        // 小幅波动 ±2%
-        const variation = (Math.sin(i * 0.7) * 0.02);
-        const v = Math.max(0, Math.round(currentVal * (1 + variation)));
-        history.push({ t, v });
+        history.push({ t, v: currentVal });
       }
       saveChartHistory(history);
     } else {
-      // 检查是否需要添加新点（距离上一个点超过1分钟）
       const lastPoint = history[history.length - 1];
       if (now - lastPoint.t >= minuteMs) {
-        // 添加新的当前值
         history.push({ t: now, v: currentVal });
         saveChartHistory(history);
       } else {
-        // 更新最后一个点的值（但不改变时间）
         history[history.length - 1].v = currentVal;
       }
     }
@@ -3635,29 +3707,52 @@ function renderWallet() {
     // 取最近10个点用于显示
     const displayHistory = history.slice(-10);
     
-    // 计算值范围
+    // 计算值范围 - 关键修复：当所有值相同时（包括全0），使用固定高度显示为水平线
     const values = displayHistory.map(h => h.v);
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
-    const range = maxVal - minVal || 1;
-    const padding = range * 0.2;
-
-    // SVG 尺寸
+    const range = maxVal - minVal;
+    
+    // SVG 尺寸（固定比例）
     const width = 320;
     const height = 70;
-    const padX = 10;
-    const padY = 8;
+    const padX = 8;  // 减小左右边距，让曲线更长
+    const padY = 10;
+    const chartHeight = height - padY * 2;
+    
+    // Y坐标计算 - 修复：曲线显示在偏下位置（留出上方空间）
+    // 曲线占据下半部分区域（从40%到95%的高度范围）
+    const chartTop = height * 0.40;  // 曲线区域从40%高度开始
+    const chartBottom = height * 0.92; // 曲线区域到92%高度结束
+    const chartRange = chartBottom - chartTop;
+    
+    const toY = (v) => {
+      if (range === 0) {
+        // 所有值相同（包括全0），在曲线区域中间显示水平线
+        return chartTop + chartRange * 0.5;
+      }
+      // 有变化时，映射到曲线区域
+      const normalized = (v - minVal) / range; // 0 到 1
+      return chartBottom - normalized * chartRange;
+    };
 
-    // 坐标转换
-    const toX = (i) => padX + (i / (displayHistory.length - 1)) * (width - padX * 2);
-    const toY = (v) => padY + (1 - (v - minVal + padding) / (range + padding * 2)) * (height - padY * 2);
+    // X坐标计算
+    const toX = (i) => {
+      if (displayHistory.length <= 1) return width / 2;
+      return padX + (i / (displayHistory.length - 1)) * (width - padX * 2);
+    };
 
-    // 生成平滑曲线路径 (使用三次贝塞尔曲线)
-    const points = displayHistory.map((h, i) => ({ x: toX(i), y: toY(h.v), v: h.v, t: h.t }));
+    // 生成点坐标
+    const points = displayHistory.map((h, i) => ({ 
+      x: toX(i), 
+      y: toY(h.v), 
+      v: h.v, 
+      t: h.t 
+    }));
     
     if (points.length < 2) return;
     
-    // 使用 Catmull-Rom 样条转贝塞尔曲线实现更平滑效果
+    // 生成平滑曲线路径 (Catmull-Rom 样条)
     let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
     
     for (let i = 0; i < points.length - 1; i++) {
@@ -3666,7 +3761,6 @@ function renderWallet() {
       const p2 = points[i + 1];
       const p3 = points[Math.min(points.length - 1, i + 2)];
       
-      // Catmull-Rom 到 Bezier 的转换
       const tension = 0.3;
       const cp1x = p1.x + (p2.x - p0.x) * tension;
       const cp1y = p1.y + (p2.y - p0.y) * tension;
@@ -3677,38 +3771,58 @@ function renderWallet() {
     }
 
     // 填充区域路径
-    const fillD = `${pathD} L ${points[points.length - 1].x.toFixed(1)},${height - padY} L ${points[0].x.toFixed(1)},${height - padY} Z`;
+    const fillD = `${pathD} L ${points[points.length - 1].x.toFixed(1)},${height} L ${points[0].x.toFixed(1)},${height} Z`;
 
     // 更新路径
     lineEl.setAttribute('d', pathD);
     fillEl.setAttribute('d', fillD);
 
-    // 生成数据点
+    // 生成数据点 - 使用固定尺寸的圆（不会随SVG拉伸变形）
+    // 通过计算当前SVG的缩放比例来补偿
     dotsEl.innerHTML = points.map((p, i) => {
       const isLast = i === points.length - 1;
+      // 基础半径
+      const baseR = isLast ? 4 : 3;
       return `<circle 
         cx="${p.x.toFixed(1)}" 
         cy="${p.y.toFixed(1)}" 
-        r="${isLast ? 4 : 3}" 
+        r="${baseR}" 
         class="${isLast ? 'chart-dot-current' : 'chart-dot'}"
         data-value="${p.v}"
         data-time="${p.t}"
       />`;
     }).join('');
 
+    // 更新时间标签
+    if (timeLabelsEl && displayHistory.length > 0) {
+      const firstTime = new Date(displayHistory[0].t);
+      const lastTime = new Date(displayHistory[displayHistory.length - 1].t);
+      const midIdx = Math.floor(displayHistory.length / 2);
+      const midTime = new Date(displayHistory[midIdx].t);
+      
+      const formatTime = (d) => `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+      
+      timeLabelsEl.innerHTML = `
+        <span class="chart-time-label">${formatTime(firstTime)}</span>
+        <span class="chart-time-label">${formatTime(midTime)}</span>
+        <span class="chart-time-label">${formatTime(lastTime)}</span>
+      `;
+    }
+
     // 保存points到全局用于tooltip
     svg._chartPoints = points;
+    svg._chartWidth = width;
     
-    // 绑定悬浮提示事件
+    // 绑定悬浮提示事件（只绑定一次）
     if (!svg.dataset._bindChart) {
       svg.addEventListener('mousemove', (e) => {
         const pts = svg._chartPoints || [];
+        const svgWidth = svg._chartWidth || 320;
         if (pts.length === 0) return;
         
         const rect = svg.getBoundingClientRect();
-        const x = (e.clientX - rect.left) * (width / rect.width);
+        const x = (e.clientX - rect.left) * (svgWidth / rect.width);
         
-        // 找最近的点
         let closest = pts[0];
         let minDist = Infinity;
         pts.forEach(p => {
@@ -3719,14 +3833,21 @@ function renderWallet() {
           }
         });
 
-        if (tooltip && minDist < 30) {
+        if (tooltip && minDist < 40) {
           const date = new Date(closest.t);
-          // 显示时:分格式
           const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
           tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
           tooltip.classList.add('visible');
-          tooltip.style.left = `${closest.x}px`;
-          tooltip.style.top = `${closest.y - 30}px`;
+          
+          // 计算tooltip位置（基于容器内相对位置）
+          const chartInner = chartEl.querySelector('.balance-chart-inner');
+          if (chartInner) {
+            const innerRect = chartInner.getBoundingClientRect();
+            const tooltipX = (closest.x / svgWidth) * innerRect.width;
+            const tooltipY = (closest.y / 70) * innerRect.height;
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
+          }
         }
       });
 
@@ -3801,15 +3922,20 @@ function renderWallet() {
   }
   const wsToggle = document.getElementById('walletStructToggle');
   const wsBox = document.getElementById('walletStructBox');
+  const wsSection = document.getElementById('walletStructPane');
   const wsContent = wsToggle?.closest('.struct-section')?.querySelector('.struct-content');
   if (wsToggle && wsBox && !wsToggle.dataset._bind) {
     wsToggle.addEventListener('click', () => {
-      const isExpanded = wsToggle.classList.contains('expanded');
+      const isExpanded = wsSection?.classList.contains('expanded') || wsToggle.classList.contains('expanded');
 
       if (!isExpanded) {
         updateWalletStruct();
         wsBox.classList.remove('hidden');
         
+        // 给父容器添加expanded类
+        if (wsSection) {
+          wsSection.classList.add('expanded');
+        }
         // V2版本的折叠动画
         if (wsContent) {
           wsContent.classList.add('expanded');
@@ -3822,6 +3948,10 @@ function renderWallet() {
         if (textSpan) textSpan.textContent = '收起账户结构体';
         else wsToggle.textContent = '收起账户结构体';
       } else {
+        // 移除父容器的expanded类
+        if (wsSection) {
+          wsSection.classList.remove('expanded');
+        }
         if (wsContent) {
           wsContent.classList.remove('expanded');
         }

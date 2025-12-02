@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203d" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203g" />
   
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1850,22 +1850,21 @@
                     
                     <!-- 余额曲线图 -->
                     <div class="balance-chart" id="balanceChart">
-                      <svg class="balance-chart-svg" viewBox="0 0 320 70" preserveAspectRatio="none">
-                        <defs>
-                          <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
-                            <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
-                          </linearGradient>
-                        </defs>
-                        <path id="chartFill" class="chart-gradient-fill" fill="url(#chartGradient)"/>
-                        <path id="chartLine" class="chart-line"/>
-                        <g id="chartDots"></g>
-                      </svg>
-                      <div class="chart-time-labels">
-                        <span class="chart-time-label">7天前</span>
-                        <span class="chart-time-label">5天前</span>
-                        <span class="chart-time-label">3天前</span>
-                        <span class="chart-time-label">今天</span>
+                      <div class="balance-chart-inner">
+                        <svg class="balance-chart-svg" viewBox="0 0 320 70" preserveAspectRatio="xMidYMid meet">
+                          <defs>
+                            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                              <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
+                              <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                            </linearGradient>
+                          </defs>
+                          <path id="chartFill" class="chart-gradient-fill" fill="url(#chartGradient)"/>
+                          <path id="chartLine" class="chart-line"/>
+                          <g id="chartDots"></g>
+                        </svg>
+                      </div>
+                      <div class="chart-time-labels" id="chartTimeLabels">
+                        <!-- 时间标签由JS动态生成 -->
                       </div>
                       <div class="chart-tooltip" id="chartTooltip"></div>
                     </div>
