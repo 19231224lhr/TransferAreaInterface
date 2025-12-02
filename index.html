@@ -21,7 +21,7 @@
   <link rel="stylesheet" href="/css/transaction.css?v=20251202" />
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
-  <link rel="stylesheet" href="/css/inquiry.css?v=20251202a" />
+  <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
   
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1670,11 +1670,43 @@
     <section class="hidden" id="inquiryCard">
       <div class="inquiry-page" id="inquiryPage">
         <div class="inquiry-loader">
-          <!-- 脉冲动画 -->
-          <div class="inquiry-pulse">
-            <div class="inquiry-pulse-ring"></div>
-            <div class="inquiry-pulse-ring"></div>
-            <div class="inquiry-pulse-ring"></div>
+          <!-- 行星环绕系统 -->
+          <div class="inquiry-orbit-system" id="inquiryOrbitSystem">
+            <!-- 轨道环 -->
+            <div class="inquiry-orbit"></div>
+            <div class="inquiry-orbit"></div>
+            
+            <!-- 行星1 - 网络 -->
+            <div class="inquiry-planet-track">
+              <div class="inquiry-planet">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <line x1="2" y1="12" x2="22" y2="12"/>
+                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- 行星2 - 安全 -->
+            <div class="inquiry-planet-track">
+              <div class="inquiry-planet">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- 行星3 - 验证 -->
+            <div class="inquiry-planet-track">
+              <div class="inquiry-planet">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                  <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+              </div>
+            </div>
+            
+            <!-- 中心图标 - 恒星 -->
             <div class="inquiry-icon" id="inquiryIcon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-pulse">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>

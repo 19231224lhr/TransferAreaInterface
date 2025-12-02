@@ -1086,6 +1086,12 @@ function startInquiryAnimation(onComplete) {
   
   // 显示成功状态
   function showSuccess() {
+    // 行星系统成功状态
+    const orbitSystem = document.getElementById('inquiryOrbitSystem');
+    if (orbitSystem) {
+      orbitSystem.classList.add('success');
+    }
+    
     // 进度条完成
     if (progressFill) {
       progressFill.style.width = '100%';
@@ -1223,6 +1229,12 @@ function resetInquiryState() {
   // 重置页面
   if (page) {
     page.classList.remove('success', 'fade-out');
+  }
+  
+  // 重置行星系统
+  const orbitSystem = document.getElementById('inquiryOrbitSystem');
+  if (orbitSystem) {
+    orbitSystem.classList.remove('success');
   }
 }
 

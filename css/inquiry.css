@@ -63,136 +63,372 @@
 }
 
 /* ========================================
-   连接动画区域
+   连接动画区域 - 行星环绕系统
    ======================================== */
 
 .inquiry-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 36px;
+  gap: 40px;
 }
 
-/* 脉冲圆环动画 - 优化版 */
-.inquiry-pulse {
+/* 行星系统容器 */
+.inquiry-orbit-system {
   position: relative;
-  width: 140px;
-  height: 140px;
+  width: 180px;
+  height: 180px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* 外层光晕 */
-.inquiry-pulse::before {
+/* 中心光晕效果 */
+.inquiry-orbit-system::before {
   content: '';
   position: absolute;
-  width: 160px;
-  height: 160px;
+  width: 130px;
+  height: 130px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
-  animation: glowPulse 3s ease-in-out infinite;
+  background: radial-gradient(circle, 
+    rgba(59, 130, 246, 0.12) 0%, 
+    rgba(139, 92, 246, 0.06) 40%,
+    transparent 70%);
+  animation: centerGlow 3s ease-in-out infinite;
+  z-index: 0;
 }
 
-@keyframes glowPulse {
-  0%, 100% { transform: scale(0.9); opacity: 0.5; }
-  50% { transform: scale(1.1); opacity: 1; }
+@keyframes centerGlow {
+  0%, 100% { 
+    transform: scale(0.85); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: scale(1.1); 
+    opacity: 1; 
+  }
 }
 
-/* 旋转圆环 - 更流畅 */
-.inquiry-pulse-ring {
+/* 轨道环 - 椭圆形3D视觉 */
+.inquiry-orbit {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid transparent;
+  border: 1.5px dashed rgba(148, 163, 184, 0.2);
 }
 
-.inquiry-pulse-ring:nth-child(1) {
+.inquiry-orbit:nth-child(1) {
+  width: 120px;
+  height: 50px;
+  animation: orbitFloat1 4s ease-in-out infinite;
+}
+
+.inquiry-orbit:nth-child(2) {
+  width: 160px;
+  height: 65px;
+  animation: orbitFloat2 4s ease-in-out infinite;
+  animation-delay: 0.5s;
+}
+
+@keyframes orbitFloat1 {
+  0%, 100% { opacity: 0.3; transform: translateY(2px); }
+  50% { opacity: 0.5; transform: translateY(-2px); }
+}
+
+@keyframes orbitFloat2 {
+  0%, 100% { opacity: 0.25; transform: translateY(-2px); }
+  50% { opacity: 0.45; transform: translateY(2px); }
+}
+
+/* 行星容器 - 绝对定位在轨道上 */
+.inquiry-planet-track {
+  position: absolute;
   width: 100%;
   height: 100%;
-  border-color: rgba(59, 130, 246, 0.15);
-  border-top-color: #3b82f6;
-  border-right-color: #3b82f6;
-  animation: ringRotate1 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  pointer-events: none;
 }
 
-.inquiry-pulse-ring:nth-child(2) {
-  width: 82%;
-  height: 82%;
-  border-color: rgba(139, 92, 246, 0.12);
-  border-bottom-color: #8b5cf6;
-  border-left-color: #8b5cf6;
-  animation: ringRotate2 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.inquiry-pulse-ring:nth-child(3) {
-  width: 64%;
-  height: 64%;
-  border-color: rgba(6, 182, 212, 0.1);
-  border-top-color: #06b6d4;
-  animation: ringRotate3 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes ringRotate1 {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-@keyframes ringRotate2 {
-  0% { transform: rotate(45deg); }
-  100% { transform: rotate(-315deg); }
-}
-
-@keyframes ringRotate3 {
-  0% { transform: rotate(-30deg); }
-  100% { transform: rotate(330deg); }
-}
-
-/* 中心图标 - 更有质感 */
-.inquiry-icon {
-  position: relative;
-  z-index: 1;
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(145deg, #4f8ef7 0%, #3b82f6 50%, #7c5ce7 100%);
-  border-radius: 18px;
+/* 行星小图标 - 基础样式 */
+.inquiry-planet {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 8px 32px rgba(59, 130, 246, 0.35),
-    0 2px 8px rgba(59, 130, 246, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: iconFloat 3s ease-in-out infinite;
+    0 4px 16px rgba(0, 0, 0, 0.15),
+    0 2px 6px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  will-change: transform;
+}
+
+.inquiry-planet svg {
+  width: 17px;
+  height: 17px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* 行星1 - 网络图标 (蓝色) - 最外圈 */
+.inquiry-planet-track:nth-child(3) .inquiry-planet {
+  background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 100%);
+  animation: planet1Orbit 5s ease-in-out infinite;
+}
+
+/* 行星2 - 安全盾牌图标 (紫色) - 中圈 */
+.inquiry-planet-track:nth-child(4) .inquiry-planet {
+  background: linear-gradient(145deg, #a78bfa 0%, #8b5cf6 100%);
+  animation: planet2Orbit 6s ease-in-out infinite;
+}
+
+/* 行星3 - 验证图标 (青色) - 内圈 */
+.inquiry-planet-track:nth-child(5) .inquiry-planet {
+  background: linear-gradient(145deg, #22d3ee 0%, #06b6d4 100%);
+  animation: planet3Orbit 4s ease-in-out infinite;
+}
+
+/* 行星1轨道动画 - 外圈顺时针 
+   后方(y>0)时被遮挡opacity降低 */
+@keyframes planet1Orbit {
+  0% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(80px, 0) scale(0.9);
+    z-index: 5;
+    opacity: 1;
+  }
+  15% {
+    opacity: 0.6;
+  }
+  25% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, 32px) scale(0.75);
+    z-index: 1;
+    opacity: 0;
+  }
+  35% {
+    opacity: 0.6;
+  }
+  50% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(-80px, 0) scale(0.9);
+    z-index: 5;
+    opacity: 1;
+  }
+  75% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, -32px) scale(1.1);
+    z-index: 20;
+    opacity: 1;
+  }
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(80px, 0) scale(0.9);
+    z-index: 5;
+    opacity: 1;
+  }
+}
+
+/* 行星2轨道动画 - 中圈逆时针 
+   后方(y>0)时被遮挡 */
+@keyframes planet2Orbit {
+  0% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(-65px, 15px) scale(0.85);
+    z-index: 4;
+    opacity: 0.7;
+  }
+  25% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, -28px) scale(1.05);
+    z-index: 20;
+    opacity: 1;
+  }
+  50% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(65px, 15px) scale(0.85);
+    z-index: 4;
+    opacity: 0.7;
+  }
+  65% {
+    opacity: 0.3;
+  }
+  75% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, 28px) scale(0.7);
+    z-index: 1;
+    opacity: 0;
+  }
+  85% {
+    opacity: 0.3;
+  }
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(-65px, 15px) scale(0.85);
+    z-index: 4;
+    opacity: 0.7;
+  }
+}
+
+/* 行星3轨道动画 - 内圈顺时针快速 
+   后方(y>0)时被遮挡 */
+@keyframes planet3Orbit {
+  0% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, -25px) scale(1.1);
+    z-index: 20;
+    opacity: 1;
+  }
+  25% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(55px, 8px) scale(0.85);
+    z-index: 5;
+    opacity: 0.8;
+  }
+  40% {
+    opacity: 0.3;
+  }
+  50% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, 25px) scale(0.7);
+    z-index: 1;
+    opacity: 0;
+  }
+  60% {
+    opacity: 0.3;
+  }
+  75% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(-55px, 8px) scale(0.85);
+    z-index: 5;
+    opacity: 0.8;
+  }
+  100% {
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, -25px) scale(1.1);
+    z-index: 20;
+    opacity: 1;
+  }
+}
+
+/* 成功状态 - 行星收缩到中心 */
+.inquiry-orbit-system.success .inquiry-planet {
+  animation: planetToCenter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
+}
+
+.inquiry-orbit-system.success .inquiry-planet-track:nth-child(4) .inquiry-planet {
+  animation-delay: 0.08s !important;
+}
+
+.inquiry-orbit-system.success .inquiry-planet-track:nth-child(5) .inquiry-planet {
+  animation-delay: 0.16s !important;
+}
+
+@keyframes planetToCenter {
+  0% { 
+    opacity: 1;
+  }
+  100% { 
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) translate(0, 0) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 成功状态轨道隐藏 */
+.inquiry-orbit-system.success .inquiry-orbit {
+  animation: orbitHide 0.4s ease-out forwards;
+}
+
+@keyframes orbitHide {
+  to { 
+    opacity: 0; 
+    transform: scale(0.8);
+  }
+}
+
+/* 中心图标 - 恒星 */
+.inquiry-icon {
+  position: relative;
+  z-index: 15;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(145deg, #4f8ef7 0%, #3b82f6 40%, #6366f1 100%);
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 0 40px rgba(59, 130, 246, 0.3),
+    0 8px 32px rgba(59, 130, 246, 0.25),
+    0 2px 8px rgba(59, 130, 246, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+  animation: iconBreath 3s ease-in-out infinite;
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .inquiry-icon svg {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   color: white;
-  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   transition: all 0.4s ease;
 }
 
 /* 成功状态图标 */
 .inquiry-icon.success {
-  background: linear-gradient(145deg, #34d399 0%, #10b981 50%, #059669 100%);
+  background: linear-gradient(145deg, #34d399 0%, #10b981 40%, #059669 100%);
   box-shadow: 
-    0 8px 32px rgba(16, 185, 129, 0.35),
-    0 2px 8px rgba(16, 185, 129, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    0 0 40px rgba(16, 185, 129, 0.35),
+    0 8px 32px rgba(16, 185, 129, 0.25),
+    0 2px 8px rgba(16, 185, 129, 0.15),
+    inset 0 2px 0 rgba(255, 255, 255, 0.2);
+  animation: successBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: scale(1.1);
 }
 
-@keyframes iconFloat {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-4px) scale(1.02); }
+@keyframes iconBreath {
+  0%, 100% { 
+    transform: scale(1);
+    box-shadow: 
+      0 0 40px rgba(59, 130, 246, 0.25),
+      0 8px 32px rgba(59, 130, 246, 0.2),
+      0 2px 8px rgba(59, 130, 246, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.2),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+  }
+  50% { 
+    transform: scale(1.05);
+    box-shadow: 
+      0 0 50px rgba(59, 130, 246, 0.35),
+      0 12px 40px rgba(59, 130, 246, 0.3),
+      0 4px 12px rgba(59, 130, 246, 0.2),
+      inset 0 2px 0 rgba(255, 255, 255, 0.25),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+  }
 }
 
 @keyframes successBounce {
   0% { transform: scale(0.8); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1.1); }
 }
 
 /* ========================================
@@ -530,25 +766,46 @@
     border-radius: 24px;
   }
 
-  .inquiry-pulse {
-    width: 120px;
-    height: 120px;
+  .inquiry-orbit-system {
+    width: 150px;
+    height: 150px;
   }
 
-  .inquiry-pulse::before {
-    width: 140px;
-    height: 140px;
+  .inquiry-orbit-system::before {
+    width: 100px;
+    height: 100px;
+  }
+
+  .inquiry-orbit:nth-child(1) {
+    width: 100px;
+    height: 42px;
+  }
+
+  .inquiry-orbit:nth-child(2) {
+    width: 135px;
+    height: 55px;
+  }
+
+  .inquiry-planet {
+    width: 28px;
+    height: 28px;
+    border-radius: 9px;
+  }
+
+  .inquiry-planet svg {
+    width: 14px;
+    height: 14px;
   }
 
   .inquiry-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
   }
 
   .inquiry-icon svg {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
   }
 
   .inquiry-title {
