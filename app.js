@@ -2839,7 +2839,7 @@ function renderWallet() {
         <div class="addr-card-detail">
           <div class="addr-detail-row">
             <span class="addr-detail-label">完整地址</span>
-            <span class="addr-detail-value">${a.slice(0, 20)}...</span>
+            <span class="addr-detail-value">${a}</span>
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">余额</span>
@@ -3112,7 +3112,7 @@ function renderWallet() {
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
             if (label) {
-              const amtVal = label.querySelector('.amount-val');
+              const amtVal = label.querySelector('.amount-num');
               if (amtVal) {
                 const vCash = Number((found && found.value && found.value.utxoValue) || 0);
                 amtVal.textContent = String(vCash);
@@ -3239,7 +3239,7 @@ function renderWallet() {
           if (addrList) {
             const label = Array.from(addrList.querySelectorAll('label')).find(l => { const inp = l.querySelector('input[type="checkbox"]'); return inp && String(inp.value).toLowerCase() === key; });
             if (label) {
-              const amtVal = label.querySelector('.amount-val');
+              const amtVal = label.querySelector('.amount-num');
               if (amtVal) {
                 amtVal.textContent = '0';
               }
@@ -4223,18 +4223,37 @@ function renderWallet() {
         // 币种图标和颜色
         const coinIcons = { 0: '₱', 1: '₿', 2: 'Ξ' };
         const coinColors = { 0: 'pgc', 1: 'btc', 2: 'eth' };
+        const coinNames = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+        
         const icon = coinIcons[tId] || '₱';
         const color = coinColors[tId] || 'pgc';
-        // 地址缩略显示
-        const shortAddr = a.slice(0, 6) + '...' + a.slice(-4);
+        const coinName = coinNames[tId] || 'PGC';
+        
+        // 地址缩略显示 (Compact View) - User requested full address
+        const shortAddr = a;
+        
         return `<label class="src-addr-item" data-addr="${a}">
           <input type="checkbox" value="${a}">
-          <span class="addr-check"></span>
-          <span class="addr-short" title="${a}">${shortAddr}</span>
-          <span class="addr-amount coin--${color}">
-            <span class="coin-symbol">${icon}</span>
-            <span class="amount-val">${amt}</span>
-          </span>
+          <div class="item-backdrop"></div>
+          
+          <div class="item-content">
+              <div class="item-left">
+                  <div class="coin-indicator coin--${color}">${icon}</div>
+                  <div class="addr-info">
+                      <span class="addr-text" title="${a}">${shortAddr}</span>
+                      <span class="coin-name-tiny">${coinName}</span>
+                  </div>
+              </div>
+              
+              <div class="item-right">
+                  <span class="amount-num" title="${amt}">${amt}</span>
+                  <div class="check-mark">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                  </div>
+              </div>
+          </div>
+          
+          <div class="selection-outline"></div>
         </label>`;
       }).join('');
     };
