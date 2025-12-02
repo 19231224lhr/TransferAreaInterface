@@ -1,6 +1,6 @@
 /* =====================================================
-   Main Page V6 - 钱包管理与交易页面
-   全宽布局 - 无外框 - 余额曲线图 - 等高模块
+   Main Page V7 - 钱包管理与交易页面
+   全屏宽度 - 无白框 - 优化曲线图
    ===================================================== */
 
 /* ========================================
@@ -45,7 +45,7 @@
   --neutral-800: #27272a;
   --neutral-900: #18181b;
   
-  /* 背景 - 移除绿色框效果 */
+  /* 背景 */
   --bg-page: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
   --bg-card: rgba(255, 255, 255, 0.98);
   --bg-card-solid: #ffffff;
@@ -98,48 +98,28 @@
   to { opacity: 1; }
 }
 
-@keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes chartDraw {
-  from {
-    stroke-dashoffset: 1000;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
 @keyframes chartGlow {
   0%, 100% {
-    filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
   }
   50% {
-    filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
   }
 }
 
 @keyframes dotPulse {
   0%, 100% {
     transform: scale(1);
-    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
   }
   50% {
-    transform: scale(1.3);
-    opacity: 0.8;
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
   }
 }
 
 /* ========================================
-   重置外层card样式
+   重置外层容器和card样式 - 移除白框！
    ======================================== */
 #walletCard.card {
   background: transparent !important;
@@ -152,27 +132,36 @@
   max-width: none !important;
 }
 
+/* 重置 container 限制 - 允许全宽 */
+.container:has(#walletCard) {
+  max-width: 100% !important;
+  padding: 0 !important;
+  padding-top: 72px !important;
+}
+
 /* ========================================
-   页面容器 - 无外框全宽布局
+   页面容器 - 全宽无白框
    ======================================== */
 .main-v2 {
-  min-height: calc(100vh - 88px);
+  min-height: calc(100vh - 72px);
   background: var(--bg-page);
-  padding: 20px 32px;
+  padding: 20px 24px;
+  width: 100%;
 }
 
 .main-v2-container {
   max-width: 100%;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 /* ========================================
-   主网格布局 - 等高两列
+   主网格布局 - 更宽的模块
    ======================================== */
 .main-grid {
   display: grid;
-  grid-template-columns: minmax(380px, 1fr) minmax(500px, 1.5fr);
-  gap: 24px;
+  grid-template-columns: minmax(400px, 1fr) minmax(550px, 1.6fr);
+  gap: 20px;
   align-items: start;
 }
 
@@ -306,7 +295,7 @@
   transform: scale(0.95);
 }
 
-/* 总资产与曲线图区域 */
+/* 总资产 */
 .total-balance {
   position: relative;
   z-index: 1;
@@ -338,12 +327,12 @@
 }
 
 /* ========================================
-   余额曲线图 - 高级设计
+   余额曲线图 - 修复版
    ======================================== */
 .balance-chart {
-  margin-top: 12px;
+  margin-top: 14px;
   position: relative;
-  height: 70px;
+  height: 80px;
   overflow: visible;
 }
 
@@ -362,7 +351,7 @@
 .chart-line {
   fill: none;
   stroke: rgba(255, 255, 255, 0.9);
-  stroke-width: 2;
+  stroke-width: 2.5;
   stroke-linecap: round;
   stroke-linejoin: round;
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
@@ -383,8 +372,6 @@
 
 .chart-dot-current {
   fill: white;
-  stroke: rgba(255, 255, 255, 0.5);
-  stroke-width: 3;
   animation: dotPulse 2s ease-in-out infinite;
 }
 
@@ -398,7 +385,7 @@
 
 .chart-time-label {
   font-size: 9px;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
 }
 
@@ -413,25 +400,14 @@
   font-weight: 500;
   pointer-events: none;
   opacity: 0;
-  transform: translateY(-8px);
-  transition: opacity 0.2s, transform 0.2s;
+  transform: translate(-50%, -100%);
+  transition: opacity 0.2s;
   z-index: 10;
   white-space: nowrap;
 }
 
 .chart-tooltip.visible {
   opacity: 1;
-  transform: translateY(0);
-}
-
-.chart-tooltip::after {
-  content: '';
-  position: absolute;
-  bottom: -4px;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: rgba(0, 0, 0, 0.85);
 }
 
 /* 币种分布 */
@@ -625,34 +601,39 @@
 }
 
 /* ========================================
-   地址项 - 紧凑可展开式
+   地址项 - 修复样式优先级
    ======================================== */
-.addr-card {
-  background: var(--neutral-50);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  transition: all var(--duration-fast) ease;
-  cursor: pointer;
+.main-v2 .addr-card {
+  background: var(--neutral-50) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  transition: all var(--duration-fast) ease !important;
+  cursor: pointer !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  display: block !important;
+  backdrop-filter: none !important;
 }
 
-.addr-card:hover {
-  background: var(--neutral-100);
+.main-v2 .addr-card:hover {
+  background: var(--neutral-100) !important;
 }
 
-.addr-card.active {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04));
-  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2);
+.main-v2 .addr-card.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04)) !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2) !important;
 }
 
 /* 地址简略行 */
-.addr-card-summary {
+.main-v2 .addr-card-summary {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
 }
 
-.addr-card-avatar {
+.main-v2 .addr-card-avatar {
   width: 32px;
   height: 32px;
   background: var(--wallet-gradient);
@@ -667,7 +648,7 @@
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
 }
 
-.addr-card-main {
+.main-v2 .addr-card-main {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -675,7 +656,7 @@
   gap: 8px;
 }
 
-.addr-card-hash {
+.main-v2 .addr-card-hash {
   font-size: 12px;
   color: var(--text-secondary);
   font-family: 'SF Mono', Monaco, 'Consolas', monospace;
@@ -685,7 +666,7 @@
   flex: 1;
 }
 
-.addr-card-balance {
+.main-v2 .addr-card-balance {
   font-size: 12px;
   font-weight: 600;
   color: var(--wallet-primary);
@@ -695,7 +676,7 @@
   border-radius: var(--radius-sm);
 }
 
-.addr-card-arrow {
+.main-v2 .addr-card-arrow {
   width: 20px;
   height: 20px;
   display: flex;
@@ -706,27 +687,27 @@
   flex-shrink: 0;
 }
 
-.addr-card-arrow svg {
+.main-v2 .addr-card-arrow svg {
   width: 14px;
   height: 14px;
 }
 
-.addr-card.expanded .addr-card-arrow {
+.main-v2 .addr-card.expanded .addr-card-arrow {
   transform: rotate(180deg);
 }
 
 /* 地址详情 */
-.addr-card-detail {
+.main-v2 .addr-card-detail {
   display: none;
   padding: 0 12px 12px;
   animation: fadeIn 0.2s ease;
 }
 
-.addr-card.expanded .addr-card-detail {
+.main-v2 .addr-card.expanded .addr-card-detail {
   display: block;
 }
 
-.addr-detail-row {
+.main-v2 .addr-detail-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -734,90 +715,100 @@
   border-top: 1px dashed var(--neutral-200);
 }
 
-.addr-detail-row:first-child {
+.main-v2 .addr-detail-row:first-child {
   border-top: none;
   padding-top: 4px;
 }
 
-.addr-detail-label {
+.main-v2 .addr-detail-label {
   font-size: 11px;
   color: var(--text-muted);
 }
 
-.addr-detail-value {
+.main-v2 .addr-detail-value {
   font-size: 11px;
   font-weight: 500;
   color: var(--text-primary);
   font-family: 'SF Mono', Monaco, 'Consolas', monospace;
 }
 
-.addr-detail-value.gas {
+.main-v2 .addr-detail-value.gas {
   color: var(--fresh-orange);
   background: rgba(245, 158, 11, 0.1);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
-/* 地址操作按钮 */
-.addr-card-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid var(--neutral-200);
-  align-items: center;
+/* 地址操作按钮 - 高优先级覆盖 */
+.main-v2 .addr-card-actions {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--neutral-200) !important;
+  align-items: center !important;
 }
 
-.addr-action-btn {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding: 8px;
-  font-size: 11px;
-  font-weight: 500;
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all var(--duration-fast) ease;
+.main-v2 .addr-action-btn {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px !important;
+  padding: 8px 12px !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer !important;
+  transition: all var(--duration-fast) ease !important;
+  position: relative !important;
+  overflow: hidden !important;
 }
 
-.addr-action-btn svg {
+.main-v2 .addr-action-btn svg {
   width: 12px;
   height: 12px;
 }
 
-.addr-action-btn--primary {
-  background: var(--wallet-gradient);
-  color: white;
+.main-v2 .addr-action-btn--primary {
+  background: var(--wallet-gradient) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
 }
 
-.addr-action-btn--primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+.main-v2 .addr-action-btn--primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
-.addr-action-btn--secondary {
-  background: var(--neutral-100);
-  color: var(--text-secondary);
+.main-v2 .addr-action-btn--primary:active {
+  transform: translateY(0) !important;
 }
 
-.addr-action-btn--secondary:hover {
-  background: var(--neutral-200);
+.main-v2 .addr-action-btn--secondary {
+  background: var(--neutral-100) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.main-v2 .addr-action-btn--secondary:hover {
+  background: var(--neutral-200) !important;
 }
 
 /* 操作菜单 */
-.addr-ops-container {
+.main-v2 .addr-ops-container {
   position: relative;
   margin-left: auto;
+  flex-shrink: 0;
 }
 
-.addr-ops {
+.main-v2 .addr-ops {
   position: relative;
 }
 
-.ops-toggle {
+.main-v2 .ops-toggle {
   width: 28px;
   height: 28px;
   display: flex;
@@ -831,12 +822,12 @@
   transition: all var(--duration-fast) ease;
 }
 
-.ops-toggle:hover {
+.main-v2 .ops-toggle:hover {
   background: var(--neutral-100);
   color: var(--text-secondary);
 }
 
-.ops-menu {
+.main-v2 .ops-menu {
   position: absolute;
   right: 0;
   top: 100%;
@@ -849,11 +840,11 @@
   overflow: hidden;
 }
 
-.ops-menu.hidden {
+.main-v2 .ops-menu.hidden {
   display: none;
 }
 
-.ops-item {
+.main-v2 .ops-item {
   display: block;
   width: 100%;
   padding: 8px 12px;
@@ -866,15 +857,15 @@
   color: var(--text-secondary);
 }
 
-.ops-item:hover {
+.main-v2 .ops-item:hover {
   background: var(--neutral-50);
 }
 
-.ops-item.danger {
+.main-v2 .ops-item.danger {
   color: var(--fresh-red);
 }
 
-.ops-item.danger:hover {
+.main-v2 .ops-item.danger:hover {
   background: rgba(239, 68, 68, 0.06);
 }
 
@@ -1660,9 +1651,9 @@
 /* ========================================
    响应式适配
    ======================================== */
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
   .main-v2 {
-    padding: 16px 20px;
+    padding: 16px;
   }
   
   .main-grid {

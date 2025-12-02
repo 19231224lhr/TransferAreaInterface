@@ -3562,8 +3562,31 @@ function renderWallet() {
   }
 
   // ========================================
-  // V6 简洁余额曲线图 (balanceChart)
+  // V7 简洁余额曲线图 (balanceChart) - 1分钟间隔
   // ========================================
+  
+  // 使用持久化存储历史数据，避免每次刷新重新生成
+  const CHART_HISTORY_KEY = 'wallet_balance_chart_history';
+  
+  // 从localStorage加载历史数据
+  const loadChartHistory = () => {
+    try {
+      const data = localStorage.getItem(CHART_HISTORY_KEY);
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  };
+  
+  // 保存历史数据到localStorage
+  const saveChartHistory = (history) => {
+    try {
+      // 只保留最近10个点
+      const trimmed = history.slice(-10);
+      localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
+    } catch (e) {}
+  };
+  
   window.updateBalanceChart = (user) => {
     const chartEl = document.getElementById('balanceChart');
     if (!chartEl) return;
@@ -3576,37 +3599,48 @@ function renderWallet() {
 
     if (!svg || !lineEl || !fillEl || !dotsEl) return;
 
-    // 获取历史数据，如果没有则生成模拟数据
-    let history = (user && user.wallet && user.wallet.history) || [];
+    // 获取当前余额
+    const vd = (user && user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+    const currentVal = Math.round(Number(vd[0] || 0) * 1 + Number(vd[1] || 0) * 100 + Number(vd[2] || 0) * 10);
+    const now = Date.now();
+    const minuteMs = 60 * 1000;
     
-    // 如果没有历史数据，生成过去7天的模拟数据
-    if (history.length < 2) {
-      const now = Date.now();
-      const dayMs = 24 * 60 * 60 * 1000;
-      const vd = (user && user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
-      const currentVal = Math.round(Number(vd[0] || 0) * 1 + Number(vd[1] || 0) * 100 + Number(vd[2] || 0) * 10);
-      
-      history = [];
-      for (let i = 7; i >= 0; i--) {
-        const t = now - i * dayMs;
-        // 生成平滑波动的历史数据
-        const variation = Math.sin(i * 0.8) * 15 + Math.random() * 10 - 5;
-        const v = Math.max(0, Math.round(currentVal * (0.85 + i * 0.02) + variation));
+    // 加载持久化的历史数据
+    let history = loadChartHistory();
+    
+    // 如果没有历史数据或太旧，初始化
+    if (history.length === 0) {
+      // 创建初始历史数据：过去10分钟，使用当前值的轻微波动
+      for (let i = 9; i >= 0; i--) {
+        const t = now - i * minuteMs;
+        // 小幅波动 ±2%
+        const variation = (Math.sin(i * 0.7) * 0.02);
+        const v = Math.max(0, Math.round(currentVal * (1 + variation)));
         history.push({ t, v });
       }
-      // 确保最后一个点是当前值
-      history[history.length - 1].v = currentVal;
+      saveChartHistory(history);
+    } else {
+      // 检查是否需要添加新点（距离上一个点超过1分钟）
+      const lastPoint = history[history.length - 1];
+      if (now - lastPoint.t >= minuteMs) {
+        // 添加新的当前值
+        history.push({ t: now, v: currentVal });
+        saveChartHistory(history);
+      } else {
+        // 更新最后一个点的值（但不改变时间）
+        history[history.length - 1].v = currentVal;
+      }
     }
 
-    // 取最近8个点用于显示
-    const displayHistory = history.slice(-8);
+    // 取最近10个点用于显示
+    const displayHistory = history.slice(-10);
     
     // 计算值范围
     const values = displayHistory.map(h => h.v);
     const minVal = Math.min(...values);
     const maxVal = Math.max(...values);
     const range = maxVal - minVal || 1;
-    const padding = range * 0.15;
+    const padding = range * 0.2;
 
     // SVG 尺寸
     const width = 320;
@@ -3618,18 +3652,28 @@ function renderWallet() {
     const toX = (i) => padX + (i / (displayHistory.length - 1)) * (width - padX * 2);
     const toY = (v) => padY + (1 - (v - minVal + padding) / (range + padding * 2)) * (height - padY * 2);
 
-    // 生成平滑曲线路径 (使用贝塞尔曲线)
+    // 生成平滑曲线路径 (使用三次贝塞尔曲线)
     const points = displayHistory.map((h, i) => ({ x: toX(i), y: toY(h.v), v: h.v, t: h.t }));
     
+    if (points.length < 2) return;
+    
+    // 使用 Catmull-Rom 样条转贝塞尔曲线实现更平滑效果
     let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
     
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      // 使用二次贝塞尔曲线实现平滑效果
-      const cpX = (prev.x + curr.x) / 2;
-      pathD += ` Q ${cpX.toFixed(1)},${prev.y.toFixed(1)} ${cpX.toFixed(1)},${((prev.y + curr.y) / 2).toFixed(1)}`;
-      pathD += ` T ${curr.x.toFixed(1)},${curr.y.toFixed(1)}`;
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(points.length - 1, i + 2)];
+      
+      // Catmull-Rom 到 Bezier 的转换
+      const tension = 0.3;
+      const cp1x = p1.x + (p2.x - p0.x) * tension;
+      const cp1y = p1.y + (p2.y - p0.y) * tension;
+      const cp2x = p2.x - (p3.x - p1.x) * tension;
+      const cp2y = p2.y - (p3.y - p1.y) * tension;
+      
+      pathD += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
     }
 
     // 填充区域路径
@@ -3652,16 +3696,22 @@ function renderWallet() {
       />`;
     }).join('');
 
+    // 保存points到全局用于tooltip
+    svg._chartPoints = points;
+    
     // 绑定悬浮提示事件
     if (!svg.dataset._bindChart) {
       svg.addEventListener('mousemove', (e) => {
+        const pts = svg._chartPoints || [];
+        if (pts.length === 0) return;
+        
         const rect = svg.getBoundingClientRect();
         const x = (e.clientX - rect.left) * (width / rect.width);
         
         // 找最近的点
-        let closest = points[0];
+        let closest = pts[0];
         let minDist = Infinity;
-        points.forEach(p => {
+        pts.forEach(p => {
           const dist = Math.abs(p.x - x);
           if (dist < minDist) {
             minDist = dist;
@@ -3671,8 +3721,9 @@ function renderWallet() {
 
         if (tooltip && minDist < 30) {
           const date = new Date(closest.t);
-          const dateStr = `${date.getMonth() + 1}/${date.getDate()}`;
-          tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${dateStr}`;
+          // 显示时:分格式
+          const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+          tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
           tooltip.classList.add('visible');
           tooltip.style.left = `${closest.x}px`;
           tooltip.style.top = `${closest.y - 30}px`;
@@ -3686,6 +3737,14 @@ function renderWallet() {
       svg.dataset._bindChart = 'true';
     }
   };
+  
+  // 每分钟自动更新图表
+  setInterval(() => {
+    const u = loadUser();
+    if (u) {
+      window.updateBalanceChart(u);
+    }
+  }, 60 * 1000);
 
   // 初始化 V6 曲线图
   const uBalanceChart = loadUser();
