@@ -1907,21 +1907,29 @@
                     </div>
                   </div>
                   <div class="address-card-header-right">
-                    <button class="address-add-btn" id="openCreateAddrBtn2" aria-label="新建地址" title="新建地址">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                      </svg>
-                    </button>
-                    <div class="address-collapse-btn">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
-                    </div>
+                    <!-- 按钮已移除 -->
                   </div>
                 </div>
                 <div class="address-list-wrapper">
                   <div id="walletAddrList" class="address-list"></div>
+                  <!-- 底部背景插画 -->
+                  <div class="address-bg-illustration">
+                    <svg viewBox="0 0 600 200" fill="none" stroke="currentColor" stroke-width="1" preserveAspectRatio="xMidYMax slice">
+                      <defs>
+                        <linearGradient id="fadeGrad" x1="0" y1="0" x2="1" y2="0">
+                          <stop offset="0%" stop-color="currentColor" stop-opacity="0.1"/>
+                          <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+                        </linearGradient>
+                      </defs>
+                      
+                      <!-- 背景网格透视 -->
+                      <path d="M0 180 L600 180 M-50 220 L650 220 M100 180 L50 220 M200 180 L180 220 M300 180 L310 220 M400 180 L440 220 M500 180 L570 220" stroke="currentColor" stroke-opacity="0.05" stroke-width="1"/>
+
+                      <!-- 装饰性数据流线条 (底部) -->
+                      <path d="M0 190 Q 150 160 300 190 T 600 180" stroke="url(#fadeGrad)" stroke-width="1.5" fill="none" />
+                      <path d="M50 200 Q 200 170 350 200" stroke="url(#fadeGrad)" stroke-width="1" fill="none" />
+                    </svg>
+                  </div>
                 </div>
               </div>
             </div>

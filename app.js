@@ -3727,11 +3727,11 @@ function renderWallet() {
     const padX = 2;  // 进一步减小左右边距，拉满宽度
     const padY = 6;
     const chartHeight = height - padY * 2;
-    
-    // Y坐标计算 - 在底部留出“轴线缓冲区”
-    // 曲线占据约80%的区域（从7%到86%的高度范围）
-    const chartTop = height * 0.07;  // 曲线区域从7%高度开始
-    const chartBottom = height * 0.86; // 曲线区域到86%高度结束
+
+    const bottomGapPx = 10;
+    const topGapPx = 8;
+    const chartTop = padY + topGapPx;
+    const chartBottom = height - padY - bottomGapPx;
     const chartRange = chartBottom - chartTop;
     
     const toY = (v) => {
@@ -3763,18 +3763,54 @@ function renderWallet() {
     // 生成平滑曲线路径 (Catmull-Rom 样条)
     let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
     
+    // 使用 Monotone Cubic Spline 算法以消除"回勾"现象并保证单调性
+    // 计算斜率
+    const slopes = [];
+    const dxs = [];
+    const dys = [];
     for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[Math.max(0, i - 1)];
+      const dx = points[i + 1].x - points[i].x;
+      const dy = points[i + 1].y - points[i].y;
+      dxs.push(dx);
+      dys.push(dy);
+      slopes.push(dy / dx);
+    }
+    // 补齐最后一个斜率，防止数组越界
+    if (slopes.length > 0) {
+        slopes.push(slopes[slopes.length - 1]);
+        dxs.push(dxs[dxs.length - 1]);
+        dys.push(dys[dys.length - 1]);
+    } else {
+        // 只有一个点的情况
+        slopes.push(0); dxs.push(0); dys.push(0);
+    }
+
+    // 计算切线斜率 m
+    const ms = [];
+    ms.push(slopes[0]); // 起点切线
+    for (let i = 0; i < slopes.length - 1; i++) {
+      // 如果斜率符号相反，说明是极值点，切线设为0以防过冲
+      if (slopes[i] * slopes[i+1] <= 0) {
+          ms.push(0);
+      } else {
+          ms.push((slopes[i] + slopes[i + 1]) / 2);
+      }
+    }
+    ms.push(slopes[slopes.length - 1]); // 终点切线
+
+    // 生成贝塞尔控制点并绘制
+    for (let i = 0; i < points.length - 1; i++) {
       const p1 = points[i];
       const p2 = points[i + 1];
-      const p3 = points[Math.min(points.length - 1, i + 2)];
+      const dx = points[i + 1].x - points[i].x;
       
-      const tension = 0.3;
-      const cp1x = p1.x + (p2.x - p0.x) * tension;
-      const cp1y = p1.y + (p2.y - p0.y) * tension;
-      const cp2x = p2.x - (p3.x - p1.x) * tension;
-      const cp2y = p2.y - (p3.y - p1.y) * tension;
-      
+      // 两个控制点 X 坐标设为区间 1/3 和 2/3 处
+      // Y 坐标根据切线斜率推算
+      const cp1x = p1.x + dx / 3;
+      const cp1y = p1.y + ms[i] * dx / 3;
+      const cp2x = p2.x - dx / 3;
+      const cp2y = p2.y - ms[i + 1] * dx / 3;
+
       pathD += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
     }
 
@@ -4254,17 +4290,18 @@ function renderWallet() {
         const icon = coinIcons[tId] || '₱';
         const color = coinColors[tId] || 'pgc';
         const coinName = coinNames[tId] || 'PGC';
+        const coinLetter = coinName.charAt(0);
         
         // 地址缩略显示 (Compact View) - User requested full address
         const shortAddr = a;
         
-        return `<label class="src-addr-item" data-addr="${a}">
+        return `<label class="src-addr-item item-type-${color}" data-addr="${a}">
           <input type="checkbox" value="${a}">
           <div class="item-backdrop"></div>
           
           <div class="item-content">
               <div class="item-left">
-                  <div class="coin-indicator coin--${color}">${icon}</div>
+                  <div class="coin-icon coin-icon--${color}">${coinLetter}</div>
                   <div class="addr-info">
                       <span class="addr-text" title="${a}">${shortAddr}</span>
                       <span class="coin-name-tiny">${coinName}</span>

@@ -2544,6 +2544,7 @@ pre code {
   color: #0f172a;
   display: flex;
   align-items: center;
+  justify-content: flex-end; /* 内容右对齐 */
   gap: 6px;
 }
 
@@ -2566,10 +2567,12 @@ pre code {
 
 .custom-select__menu {
   position: absolute;
-  left: 0;
+  right: 0; /* 菜单右对齐 */
+  left: auto; /* 取消左对齐 */
   top: 100%;
   margin-top: .25rem;
   min-width: 100%;
+  width: max-content; /* 宽度自适应内容 */
   background: linear-gradient(180deg, #ffffff, #f8fafc);
   border: 1px solid rgba(226, 232, 240, .22);
   border-radius: 10px;
@@ -2588,7 +2591,7 @@ pre code {
   border-radius: 8px;
   color: #0f172a;
   display: flex;
-  align-items: center;
+  align-items: center; /* 确保 Flex 容器内垂直居中 */
   gap: .4rem;
   cursor: pointer;
   transition: background .15s ease;
@@ -2610,6 +2613,7 @@ pre code {
   border-radius: 50%;
   box-shadow: 0 1px 3px rgba(15, 23, 42, .12);
   flex-shrink: 0;
+  margin: 0; /* Reset margins globally for component usage */
 }
 
 .coin--pgc {

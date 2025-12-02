@@ -786,24 +786,24 @@
 .item-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(255, 255, 255, 0.6);
+  background: #f1f5f9; /* neutral-100 - Darker than before */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
   box-shadow: 
     0 2px 6px rgba(15, 23, 42, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
   transition: all 0.2s ease;
   z-index: 0;
 }
 
 .src-addr-item:hover .item-backdrop {
-  background: rgba(255, 255, 255, 0.85);
+  background: #e2e8f0; /* neutral-200 */
   transform: translateY(-1px);
   box-shadow: 
     0 4px 12px rgba(15, 23, 42, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 /* 选中状态边框 */
@@ -823,7 +823,7 @@
 }
 
 .src-addr-item.selected .item-backdrop {
-  background: linear-gradient(90deg, rgba(240, 249, 255, 0.95), rgba(255, 255, 255, 0.9));
+  background: #f1f5f9;
 }
 
 .src-addr-item input[type="checkbox"] {
@@ -853,9 +853,10 @@
   min-width: 0;
 }
 
-.coin-indicator {
-  width: 28px;
-  height: 28px;
+/* Coin Icon Styles - Matched to main-v2.css */
+.src-addr-item .coin-icon {
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -863,12 +864,74 @@
   font-size: 12px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.6);
+  color: white;
+  /* Fix vertical alignment */
+  margin-top: 0;
 }
 
-.coin-indicator.coin--pgc { background: #e0f2fe; color: #0284c7; }
-.coin-indicator.coin--btc { background: #fef3c7; color: #d97706; }
-.coin-indicator.coin--eth { background: #e0e7ff; color: #4f46e5; }
+/* 修复 custom-select 中的图标样式 */
+.custom-select .coin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: white;
+  margin-right: 8px;
+  /* Reset any inherited margins */
+  margin-top: 0;
+  margin-bottom: 0;
+  transform: translateY(1px); /* 微调垂直位置以实现光学居中 */
+}
+
+.custom-select .coin-icon--pgc { background: var(--coin-pgc, #10b981); }
+.custom-select .coin-icon--btc { background: var(--coin-btc, #f59e0b); }
+.custom-select .coin-icon--eth { background: var(--coin-eth, #6366f1); }
+
+.src-addr-item .coin-icon--pgc { background: var(--coin-pgc, #10b981); }
+.src-addr-item .coin-icon--btc { background: var(--coin-btc, #f59e0b); }
+.src-addr-item .coin-icon--eth { background: var(--coin-eth, #6366f1); }
+
+/* Dynamic background colors for items */
+.src-addr-item.item-type-pgc .item-backdrop {
+  background: rgba(16, 185, 129, 0.05); /* Very pale green */
+}
+.src-addr-item.item-type-pgc:hover .item-backdrop {
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.src-addr-item.item-type-btc .item-backdrop {
+  background: rgba(245, 158, 11, 0.05); /* Very pale amber */
+}
+.src-addr-item.item-type-btc:hover .item-backdrop {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.src-addr-item.item-type-eth .item-backdrop {
+  background: rgba(99, 102, 241, 0.05); /* Very pale indigo */
+}
+.src-addr-item.item-type-eth:hover .item-backdrop {
+  background: rgba(99, 102, 241, 0.1);
+}
+
+/* Selected state overrides */
+.src-addr-item.selected.item-type-pgc .item-backdrop {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.05));
+}
+.src-addr-item.selected.item-type-btc .item-backdrop {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
+}
+.src-addr-item.selected.item-type-eth .item-backdrop {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.05));
+}
+
+.src-addr-item.selected.item-type-pgc .selection-outline { border-color: rgba(16, 185, 129, 0.5); }
+.src-addr-item.selected.item-type-btc .selection-outline { border-color: rgba(245, 158, 11, 0.5); }
+.src-addr-item.selected.item-type-eth .selection-outline { border-color: rgba(99, 102, 241, 0.5); }
 
 .addr-info {
   display: flex;

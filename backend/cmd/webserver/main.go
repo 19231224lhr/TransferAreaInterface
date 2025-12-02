@@ -12,6 +12,7 @@ import (
 	"hash/crc32"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -133,6 +134,9 @@ func main() {
 		fs.ServeHTTP(w, r)
 	})
 
-	log.Println("Serving frontend on http://localhost:8081")
-	log.Fatal(http.ListenAndServe(":8081", nil))
+    port := os.Getenv("PORT")
+    if port == "" { port = "8081" }
+    addr := ":" + port
+    log.Println("Serving frontend on http://localhost:" + port)
+    log.Fatal(http.ListenAndServe(addr, nil))
 }
