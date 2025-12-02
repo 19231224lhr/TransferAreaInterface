@@ -1,0 +1,585 @@
+/**
+ * ========================================
+ * 系统连接页面样式 - inquiry.css
+ * 现代简约设计 - 高级质感
+ * ========================================
+ */
+
+/* ========================================
+   页面容器
+   ======================================== */
+
+#inquiryCard {
+  position: relative;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.inquiry-page {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: 28px;
+  padding: 56px 48px;
+  min-height: 460px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 4px 32px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  animation: pageSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+              opacity 0.4s ease;
+}
+
+/* 成功状态 - 整体容器 */
+.inquiry-page.success {
+  animation: successPulse 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes pageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes successPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+/* ========================================
+   连接动画区域
+   ======================================== */
+
+.inquiry-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 36px;
+}
+
+/* 脉冲圆环动画 - 优化版 */
+.inquiry-pulse {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 外层光晕 */
+.inquiry-pulse::before {
+  content: '';
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, transparent 70%);
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.5; }
+  50% { transform: scale(1.1); opacity: 1; }
+}
+
+/* 旋转圆环 - 更流畅 */
+.inquiry-pulse-ring {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid transparent;
+}
+
+.inquiry-pulse-ring:nth-child(1) {
+  width: 100%;
+  height: 100%;
+  border-color: rgba(59, 130, 246, 0.15);
+  border-top-color: #3b82f6;
+  border-right-color: #3b82f6;
+  animation: ringRotate1 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.inquiry-pulse-ring:nth-child(2) {
+  width: 82%;
+  height: 82%;
+  border-color: rgba(139, 92, 246, 0.12);
+  border-bottom-color: #8b5cf6;
+  border-left-color: #8b5cf6;
+  animation: ringRotate2 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.inquiry-pulse-ring:nth-child(3) {
+  width: 64%;
+  height: 64%;
+  border-color: rgba(6, 182, 212, 0.1);
+  border-top-color: #06b6d4;
+  animation: ringRotate3 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes ringRotate1 {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes ringRotate2 {
+  0% { transform: rotate(45deg); }
+  100% { transform: rotate(-315deg); }
+}
+
+@keyframes ringRotate3 {
+  0% { transform: rotate(-30deg); }
+  100% { transform: rotate(330deg); }
+}
+
+/* 中心图标 - 更有质感 */
+.inquiry-icon {
+  position: relative;
+  z-index: 1;
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(145deg, #4f8ef7 0%, #3b82f6 50%, #7c5ce7 100%);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 8px 32px rgba(59, 130, 246, 0.35),
+    0 2px 8px rgba(59, 130, 246, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: iconFloat 3s ease-in-out infinite;
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inquiry-icon svg {
+  width: 26px;
+  height: 26px;
+  color: white;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+  transition: all 0.4s ease;
+}
+
+/* 成功状态图标 */
+.inquiry-icon.success {
+  background: linear-gradient(145deg, #34d399 0%, #10b981 50%, #059669 100%);
+  box-shadow: 
+    0 8px 32px rgba(16, 185, 129, 0.35),
+    0 2px 8px rgba(16, 185, 129, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  animation: successBounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-4px) scale(1.02); }
+}
+
+@keyframes successBounce {
+  0% { transform: scale(0.8); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* ========================================
+   文字区域
+   ======================================== */
+
+.inquiry-text {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.inquiry-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  letter-spacing: -0.02em;
+  transition: all 0.4s ease;
+}
+
+.inquiry-title.success {
+  color: #059669;
+}
+
+.inquiry-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+  transition: all 0.4s ease;
+}
+
+/* ========================================
+   进度指示器 - 全新设计
+   ======================================== */
+
+.inquiry-progress {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 360px;
+}
+
+/* 进度条轨道 */
+.inquiry-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 100%);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* 进度条填充 - 流动粒子效果 */
+.inquiry-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    #3b82f6 0%, 
+    #8b5cf6 25%, 
+    #06b6d4 50%,
+    #8b5cf6 75%,
+    #3b82f6 100%);
+  background-size: 200% 100%;
+  border-radius: 3px;
+  width: 0%;
+  position: relative;
+  animation: progressGradient 2s linear infinite;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+/* 闪光效果 */
+.inquiry-progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, 
+    transparent 0%,
+    rgba(255, 255, 255, 0.4) 50%,
+    transparent 100%);
+  animation: progressShine 1.5s ease-in-out infinite;
+}
+
+@keyframes progressGradient {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes progressShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* 成功状态进度条 */
+.inquiry-progress-fill.complete {
+  width: 100% !important;
+  background: linear-gradient(90deg, #10b981 0%, #34d399 50%, #10b981 100%);
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5);
+  animation: none;
+}
+
+.inquiry-progress-fill.complete::after {
+  animation: none;
+  opacity: 0;
+}
+
+/* 步骤指示 - 全新设计 */
+.inquiry-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: relative;
+}
+
+.inquiry-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  min-width: 80px;
+}
+
+.inquiry-step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 2;
+}
+
+.inquiry-step-dot::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #cbd5e1;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.inquiry-step span:last-child {
+  font-size: 12px;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: all 0.4s ease;
+  white-space: nowrap;
+}
+
+/* 等待状态 */
+.inquiry-step.waiting .inquiry-step-dot {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.inquiry-step.waiting .inquiry-step-dot::before {
+  background: #cbd5e1;
+}
+
+/* 激活状态 */
+.inquiry-step.active .inquiry-step-dot {
+  background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  animation: stepPulse 1.5s ease-in-out infinite;
+}
+
+.inquiry-step.active .inquiry-step-dot::before {
+  background: #3b82f6;
+  animation: dotBlink 1s ease-in-out infinite;
+}
+
+.inquiry-step.active span:last-child {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+@keyframes stepPulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15); }
+  50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.08); }
+}
+
+@keyframes dotBlink {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.7; }
+}
+
+/* 完成状态 */
+.inquiry-step.completed .inquiry-step-dot {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.inquiry-step.completed .inquiry-step-dot::before {
+  /* 变成勾选 */
+  width: 10px;
+  height: 6px;
+  background: transparent;
+  border-radius: 0;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translateY(-1px);
+}
+
+.inquiry-step.completed span:last-child {
+  color: #10b981;
+  font-weight: 500;
+}
+
+/* 步骤连接线 */
+.inquiry-step-divider {
+  width: 40px;
+  height: 2px;
+  background: #e2e8f0;
+  position: relative;
+  overflow: hidden;
+  margin: 0 4px;
+  margin-bottom: 24px;
+  border-radius: 1px;
+}
+
+/* 连接线流动效果 */
+.inquiry-step-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 1px;
+}
+
+.inquiry-step-divider.flowing::after {
+  width: 100%;
+  animation: lineFlow 0.8s ease-out forwards;
+}
+
+.inquiry-step-divider.complete::after {
+  width: 100%;
+  background: #10b981;
+}
+
+@keyframes lineFlow {
+  0% { width: 0%; left: 0; }
+  100% { width: 100%; left: 0; }
+}
+
+/* ========================================
+   底部提示
+   ======================================== */
+
+.inquiry-tip {
+  margin-top: 20px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 50%, #ecfdf5 100%);
+  border-radius: 14px;
+  border: 1px solid rgba(59, 130, 246, 0.08);
+  transition: all 0.4s ease;
+}
+
+.inquiry-tip.success {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.inquiry-tip p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: color 0.4s ease;
+}
+
+.inquiry-tip.success p {
+  color: #059669;
+}
+
+.inquiry-tip svg {
+  width: 18px;
+  height: 18px;
+  color: #3b82f6;
+  flex-shrink: 0;
+  transition: color 0.4s ease;
+}
+
+.inquiry-tip.success svg {
+  color: #10b981;
+}
+
+/* ========================================
+   成功后的淡出动画
+   ======================================== */
+
+.inquiry-page.fade-out {
+  animation: fadeOutUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes fadeOutUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.98);
+  }
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 600px) {
+  .inquiry-page {
+    padding: 48px 24px;
+    min-height: 420px;
+    border-radius: 24px;
+  }
+
+  .inquiry-pulse {
+    width: 120px;
+    height: 120px;
+  }
+
+  .inquiry-pulse::before {
+    width: 140px;
+    height: 140px;
+  }
+
+  .inquiry-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+  }
+
+  .inquiry-icon svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .inquiry-title {
+    font-size: 20px;
+  }
+
+  .inquiry-desc {
+    font-size: 13px;
+  }
+
+  .inquiry-progress {
+    max-width: 100%;
+  }
+
+  .inquiry-step {
+    min-width: 64px;
+  }
+
+  .inquiry-step-divider {
+    width: 24px;
+  }
+
+  .inquiry-step span:last-child {
+    font-size: 11px;
+  }
+
+  .inquiry-tip {
+    padding: 12px 16px;
+  }
+
+  .inquiry-tip p {
+    font-size: 12px;
+  }
+}

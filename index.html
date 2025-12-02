@@ -21,6 +21,7 @@
   <link rel="stylesheet" href="/css/transaction.css?v=20251202" />
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
+  <link rel="stylesheet" href="/css/inquiry.css?v=20251202a" />
   
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1666,20 +1667,65 @@
       </div>
     </section>
 
-    <section class="card hidden" id="inquiryCard">
-      <div class="card-header">
-        <h2>正在连接</h2>
-      </div>
-      <div class="loader loader--hero">
-        <div class="bolt" aria-hidden="true">
-          <span class="seg seg1"></span>
-          <span class="seg seg2"></span>
-          <span class="seg seg3"></span>
-          <span class="seg seg4"></span>
+    <section class="hidden" id="inquiryCard">
+      <div class="inquiry-page" id="inquiryPage">
+        <div class="inquiry-loader">
+          <!-- 脉冲动画 -->
+          <div class="inquiry-pulse">
+            <div class="inquiry-pulse-ring"></div>
+            <div class="inquiry-pulse-ring"></div>
+            <div class="inquiry-pulse-ring"></div>
+            <div class="inquiry-icon" id="inquiryIcon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-pulse">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+              </svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-check" style="display:none">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- 文字区域 -->
+          <div class="inquiry-text">
+            <h2 class="inquiry-title" id="inquiryTitle">正在连接到网络</h2>
+            <p class="inquiry-desc" id="inquiryDesc">正在建立安全连接，验证账户信息</p>
+          </div>
+
+          <!-- 进度指示器 -->
+          <div class="inquiry-progress">
+            <div class="inquiry-progress-bar">
+              <div class="inquiry-progress-fill" id="inquiryProgressFill"></div>
+            </div>
+            <div class="inquiry-steps" id="inquirySteps">
+              <div class="inquiry-step active" data-step="1">
+                <span class="inquiry-step-dot"></span>
+                <span>初始化</span>
+              </div>
+              <div class="inquiry-step-divider" data-line="1"></div>
+              <div class="inquiry-step waiting" data-step="2">
+                <span class="inquiry-step-dot"></span>
+                <span>连接网络</span>
+              </div>
+              <div class="inquiry-step-divider" data-line="2"></div>
+              <div class="inquiry-step waiting" data-step="3">
+                <span class="inquiry-step-dot"></span>
+                <span>验证账户</span>
+              </div>
+            </div>
+          </div>
         </div>
-        <span>正在连接到快速转账网络...</span>
+
+        <!-- 底部提示 -->
+        <div class="inquiry-tip" id="inquiryTip">
+          <p>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 16v-4M12 8h.01"/>
+            </svg>
+            <span id="inquiryTipText">正在发起网络问询以确定账户所属关系，请稍候</span>
+          </p>
+        </div>
       </div>
-      <p class="tip">正在发起网络问询以确定账户所属关系，请稍候。</p>
     </section>
 
     <section class="card hidden" id="memberInfoCard">

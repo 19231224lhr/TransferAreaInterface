@@ -1019,6 +1019,213 @@ function getJoinedGroup() {
   return null;
 }
 
+/**
+ * 连接页面动画控制
+ * 流畅的三阶段进度动画 + 成功状态过渡
+ */
+function startInquiryAnimation(onComplete) {
+  // 重置状态
+  resetInquiryState();
+  
+  const steps = document.querySelectorAll('#inquirySteps .inquiry-step');
+  const lines = document.querySelectorAll('#inquirySteps .inquiry-step-divider');
+  const progressFill = document.getElementById('inquiryProgressFill');
+  const icon = document.getElementById('inquiryIcon');
+  const title = document.getElementById('inquiryTitle');
+  const desc = document.getElementById('inquiryDesc');
+  const tip = document.getElementById('inquiryTip');
+  const tipText = document.getElementById('inquiryTipText');
+  const page = document.getElementById('inquiryPage');
+  
+  // 阶段文案
+  const stageTexts = [
+    { title: '正在初始化', desc: '准备连接组件...' },
+    { title: '正在连接网络', desc: '正在建立安全连接，验证账户信息' },
+    { title: '正在验证账户', desc: '校验账户信息与组织关系...' },
+    { title: '连接成功', desc: '账户验证通过，即将进入系统' }
+  ];
+  
+  // 更新进度和阶段状态
+  function updateStage(stageIndex) {
+    // 更新进度条
+    const progress = ((stageIndex + 1) / 3) * 100;
+    if (progressFill) {
+      progressFill.style.width = Math.min(progress, 95) + '%';
+    }
+    
+    // 更新文案
+    if (title && stageTexts[stageIndex]) {
+      title.textContent = stageTexts[stageIndex].title;
+    }
+    if (desc && stageTexts[stageIndex]) {
+      desc.textContent = stageTexts[stageIndex].desc;
+    }
+    
+    // 更新步骤状态
+    steps.forEach((step, i) => {
+      step.classList.remove('active', 'completed', 'waiting');
+      if (i < stageIndex) {
+        step.classList.add('completed');
+      } else if (i === stageIndex) {
+        step.classList.add('active');
+      } else {
+        step.classList.add('waiting');
+      }
+    });
+    
+    // 更新连接线
+    lines.forEach((line, i) => {
+      line.classList.remove('flowing', 'complete');
+      if (i < stageIndex) {
+        line.classList.add('complete');
+      } else if (i === stageIndex - 1) {
+        line.classList.add('flowing');
+      }
+    });
+  }
+  
+  // 显示成功状态
+  function showSuccess() {
+    // 进度条完成
+    if (progressFill) {
+      progressFill.style.width = '100%';
+      progressFill.classList.add('complete');
+    }
+    
+    // 所有步骤完成
+    steps.forEach(step => {
+      step.classList.remove('active', 'waiting');
+      step.classList.add('completed');
+    });
+    
+    // 所有连接线完成
+    lines.forEach(line => {
+      line.classList.remove('flowing');
+      line.classList.add('complete');
+    });
+    
+    // 图标变成勾选
+    if (icon) {
+      icon.classList.add('success');
+      const iconPulse = icon.querySelector('.icon-pulse');
+      const iconCheck = icon.querySelector('.icon-check');
+      if (iconPulse) iconPulse.style.display = 'none';
+      if (iconCheck) iconCheck.style.display = 'block';
+    }
+    
+    // 标题变绿
+    if (title) {
+      title.textContent = stageTexts[3].title;
+      title.classList.add('success');
+    }
+    if (desc) {
+      desc.textContent = stageTexts[3].desc;
+    }
+    
+    // 提示变绿
+    if (tip) tip.classList.add('success');
+    if (tipText) tipText.textContent = '验证通过，正在为您跳转...';
+    
+    // 页面脉冲效果
+    if (page) page.classList.add('success');
+  }
+  
+  // 淡出并跳转
+  function fadeOutAndNavigate() {
+    if (page) {
+      page.classList.add('fade-out');
+    }
+    setTimeout(() => {
+      if (onComplete) onComplete();
+    }, 500);
+  }
+  
+  // 开始动画序列
+  // 阶段1: 初始化 (0-600ms)
+  updateStage(0);
+  
+  setTimeout(() => {
+    // 阶段2: 连接网络 (600-1600ms)
+    updateStage(1);
+  }, 600);
+  
+  setTimeout(() => {
+    // 阶段3: 验证账户 (1600-2600ms)
+    updateStage(2);
+  }, 1600);
+  
+  setTimeout(() => {
+    // 成功状态 (2600ms)
+    showSuccess();
+  }, 2600);
+  
+  setTimeout(() => {
+    // 淡出并跳转 (3200ms)
+    fadeOutAndNavigate();
+  }, 3200);
+}
+
+/**
+ * 重置 inquiry 页面状态
+ */
+function resetInquiryState() {
+  const steps = document.querySelectorAll('#inquirySteps .inquiry-step');
+  const lines = document.querySelectorAll('#inquirySteps .inquiry-step-divider');
+  const progressFill = document.getElementById('inquiryProgressFill');
+  const icon = document.getElementById('inquiryIcon');
+  const title = document.getElementById('inquiryTitle');
+  const desc = document.getElementById('inquiryDesc');
+  const tip = document.getElementById('inquiryTip');
+  const tipText = document.getElementById('inquiryTipText');
+  const page = document.getElementById('inquiryPage');
+  
+  // 重置进度条
+  if (progressFill) {
+    progressFill.style.width = '0%';
+    progressFill.classList.remove('complete');
+  }
+  
+  // 重置步骤
+  steps.forEach((step, i) => {
+    step.classList.remove('active', 'completed', 'waiting');
+    if (i === 0) {
+      step.classList.add('active');
+    } else {
+      step.classList.add('waiting');
+    }
+  });
+  
+  // 重置连接线
+  lines.forEach(line => {
+    line.classList.remove('flowing', 'complete');
+  });
+  
+  // 重置图标
+  if (icon) {
+    icon.classList.remove('success');
+    const iconPulse = icon.querySelector('.icon-pulse');
+    const iconCheck = icon.querySelector('.icon-check');
+    if (iconPulse) iconPulse.style.display = 'block';
+    if (iconCheck) iconCheck.style.display = 'none';
+  }
+  
+  // 重置文字
+  if (title) {
+    title.textContent = '正在连接到网络';
+    title.classList.remove('success');
+  }
+  if (desc) desc.textContent = '正在建立安全连接，验证账户信息';
+  
+  // 重置提示
+  if (tip) tip.classList.remove('success');
+  if (tipText) tipText.textContent = '正在发起网络问询以确定账户所属关系，请稍候';
+  
+  // 重置页面
+  if (page) {
+    page.classList.remove('success', 'fade-out');
+  }
+}
+
 function router() {
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
@@ -1118,20 +1325,20 @@ function router() {
       break;
     case '/inquiry':
       showCard(document.getElementById('inquiryCard'));
-      setTimeout(() => {
+      startInquiryAnimation(() => {
         const u3 = loadUser();
         if (u3) {
           u3.orgNumber = '10000000';
           saveUser(u3);
         }
         routeTo('#/member-info');
-      }, 2000);
+      });
       break;
     case '/inquiry-main':
       showCard(document.getElementById('inquiryCard'));
-      setTimeout(() => {
+      startInquiryAnimation(() => {
         routeTo('#/main');
-      }, 2000);
+      });
       break;
     case '/member-info':
       showCard(document.getElementById('memberInfoCard'));
