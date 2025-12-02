@@ -2033,14 +2033,13 @@ if (skipJoinBtn) {
 if (joinRecBtn) {
   joinRecBtn.addEventListener('click', async () => {
     const g = DEFAULT_GROUP;
-    const overlay = document.getElementById('joinOverlay');
     try {
-      if (overlay) overlay.classList.remove('hidden');
+      showUnifiedLoading('正在加入担保组织...');
       joinRecBtn.disabled = true;
       if (joinSearchBtn) joinSearchBtn.disabled = true;
       await wait(2000);
     } finally {
-      if (overlay) overlay.classList.add('hidden');
+      hideUnifiedOverlay();
       joinRecBtn.disabled = false;
       if (joinSearchBtn) joinSearchBtn.disabled = false;
     }
@@ -2077,14 +2076,13 @@ if (joinSearchBtn) {
   joinSearchBtn.addEventListener('click', async () => {
     if (joinSearchBtn.disabled) return;
     const g = currentSelectedGroup || DEFAULT_GROUP;
-    const overlay = document.getElementById('joinOverlay');
     try {
-      if (overlay) overlay.classList.remove('hidden');
+      showUnifiedLoading('正在加入担保组织...');
       joinRecBtn.disabled = true;
       joinSearchBtn.disabled = true;
       await wait(2000);
     } finally {
-      if (overlay) overlay.classList.add('hidden');
+      hideUnifiedOverlay();
       joinRecBtn.disabled = false;
       joinSearchBtn.disabled = false;
     }
