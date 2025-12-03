@@ -4156,13 +4156,13 @@ function renderWallet() {
   const optionsContent = document.getElementById('optionsContent');
   if (optionsToggle && optionsContent && !optionsToggle.dataset._bind) {
     optionsToggle.addEventListener('click', () => {
-      const isExpanded = optionsToggle.classList.contains('expanded');
-      if (isExpanded) {
-        optionsToggle.classList.remove('expanded');
-        optionsContent.classList.remove('expanded');
+      const isActive = optionsToggle.classList.contains('active');
+      if (isActive) {
+        optionsToggle.classList.remove('active');
+        optionsContent.classList.remove('show');
       } else {
-        optionsToggle.classList.add('expanded');
-        optionsContent.classList.add('expanded');
+        optionsToggle.classList.add('active');
+        optionsContent.classList.add('show');
       }
     });
     optionsToggle.dataset._bind = '1';
@@ -4182,7 +4182,8 @@ function renderWallet() {
   // V2 Main Page - 交易模式切换
   const modeTabsContainer = document.querySelector('.transfer-mode-tabs');
   if (modeTabsContainer && !modeTabsContainer.dataset._bind) {
-    const isCompactMode = () => window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches;
+    // 竖屏或窄屏时使用紧凑的单选下拉模式
+    const isCompactMode = () => window.matchMedia('(max-width: 860px)').matches;
     const ensureDropdown = () => {
       let dd = modeTabsContainer.querySelector('.mode-dropdown');
       if (!dd) {
@@ -4247,6 +4248,64 @@ function renderWallet() {
     window.addEventListener('orientationchange', onResize);
     updateModeTabsLayout();
     modeTabsContainer.dataset._bind = '1';
+  }
+  
+  // V2 Main Page - 未加入担保组织警告弹窗事件处理
+  const noOrgWarnBtn = document.getElementById('noOrgWarnBtn');
+  const noOrgModal = document.getElementById('noOrgModal');
+  const noOrgModalCancel = document.getElementById('noOrgModalCancel');
+  const noOrgModalOk = document.getElementById('noOrgModalOk');
+  
+  if (noOrgWarnBtn && noOrgModal && !noOrgWarnBtn.dataset._bind) {
+    // 显示弹窗
+    const showNoOrgModal = () => {
+      noOrgModal.classList.remove('hidden');
+    };
+    
+    // 隐藏弹窗
+    const hideNoOrgModal = () => {
+      noOrgModal.classList.add('hidden');
+    };
+    
+    // 警告按钮点击事件
+    noOrgWarnBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      showNoOrgModal();
+    });
+    
+    // 点击遮罩层关闭
+    noOrgModal.addEventListener('click', (e) => {
+      if (e.target === noOrgModal) {
+        hideNoOrgModal();
+      }
+    });
+    
+    // 取消按钮
+    if (noOrgModalCancel) {
+      noOrgModalCancel.addEventListener('click', hideNoOrgModal);
+    }
+    
+    // 确认按钮 - 前往加入担保组织
+    if (noOrgModalOk) {
+      noOrgModalOk.addEventListener('click', () => {
+        hideNoOrgModal();
+        if (typeof routeTo === 'function') {
+          routeTo('#/join-group');
+        } else {
+          window.location.hash = '#/join-group';
+        }
+      });
+    }
+    
+    // ESC 键关闭弹窗
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !noOrgModal.classList.contains('hidden')) {
+        hideNoOrgModal();
+      }
+    });
+    
+    noOrgWarnBtn.dataset._bind = '1';
   }
   
   // V2 Main Page - openCreateAddrBtn2 同步功能
@@ -5164,6 +5223,21 @@ function refreshOrgPanel() {
   const tfModePledge = document.getElementById('tfModePledge');
   const isPledgeSel = document.getElementById('isPledge');
   const hasOrg = joined;
+  
+  // 更新新的交易模式切换UI
+  const modeTabsContainer = document.getElementById('transferModeTabs');
+  const noOrgWarning = document.getElementById('noOrgWarning');
+  
+  if (modeTabsContainer) {
+    if (hasOrg) {
+      // 已加入担保组织 - 显示完整模式切换
+      modeTabsContainer.classList.remove('no-org-mode');
+    } else {
+      // 未加入担保组织 - 显示简化模式 + 警告
+      modeTabsContainer.classList.add('no-org-mode');
+    }
+  }
+  
   if (tfModeQuick && tfModeQuick.parentNode) {
     const quickLabel = tfModeQuick.parentNode;
     const span = quickLabel.querySelector('.segment-content');

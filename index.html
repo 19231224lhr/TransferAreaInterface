@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203l" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203s" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -2023,10 +2023,25 @@
                 </div>
 
                 <!-- 交易模式切换 -->
-                <div class="transfer-mode-tabs">
+                <div class="transfer-mode-tabs" id="transferModeTabs">
+                  <!-- 正常模式（已加入担保组织） -->
                   <button class="transfer-mode-tab active" data-mode="quick">快速转账</button>
                   <button class="transfer-mode-tab" data-mode="cross">跨链转账</button>
                   <button class="transfer-mode-tab" data-mode="pledge">质押交易</button>
+                  
+                  <!-- 未加入担保组织的提示模块 -->
+                  <div class="no-org-warning hidden" id="noOrgWarning">
+                    <button class="no-org-tab active" data-mode="quick">
+                      <span class="no-org-tab-text">普通转账</span>
+                    </button>
+                    <button class="no-org-warn-btn" id="noOrgWarnBtn" type="button" aria-label="未加入担保组织提示">
+                      <svg class="no-org-warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                        <line x1="12" y1="9" x2="12" y2="13"/>
+                        <circle cx="12" cy="17" r="0.5" fill="currentColor"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -2543,6 +2558,48 @@
             <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden">取消</button>
             <button id="unifiedOkBtn" class="unified-btn unified-btn--primary">好的</button>
           </div>
+        </div>
+      </div>
+    </div>
+    <!-- 未加入担保组织提示弹窗 -->
+    <div id="noOrgModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="dialog no-org-dialog">
+        <div class="no-org-dialog-header">
+          <div class="no-org-dialog-icon-wrap">
+            <svg class="no-org-dialog-icon" viewBox="0 0 24 24" fill="none">
+              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 7v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              <circle cx="12" cy="16" r="1.2" fill="currentColor"/>
+            </svg>
+          </div>
+          <h3>未加入担保组织</h3>
+        </div>
+        <p class="tip">当前账户尚未加入担保组织，这可能导致：</p>
+        <ul class="no-org-dialog-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>交易确认时间更长</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>Gas 费用显著增加</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            <span>无法使用快速转账等高级功能</span>
+          </li>
+        </ul>
+        <div class="actions">
+          <button id="noOrgModalCancel" class="btn secondary">我知道了</button>
+          <button id="noOrgModalOk" class="btn primary">前往加入</button>
         </div>
       </div>
     </div>
