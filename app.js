@@ -4644,14 +4644,14 @@ function renderWallet() {
     bindToggle(changeHeadBtn);
     let billSeq = 0;
     const updateRemoveState = () => {
-      const rows = Array.from(billList.querySelectorAll('.bill-item'));
-      const onlyOne = rows.length <= 1;
-      rows.forEach(r => {
-        const btn = r.querySelector('.bill-remove');
+      const cards = Array.from(billList.querySelectorAll('.recipient-card'));
+      const onlyOne = cards.length <= 1;
+      cards.forEach(card => {
+        const btn = card.querySelector('[data-role="remove"]');
         if (btn) {
           btn.disabled = onlyOne;
           if (onlyOne) {
-            btn.setAttribute('title', '仅剩一笔转账账单不允许删除');
+            btn.setAttribute('title', '仅剩一笔转账不允许删除');
             btn.setAttribute('aria-disabled', 'true');
           } else {
             btn.removeAttribute('title');
@@ -4660,26 +4660,114 @@ function renderWallet() {
         }
       });
     };
+    
+    // 更新卡片索引
+    const updateCardIndices = () => {
+      const cards = billList.querySelectorAll('.recipient-card');
+      cards.forEach((card, idx) => {
+        card.setAttribute('data-index', idx + 1);
+      });
+    };
+    
     const addBill = () => {
       const g = computeCurrentOrgId() || '';
-      const row = document.createElement('div');
-      row.className = 'bill-item';
+      const card = document.createElement('div');
+      card.className = 'recipient-card';
       const idBase = `bill_${Date.now()}_${billSeq++}`;
-      row.innerHTML = `
-        <div class="bill-grid">
-          <div class="bill-row bill-row--full bill-row--addr"><label class="bill-label" for="${idBase}_to">地址</label><div class="bill-addr-input-wrap"><input id="${idBase}_to" class="input" type="text" placeholder="To Address" aria-label="目标地址" data-name="to"><button type="button" class="bill-addr-lookup" aria-label="自动补全担保组织与公钥" title="查询担保组织与公钥" data-role="addr-lookup"><svg class="icon-search" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><circle cx="7" cy="7" r="4.2" stroke="currentColor" stroke-width="1.6" fill="none"></circle><line x1="10.2" y1="10.2" x2="13" y2="13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line></svg></button></div></div>
-          <div class="bill-row"><label class="bill-label" for="${idBase}_val">金额</label><input id="${idBase}_val" class="input" type="number" placeholder="金额" aria-label="金额" data-name="val"></div>
-          <div class="bill-row"><label class="bill-label" for="${idBase}_mt">币种</label><div id="${idBase}_mt" class="input custom-select" role="button" aria-label="币种" data-name="mt" data-val="0"><span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></span><span class="custom-select__arrow">▾</span><div class="custom-select__menu"><div class="custom-select__item" data-val="0"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></div><div class="custom-select__item" data-val="1"><span class="coin-icon coin--btc"></span><span class="coin-label">BTC</span></div><div class="custom-select__item" data-val="2"><span class="coin-icon coin--eth"></span><span class="coin-label">ETH</span></div></div></div></div>
-          <div class="bill-row bill-row--full"><label class="bill-label" for="${idBase}_pub">公钥</label><input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y 或 X,Y" aria-label="公钥" data-name="pub"></div>
-          <div class="bill-row"><label class="bill-label" for="${idBase}_gid">担保组织ID</label><input id="${idBase}_gid" class="input" type="text" placeholder="担保组织ID" value="" aria-label="担保组织ID" data-name="gid"></div>
-          <div class="bill-row"><label class="bill-label" for="${idBase}_gas">转移Gas</label><input id="${idBase}_gas" class="input" type="number" placeholder="转移Gas" aria-label="转移Gas" data-name="gas"></div>
-          <div class="bill-actions bill-actions--full"><button class="btn danger btn--sm bill-remove">删除</button></div>
+      const cardIndex = billList.querySelectorAll('.recipient-card').length + 1;
+      card.setAttribute('data-index', cardIndex);
+      
+      card.innerHTML = `
+        <div class="recipient-content">
+          <!-- 主要区域：地址 -->
+          <div class="recipient-main">
+            <div class="recipient-addr-field">
+              <span class="recipient-field-label">收款地址</span>
+              <div class="recipient-addr-input-wrap">
+                <input id="${idBase}_to" class="input" type="text" placeholder="输入收款方地址" aria-label="目标地址" data-name="to">
+                <button type="button" class="recipient-lookup-btn" aria-label="查询地址信息" title="自动补全担保组织与公钥" data-role="addr-lookup">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"/>
+                    <path d="M21 21l-4.35-4.35"/>
+                  </svg>
+                  <span class="lookup-spinner"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 金额和币种 -->
+          <div class="recipient-amount-row">
+            <div class="recipient-field">
+              <span class="recipient-field-label">转账金额</span>
+              <input id="${idBase}_val" class="input" type="number" placeholder="0.00" aria-label="金额" data-name="val">
+            </div>
+            <div class="recipient-field">
+              <span class="recipient-field-label">币种</span>
+              <div id="${idBase}_mt" class="recipient-coin-select" role="button" aria-label="币种" data-name="mt" data-val="0">
+                <div class="recipient-coin-value">
+                  <span class="coin-icon coin--pgc"></span>
+                  <span class="coin-label">PGC</span>
+                  <span class="recipient-coin-arrow">▾</span>
+                </div>
+                <div class="recipient-coin-menu">
+                  <div class="recipient-coin-item" data-val="0"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></div>
+                  <div class="recipient-coin-item" data-val="1"><span class="coin-icon coin--btc"></span><span class="coin-label">BTC</span></div>
+                  <div class="recipient-coin-item" data-val="2"><span class="coin-icon coin--eth"></span><span class="coin-label">ETH</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 可折叠的详情区 -->
+          <div class="recipient-details">
+            <div class="recipient-details-inner">
+              <div class="recipient-details-content">
+                <div class="recipient-field">
+                  <span class="recipient-field-label">公钥</span>
+                  <input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y 或 X,Y" aria-label="公钥" data-name="pub">
+                </div>
+                <div class="recipient-details-row">
+                  <div class="recipient-field">
+                    <span class="recipient-field-label">担保组织ID</span>
+                    <input id="${idBase}_gid" class="input" type="text" placeholder="可选" value="" aria-label="担保组织ID" data-name="gid">
+                  </div>
+                  <div class="recipient-field">
+                    <span class="recipient-field-label">转移Gas</span>
+                    <input id="${idBase}_gas" class="input" type="number" placeholder="0" aria-label="转移Gas" data-name="gas">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 底部操作栏 -->
+          <div class="recipient-actions">
+            <button type="button" class="recipient-expand-btn" data-role="expand">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+              <span>高级选项</span>
+            </button>
+            <button type="button" class="recipient-remove-btn" data-role="remove">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 6h18"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+              </svg>
+              <span>删除</span>
+            </button>
+          </div>
         </div>
       `;
-      const addrInputEl = row.querySelector('[data-name="to"]');
-      const gidInputEl = row.querySelector('[data-name="gid"]');
-      const pubInputEl = row.querySelector('[data-name="pub"]');
-      const lookupBtn = row.querySelector('[data-role="addr-lookup"]');
+      
+      const addrInputEl = card.querySelector('[data-name="to"]');
+      const gidInputEl = card.querySelector('[data-name="gid"]');
+      const pubInputEl = card.querySelector('[data-name="pub"]');
+      const lookupBtn = card.querySelector('[data-role="addr-lookup"]');
+      const expandBtn = card.querySelector('[data-role="expand"]');
+      const removeBtn = card.querySelector('[data-role="remove"]');
+      
+      // 地址查询按钮
       if (lookupBtn && addrInputEl) {
         lookupBtn.addEventListener('click', async () => {
           if (lookupBtn.dataset.loading === '1') return;
@@ -4704,7 +4792,7 @@ function renderWallet() {
               await new Promise((resolve) => setTimeout(resolve, 2000 - elapsed));
             }
             if (!info) {
-              showModalTip('地址查询失败', '未找到该地址对应的信息，请检查输入是否正确。', true);
+              showMiniToast('未找到该地址信息', 'error');
               return;
             }
             if (pubInputEl && info.pubKey) {
@@ -4713,8 +4801,16 @@ function renderWallet() {
             if (gidInputEl) {
               gidInputEl.value = info.groupId || '';
             }
+            // 查询成功后自动展开详情区显示结果
+            if (info.pubKey || info.groupId) {
+              card.classList.add('expanded');
+              const hasKey = info.pubKey ? '公钥' : '';
+              const hasOrg = info.groupId ? '担保组织' : '';
+              const found = [hasKey, hasOrg].filter(Boolean).join('、');
+              showMiniToast(`已获取${found}信息`, 'success');
+            }
           } catch (e) {
-            showModalTip('地址查询失败', '查询地址信息时发生错误，请稍后重试。', true);
+            showMiniToast('查询失败，请稍后重试', 'error');
           } finally {
             lookupBtn.disabled = false;
             lookupBtn.classList.remove('is-loading');
@@ -4722,39 +4818,67 @@ function renderWallet() {
           }
         });
       }
-      billList.appendChild(row);
+      
+      // 展开/折叠按钮
+      if (expandBtn) {
+        expandBtn.addEventListener('click', () => {
+          card.classList.toggle('expanded');
+          const label = expandBtn.querySelector('span');
+          if (label) {
+            label.textContent = card.classList.contains('expanded') ? '收起选项' : '高级选项';
+          }
+        });
+      }
+      
+      // 删除按钮
+      if (removeBtn) {
+        removeBtn.addEventListener('click', () => {
+          const cards = billList.querySelectorAll('.recipient-card');
+          if (cards.length <= 1) return;
+          card.style.animation = 'recipientCardExit 0.25s ease forwards';
+          setTimeout(() => {
+            card.remove();
+            updateCardIndices();
+            updateRemoveState();
+          }, 250);
+        });
+      }
+      
+      billList.appendChild(card);
+      updateCardIndices();
       updateRemoveState();
-      const del = row.querySelector('.bill-remove');
-      del.addEventListener('click', () => {
-        const rows = Array.from(billList.querySelectorAll('.bill-item'));
-        if (rows.length <= 1) return;
-        row.remove();
-        updateRemoveState();
-      });
-      const gasInputEl = row.querySelector('[data-name="gas"]');
-      const cs = row.querySelector('#' + idBase + '_mt');
+      
+      // 币种选择器
+      const cs = card.querySelector('#' + idBase + '_mt');
       if (cs) {
         cs.addEventListener('click', (e) => { e.stopPropagation(); cs.classList.toggle('open'); });
-        const menu = cs.querySelector('.custom-select__menu');
+        const menu = cs.querySelector('.recipient-coin-menu');
         if (menu) {
           menu.addEventListener('click', (ev) => {
             ev.stopPropagation();
-            const item = ev.target.closest('.custom-select__item');
+            const item = ev.target.closest('.recipient-coin-item');
             if (!item) return;
             const v = item.getAttribute('data-val');
             cs.dataset.val = v;
-            const valEl = cs.querySelector('.custom-select__value');
+            const valEl = cs.querySelector('.recipient-coin-value');
             if (valEl) {
               const labels = { '0': { t: 'PGC', c: 'coin--pgc' }, '1': { t: 'BTC', c: 'coin--btc' }, '2': { t: 'ETH', c: 'coin--eth' } };
               const m = labels[v] || labels['0'];
-              valEl.innerHTML = `<span class="coin-icon ${m.c}"></span><span class="coin-label">${m.t}</span>`;
+              valEl.innerHTML = `<span class="coin-icon ${m.c}"></span><span class="coin-label">${m.t}</span><span class="recipient-coin-arrow">▾</span>`;
             }
             cs.classList.remove('open');
           });
         }
         document.addEventListener('click', () => { cs.classList.remove('open'); });
       }
-      if (gasInputEl) { gasInputEl.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addBill(); } }); }
+      
+      // 回车添加新收款方
+      const gasInputEl = card.querySelector('[data-name="gas"]');
+      if (gasInputEl) { 
+        gasInputEl.addEventListener('keydown', (e) => { 
+          if (e.key === 'Enter') { e.preventDefault(); addBill(); } 
+        }); 
+      }
     };
     addBillBtn.addEventListener('click', () => { addBill(); });
     addBill();
@@ -4803,10 +4927,10 @@ function renderWallet() {
           return;
         }
       }
-      const rows = Array.from(billList.querySelectorAll('.bill-item'));
-      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账账单'); return; }
+      const rows = Array.from(billList.querySelectorAll('.recipient-card'));
+      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账'); return; }
       const isCross = tfMode.value === 'cross';
-      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔账单'); return; }
+      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔转账'); return; }
       const changeMap = {};
       if (chPGC.value) changeMap[0] = chPGC.value;
       if (chBTC.value) changeMap[1] = chBTC.value;

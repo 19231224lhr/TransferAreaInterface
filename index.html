@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203s" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203u" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -2063,17 +2063,19 @@
                   </div>
                 </div>
 
-                <!-- To: 账单列表 -->
-                <div class="transfer-to">
-                  <div class="transfer-section-label">转至 · TO</div>
-                  <div id="billList" class="bill-list" role="list"></div>
-                  <button id="addBillBtn" class="add-bill-btn">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="12" y1="5" x2="12" y2="19"></line>
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    添加收款方
-                  </button>
+                <!-- To: 收款方模块 -->
+                <div class="recipients-section">
+                  <div class="recipients-header">
+                    <div class="recipients-title">转至 · TO</div>
+                    <button id="addBillBtn" class="add-recipient-btn" type="button">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                      </svg>
+                      <span>添加</span>
+                    </button>
+                  </div>
+                  <div id="billList" class="recipients-list" role="list"></div>
                 </div>
               </div>
 

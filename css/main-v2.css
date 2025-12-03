@@ -1296,45 +1296,491 @@ Already defined above with darker background
   color: white;
 }
 
-/* 收款方 */
-.transfer-to {
-  margin-top: 6px;
+/* ========================================
+   收款方模块 - 现代化重构
+   ======================================== */
+
+.recipients-section {
+  margin-top: 8px;
 }
 
-.bill-list {
+/* 头部区域 - 与从(transfer-from)一致 */
+.recipients-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0;
+}
+
+.recipients-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* 隐藏图标和计数，保持简洁 */
+.recipients-icon,
+.recipients-count {
+  display: none;
+}
+
+/* 添加按钮 - 轻量级虚线风格 */
+.add-recipient-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px dashed var(--neutral-300);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-recipient-btn svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.add-recipient-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  background: var(--neutral-50);
+}
+
+.add-recipient-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.add-recipient-btn:active {
+  transform: scale(0.98);
+}
+
+/* 收款方列表 - 与tx-addr-list一致的容器样式 */
+.recipients-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
   min-height: 50px;
+  padding: 10px;
+  background: var(--neutral-50);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--neutral-200);
 }
 
-.add-bill-btn {
+/* 收款方卡片 - 简洁灰色背景 */
+.recipient-card {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  overflow: visible;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: recipientCardEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+@keyframes recipientCardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes recipientCardExit {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+.recipient-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.recipient-card:focus-within {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* 卡片内容 - 移除左侧序号空间 */
+.recipient-content {
+  padding: 12px 14px;
+}
+
+/* 主要输入区 - 地址行 */
+.recipient-main {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recipient-addr-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recipient-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+}
+
+.recipient-addr-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+
+.recipient-addr-input-wrap .input {
+  flex: 1;
+}
+
+/* 地址查询按钮 */
+.recipient-lookup-btn {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 100%;
-  padding: 12px;
-  background: var(--neutral-50);
-  border: 1px dashed var(--neutral-200);
-  border-radius: var(--radius-md);
-  color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 500;
+  background: var(--neutral-100);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all var(--duration-fast) ease;
-  margin-top: 8px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
 }
 
-.add-bill-btn svg {
+.recipient-lookup-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 加载状态的spinner */
+.recipient-lookup-btn .lookup-spinner {
+  position: absolute;
   width: 14px;
   height: 14px;
+  border: 2px solid var(--neutral-200);
+  border-top-color: var(--transfer-primary);
+  border-radius: 50%;
+  opacity: 0;
+  animation: none;
 }
 
-.add-bill-btn:hover {
+.recipient-lookup-btn.is-loading .lookup-spinner {
+  opacity: 1;
+  animation: spin 0.8s linear infinite;
+}
+
+.recipient-lookup-btn.is-loading svg {
+  opacity: 0;
+}
+
+.recipient-lookup-btn:hover:not(.is-loading) {
+  background: var(--neutral-200);
+  border-color: var(--neutral-300);
+  color: var(--text-primary);
+}
+
+.recipient-lookup-btn:active:not(.is-loading) {
+  transform: scale(0.95);
+}
+
+.recipient-lookup-btn.is-loading {
+  pointer-events: none;
+  background: var(--neutral-50);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* 金额和币种行 */
+.recipient-amount-row {
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recipient-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* 自定义输入框样式覆盖 */
+.recipient-card .input {
+  height: 36px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.recipient-card .input:hover {
+  border-color: var(--neutral-300);
+}
+
+.recipient-card .input:focus {
   border-color: var(--transfer-primary);
-  color: var(--transfer-primary);
-  background: rgba(59, 130, 246, 0.04);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: white;
+}
+
+.recipient-card .input::placeholder {
+  color: var(--text-muted);
+}
+
+/* 币种选择器 */
+.recipient-coin-select {
+  position: relative;
+  height: 36px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.recipient-coin-select:hover {
+  border-color: var(--neutral-300);
+}
+
+.recipient-coin-select.open {
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  z-index: 100;
+}
+
+.recipient-coin-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 12px;
+}
+
+.recipient-coin-value .coin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.recipient-coin-value .coin-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.recipient-coin-arrow {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.recipient-coin-select.open .recipient-coin-arrow {
+  transform: rotate(180deg);
+}
+
+.recipient-coin-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recipient-coin-select.open .recipient-coin-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.recipient-coin-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.recipient-coin-item:first-child {
+  border-radius: 7px 7px 0 0;
+}
+
+.recipient-coin-item:last-child {
+  border-radius: 0 0 7px 7px;
+}
+
+.recipient-coin-item:hover {
+  background: var(--neutral-50);
+}
+
+.recipient-coin-item .coin-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.recipient-coin-item .coin-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+/* 折叠详情区 */
+.recipient-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recipient-card.expanded .recipient-details {
+  grid-template-rows: 1fr;
+}
+
+.recipient-details-inner {
+  overflow: hidden;
+}
+
+.recipient-details-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--neutral-200);
+}
+
+.recipient-details-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* 卡片底部操作栏 */
+.recipient-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.recipient-expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--neutral-200);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recipient-expand-btn svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.recipient-card.expanded .recipient-expand-btn svg {
+  transform: rotate(180deg);
+}
+
+.recipient-expand-btn:hover {
+  border-color: var(--neutral-300);
+  color: var(--text-secondary);
+  background: var(--neutral-50);
+}
+
+.recipient-remove-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  border-radius: 6px;
+  color: var(--fresh-red);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.6;
+}
+
+.recipient-remove-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recipient-remove-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: rgba(239, 68, 68, 0.3);
+  opacity: 1;
+}
+
+.recipient-remove-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .recipient-content {
+    padding: 10px 12px;
+  }
+  
+  .recipient-amount-row {
+    grid-template-columns: 1fr 100px;
+  }
+  
+  .recipient-details-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .recipient-actions {
+    flex-direction: row;
+    gap: 6px;
+  }
 }
 
 /* 高级选项 */
