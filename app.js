@@ -2837,28 +2837,30 @@ function renderWallet() {
           </div>
         </div>
         <div class="addr-card-detail">
-          <div class="addr-detail-row">
-            <span class="addr-detail-label">完整地址</span>
-            <span class="addr-detail-value">${a}</span>
-          </div>
-          <div class="addr-detail-row">
-            <span class="addr-detail-label">余额</span>
-            <span class="addr-detail-value">${amtCash0} ${coinType}</span>
-          </div>
-          <div class="addr-detail-row">
-            <span class="addr-detail-label">GAS</span>
-            <span class="addr-detail-value gas">${gas0}</span>
-          </div>
-          <div class="addr-card-actions">
-            <button class="addr-action-btn addr-action-btn--primary btn-add test-add-any" title="增加余额">
-              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              增加
-            </button>
-            <button class="addr-action-btn addr-action-btn--secondary btn-zero test-zero-any" title="清空余额">
-              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              清空
-            </button>
-            <div class="addr-ops-container"></div>
+          <div class="addr-card-detail-inner">
+            <div class="addr-detail-row">
+              <span class="addr-detail-label">完整地址</span>
+              <span class="addr-detail-value">${a}</span>
+            </div>
+            <div class="addr-detail-row">
+              <span class="addr-detail-label">余额</span>
+              <span class="addr-detail-value">${amtCash0} ${coinType}</span>
+            </div>
+            <div class="addr-detail-row">
+              <span class="addr-detail-label">GAS</span>
+              <span class="addr-detail-value gas">${gas0}</span>
+            </div>
+            <div class="addr-card-actions">
+              <button class="addr-action-btn addr-action-btn--primary btn-add test-add-any" title="增加余额">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                增加
+              </button>
+              <button class="addr-action-btn addr-action-btn--secondary btn-zero test-zero-any" title="清空余额">
+                <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                清空
+              </button>
+              <div class="addr-ops-container"></div>
+            </div>
           </div>
         </div>
       `;

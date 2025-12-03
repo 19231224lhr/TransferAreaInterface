@@ -181,13 +181,7 @@
   display: grid;
   grid-template-columns: minmax(400px, 1fr) minmax(550px, 1.6fr);
   gap: 20px;
-  align-items: start;
-}
-
-/* 确保钱包和转账面板等高 */
-.main-grid>.wallet-panel,
-.main-grid>.transfer-panel {
-  align-self: stretch;
+  align-items: start; /* 顶部对齐，各自独立高度 */
 }
 
 /* ========================================
@@ -201,6 +195,12 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   animation: fadeUp 0.5s var(--ease-out);
+  /* 高度变化时的平滑过渡 */
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+.wallet-panel:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 /* === 资产概览 === */
@@ -517,9 +517,10 @@
   background: #f1f5f9 !important;
   /* neutral-100 */
   border-radius: var(--radius-md) !important;
-  overflow: visible !important;
-  /* 允许菜单溢出 */
-  transition: all var(--duration-fast) ease !important;
+  overflow: hidden !important;
+  /* 收起时裁剪内容 */
+  transition: background 0.2s ease,
+              box-shadow 0.2s ease !important;
   cursor: pointer !important;
   border: none !important;
   padding: 0 !important;
@@ -528,6 +529,10 @@
   backdrop-filter: none !important;
   position: relative !important;
   z-index: 1;
+}
+
+.main-v2 .addr-card.expanded {
+  overflow: visible !important; /* 展开时允许溢出 */
 }
 
 .main-v2 .addr-card:hover {
@@ -809,7 +814,7 @@ Already defined above with darker background
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  transition: transform var(--duration-fast) ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   flex-shrink: 0;
 }
 
@@ -822,15 +827,28 @@ Already defined above with darker background
   transform: rotate(180deg);
 }
 
-/* 地址详情 */
+/* 地址详情 - 平滑展开动画 */
 .main-v2 .addr-card-detail {
-  display: none;
-  padding: 0 12px 12px;
-  animation: fadeIn 0.2s ease;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease;
+}
+
+.main-v2 .addr-card-detail-inner {
+  overflow: hidden;
+  padding: 0 12px;
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .main-v2 .addr-card.expanded .addr-card-detail {
-  display: block;
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.main-v2 .addr-card.expanded .addr-card-detail-inner {
+  padding: 0 12px 12px;
 }
 
 .main-v2 .addr-detail-row {
@@ -1006,6 +1024,12 @@ Already defined above with darker background
   box-shadow: var(--shadow-md);
   overflow: hidden;
   animation: fadeUp 0.5s var(--ease-out) 0.08s backwards;
+  /* 高度变化时的平滑过渡 */
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+.transfer-panel:hover {
+  box-shadow: var(--shadow-lg);
 }
 
 /* 转账交易头部 - 蓝色主题 */
@@ -1362,13 +1386,23 @@ Already defined above with darker background
 }
 
 .options-content {
-  display: none;
-  padding: 0 24px 16px;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease,
+              padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 24px;
+}
+
+.options-content > * {
+  overflow: hidden;
 }
 
 .options-content.show {
-  display: block;
-  animation: fadeIn 0.2s ease;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  padding: 0 24px 16px;
 }
 
 .options-grid {
@@ -2019,6 +2053,19 @@ Already defined above with darker background
 
   .ns-value {
     font-size: 10px;
+  }
+}
+
+/* ========================================
+   减少动画模式支持（无障碍）
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
 
