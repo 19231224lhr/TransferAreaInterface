@@ -1,7 +1,7 @@
 /**
  * ========================================
  * 担保组织详情页样式 - group.css
- * 全新左右布局设计 - 紫色主题
+ * 全新左右布局设计 - 青色/蓝绿色主题
  * ======================================== 
  */
 
@@ -30,13 +30,13 @@
   box-shadow: 
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
-  animation: groupPageSlideIn 0.4s ease-out both;
+  animation: groupPageSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes groupPageSlideIn {
   from {
     opacity: 0;
-    transform: translateY(12px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -45,11 +45,11 @@
 }
 
 /* ========================================
-   左侧边栏 - 紫色品牌展示区
+   左侧边栏 - 青色/蓝绿色品牌展示区
    ======================================== */
 
 .group-sidebar {
-  background: linear-gradient(165deg, #7c3aed 0%, #8b5cf6 50%, #a855f7 100%);
+  background: linear-gradient(165deg, #0d9488 0%, #14b8a6 40%, #2dd4bf 80%, #5eead4 100%);
   padding: 48px 36px;
   display: flex;
   flex-direction: column;
@@ -65,8 +65,9 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
   pointer-events: none;
+  animation: orbFloat 20s ease-in-out infinite;
 }
 
 .group-sidebar::after {
@@ -78,6 +79,12 @@
   height: 80%;
   background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
   pointer-events: none;
+  animation: orbFloat 15s ease-in-out infinite reverse;
+}
+
+@keyframes orbFloat {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(10px, -10px); }
 }
 
 .group-sidebar-content {
@@ -91,6 +98,18 @@
 /* 品牌区域 */
 .group-brand {
   margin-bottom: 48px;
+  animation: brandEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+
+@keyframes brandEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .group-brand-icon {
@@ -103,6 +122,7 @@
   justify-content: center;
   margin-bottom: 24px;
   backdrop-filter: blur(10px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .group-brand-icon svg {
@@ -117,11 +137,12 @@
   color: white;
   margin: 0 0 12px;
   letter-spacing: -0.5px;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .group-brand-desc {
   font-size: 15px;
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
   line-height: 1.6;
 }
@@ -131,7 +152,7 @@
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
 .group-benefit {
@@ -139,19 +160,38 @@
   align-items: flex-start;
   gap: 16px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 14px;
-  transition: background 0.2s ease;
+  backdrop-filter: blur(8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: benefitEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.group-benefit:nth-child(1) { animation-delay: 0.15s; }
+.group-benefit:nth-child(2) { animation-delay: 0.2s; }
+.group-benefit:nth-child(3) { animation-delay: 0.25s; }
+.group-benefit:nth-child(4) { animation-delay: 0.3s; }
+
+@keyframes benefitEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .group-benefit:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateX(4px);
 }
 
 .group-benefit-icon {
   width: 40px;
   height: 40px;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.18);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -174,7 +214,7 @@
 
 .group-benefit-text p {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.75);
+  color: rgba(255, 255, 255, 0.8);
   margin: 0;
   line-height: 1.5;
 }
@@ -183,11 +223,23 @@
 .group-sidebar-footer {
   margin-top: auto;
   padding-top: 32px;
+  animation: footerEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.4s both;
+}
+
+@keyframes footerEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .group-stats {
   display: flex;
-  gap: 24px;
+  gap: 32px;
 }
 
 .group-stat {
@@ -197,14 +249,16 @@
 }
 
 .group-stat-value {
-  font-size: 24px;
+  font-size: 26px;
   font-weight: 700;
   color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .group-stat-label {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.75);
+  font-weight: 500;
 }
 
 /* ========================================
@@ -227,13 +281,13 @@
 
 /* 面板通用样式 */
 .group-pane {
-  animation: groupPaneFadeIn 0.3s ease-out both;
+  animation: paneFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
 }
 
-@keyframes groupPaneFadeIn {
+@keyframes paneFadeIn {
   from {
     opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
@@ -273,16 +327,16 @@
 }
 
 .group-status-badge--active {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.08));
-  color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.12), rgba(45, 212, 191, 0.08));
+  color: #0d9488;
+  border: 1px solid rgba(20, 184, 166, 0.25);
 }
 
 .group-status-badge .status-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #10b981;
+  background: #14b8a6;
   animation: statusPulse 2s ease-in-out infinite;
 }
 
@@ -293,7 +347,7 @@
   }
   50% { 
     opacity: 0.6; 
-    transform: scale(1.2);
+    transform: scale(1.15);
   }
 }
 
@@ -303,7 +357,19 @@
   border-radius: 20px;
   border: 1px solid rgba(0, 0, 0, 0.06);
   overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .group-info-header {
@@ -311,19 +377,19 @@
   align-items: center;
   gap: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(168, 85, 247, 0.03));
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.08), rgba(45, 212, 191, 0.04));
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .group-info-avatar {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
   border-radius: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
 }
 
 .group-info-avatar svg {
@@ -354,18 +420,18 @@
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: rgba(16, 185, 129, 0.1);
+  background: rgba(20, 184, 166, 0.1);
   border-radius: 100px;
   font-size: 12px;
   font-weight: 600;
-  color: #10b981;
+  color: #0d9488;
 }
 
 .group-info-status .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
+  background: #14b8a6;
 }
 
 /* 信息网格 */
@@ -383,6 +449,11 @@
   display: flex;
   align-items: flex-start;
   gap: 14px;
+  transition: background 0.2s ease;
+}
+
+.group-info-item:hover {
+  background: #fafcfc;
 }
 
 .group-info-item--full {
@@ -392,7 +463,7 @@
 .info-icon {
   width: 36px;
   height: 36px;
-  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(168, 85, 247, 0.04));
+  background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(45, 212, 191, 0.06));
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -403,7 +474,7 @@
 .info-icon svg {
   width: 18px;
   height: 18px;
-  color: #8b5cf6;
+  color: #0d9488;
 }
 
 .info-content {
@@ -464,8 +535,8 @@
 }
 
 .info-copy-btn:hover {
-  background: #8b5cf6;
-  border-color: #8b5cf6;
+  background: #0d9488;
+  border-color: #0d9488;
 }
 
 .info-copy-btn:hover svg {
@@ -477,6 +548,18 @@
   display: flex;
   gap: 12px;
   margin-top: 32px;
+  animation: actionsEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+}
+
+@keyframes actionsEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .group-action-btn {
@@ -489,7 +572,7 @@
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   border: none;
 }
 
@@ -522,17 +605,18 @@
   background: #f8fafc;
   color: #334155;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .group-action-btn--join {
-  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  background: linear-gradient(135deg, #0d9488, #14b8a6);
   color: white;
-  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.3);
 }
 
 .group-action-btn--join:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.4);
 }
 
 .group-action-btn--secondary {
@@ -544,6 +628,7 @@
 .group-action-btn--secondary:hover {
   background: #f8fafc;
   color: #334155;
+  transform: translateY(-1px);
 }
 
 /* ========================================
@@ -560,6 +645,18 @@
 .group-empty-content {
   text-align: center;
   padding: 48px 24px;
+  animation: emptyEnter 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+}
+
+@keyframes emptyEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .group-empty-visual {
@@ -579,7 +676,7 @@
 .empty-icon-wrapper svg {
   width: 56px;
   height: 56px;
-  color: #c4b5fd;
+  color: #5eead4;
   animation: emptyIconFloat 3s ease-in-out infinite;
 }
 
@@ -592,7 +689,7 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 70%);
+  background: radial-gradient(circle, rgba(20, 184, 166, 0.12), transparent 70%);
   animation: emptyPulse 3s ease-in-out infinite;
 }
 
@@ -602,7 +699,7 @@
     opacity: 0.5;
   }
   50% { 
-    transform: scale(1.2); 
+    transform: scale(1.15); 
     opacity: 0.8;
   }
 }
@@ -673,16 +770,25 @@
 
 @media (prefers-reduced-motion: reduce) {
   .group-page,
+  .group-brand,
+  .group-benefit,
+  .group-sidebar-footer,
   .group-pane,
+  .group-info-card,
+  .group-actions,
+  .group-empty-content,
   .empty-icon-wrapper svg,
   .empty-icon-pulse,
-  .group-status-badge .status-dot {
+  .group-status-badge .status-dot,
+  .group-sidebar::before,
+  .group-sidebar::after {
     animation: none !important;
   }
 
   .group-action-btn,
   .group-benefit,
-  .info-copy-btn {
+  .info-copy-btn,
+  .group-info-item {
     transition: none !important;
   }
 }

@@ -368,6 +368,18 @@ function updateHeaderUser(user) {
     if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
     menuBalanceItem.dataset._bind = '1';
   }
+  // 担保组织点击事件绑定 - 跳转到组织详情页
+  if (menuOrgItem && !menuOrgItem.dataset._bind) {
+    menuOrgItem.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 关闭用户菜单
+      const userMenu = document.getElementById('userMenu');
+      if (userMenu) userMenu.classList.add('hidden');
+      // 跳转到组织详情页
+      routeTo('#/group-detail');
+    });
+    menuOrgItem.dataset._bind = '1';
+  }
 }
 function saveUser(user) {
   try {
