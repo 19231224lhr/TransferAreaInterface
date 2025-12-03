@@ -4571,10 +4571,12 @@ function renderWallet() {
           if (menu) menu.innerHTML = '<div class="custom-select__item disabled">无可用地址</div>';
           if (valEl) valEl.textContent = '无可用地址';
           if (hidden) hidden.value = '';
+          const ico0 = box.querySelector('.coin-icon');
+          if (ico0) ico0.remove();
           return;
         }
 
-        if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><span class="coin-icon ${box.dataset.coin === 'BTC' ? 'coin--btc' : (box.dataset.coin === 'ETH' ? 'coin--eth' : 'coin--pgc')}"></span><code class="break" style="font-weight:700">${a}</code></div>`).join('');
+        if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><code class="break">${a}</code></div>`).join('');
 
         // Preserve existing selection if valid, otherwise select first
         const currentVal = hidden.value;
@@ -4583,6 +4585,8 @@ function renderWallet() {
 
         if (valEl) valEl.textContent = first;
         if (hidden) hidden.value = first;
+        const ico = box.querySelector('.coin-icon');
+        if (ico) ico.remove();
       };
 
       buildMenu(csPGC, optsPGC, chPGC);
@@ -4755,6 +4759,13 @@ function renderWallet() {
               </svg>
               <span>删除</span>
             </button>
+            <button type="button" class="recipient-add-btn" data-role="add">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+              <span>添加</span>
+            </button>
           </div>
         </div>
       `;
@@ -4765,6 +4776,7 @@ function renderWallet() {
       const lookupBtn = card.querySelector('[data-role="addr-lookup"]');
       const expandBtn = card.querySelector('[data-role="expand"]');
       const removeBtn = card.querySelector('[data-role="remove"]');
+      const addBtn = card.querySelector('[data-role="add"]');
       
       // 地址查询按钮
       if (lookupBtn && addrInputEl) {
@@ -4842,6 +4854,11 @@ function renderWallet() {
           }, 250);
         });
       }
+
+      // 添加按钮（移动至删除按钮右侧）
+      if (addBtn) {
+        addBtn.addEventListener('click', () => { addBill(); });
+      }
       
       billList.appendChild(card);
       updateCardIndices();
@@ -4879,7 +4896,7 @@ function renderWallet() {
         }); 
       }
     };
-    addBillBtn.addEventListener('click', () => { addBill(); });
+    if (addBillBtn) { addBillBtn.addEventListener('click', () => { addBill(); }); }
     addBill();
     updateRemoveState();
     const updateBtn = () => {
@@ -5162,6 +5179,28 @@ function renderWallet() {
     };
     tfBtn.dataset._bind = '1';
   }
+
+  // Fallback: 委托事件，确保地址选择器可打开并选择
+  document.addEventListener('click', (ev) => {
+    const box = ev.target.closest('.custom-select.cs-addr');
+    if (!box) return;
+    ev.stopPropagation();
+    const opening = !box.classList.contains('open');
+    box.classList.toggle('open', opening);
+  });
+  document.addEventListener('click', (ev) => {
+    const item = ev.target.closest('.custom-select.cs-addr .custom-select__item');
+    if (!item) return;
+    ev.stopPropagation();
+    const box = item.closest('.custom-select.cs-addr');
+    const v = item.getAttribute('data-val') || '';
+    const valEl = box ? box.querySelector('.addr-val') : null;
+    if (valEl) valEl.textContent = v;
+    const coin = box ? (box.dataset.coin || '') : '';
+    const hidden = document.getElementById('chAddr' + coin);
+    if (hidden) hidden.value = v;
+    if (box) box.classList.remove('open');
+  });
 
   const openCreateAddrBtnModal = document.getElementById('openCreateAddrBtn');
   const openImportAddrBtn = document.getElementById('openImportAddrBtn');

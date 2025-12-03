@@ -745,8 +745,8 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
   gap: 10px;
-  max-height: 360px;
-  overflow-y: auto;
+  max-height: none;
+  overflow: visible;
   padding: 4px;
   margin-top: 12px;
   border: none !important; /* Ensure no dashed border */
@@ -889,6 +889,8 @@
   color: white;
   /* Fix vertical alignment */
   margin-top: 0;
+  line-height: 32px;
+  transform: translateY(1px);
 }
 
 /* 修复 custom-select 中的图标样式 */
@@ -919,41 +921,16 @@
 .src-addr-item .coin-icon--eth { background: var(--coin-eth, #6366f1); }
 
 /* Dynamic background colors for items */
-.src-addr-item.item-type-pgc .item-backdrop {
-  background: rgba(16, 185, 129, 0.05); /* Very pale green */
-}
-.src-addr-item.item-type-pgc:hover .item-backdrop {
-  background: rgba(16, 185, 129, 0.1);
-}
-
-.src-addr-item.item-type-btc .item-backdrop {
-  background: rgba(245, 158, 11, 0.05); /* Very pale amber */
-}
-.src-addr-item.item-type-btc:hover .item-backdrop {
-  background: rgba(245, 158, 11, 0.1);
-}
-
-.src-addr-item.item-type-eth .item-backdrop {
-  background: rgba(99, 102, 241, 0.05); /* Very pale indigo */
-}
-.src-addr-item.item-type-eth:hover .item-backdrop {
-  background: rgba(99, 102, 241, 0.1);
-}
+/* Unified pale blue backdrop for selection list */
+.src-addr-item .item-backdrop { background: rgba(59, 130, 246, 0.08); }
+.src-addr-item:hover .item-backdrop { background: rgba(59, 130, 246, 0.12); }
 
 /* Selected state overrides */
-.src-addr-item.selected.item-type-pgc .item-backdrop {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.12), rgba(16, 185, 129, 0.05));
-}
-.src-addr-item.selected.item-type-btc .item-backdrop {
-  background: linear-gradient(90deg, rgba(245, 158, 11, 0.12), rgba(245, 158, 11, 0.05));
-}
-.src-addr-item.selected.item-type-eth .item-backdrop {
-  background: linear-gradient(90deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.05));
+.src-addr-item.selected .item-backdrop {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.14), rgba(59, 130, 246, 0.08));
 }
 
-.src-addr-item.selected.item-type-pgc .selection-outline { border-color: rgba(16, 185, 129, 0.5); }
-.src-addr-item.selected.item-type-btc .selection-outline { border-color: rgba(245, 158, 11, 0.5); }
-.src-addr-item.selected.item-type-eth .selection-outline { border-color: rgba(99, 102, 241, 0.5); }
+.src-addr-item.selected .selection-outline { border-color: rgba(59, 130, 246, 0.5); }
 
 .addr-info {
   display: flex;

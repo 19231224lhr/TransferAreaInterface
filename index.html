@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203u" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251204a" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -2067,13 +2067,7 @@
                 <div class="recipients-section">
                   <div class="recipients-header">
                     <div class="recipients-title">转至 · TO</div>
-                    <button id="addBillBtn" class="add-recipient-btn" type="button">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="12" y1="5" x2="12" y2="19"/>
-                        <line x1="5" y1="12" x2="19" y2="12"/>
-                      </svg>
-                      <span>添加</span>
-                    </button>
+                    <!-- 添加按钮已移动至卡片底部操作栏，与删除并排 -->
                   </div>
                   <div id="billList" class="recipients-list" role="list"></div>
                 </div>
@@ -2154,7 +2148,6 @@
                           <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
                           <span class="toggle-slider"></span>
                         </label>
-                        <span style="font-size: 13px; color: var(--text-muted-light);">优先使用TXCer</span>
                       </div>
                     </div>
                   </div>

@@ -2573,10 +2573,10 @@ pre code {
   margin-top: .25rem;
   min-width: 100%;
   width: max-content; /* 宽度自适应内容 */
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
-  border: 1px solid rgba(226, 232, 240, .22);
+  background: #ffffff;
+  border: none;
   border-radius: 10px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, .12);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, .08);
   padding: .25rem;
   display: none;
   z-index: 100;
@@ -2587,23 +2587,23 @@ pre code {
 }
 
 .custom-select__item {
-  padding: .35rem .6rem;
-  border-radius: 8px;
+  padding: .45rem .8rem;
+  border-radius: 0;
   color: #0f172a;
   display: flex;
   align-items: center; /* 确保 Flex 容器内垂直居中 */
-  gap: .4rem;
+  gap: .5rem;
   cursor: pointer;
-  transition: background .15s ease;
+  transition: background .15s ease, color .15s ease;
 }
 
 .custom-select__item:hover {
-  background: #f1f5f9;
+  background: rgba(241, 245, 249, 0.7);
 }
 
 .custom-select__item.selected {
-  background: rgba(14, 165, 233, 0.1);
-  color: #0ea5e9;
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--transfer-primary);
 }
 
 /* Coin 图标样式 */
@@ -2629,7 +2629,7 @@ pre code {
 }
 
 .custom-select .coin-label {
-  font-weight: 600;
+  font-weight: 400;
   color: #0f172a;
 }
 
@@ -2644,6 +2644,7 @@ pre code {
   align-items: center;
   gap: 6px;
   min-width: 0;
+  justify-content: flex-start;
 }
 
 .cs-addr .addr-val {
@@ -2653,12 +2654,46 @@ pre code {
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 13px;
+  color: var(--text-primary);
+  font-weight: 400;
 }
 
 .cs-addr .custom-select__item code.break {
-  max-width: 220px;
+  max-width: 360px;
   display: inline-block;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.cs-addr .coin-icon {
+  display: none !important;
+}
+.cs-addr .custom-select__item .coin-icon {
+  display: none !important;
+}
+
+.custom-select__item.disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+.cs-addr .custom-select__arrow {
+  color: #94a3b8;
+  opacity: .85;
+}
+.cs-addr .custom-select__item {
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.cs-addr .custom-select__item:hover {
+  background: rgba(241, 245, 249, 0.5) !important;
+}
+.cs-addr .custom-select__item.selected {
+  background: rgba(59, 130, 246, 0.08) !important;
 }
