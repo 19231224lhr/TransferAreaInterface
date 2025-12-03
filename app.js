@@ -4065,28 +4065,70 @@ function renderWallet() {
   // V2 Main Page - 交易模式切换
   const modeTabsContainer = document.querySelector('.transfer-mode-tabs');
   if (modeTabsContainer && !modeTabsContainer.dataset._bind) {
-    modeTabsContainer.addEventListener('click', (e) => {
-      const tab = e.target.closest('.transfer-mode-tab') || e.target.closest('.mode-tab');
-      if (!tab) return;
-      
-      // 移除所有 active
+    const isCompactMode = () => window.matchMedia('(max-width: 640px) and (orientation: portrait)').matches;
+    const ensureDropdown = () => {
+      let dd = modeTabsContainer.querySelector('.mode-dropdown');
+      if (!dd) {
+        dd = document.createElement('div');
+        dd.className = 'mode-dropdown';
+        modeTabsContainer.appendChild(dd);
+      }
+      return dd;
+    };
+    const rebuildDropdown = () => {
+      const dd = ensureDropdown();
+      const items = [];
+      modeTabsContainer.querySelectorAll('.transfer-mode-tab').forEach(b => {
+        if (!b.classList.contains('active')) {
+          items.push(`<button class="mode-item" data-mode="${b.dataset.mode}">${b.textContent}</button>`);
+        }
+      });
+      dd.innerHTML = items.join('');
+    };
+    const applyMode = (mode) => {
       modeTabsContainer.querySelectorAll('.transfer-mode-tab, .mode-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      
-      // 同步到隐藏的select
-      const mode = tab.dataset.mode;
+      const btn = modeTabsContainer.querySelector(`.transfer-mode-tab[data-mode="${mode}"]`);
+      if (btn) btn.classList.add('active');
       const tfModeSelect = document.getElementById('tfMode');
       const isPledgeSelect = document.getElementById('isPledge');
-      
       if (tfModeSelect) tfModeSelect.value = mode;
       if (isPledgeSelect) isPledgeSelect.value = mode === 'pledge' ? 'true' : 'false';
-      
-      // 也同步到原来的radio buttons (如果存在)
       const radios = document.querySelectorAll('input[name="tfModeChoice"]');
-      radios.forEach(r => {
-        r.checked = r.value === mode;
-      });
+      radios.forEach(r => { r.checked = r.value === mode; });
+    };
+    const updateModeTabsLayout = () => {
+      if (isCompactMode()) {
+        modeTabsContainer.classList.add('compact');
+        rebuildDropdown();
+      } else {
+        modeTabsContainer.classList.remove('compact');
+        modeTabsContainer.classList.remove('open');
+        const dd = modeTabsContainer.querySelector('.mode-dropdown');
+        if (dd) dd.remove();
+      }
+    };
+    modeTabsContainer.addEventListener('click', (e) => {
+      const tab = e.target.closest('.transfer-mode-tab') || e.target.closest('.mode-tab');
+      if (tab) {
+        if (modeTabsContainer.classList.contains('compact') && tab.classList.contains('active')) {
+          rebuildDropdown();
+          modeTabsContainer.classList.toggle('open');
+          return;
+        }
+        applyMode(tab.dataset.mode);
+        return;
+      }
+      const item = e.target.closest('.mode-item');
+      if (item) {
+        applyMode(item.dataset.mode);
+        modeTabsContainer.classList.remove('open');
+      }
     });
+    let layoutTimer;
+    const onResize = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout(updateModeTabsLayout, 50); };
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    updateModeTabsLayout();
     modeTabsContainer.dataset._bind = '1';
   }
   

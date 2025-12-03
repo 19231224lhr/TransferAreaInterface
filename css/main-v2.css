@@ -271,14 +271,14 @@
 }
 
 .asset-title-group h2 {
-  font-size: 16px;
+  font-size: 18px;
   font-weight: 600;
   color: var(--text-light);
   margin: 0;
 }
 
 .asset-title-group span {
-  font-size: 11px;
+  font-size: 13px;
   color: var(--text-light-secondary);
   display: block;
   margin-top: 2px;
@@ -1019,6 +1019,7 @@ Already defined above with darker background
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  z-index: 2;
 }
 
 .transfer-header-top {
@@ -1889,6 +1890,65 @@ Already defined above with darker background
   }
 }
 
+@media (max-width: 860px) {
+  .transfer-mode-tabs {
+    flex-direction: column;
+    gap: 6px;
+  }
+  .transfer-mode-tab {
+    flex: none;
+    width: 100%;
+    padding: 10px 12px;
+  }
+}
+
+.transfer-mode-tabs.compact {
+  position: relative;
+}
+.transfer-mode-tabs.compact .transfer-mode-tab {
+  display: none;
+}
+.transfer-mode-tabs.compact .transfer-mode-tab.active {
+  display: block;
+  width: 100%;
+}
+.mode-dropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 6px);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 5;
+  pointer-events: auto;
+}
+.transfer-mode-tabs.compact.open .mode-dropdown {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+.mode-item {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+.mode-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
 @media (max-width: 640px) {
   .main-v2 {
     padding: 12px;
@@ -1918,7 +1978,8 @@ Already defined above with darker background
 
   .transfer-header {
     padding: 16px;
-    min-height: 220px;
+    min-height: 280px;
+    overflow: visible;
   }
 
   .transfer-flow {
