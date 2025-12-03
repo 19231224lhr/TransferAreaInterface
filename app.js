@@ -4706,14 +4706,13 @@ function renderWallet() {
               <span class="recipient-field-label">币种</span>
               <div id="${idBase}_mt" class="recipient-coin-select" role="button" aria-label="币种" data-name="mt" data-val="0">
                 <div class="recipient-coin-value">
-                  <span class="coin-icon coin--pgc"></span>
                   <span class="coin-label">PGC</span>
                   <span class="recipient-coin-arrow">▾</span>
                 </div>
                 <div class="recipient-coin-menu">
-                  <div class="recipient-coin-item" data-val="0"><span class="coin-icon coin--pgc"></span><span class="coin-label">PGC</span></div>
-                  <div class="recipient-coin-item" data-val="1"><span class="coin-icon coin--btc"></span><span class="coin-label">BTC</span></div>
-                  <div class="recipient-coin-item" data-val="2"><span class="coin-icon coin--eth"></span><span class="coin-label">ETH</span></div>
+                  <div class="recipient-coin-item" data-val="0"><span class="coin-label">PGC</span></div>
+                  <div class="recipient-coin-item" data-val="1"><span class="coin-label">BTC</span></div>
+                  <div class="recipient-coin-item" data-val="2"><span class="coin-label">ETH</span></div>
                 </div>
               </div>
             </div>
@@ -4862,9 +4861,9 @@ function renderWallet() {
             cs.dataset.val = v;
             const valEl = cs.querySelector('.recipient-coin-value');
             if (valEl) {
-              const labels = { '0': { t: 'PGC', c: 'coin--pgc' }, '1': { t: 'BTC', c: 'coin--btc' }, '2': { t: 'ETH', c: 'coin--eth' } };
+              const labels = { '0': { t: 'PGC' }, '1': { t: 'BTC' }, '2': { t: 'ETH' } };
               const m = labels[v] || labels['0'];
-              valEl.innerHTML = `<span class="coin-icon ${m.c}"></span><span class="coin-label">${m.t}</span><span class="recipient-coin-arrow">▾</span>`;
+              valEl.innerHTML = `<span class="coin-label">${m.t}</span><span class="recipient-coin-arrow">▾</span>`;
             }
             cs.classList.remove('open');
           });
