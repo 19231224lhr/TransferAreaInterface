@@ -12,27 +12,27 @@
   --wallet-primary-light: #34d399;
   --wallet-primary-dark: #059669;
   --wallet-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  
+
   /* 深蓝主题 - 转账 */
   --transfer-primary: #3b82f6;
   --transfer-primary-light: #60a5fa;
   --transfer-primary-dark: #2563eb;
   --transfer-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  
+
   /* 紫色主题 - 组织 */
   --org-primary: #8b5cf6;
   --org-primary-light: #a78bfa;
   --org-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  
+
   /* 辅助色 */
   --fresh-orange: #f59e0b;
   --fresh-red: #ef4444;
-  
+
   /* 币种色彩 */
   --coin-pgc: linear-gradient(135deg, #34d399, #10b981);
   --coin-btc: linear-gradient(135deg, #fbbf24, #f59e0b);
   --coin-eth: linear-gradient(135deg, #818cf8, #6366f1);
-  
+
   /* 中性色 */
   --neutral-50: #fafafa;
   --neutral-100: #f4f4f5;
@@ -44,19 +44,19 @@
   --neutral-700: #3f3f46;
   --neutral-800: #27272a;
   --neutral-900: #18181b;
-  
+
   /* 背景 */
   --bg-page: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
   --bg-card: rgba(255, 255, 255, 0.98);
   --bg-card-solid: #ffffff;
-  
+
   /* 文字 */
   --text-primary: #18181b;
   --text-secondary: #52525b;
   --text-muted: #a1a1aa;
   --text-light: #ffffff;
   --text-light-secondary: rgba(255, 255, 255, 0.75);
-  
+
   /* 阴影 */
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -64,14 +64,14 @@
   --shadow-green: 0 8px 30px rgba(16, 185, 129, 0.2);
   --shadow-blue: 0 8px 30px rgba(59, 130, 246, 0.2);
   --shadow-purple: 0 8px 30px rgba(139, 92, 246, 0.2);
-  
+
   /* 圆角 */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-2xl: 24px;
-  
+
   /* 动画 */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -87,6 +87,7 @@
     opacity: 0;
     transform: translate3d(0, 16px, 0);
   }
+
   to {
     opacity: 1;
     transform: translate3d(0, 0, 0);
@@ -94,24 +95,35 @@
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes chartGlow {
-  0%, 100% {
+
+  0%,
+  100% {
     filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.3));
   }
+
   50% {
     filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.5));
   }
 }
 
 @keyframes dotPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
   }
+
   50% {
     transform: scale(1.15);
     box-shadow: 0 0 0 6px rgba(255, 255, 255, 0);
@@ -173,8 +185,8 @@
 }
 
 /* 确保钱包和转账面板等高 */
-.main-grid > .wallet-panel,
-.main-grid > .transfer-panel {
+.main-grid>.wallet-panel,
+.main-grid>.transfer-panel {
   align-self: stretch;
 }
 
@@ -204,10 +216,14 @@
 /* 资产头部 - 绿色主题 */
 .asset-header {
   background: var(--wallet-gradient);
-  padding: 20px 24px 10px; /* 增加下边距，让时间轴与绿色边框有间隙 */
+  padding: 24px;
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
 .asset-header::before {
@@ -217,7 +233,7 @@
   right: -80px;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -346,7 +362,8 @@
   flex-direction: column;
   overflow: visible;
   width: 100%;
-  height: 84px; /* 拉高容器，让曲线更舒展 */
+  height: 84px;
+  /* 拉高容器，让曲线更舒展 */
   flex-shrink: 0;
   border-radius: 12px;
   background: linear-gradient(135deg, rgba(14, 165, 233, 0.05), rgba(56, 189, 248, 0.03));
@@ -406,10 +423,13 @@
 }
 
 @keyframes chartDotPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     r: 4;
     filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.7));
   }
+
   50% {
     r: 5;
     filter: drop-shadow(0 0 12px rgba(255, 255, 255, 1));
@@ -421,7 +441,8 @@
   position: absolute;
   left: 8px;
   right: 8px;
-  bottom: 3px; /* 与容器底部保持微小间距 */
+  bottom: 3px;
+  /* 与容器底部保持微小间距 */
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
@@ -433,7 +454,8 @@
   font-size: 10px;
   color: rgba(255, 255, 255, 0.65);
   font-weight: 500;
-  line-height: 1.0; /* 贴近底部边框 */
+  line-height: 1.0;
+  /* 贴近底部边框 */
 }
 
 /* 曲线图悬浮提示 - 高级质感设计 */
@@ -453,9 +475,9 @@
   white-space: nowrap;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2), 
-              0 4px 12px rgba(0, 0, 0, 0.1),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .chart-tooltip.visible {
@@ -472,26 +494,31 @@
   margin-top: 10px;
   background: var(--bg-card-solid);
   position: relative;
-  z-index: 1; /* 确保币种区域在曲线图之下 */
+  z-index: 1;
+  /* 确保币种区域在曲线图之下 */
 }
 
 .coin-card {
   padding: 16px 12px;
-  background: #f1f5f9; /* neutral-100 */
+  background: #f1f5f9;
+  /* neutral-100 */
   border-radius: var(--radius-lg);
   text-align: center;
   transition: all var(--duration-fast) ease;
 }
 
 .coin-card:hover {
-  background: #e2e8f0; /* neutral-200 */
+  background: #e2e8f0;
+  /* neutral-200 */
   transform: translateY(-2px);
 }
 
 .main-v2 .addr-card {
-  background: #f1f5f9 !important; /* neutral-100 */
+  background: #f1f5f9 !important;
+  /* neutral-100 */
   border-radius: var(--radius-md) !important;
-  overflow: visible !important; /* 允许菜单溢出 */
+  overflow: visible !important;
+  /* 允许菜单溢出 */
   transition: all var(--duration-fast) ease !important;
   cursor: pointer !important;
   border: none !important;
@@ -504,8 +531,10 @@
 }
 
 .main-v2 .addr-card:hover {
-  background: #e2e8f0 !important; /* neutral-200 */
-  z-index: 10 !important; /* 悬浮时提升层级，防止菜单被下方卡片遮挡 */
+  background: #e2e8f0 !important;
+  /* neutral-200 */
+  z-index: 10 !important;
+  /* 悬浮时提升层级，防止菜单被下方卡片遮挡 */
 }
 
 .coin-icon {
@@ -521,9 +550,17 @@
   color: white;
 }
 
-.coin-icon--pgc { background: var(--coin-pgc); }
-.coin-icon--btc { background: var(--coin-btc); }
-.coin-icon--eth { background: var(--coin-eth); }
+.coin-icon--pgc {
+  background: var(--coin-pgc);
+}
+
+.coin-icon--btc {
+  background: var(--coin-btc);
+}
+
+.coin-icon--eth {
+  background: var(--coin-eth);
+}
 
 .coin-name {
   font-size: 12px;
@@ -692,7 +729,8 @@
 }
 
 .address-list {
-  padding: 8px 12px 100px; /* 增加底部内边距，防止菜单被遮挡 */
+  padding: 8px 12px 100px;
+  /* 增加底部内边距，防止菜单被遮挡 */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -973,11 +1011,21 @@ Already defined above with darker background
 /* 转账头部 */
 .transfer-header {
   background: var(--transfer-gradient);
-  padding: 20px 24px;
+  padding: 24px;
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   flex-shrink: 0;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.transfer-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .transfer-header::before {
@@ -987,7 +1035,7 @@ Already defined above with darker background
   right: -60px;
   width: 180px;
   height: 180px;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -998,7 +1046,7 @@ Already defined above with darker background
   left: -40px;
   width: 120px;
   height: 120px;
-  background: radial-gradient(circle, rgba(0,0,0,0.08) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -1041,39 +1089,106 @@ Already defined above with darker background
   margin-top: 3px;
 }
 
-/* 模式切换标签 */
+/* 模式切换标签 - 分段控制器风格 */
 .transfer-mode-tabs {
   display: flex;
-  gap: 4px;
-  margin-top: 18px;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.2);
   padding: 4px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   position: relative;
   z-index: 1;
+  margin-top: auto;
+  /* Push to bottom */
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .transfer-mode-tab {
   flex: 1;
-  padding: 12px 14px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--text-light-secondary);
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
   background: transparent;
   border: none;
-  border-radius: var(--radius-sm);
+  border-radius: var(--radius-md);
   cursor: pointer;
   transition: all var(--duration-fast) ease;
+  position: relative;
+  overflow: hidden;
 }
 
 .transfer-mode-tab:hover {
-  color: var(--text-light);
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .transfer-mode-tab.active {
   background: white;
   color: var(--transfer-primary);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 网络状态小组件 */
+.network-status-widget {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ns-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ns-label {
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.ns-value {
+  font-size: 12px;
+  color: white;
+  font-weight: 600;
+  font-family: 'SF Mono', Monaco, monospace;
+}
+
+.ns-divider {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.ns-dot {
+  width: 6px;
+  height: 6px;
+  background: #10b981;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
 }
 
 /* 转账流程区域 */
@@ -1663,11 +1778,11 @@ Already defined above with darker background
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
 }
 
-.toggle-switch input:checked + .toggle-slider {
+.toggle-switch input:checked+.toggle-slider {
   background: var(--wallet-gradient);
 }
 
-.toggle-switch input:checked + .toggle-slider:before {
+.toggle-switch input:checked+.toggle-slider:before {
   transform: translateX(18px);
 }
 
@@ -1732,9 +1847,17 @@ Already defined above with darker background
 /* ========================================
    币种颜色类
    ======================================== */
-.coin--pgc { background: var(--coin-pgc); }
-.coin--btc { background: var(--coin-btc); }
-.coin--eth { background: var(--coin-eth); }
+.coin--pgc {
+  background: var(--coin-pgc);
+}
+
+.coin--btc {
+  background: var(--coin-btc);
+}
+
+.coin--eth {
+  background: var(--coin-eth);
+}
 
 /* ========================================
    响应式适配
@@ -1743,7 +1866,7 @@ Already defined above with darker background
   .main-v2 {
     padding: 16px;
   }
-  
+
   .main-grid {
     grid-template-columns: 1fr;
     gap: 16px;
@@ -1754,44 +1877,45 @@ Already defined above with darker background
   .main-v2 {
     padding: 12px;
   }
-  
+
   .main-grid {
     gap: 12px;
   }
-  
+
   .asset-header {
     padding: 16px;
   }
-  
+
   .total-balance-amount {
     font-size: 26px;
   }
-  
+
   .balance-chart {
-    height: 76px; /* 移动端也相应拉高 */
+    height: 76px;
+    /* 移动端也相应拉高 */
   }
-  
+
   .coin-distribution {
     padding: 12px;
     gap: 6px;
   }
-  
+
   .transfer-header {
     padding: 16px;
   }
-  
+
   .transfer-flow {
     padding: 16px;
   }
-  
+
   .transfer-mode-tabs {
     flex-direction: column;
   }
-  
+
   .options-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .org-info-grid {
     grid-template-columns: 1fr;
   }

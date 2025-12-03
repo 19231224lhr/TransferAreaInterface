@@ -5,7 +5,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>简洁钱包前端 - 钱包操作</title>
-  
+
   <!-- 模块化CSS - 按功能分离 -->
   <link rel="stylesheet" href="/css/base.css?v=20251203b" />
   <link rel="stylesheet" href="/css/animations.css?v=20251201" />
@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
   <link rel="stylesheet" href="/css/main-v2.css?v=20251203k" />
-  
+
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
   <style>
@@ -71,9 +71,9 @@
       margin-top: 4px;
       background: #fff;
       padding: 8px;
-        border-radius: 4px;
-        border: 1px solid #e2e8f0;
-      }
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
   </style>
 </head>
 
@@ -84,13 +84,13 @@
       <div class="header-logo">
         <div class="logo-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="url(#logoGrad)" stroke-width="1.5" fill="none"/>
-            <path d="M12 6l6 3v6l-6 3-6-3V9l6-3z" fill="url(#logoGrad)" opacity="0.2"/>
-            <circle cx="12" cy="12" r="3" fill="url(#logoGrad)"/>
+            <path d="M12 2L2 7v10l10 5 10-5V7L12 2z" stroke="url(#logoGrad)" stroke-width="1.5" fill="none" />
+            <path d="M12 6l6 3v6l-6 3-6-3V9l6-3z" fill="url(#logoGrad)" opacity="0.2" />
+            <circle cx="12" cy="12" r="3" fill="url(#logoGrad)" />
             <defs>
               <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style="stop-color:#0ea5e9"/>
-                <stop offset="100%" style="stop-color:#8b5cf6"/>
+                <stop offset="0%" style="stop-color:#0ea5e9" />
+                <stop offset="100%" style="stop-color:#8b5cf6" />
               </linearGradient>
             </defs>
           </svg>
@@ -102,15 +102,17 @@
       <div id="userBar" class="user-bar">
         <button id="userButton" class="user-button" aria-label="用户信息">
           <div class="user-avatar" id="userAvatar">
-            <svg class="avatar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
+            <svg class="avatar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
             </svg>
             <img class="avatar-img hidden" src="/assets/avatar.png" alt="用户头像">
           </div>
           <span id="userLabel" class="user-label">未登录</span>
-          <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"/>
+          <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
         <div id="userMenu" class="user-menu hidden">
@@ -118,8 +120,8 @@
           <div class="menu-header">
             <div class="menu-header-avatar" id="menuHeaderAvatar">
               <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                <circle cx="12" cy="7" r="4"/>
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
               </svg>
               <img class="avatar-img hidden" src="/assets/avatar.png" alt="用户头像">
             </div>
@@ -134,9 +136,9 @@
             <div class="menu-card" id="menuAccountItem">
               <div class="menu-card-icon menu-card-icon--blue">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="16" rx="2"/>
-                  <line x1="7" y1="8" x2="17" y2="8"/>
-                  <line x1="7" y1="12" x2="13" y2="12"/>
+                  <rect x="3" y="4" width="18" height="16" rx="2" />
+                  <line x1="7" y1="8" x2="17" y2="8" />
+                  <line x1="7" y1="12" x2="13" y2="12" />
                 </svg>
               </div>
               <div class="menu-card-content">
@@ -148,8 +150,8 @@
             <div class="menu-card menu-card--clickable" id="menuAddressItem">
               <div class="menu-card-icon menu-card-icon--green">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                  <circle cx="12" cy="10" r="3"/>
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
                 </svg>
               </div>
               <div class="menu-card-content">
@@ -157,7 +159,7 @@
                 <code id="menuAddress" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6"/>
+                <polyline points="9 18 15 12 9 6" />
               </svg>
               <div id="menuAddressPopup" class="menu-popup hidden">
                 <div id="menuAddressList"></div>
@@ -167,10 +169,10 @@
             <div class="menu-card hidden" id="menuOrgItem">
               <div class="menu-card-icon menu-card-icon--purple">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
               <div class="menu-card-content">
@@ -182,9 +184,9 @@
             <div class="menu-card menu-card--clickable hidden" id="menuBalanceItem">
               <div class="menu-card-icon menu-card-icon--amber">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/>
-                  <path d="M12 18V6"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
+                  <path d="M12 18V6" />
                 </svg>
               </div>
               <div class="menu-card-content">
@@ -192,7 +194,7 @@
                 <code id="menuBalance" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6"/>
+                <polyline points="9 18 15 12 9 6" />
               </svg>
               <div id="menuBalancePopup" class="menu-popup menu-balance-popup hidden">
                 <div class="balance-breakdown">
@@ -221,8 +223,8 @@
           <div id="menuEmpty" class="menu-empty hidden">
             <div class="menu-empty-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
             <div class="menu-empty-text">尚未登录</div>
@@ -232,9 +234,9 @@
           <!-- 退出按钮 -->
           <button id="logoutBtn" class="menu-logout-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
             <span>退出登录</span>
           </button>
@@ -248,24 +250,24 @@
     <svg width="0" height="0" style="position:absolute">
       <defs>
         <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#0ea5e9"/>
-          <stop offset="100%" style="stop-color:#06b6d4"/>
+          <stop offset="0%" style="stop-color:#0ea5e9" />
+          <stop offset="100%" style="stop-color:#06b6d4" />
         </linearGradient>
         <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#8b5cf6"/>
-          <stop offset="100%" style="stop-color:#a78bfa"/>
+          <stop offset="0%" style="stop-color:#8b5cf6" />
+          <stop offset="100%" style="stop-color:#a78bfa" />
         </linearGradient>
         <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#f59e0b"/>
-          <stop offset="100%" style="stop-color:#fbbf24"/>
+          <stop offset="0%" style="stop-color:#f59e0b" />
+          <stop offset="100%" style="stop-color:#fbbf24" />
         </linearGradient>
         <linearGradient id="grad4" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#10b981"/>
-          <stop offset="100%" style="stop-color:#34d399"/>
+          <stop offset="0%" style="stop-color:#10b981" />
+          <stop offset="100%" style="stop-color:#34d399" />
         </linearGradient>
       </defs>
     </svg>
-    
+
     <!-- 全新现代化首页 -->
     <section class="welcome-hero" id="welcomeCard">
       <!-- 动态背景 -->
@@ -276,7 +278,7 @@
         <div class="welcome-gradient-orb orb-4"></div>
         <div class="welcome-grid-pattern"></div>
       </div>
-      
+
       <!-- 浮动粒子 -->
       <div class="welcome-particles">
         <div class="particle p1"></div>
@@ -309,8 +311,9 @@
         <div class="feature-cards">
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
             <h3>安全保障</h3>
@@ -318,8 +321,9 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
             </div>
             <h3>极速转账</h3>
@@ -327,10 +331,11 @@
           </div>
           <div class="feature-card">
             <div class="feature-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <line x1="2" y1="12" x2="22" y2="12"/>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
             </div>
             <h3>跨链互通</h3>
@@ -342,16 +347,18 @@
         <div class="welcome-actions">
           <button id="registerAccountBtn" class="welcome-btn welcome-btn-primary">
             <span>立即开始</span>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="5" y1="12" x2="19" y2="12"/>
-              <polyline points="12 5 19 12 12 19"/>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
             </svg>
           </button>
           <button id="loginAccountBtn" class="welcome-btn welcome-btn-secondary">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-              <polyline points="10 17 15 12 10 7"/>
-              <line x1="15" y1="12" x2="3" y2="12"/>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+              <polyline points="10 17 15 12 10 7" />
+              <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
             <span>已有账户？登录</span>
           </button>
@@ -382,15 +389,16 @@
           <div class="card-shine"></div>
           <div class="card-content">
             <div class="card-logo">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#cardGradient)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#cardGradient)" stroke-width="1.5"
+                stroke-linecap="round" stroke-linejoin="round">
                 <defs>
                   <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#0ea5e9"/>
-                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                    <stop offset="0%" style="stop-color:#0ea5e9" />
+                    <stop offset="100%" style="stop-color:#8b5cf6" />
                   </linearGradient>
                 </defs>
-                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
-                <line x1="1" y1="10" x2="23" y2="10"/>
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                <line x1="1" y1="10" x2="23" y2="10" />
               </svg>
             </div>
             <div class="card-number">•••• •••• •••• 4242</div>
@@ -413,15 +421,15 @@
             <div class="wallet-inner">
               <div class="wallet-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/>
-                  <path d="M1 10h22"/>
-                  <circle cx="18" cy="15" r="2"/>
+                  <path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
+                  <path d="M1 10h22" />
+                  <circle cx="18" cy="15" r="2" />
                 </svg>
               </div>
               <div class="wallet-amount">+128.5</div>
             </div>
           </div>
-          
+
           <!-- NFT艺术卡片 -->
           <div class="deco-item deco-nft">
             <div class="nft-inner">
@@ -435,7 +443,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 加密币圆形 -->
           <div class="deco-item deco-coin">
             <div class="coin-inner">
@@ -443,7 +451,7 @@
               <div class="coin-shine"></div>
             </div>
           </div>
-          
+
           <!-- 数据图表卡 -->
           <div class="deco-item deco-chart">
             <div class="chart-inner">
@@ -457,7 +465,7 @@
               <div class="chart-trend">↗ 12.5%</div>
             </div>
           </div>
-          
+
           <!-- 区块链立方体 -->
           <div class="deco-item deco-cube">
             <div class="cube-container">
@@ -472,22 +480,22 @@
               <div class="cube-shadow"></div>
             </div>
           </div>
-          
+
           <!-- 以太坊标志 -->
           <div class="deco-item deco-eth">
             <div class="eth-inner">
               <svg viewBox="0 0 32 32" fill="none">
-                <path d="M16 2L6 16.5L16 22L26 16.5L16 2Z" fill="url(#ethGrad1)"/>
-                <path d="M16 2L6 16.5L16 12.5V2Z" fill="url(#ethGrad2)" opacity="0.6"/>
-                <path d="M16 24L6 18L16 30L26 18L16 24Z" fill="url(#ethGrad1)"/>
+                <path d="M16 2L6 16.5L16 22L26 16.5L16 2Z" fill="url(#ethGrad1)" />
+                <path d="M16 2L6 16.5L16 12.5V2Z" fill="url(#ethGrad2)" opacity="0.6" />
+                <path d="M16 24L6 18L16 30L26 18L16 24Z" fill="url(#ethGrad1)" />
                 <defs>
                   <linearGradient id="ethGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#627eea"/>
-                    <stop offset="100%" style="stop-color:#8b5cf6"/>
+                    <stop offset="0%" style="stop-color:#627eea" />
+                    <stop offset="100%" style="stop-color:#8b5cf6" />
                   </linearGradient>
                   <linearGradient id="ethGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" style="stop-color:#627eea"/>
-                    <stop offset="100%" style="stop-color:#4f46e5"/>
+                    <stop offset="0%" style="stop-color:#627eea" />
+                    <stop offset="100%" style="stop-color:#4f46e5" />
                   </linearGradient>
                 </defs>
               </svg>
@@ -507,9 +515,9 @@
             <div class="entry-brand">
               <div class="entry-brand-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <rect x="2" y="6" width="20" height="12" rx="2"/>
-                  <circle cx="12" cy="12" r="2"/>
-                  <path d="M6 12h.01M18 12h.01"/>
+                  <rect x="2" y="6" width="20" height="12" rx="2" />
+                  <circle cx="12" cy="12" r="2" />
+                  <path d="M6 12h.01M18 12h.01" />
                 </svg>
               </div>
               <h1 class="entry-brand-title">钱包管理</h1>
@@ -521,7 +529,7 @@
               <div class="entry-benefit">
                 <div class="entry-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
@@ -532,10 +540,10 @@
               <div class="entry-benefit">
                 <div class="entry-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
@@ -546,9 +554,9 @@
               <div class="entry-benefit">
                 <div class="entry-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
@@ -579,7 +587,7 @@
           <!-- 返回按钮 -->
           <button class="entry-back-btn" id="entryBackBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             <span>返回</span>
           </button>
@@ -597,8 +605,8 @@
               <button id="createWalletBtn" class="entry-action-card entry-action-card--create">
                 <div class="entry-action-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 8v8M8 12h8"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 8v8M8 12h8" />
                   </svg>
                 </div>
                 <div class="entry-action-info">
@@ -606,16 +614,16 @@
                   <p>生成全新的密钥对</p>
                 </div>
                 <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
 
               <button id="importWalletBtn" class="entry-action-card entry-action-card--import">
                 <div class="entry-action-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
                 </div>
                 <div class="entry-action-info">
@@ -623,7 +631,7 @@
                   <p>使用已有私钥导入</p>
                 </div>
                 <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -631,8 +639,8 @@
             <!-- 提示信息 -->
             <div class="entry-tip-block">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 16v-4M12 8h.01"/>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4M12 8h.01" />
               </svg>
               <span>每次新建或导入都会加入到当前账户的钱包列表</span>
             </div>
@@ -642,9 +650,9 @@
               <div class="entry-wallet-header">
                 <div class="entry-wallet-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
-                    <polyline points="17 21 17 13 7 13 7 21"/>
-                    <polyline points="7 3 7 8 15 8"/>
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
                   </svg>
                 </div>
                 <div class="entry-wallet-info">
@@ -656,14 +664,14 @@
               <button id="briefToggleBtn" class="entry-toggle-btn hidden">
                 <span>展开更多</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"/>
+                  <polyline points="6 9 12 15 18 9" />
                 </svg>
               </button>
               <div id="walletEmptyTip" class="entry-empty-tip hidden">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <span>请先添加至少一个钱包地址</span>
               </div>
@@ -674,7 +682,7 @@
               <button id="entryNextBtn" class="entry-next-btn" disabled>
                 <span>继续下一步</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -693,7 +701,7 @@
             <div class="new-brand">
               <div class="new-brand-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
               <h1 class="new-brand-title">创建新账户</h1>
@@ -705,7 +713,7 @@
               <div class="new-benefit">
                 <div class="new-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
                 <div class="new-benefit-text">
@@ -716,8 +724,8 @@
               <div class="new-benefit">
                 <div class="new-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </div>
                 <div class="new-benefit-text">
@@ -728,7 +736,7 @@
               <div class="new-benefit">
                 <div class="new-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
                 <div class="new-benefit-text">
@@ -759,7 +767,7 @@
           <!-- 返回按钮 -->
           <button class="new-back-btn" id="newBackBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             <span>返回</span>
           </button>
@@ -791,7 +799,7 @@
               <div class="new-result-success">
                 <div class="new-success-check">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
                 <h3>账户创建成功</h3>
@@ -802,8 +810,8 @@
                 <div class="new-info-card">
                   <div class="new-info-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
                     </svg>
                     <span>Account ID</span>
                   </div>
@@ -813,8 +821,8 @@
                 <div class="new-info-card">
                   <div class="new-info-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
                     </svg>
                     <span>主地址</span>
                   </div>
@@ -828,13 +836,14 @@
                   <div class="new-key-header" id="privateKeyToggle">
                     <div class="new-key-label">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                        <path
+                          d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                       </svg>
                       <span>私钥（Hex）</span>
                       <span class="new-warning-badge">请勿泄露</span>
                     </div>
                     <svg class="new-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"/>
+                      <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </div>
                   <code id="privHex" class="new-key-value"></code>
@@ -844,8 +853,8 @@
                   <div class="new-key-header">
                     <div class="new-key-label">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
                       <span>公钥（X / Y Hex）</span>
                     </div>
@@ -858,9 +867,9 @@
               <!-- 警告提示 -->
               <div class="new-result-tip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
               </div>
@@ -870,16 +879,16 @@
             <div class="new-page-actions">
               <button id="createBtn" class="new-action-btn new-action-btn--secondary">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="23 4 23 10 17 10"/>
-                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                  <polyline points="23 4 23 10 17 10" />
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
                 <span>重新生成</span>
               </button>
               <button id="newNextBtn" class="new-action-btn new-action-btn--primary">
                 <span>添加钱包地址</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="5" y1="12" x2="19" y2="12"/>
-                  <polyline points="12 5 19 12 12 19"/>
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                  <polyline points="12 5 19 12 12 19" />
                 </svg>
               </button>
             </div>
@@ -898,9 +907,9 @@
             <div class="login-brand">
               <div class="login-brand-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
               </div>
               <h1 class="login-brand-title">登录账户</h1>
@@ -912,7 +921,7 @@
               <div class="login-benefit">
                 <div class="login-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
                 <div class="login-benefit-text">
@@ -923,8 +932,8 @@
               <div class="login-benefit">
                 <div class="login-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
                   </svg>
                 </div>
                 <div class="login-benefit-text">
@@ -935,9 +944,9 @@
               <div class="login-benefit">
                 <div class="login-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="6" width="20" height="12" rx="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <path d="M6 12h.01M18 12h.01"/>
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
                   </svg>
                 </div>
                 <div class="login-benefit-text">
@@ -968,7 +977,7 @@
           <!-- 返回按钮 -->
           <button class="login-back-btn" id="loginBackBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             <span>返回</span>
           </button>
@@ -986,21 +995,23 @@
               <div class="login-input-group">
                 <label class="login-label">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                   <span>私钥（Hex）</span>
                 </label>
                 <div class="login-input-wrapper">
-                  <input id="loginPrivHex" class="login-input" type="password" placeholder="请输入您的私钥 Hex..." autocomplete="off" />
+                  <input id="loginPrivHex" class="login-input" type="password" placeholder="请输入您的私钥 Hex..."
+                    autocomplete="off" />
                   <button type="button" class="login-toggle-visibility" id="loginToggleVisibility">
                     <svg class="eye-open hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
                     <svg class="eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   </button>
                 </div>
@@ -1008,9 +1019,9 @@
 
               <button id="loginBtn" class="login-submit-btn">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+                  <polyline points="10 17 15 12 10 7" />
+                  <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
                 <span>安全登录</span>
               </button>
@@ -1019,7 +1030,7 @@
             <!-- 安全提示 -->
             <div class="login-tip-block">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <span>请确保在安全的环境中输入私钥，切勿泄露给他人</span>
             </div>
@@ -1043,7 +1054,7 @@
               <div class="login-success-header">
                 <div class="login-success-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
                 <h3>登录成功</h3>
@@ -1054,8 +1065,8 @@
                 <div class="login-result-item">
                   <div class="login-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
                     </svg>
                     <span>Account ID</span>
                   </div>
@@ -1064,8 +1075,8 @@
                 <div class="login-result-item">
                   <div class="login-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
                     </svg>
                     <span>主地址</span>
                   </div>
@@ -1078,13 +1089,14 @@
                 <div class="login-result-item login-result-item--private collapsed" id="loginPrivContainer">
                   <div class="login-result-label login-result-label--clickable">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
                     <span>私钥（Hex）</span>
                     <span class="login-warning-badge">敏感信息</span>
-                    <svg class="login-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"/>
+                    <svg class="login-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </div>
                   <code id="loginPrivOut" class="login-result-value login-result-value--secret"></code>
@@ -1092,8 +1104,8 @@
                 <div class="login-result-item">
                   <div class="login-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 5 5"/>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 5 5" />
                     </svg>
                     <span>公钥（X / Y Hex）</span>
                   </div>
@@ -1106,15 +1118,15 @@
               <div class="login-actions">
                 <button id="loginCancelBtn" class="login-cancel-btn hidden">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                   <span>重新登录</span>
                 </button>
                 <button id="loginNextBtn" class="login-next-btn hidden">
                   <span>进入钱包管理</span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
                   </svg>
                 </button>
               </div>
@@ -1134,9 +1146,9 @@
             <div class="import-brand">
               <div class="import-brand-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
               </div>
               <h1 class="import-brand-title">导入钱包</h1>
@@ -1148,7 +1160,7 @@
               <div class="import-benefit">
                 <div class="import-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
                 </div>
                 <div class="import-benefit-text">
@@ -1159,9 +1171,9 @@
               <div class="import-benefit">
                 <div class="import-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="6" width="20" height="12" rx="2"/>
-                    <circle cx="12" cy="12" r="2"/>
-                    <path d="M6 12h.01M18 12h.01"/>
+                    <rect x="2" y="6" width="20" height="12" rx="2" />
+                    <circle cx="12" cy="12" r="2" />
+                    <path d="M6 12h.01M18 12h.01" />
                   </svg>
                 </div>
                 <div class="import-benefit-text">
@@ -1172,7 +1184,8 @@
               <div class="import-benefit">
                 <div class="import-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    <path
+                      d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                   </svg>
                 </div>
                 <div class="import-benefit-text">
@@ -1203,7 +1216,7 @@
           <!-- 返回按钮 -->
           <button class="import-back-btn" id="importBackBtn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
+              <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
             <span>返回</span>
           </button>
@@ -1221,28 +1234,32 @@
               <div class="import-input-group">
                 <label class="import-label">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                    <path
+                      d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                   </svg>
                   <span>私钥（Hex）</span>
                 </label>
                 <div class="import-input-wrapper">
-                  <input id="importPrivHex" class="import-input" type="password" placeholder="请输入 64 位十六进制私钥" autocomplete="off" spellcheck="false" />
+                  <input id="importPrivHex" class="import-input" type="password" placeholder="请输入 64 位十六进制私钥"
+                    autocomplete="off" spellcheck="false" />
                   <button type="button" class="import-toggle-visibility" id="importToggleVisibility" title="切换显示/隐藏">
                     <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                      <circle cx="12" cy="12" r="3"/>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
                     </svg>
-                    <svg class="eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
-                      <line x1="1" y1="1" x2="23" y2="23"/>
+                    <svg class="eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
                     </svg>
                   </button>
                 </div>
                 <p class="import-input-hint">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="16" x2="12" y2="12"/>
-                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
                   <span>支持带 0x 前缀或纯 64 位十六进制格式</span>
                 </p>
@@ -1250,9 +1267,9 @@
 
               <button id="importBtn" class="import-submit-btn" data-mode="wallet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 <span>导入钱包</span>
               </button>
@@ -1261,7 +1278,7 @@
             <!-- 安全提示 -->
             <div class="import-tip-block">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
               <span>请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中</span>
             </div>
@@ -1285,7 +1302,7 @@
               <div class="import-success-header">
                 <div class="import-success-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"/>
+                    <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
                 <h3>钱包导入成功</h3>
@@ -1296,8 +1313,8 @@
                 <div class="import-result-item">
                   <div class="import-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
                     </svg>
                     <span>Account ID</span>
                   </div>
@@ -1306,8 +1323,8 @@
                 <div class="import-result-item">
                   <div class="import-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
+                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                      <circle cx="12" cy="10" r="3" />
                     </svg>
                     <span>主地址</span>
                   </div>
@@ -1320,12 +1337,14 @@
                 <div class="import-result-item import-result-item--private collapsed" id="importPrivateKeyItem">
                   <div class="import-result-label import-result-label--clickable" id="importPrivateKeyToggle">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                      <path
+                        d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                     </svg>
                     <span>私钥（Hex）</span>
                     <span class="import-warning-badge">请勿泄露</span>
-                    <svg class="import-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"/>
+                    <svg class="import-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2">
+                      <polyline points="6 9 12 15 18 9" />
                     </svg>
                   </div>
                   <code id="importPrivHexOut" class="import-result-value import-result-value--secret"></code>
@@ -1333,8 +1352,8 @@
                 <div class="import-result-item">
                   <div class="import-result-label">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                      <path d="M7 11V7a5 5 0 0 1 5 5"/>
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0 1 5 5" />
                     </svg>
                     <span>公钥（X / Y Hex）</span>
                   </div>
@@ -1346,9 +1365,9 @@
               <!-- 警告提示 -->
               <div class="import-result-tip">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
-                  <line x1="12" y1="9" x2="12" y2="13"/>
-                  <line x1="12" y1="17" x2="12.01" y2="17"/>
+                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
                 <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
               </div>
@@ -1357,15 +1376,15 @@
               <div class="import-actions">
                 <button id="importCancelBtn" class="import-cancel-btn hidden">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
                   <span>重新导入</span>
                 </button>
                 <button id="importNextBtn" class="import-next-btn hidden">
                   <span>继续下一步</span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
+                    <line x1="5" y1="12" x2="19" y2="12" />
+                    <polyline points="12 5 19 12 12 19" />
                   </svg>
                 </button>
               </div>
@@ -1385,10 +1404,10 @@
             <div class="join-brand">
               <div class="join-brand-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                  <circle cx="9" cy="7" r="4"/>
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
               <h1 class="join-brand-title">加入担保组织</h1>
@@ -1400,7 +1419,7 @@
               <div class="join-benefit">
                 <div class="join-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
                   </svg>
                 </div>
                 <div class="join-benefit-text">
@@ -1411,8 +1430,8 @@
               <div class="join-benefit">
                 <div class="join-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
                 </div>
                 <div class="join-benefit-text">
@@ -1423,8 +1442,8 @@
               <div class="join-benefit">
                 <div class="join-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
                   </svg>
                 </div>
                 <div class="join-benefit-text">
@@ -1435,9 +1454,9 @@
               <div class="join-benefit">
                 <div class="join-benefit-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="20" x2="12" y2="10"/>
-                    <line x1="18" y1="20" x2="18" y2="4"/>
-                    <line x1="6" y1="20" x2="6" y2="16"/>
+                    <line x1="12" y1="20" x2="12" y2="10" />
+                    <line x1="18" y1="20" x2="18" y2="4" />
+                    <line x1="6" y1="20" x2="6" y2="16" />
                   </svg>
                 </div>
                 <div class="join-benefit-text">
@@ -1470,14 +1489,15 @@
             <div class="join-tabs">
               <button class="join-tab join-tab--active" data-tab="recommend">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  <path
+                    d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
                 <span>系统推荐</span>
               </button>
               <button class="join-tab" data-tab="search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <span>搜索组织</span>
               </button>
@@ -1496,10 +1516,10 @@
                 <div class="join-org-header">
                   <div class="join-org-avatar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                   </div>
                   <div class="join-org-identity">
@@ -1516,8 +1536,9 @@
                   <div class="join-org-detail">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                          d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1528,7 +1549,7 @@
                   <div class="join-org-detail">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1539,8 +1560,8 @@
                   <div class="join-org-detail join-org-detail--full">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1554,7 +1575,7 @@
               <button id="joinRecBtn" class="join-submit-btn">
                 <span>加入此组织</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -1569,8 +1590,8 @@
               <div class="join-search-area">
                 <div class="join-search-field">
                   <svg class="join-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
                   <input id="groupSearch" type="text" placeholder="输入担保组织编号..." autocomplete="off" />
                 </div>
@@ -1583,10 +1604,10 @@
                 <div class="join-org-header">
                   <div class="join-org-avatar">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="9" cy="7" r="4"/>
-                      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                      <circle cx="9" cy="7" r="4" />
+                      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                   </div>
                   <div class="join-org-identity">
@@ -1603,8 +1624,9 @@
                   <div class="join-org-detail">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="3"/>
-                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                          d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1615,7 +1637,7 @@
                   <div class="join-org-detail">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1626,8 +1648,8 @@
                   <div class="join-org-detail join-org-detail--full">
                     <div class="detail-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
                     </div>
                     <div class="detail-content">
@@ -1642,8 +1664,8 @@
               <div id="searchEmpty" class="join-empty-state">
                 <div class="join-empty-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <circle cx="11" cy="11" r="8"/>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
                 </div>
                 <p>输入组织编号开始搜索</p>
@@ -1652,7 +1674,7 @@
               <button id="joinSearchBtn" class="join-submit-btn" disabled>
                 <span>加入此组织</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </button>
             </div>
@@ -1676,44 +1698,46 @@
             <!-- 轨道环 -->
             <div class="inquiry-orbit"></div>
             <div class="inquiry-orbit"></div>
-            
+
             <!-- 行星1 - 网络 -->
             <div class="inquiry-planet-track">
               <div class="inquiry-planet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"/>
-                  <line x1="2" y1="12" x2="22" y2="12"/>
-                  <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                 </svg>
               </div>
             </div>
-            
+
             <!-- 行星2 - 安全 -->
             <div class="inquiry-planet-track">
               <div class="inquiry-planet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                 </svg>
               </div>
             </div>
-            
+
             <!-- 行星3 - 验证 -->
             <div class="inquiry-planet-track">
               <div class="inquiry-planet">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
-                  <polyline points="22 4 12 14.01 9 11.01"/>
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
               </div>
             </div>
-            
+
             <!-- 中心图标 - 恒星 -->
             <div class="inquiry-icon" id="inquiryIcon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-pulse">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
               </svg>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-check" style="display:none">
-                <polyline points="20 6 9 17 4 12"/>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-check"
+                style="display:none">
+                <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
           </div>
@@ -1752,8 +1776,8 @@
         <div class="inquiry-tip" id="inquiryTip">
           <p>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 16v-4M12 8h.01"/>
+              <circle cx="12" cy="12" r="10" />
+              <path d="M12 16v-4M12 8h.01" />
             </svg>
             <span id="inquiryTipText">正在发起网络问询以确定账户所属关系，请稍候</span>
           </p>
@@ -1817,20 +1841,23 @@
                         </div>
                       </div>
                       <div class="asset-actions">
-                        <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新" aria-label="刷新余额">
+                        <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新"
+                          aria-label="刷新余额">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <path d="M23 4v6h-6"></path>
                             <path d="M1 20v-6h6"></path>
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                           </svg>
                         </button>
-                        <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建" aria-label="新建地址">
+                        <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建"
+                          aria-label="新建地址">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                           </svg>
                         </button>
-                        <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入" aria-label="导入地址">
+                        <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入"
+                          aria-label="导入地址">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                             <polyline points="7 10 12 15 17 10"></polyline>
@@ -1847,19 +1874,19 @@
                         <span class="total-balance-unit">USDT</span>
                       </div>
                     </div>
-                    
+
                     <!-- 余额曲线图 -->
                     <div class="balance-chart" id="balanceChart">
                       <div class="balance-chart-inner">
                         <svg class="balance-chart-svg" viewBox="0 0 320 70" preserveAspectRatio="xMidYMid meet">
                           <defs>
                             <linearGradient id="chartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                              <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
-                              <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
+                              <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)" />
+                              <stop offset="100%" style="stop-color:rgba(255,255,255,0)" />
                             </linearGradient>
                           </defs>
-                          <path id="chartFill" class="chart-gradient-fill" fill="url(#chartGradient)"/>
-                          <path id="chartLine" class="chart-line"/>
+                          <path id="chartFill" class="chart-gradient-fill" fill="url(#chartGradient)" />
+                          <path id="chartLine" class="chart-line" />
                           <g id="chartDots"></g>
                         </svg>
                       </div>
@@ -1869,7 +1896,7 @@
                       <div class="chart-tooltip" id="chartTooltip"></div>
                     </div>
                   </div>
-                  
+
                   <!-- 币种分布 -->
                   <div class="coin-distribution">
                     <div class="coin-card coin-card--pgc">
@@ -1890,7 +1917,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <!-- 地址管理卡片 -->
               <div class="address-card">
                 <div class="address-card-header" id="addressHeader">
@@ -1914,42 +1941,66 @@
                   <div id="walletAddrList" class="address-list"></div>
                   <!-- 底部背景插画 -->
                   <div class="address-bg-illustration">
-                    <svg viewBox="0 0 600 200" fill="none" stroke="currentColor" stroke-width="1" preserveAspectRatio="xMidYMax slice">
+                    <svg viewBox="0 0 600 200" fill="none" stroke="currentColor" stroke-width="1"
+                      preserveAspectRatio="xMidYMax slice">
                       <defs>
                         <linearGradient id="fadeGrad" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stop-color="currentColor" stop-opacity="0.1"/>
-                          <stop offset="100%" stop-color="currentColor" stop-opacity="0"/>
+                          <stop offset="0%" stop-color="currentColor" stop-opacity="0.1" />
+                          <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
                         </linearGradient>
                       </defs>
-                      
+
                       <!-- 背景网格透视 -->
-                      <path d="M0 180 L600 180 M-50 220 L650 220 M100 180 L50 220 M200 180 L180 220 M300 180 L310 220 M400 180 L440 220 M500 180 L570 220" stroke="currentColor" stroke-opacity="0.05" stroke-width="1"/>
+                      <path
+                        d="M0 180 L600 180 M-50 220 L650 220 M100 180 L50 220 M200 180 L180 220 M300 180 L310 220 M400 180 L440 220 M500 180 L570 220"
+                        stroke="currentColor" stroke-opacity="0.05" stroke-width="1" />
 
                       <!-- 装饰性数据流线条 (底部) -->
-                      <path d="M0 190 Q 150 160 300 190 T 600 180" stroke="url(#fadeGrad)" stroke-width="1.5" fill="none" />
+                      <path d="M0 190 Q 150 160 300 190 T 600 180" stroke="url(#fadeGrad)" stroke-width="1.5"
+                        fill="none" />
                       <path d="M50 200 Q 200 170 350 200" stroke="url(#fadeGrad)" stroke-width="1" fill="none" />
                     </svg>
                   </div>
                 </div>
               </div>
             </div>
-            
+
             <!-- 右侧转账面板 -->
             <div class="transfer-panel">
               <div class="transfer-header">
-                <div class="transfer-header-left">
-                  <div class="transfer-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <line x1="22" y1="2" x2="11" y2="13"></line>
-                      <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                    </svg>
+                <div class="transfer-header-top">
+                  <div class="transfer-header-left">
+                    <div class="transfer-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                      </svg>
+                    </div>
+                    <div class="transfer-title">
+                      <h2>转账交易</h2>
+                      <span>快速安全的转账体验</span>
+                    </div>
                   </div>
-                  <div class="transfer-title">
-                    <h2>转账交易</h2>
-                    <span>快速安全的转账体验</span>
+
+                  <!-- 网络状态小组件 -->
+                  <div class="network-status-widget">
+                    <div class="ns-item">
+                      <span class="ns-label">Gas</span>
+                      <span class="ns-value">12 Gwei</span>
+                    </div>
+                    <div class="ns-divider"></div>
+                    <div class="ns-item">
+                      <span class="ns-label">Block</span>
+                      <span class="ns-value">#18,293</span>
+                    </div>
+                    <div class="ns-divider"></div>
+                    <div class="ns-item">
+                      <span class="ns-dot"></span>
+                      <span class="ns-value">Mainnet</span>
+                    </div>
                   </div>
                 </div>
-                
+
                 <!-- 交易模式切换 -->
                 <div class="transfer-mode-tabs">
                   <button class="transfer-mode-tab active" data-mode="quick">快速转账</button>
@@ -1957,7 +2008,7 @@
                   <button class="transfer-mode-tab" data-mode="pledge">质押交易</button>
                 </div>
               </div>
-              
+
               <!-- 转账流程 -->
               <div class="transfer-flow">
                 <!-- From: 来源地址 -->
@@ -1965,7 +2016,7 @@
                   <div class="transfer-section-label">从 · FROM</div>
                   <div id="srcAddrList" class="tx-addr-list" role="list"></div>
                 </div>
-                
+
                 <!-- 流程连接器 -->
                 <div class="transfer-connector">
                   <div class="connector-icon">
@@ -1975,7 +2026,7 @@
                     </svg>
                   </div>
                 </div>
-                
+
                 <!-- To: 账单列表 -->
                 <div class="transfer-to">
                   <div class="transfer-section-label">转至 · TO</div>
@@ -1989,14 +2040,16 @@
                   </button>
                 </div>
               </div>
-              
+
               <!-- 转账选项 - 折叠区 -->
               <div class="transfer-options">
                 <div class="options-toggle" id="optionsToggle">
                   <span class="options-toggle-left">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <circle cx="12" cy="12" r="3"></circle>
-                      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                      <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                      </path>
                     </svg>
                     高级选项
                   </span>
@@ -2006,7 +2059,7 @@
                     </svg>
                   </span>
                 </div>
-                
+
                 <div class="options-content" id="optionsContent">
                   <div class="options-grid">
                     <div class="option-field">
@@ -2026,8 +2079,10 @@
                     <div class="option-field">
                       <label class="option-field-label">PGC 找零地址</label>
                       <select id="chAddrPGC" class="input" style="display:none"></select>
-                      <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="PGC">
-                        <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                      <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="PGC">
+                        <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span
+                            class="addr-val" style="margin-left:6px"></span></span>
                         <span class="custom-select__arrow">▾</span>
                         <div class="custom-select__menu"></div>
                       </div>
@@ -2035,8 +2090,10 @@
                     <div class="option-field">
                       <label class="option-field-label">BTC 找零地址</label>
                       <select id="chAddrBTC" class="input" style="display:none"></select>
-                      <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="BTC">
-                        <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                      <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="BTC">
+                        <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span
+                            class="addr-val" style="margin-left:6px"></span></span>
                         <span class="custom-select__arrow">▾</span>
                         <div class="custom-select__menu"></div>
                       </div>
@@ -2044,8 +2101,10 @@
                     <div class="option-field">
                       <label class="option-field-label">ETH 找零地址</label>
                       <select id="chAddrETH" class="input" style="display:none"></select>
-                      <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button" data-coin="ETH">
-                        <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span class="addr-val" style="margin-left:6px"></span></span>
+                      <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="ETH">
+                        <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span
+                            class="addr-val" style="margin-left:6px"></span></span>
                         <span class="custom-select__arrow">▾</span>
                         <div class="custom-select__menu"></div>
                       </div>
@@ -2061,7 +2120,7 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- 隐藏的原始表单字段 -->
                   <select id="tfMode" class="input" style="display:none">
                     <option value="quick" selected>快速转账</option>
@@ -2078,7 +2137,7 @@
                   </select>
                 </div>
               </div>
-              
+
               <!-- 提交按钮 -->
               <div class="transfer-submit">
                 <button id="tfSendBtn" class="submit-btn submit-btn--primary ripple" aria-label="生成交易结构体">
@@ -2092,15 +2151,19 @@
                   构造交易
                 </button>
               </div>
-              
+
               <!-- 错误提示 -->
               <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
-              
+
               <!-- 结果预览 -->
-              <pre id="txPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-lg);padding:var(--space-md);background:var(--surface-light-2);border-radius:var(--radius-sm);border:1px solid var(--surface-light-3);" aria-live="polite"></pre>
-              <pre id="txFinalPreview" class="result hidden" style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-md);padding:var(--space-md);background:linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(52, 211, 153, 0.03));border-radius:var(--radius-sm);border-left:4px solid var(--coin-pgc);" aria-live="polite"></pre>
+              <pre id="txPreview" class="result hidden"
+                style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-lg);padding:var(--space-md);background:var(--surface-light-2);border-radius:var(--radius-sm);border:1px solid var(--surface-light-3);"
+                aria-live="polite"></pre>
+              <pre id="txFinalPreview" class="result hidden"
+                style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-md);padding:var(--space-md);background:linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(52, 211, 153, 0.03));border-radius:var(--radius-sm);border-left:4px solid var(--coin-pgc);"
+                aria-live="polite"></pre>
             </div>
-            
+
             <!-- 底部担保组织面板 -->
             <div class="org-panel">
               <div class="org-panel-header">
@@ -2119,7 +2182,7 @@
                   已加入
                 </span>
               </div>
-              
+
               <!-- 已加入状态 -->
               <div id="woCard" class="org-panel-content">
                 <div class="org-info-grid">
@@ -2144,7 +2207,7 @@
               <div class="org-panel-actions" id="woActions">
                 <button id="woExitBtn" class="org-action-btn org-action-btn--exit">退出担保组织</button>
               </div>
-              
+
               <!-- 未加入状态 -->
               <div id="woEmpty" class="org-empty-state hidden">
                 <div class="org-empty-icon">
@@ -2157,7 +2220,7 @@
                 <button id="woJoinBtn" class="org-action-btn org-action-btn--join">加入担保组织</button>
               </div>
             </div>
-            
+
             <!-- 账户结构体区域 -->
             <div class="struct-section" id="walletStructPane">
               <button id="walletStructToggle" class="struct-toggle-btn">
@@ -2205,7 +2268,7 @@
         <div class="unified-success hidden" id="unifiedSuccess">
           <div class="success-icon-wrap">
             <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"/>
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
           <h3 class="success-title" id="unifiedTitle">操作成功</h3>
