@@ -1669,6 +1669,29 @@ Already defined above with darker background
   border-color: #ef4444;
 }
 
+.org-action-btn--detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.08));
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  text-decoration: none;
+}
+
+.org-action-btn--detail svg {
+  width: 14px;
+  height: 14px;
+}
+
+.org-action-btn--detail:hover {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
 .org-action-btn--join {
   background: var(--org-gradient);
   color: white;

@@ -1,0 +1,688 @@
+/**
+ * ========================================
+ * 担保组织详情页样式 - group.css
+ * 全新左右布局设计 - 紫色主题
+ * ======================================== 
+ */
+
+/* ========================================
+   页面容器 - 左右布局
+   ======================================== */
+
+#groupDetailCard {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.group-page {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: calc(100vh - 120px);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  animation: groupPageSlideIn 0.4s ease-out both;
+}
+
+@keyframes groupPageSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   左侧边栏 - 紫色品牌展示区
+   ======================================== */
+
+.group-sidebar {
+  background: linear-gradient(165deg, #7c3aed 0%, #8b5cf6 50%, #a855f7 100%);
+  padding: 48px 36px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 装饰性背景图案 */
+.group-sidebar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.group-sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -30%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.group-sidebar-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 品牌区域 */
+.group-brand {
+  margin-bottom: 48px;
+}
+
+.group-brand-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+}
+
+.group-brand-icon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.group-brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.group-brand-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* 权益列表 */
+.group-benefits {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.group-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  transition: background 0.2s ease;
+}
+
+.group-benefit:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.group-benefit-icon {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.group-benefit-icon svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.group-benefit-text h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  margin: 0 0 4px;
+}
+
+.group-benefit-text p {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.75);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 底部统计 */
+.group-sidebar-footer {
+  margin-top: auto;
+  padding-top: 32px;
+}
+
+.group-stats {
+  display: flex;
+  gap: 24px;
+}
+
+.group-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: white;
+}
+
+.group-stat-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* ========================================
+   右侧主内容区
+   ======================================== */
+
+.group-main {
+  background: #f8fafc;
+  padding: 48px;
+  display: flex;
+  align-items: flex-start;
+  overflow-y: auto;
+}
+
+.group-main-content {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* 面板通用样式 */
+.group-pane {
+  animation: groupPaneFadeIn 0.3s ease-out both;
+}
+
+@keyframes groupPaneFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 页面头部 */
+.group-pane-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.group-pane-title h2 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.group-pane-title p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.group-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 100px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.group-status-badge--active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.08));
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.group-status-badge .status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+  }
+  50% { 
+    opacity: 0.6; 
+    transform: scale(1.2);
+  }
+}
+
+/* 组织信息卡片 */
+.group-info-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.group-info-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.06), rgba(168, 85, 247, 0.03));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.group-info-avatar {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+}
+
+.group-info-avatar svg {
+  width: 28px;
+  height: 28px;
+  color: white;
+}
+
+.group-info-identity {
+  flex: 1;
+}
+
+.group-info-id {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+.group-info-type {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.group-info-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #10b981;
+}
+
+.group-info-status .status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+/* 信息网格 */
+.group-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.group-info-item {
+  position: relative;
+  background: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.group-info-item--full {
+  grid-column: 1 / -1;
+}
+
+.info-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.08), rgba(168, 85, 247, 0.04));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.info-icon svg {
+  width: 18px;
+  height: 18px;
+  color: #8b5cf6;
+}
+
+.info-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.info-content label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.info-content span {
+  display: block;
+  font-size: 14px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  color: #334155;
+  word-break: break-all;
+  line-height: 1.5;
+}
+
+.info-value--mono {
+  font-size: 13px !important;
+}
+
+.info-copy-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: #f1f5f9;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transform: translateX(5px);
+  transition: all 0.2s ease;
+}
+
+.info-copy-btn svg {
+  width: 14px;
+  height: 14px;
+  color: #64748b;
+}
+
+.group-info-item:hover .info-copy-btn {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.info-copy-btn:hover {
+  background: #8b5cf6;
+  border-color: #8b5cf6;
+}
+
+.info-copy-btn:hover svg {
+  color: white;
+}
+
+/* 操作按钮区域 */
+.group-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+}
+
+.group-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.group-action-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.group-action-btn--exit {
+  background: rgba(239, 68, 68, 0.08);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.group-action-btn--exit:hover {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  color: white;
+  border-color: transparent;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25);
+}
+
+.group-action-btn--back {
+  background: white;
+  color: #64748b;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.group-action-btn--back:hover {
+  background: #f8fafc;
+  color: #334155;
+  transform: translateY(-2px);
+}
+
+.group-action-btn--join {
+  background: linear-gradient(135deg, #7c3aed, #a855f7);
+  color: white;
+  box-shadow: 0 4px 16px rgba(124, 58, 237, 0.25);
+}
+
+.group-action-btn--join:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.35);
+}
+
+.group-action-btn--secondary {
+  background: white;
+  color: #64748b;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.group-action-btn--secondary:hover {
+  background: #f8fafc;
+  color: #334155;
+}
+
+/* ========================================
+   空状态 - 未加入组织
+   ======================================== */
+
+.group-pane--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.group-empty-content {
+  text-align: center;
+  padding: 48px 24px;
+}
+
+.group-empty-visual {
+  margin-bottom: 32px;
+}
+
+.empty-icon-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-icon-wrapper svg {
+  width: 56px;
+  height: 56px;
+  color: #c4b5fd;
+  animation: emptyIconFloat 3s ease-in-out infinite;
+}
+
+@keyframes emptyIconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.empty-icon-pulse {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1), transparent 70%);
+  animation: emptyPulse 3s ease-in-out infinite;
+}
+
+@keyframes emptyPulse {
+  0%, 100% { 
+    transform: scale(1); 
+    opacity: 0.5;
+  }
+  50% { 
+    transform: scale(1.2); 
+    opacity: 0.8;
+  }
+}
+
+.group-empty-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.group-empty-desc {
+  font-size: 15px;
+  color: #64748b;
+  margin: 0 0 32px;
+  line-height: 1.7;
+}
+
+.group-empty-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ========================================
+   响应式适配
+   ======================================== */
+
+@media (max-width: 900px) {
+  .group-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .group-sidebar {
+    padding: 32px 24px;
+  }
+
+  .group-benefits {
+    display: none;
+  }
+
+  .group-sidebar-footer {
+    display: none;
+  }
+
+  .group-main {
+    padding: 32px 24px;
+  }
+
+  .group-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .group-actions {
+    flex-direction: column;
+  }
+
+  .group-action-btn {
+    width: 100%;
+  }
+}
+
+/* ========================================
+   减少动画偏好
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .group-page,
+  .group-pane,
+  .empty-icon-wrapper svg,
+  .empty-icon-pulse,
+  .group-status-badge .status-dot {
+    animation: none !important;
+  }
+
+  .group-action-btn,
+  .group-benefit,
+  .info-copy-btn {
+    transition: none !important;
+  }
+}

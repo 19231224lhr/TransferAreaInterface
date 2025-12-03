@@ -1362,6 +1362,31 @@ function router() {
       if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
       if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
       break;
+    case '/group-detail':
+      {
+        const g1 = getJoinedGroup();
+        const joined1 = !!(g1 && g1.groupID);
+        showCard(document.getElementById('groupDetailCard'));
+        // 更新组织详情页面内容
+        const groupJoinedPane = document.getElementById('groupJoinedPane');
+        const groupEmptyPane = document.getElementById('groupEmptyPane');
+        if (joined1) {
+          if (groupJoinedPane) groupJoinedPane.classList.remove('hidden');
+          if (groupEmptyPane) groupEmptyPane.classList.add('hidden');
+          const groupDetailID = document.getElementById('groupDetailID');
+          const groupDetailAggre = document.getElementById('groupDetailAggre');
+          const groupDetailAssign = document.getElementById('groupDetailAssign');
+          const groupDetailPledge = document.getElementById('groupDetailPledge');
+          if (groupDetailID) groupDetailID.textContent = g1.groupID || '-';
+          if (groupDetailAggre) groupDetailAggre.textContent = g1.aggreNode || '-';
+          if (groupDetailAssign) groupDetailAssign.textContent = g1.assignNode || '-';
+          if (groupDetailPledge) groupDetailPledge.textContent = g1.pledgeAddress || '-';
+        } else {
+          if (groupJoinedPane) groupJoinedPane.classList.add('hidden');
+          if (groupEmptyPane) groupEmptyPane.classList.remove('hidden');
+        }
+      }
+      break;
     case '/inquiry':
       showCard(document.getElementById('inquiryCard'));
       startInquiryAnimation(() => {
@@ -3380,6 +3405,84 @@ function renderWallet() {
     });
     joinBtn.dataset._bind = '1';
   }
+  // 查看详情按钮 - 跳转到组织详情页
+  const woDetailBtn = document.getElementById('woDetailBtn');
+  if (woDetailBtn && !woDetailBtn.dataset._bind) {
+    woDetailBtn.addEventListener('click', () => {
+      routeTo('#/group-detail');
+    });
+    woDetailBtn.dataset._bind = '1';
+  }
+  // 组织详情页面按钮事件绑定
+  const groupExitBtn = document.getElementById('groupExitBtn');
+  const groupBackBtn = document.getElementById('groupBackBtn');
+  const groupJoinBtn = document.getElementById('groupJoinBtn');
+  const groupEmptyBackBtn = document.getElementById('groupEmptyBackBtn');
+  if (groupExitBtn && !groupExitBtn.dataset._bind) {
+    groupExitBtn.addEventListener('click', async () => {
+      const u3 = loadUser();
+      if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
+      const confirmed = await showConfirmModal('退出担保组织', '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？', '确认', '取消');
+      if (!confirmed) return;
+      const ov = document.getElementById('actionOverlay');
+      const ovt = document.getElementById('actionOverlayText');
+      if (ovt) ovt.textContent = '正在退出担保组织...';
+      if (ov) ov.classList.remove('hidden');
+      await wait(2000);
+      if (ov) ov.classList.add('hidden');
+      const latest = loadUser();
+      if (latest) {
+        try { localStorage.removeItem('guarChoice'); } catch { }
+        latest.guarGroup = null;
+        latest.orgNumber = '';
+        saveUser(latest);
+      }
+      updateWalletBrief();
+      refreshOrgPanel();
+      updateOrgDisplay();
+      showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
+      // 刷新当前页面状态
+      routeTo('#/group-detail');
+    });
+    groupExitBtn.dataset._bind = '1';
+  }
+  if (groupBackBtn && !groupBackBtn.dataset._bind) {
+    groupBackBtn.addEventListener('click', () => {
+      routeTo('#/main');
+    });
+    groupBackBtn.dataset._bind = '1';
+  }
+  if (groupJoinBtn && !groupJoinBtn.dataset._bind) {
+    groupJoinBtn.addEventListener('click', () => {
+      routeTo('#/join-group');
+    });
+    groupJoinBtn.dataset._bind = '1';
+  }
+  if (groupEmptyBackBtn && !groupEmptyBackBtn.dataset._bind) {
+    groupEmptyBackBtn.addEventListener('click', () => {
+      routeTo('#/main');
+    });
+    groupEmptyBackBtn.dataset._bind = '1';
+  }
+  // GROUP 页面复制按钮
+  const groupCopyBtns = document.querySelectorAll('#groupDetailCard .info-copy-btn');
+  groupCopyBtns.forEach(btn => {
+    if (!btn.dataset._bind) {
+      btn.addEventListener('click', () => {
+        const targetId = btn.dataset.copy;
+        const targetEl = document.getElementById(targetId);
+        if (targetEl) {
+          const text = targetEl.textContent;
+          navigator.clipboard.writeText(text).then(() => {
+            showToast && showToast('已复制到剪贴板', 'success');
+          }).catch(() => {
+            showToast && showToast('复制失败', 'error');
+          });
+        }
+      });
+      btn.dataset._bind = '1';
+    }
+  });
   // 动画循环控制
   let chartAnimationId = null;
 
