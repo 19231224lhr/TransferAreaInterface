@@ -1008,14 +1008,13 @@ Already defined above with darker background
   animation: fadeUp 0.5s var(--ease-out) 0.08s backwards;
 }
 
-/* 转账头部 */
+/* 转账交易头部 - 蓝色主题 */
 .transfer-header {
   background: var(--transfer-gradient);
   padding: 24px;
   position: relative;
   overflow: hidden;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
-  flex-shrink: 0;
   min-height: 280px;
   display: flex;
   flex-direction: column;
@@ -1129,34 +1128,74 @@ Already defined above with darker background
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
+/* 网络状态曲线图 - 简洁风格 */
+.network-chart-area {
+  position: relative;
+  z-index: 1;
+  margin-top: 10px;
+  margin-bottom: 0;
+  flex: 0;
+}
+
+.network-chart-container {
+  position: relative;
+  height: 84px;
+  min-height: 84px;
+}
+
+.network-chart-svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.network-chart-fill {
+  fill: url(#networkGradient);
+  opacity: 0.7;
+}
+
+.network-chart-line {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.network-chart-dot {
+  fill: white;
+  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
+  transition: cx 0.3s ease, cy 0.3s ease;
+}
+
 /* 网络状态小组件 */
 .network-status-widget {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: var(--radius-lg);
+  gap: 10px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-md);
   backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .ns-item {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 2px;
+  gap: 1px;
 }
 
 .ns-label {
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.6);
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.55);
   font-weight: 500;
-  text-transform: uppercase;
 }
 
 .ns-value {
-  font-size: 12px;
+  font-size: 11px;
   color: white;
   font-weight: 600;
   font-family: 'SF Mono', Monaco, monospace;
@@ -1164,31 +1203,8 @@ Already defined above with darker background
 
 .ns-divider {
   width: 1px;
-  height: 20px;
-  background: rgba(255, 255, 255, 0.15);
-}
-
-.ns-dot {
-  width: 6px;
-  height: 6px;
-  background: #10b981;
-  border-radius: 50%;
-  box-shadow: 0 0 8px #10b981;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-  }
-
-  70% {
-    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-  }
+  height: 16px;
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* 转账流程区域 */
@@ -1902,6 +1918,7 @@ Already defined above with darker background
 
   .transfer-header {
     padding: 16px;
+    min-height: 220px;
   }
 
   .transfer-flow {
@@ -1918,6 +1935,29 @@ Already defined above with darker background
 
   .org-info-grid {
     grid-template-columns: 1fr;
+  }
+
+  /* 网络图表响应式 */
+  .network-chart-area {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .network-chart-container {
+    min-height: 50px;
+  }
+
+  .network-status-widget {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .ns-label {
+    font-size: 8px;
+  }
+
+  .ns-value {
+    font-size: 10px;
   }
 }
 

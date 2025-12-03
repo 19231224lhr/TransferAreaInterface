@@ -22,7 +22,7 @@
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251203k" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251203l" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1982,22 +1982,39 @@
                     </div>
                   </div>
 
-                  <!-- 网络状态小组件 -->
+                  <!-- 网络状态指标 -->
                   <div class="network-status-widget">
                     <div class="ns-item">
-                      <span class="ns-label">Gas</span>
-                      <span class="ns-value">12 Gwei</span>
+                      <span class="ns-label">↓ 下载</span>
+                      <span class="ns-value" id="downloadSpeed">-- KB/s</span>
                     </div>
                     <div class="ns-divider"></div>
                     <div class="ns-item">
-                      <span class="ns-label">Block</span>
-                      <span class="ns-value">#18,293</span>
+                      <span class="ns-label">↑ 上传</span>
+                      <span class="ns-value" id="uploadSpeed">-- KB/s</span>
                     </div>
                     <div class="ns-divider"></div>
                     <div class="ns-item">
-                      <span class="ns-dot"></span>
-                      <span class="ns-value">Mainnet</span>
+                      <span class="ns-label">延迟</span>
+                      <span class="ns-value" id="latencyValue">-- ms</span>
                     </div>
+                  </div>
+                </div>
+
+                <!-- 网络速度曲线图 -->
+                <div class="network-chart-area">
+                  <div class="network-chart-container">
+                    <svg class="network-chart-svg" id="networkChartSvg" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="networkGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                          <stop offset="0%" style="stop-color: rgba(255,255,255,0.35)"/>
+                          <stop offset="100%" style="stop-color: rgba(255,255,255,0)"/>
+                        </linearGradient>
+                      </defs>
+                      <path class="network-chart-fill" id="networkChartFill"/>
+                      <path class="network-chart-line" id="networkChartLine"/>
+                      <circle class="network-chart-dot" id="networkChartDot" r="3"/>
+                    </svg>
                   </div>
                 </div>
 
