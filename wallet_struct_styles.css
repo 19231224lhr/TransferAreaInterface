@@ -1,321 +1,331 @@
-/* Wallet Structure Styles - Optimized v4 (Account Info Module) */
+/* Wallet Structure Styles - Modern Minimal Design v6 */
+
+/* ==================== 基础容器样式 ==================== */
 .wb-section {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
 .wb-title {
-  margin: 0 0 12px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #334155;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  margin: 0 0 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
-/* Account Info Card Styles */
+/* ==================== 账户信息卡片 ==================== */
 .wb-account-card {
-  background: #fffbeb;
-  /* Amber-50 */
-  border: 1px solid #fcd34d;
-  /* Amber-300 */
-  border-left: 4px solid #f59e0b;
-  /* Amber-500 */
-  border-radius: 12px;
-  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .wb-account-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: #92400e;
-  /* Amber-800 */
-  font-size: 15px;
-  font-weight: 700;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-account-header::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 2px;
 }
 
 .wb-account-id-box {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
   border-radius: 12px;
   padding: 20px;
   text-align: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .wb-account-id-label {
-  color: #92400e;
-  font-size: 13px;
-  margin-bottom: 8px;
+  color: #94a3b8;
+  font-size: 11px;
+  margin-bottom: 6px;
   font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .wb-account-id-val {
-  color: #d97706;
-  /* Amber-600 */
-  font-size: 32px;
+  color: #1e293b;
+  font-size: 36px;
   font-weight: 700;
-  font-family: 'Outfit', sans-serif;
-  /* Fallback to sans-serif if Outfit not loaded */
-  letter-spacing: 1px;
-  text-shadow: 0 1px 2px rgba(217, 119, 6, 0.1);
+  font-family: 'Inter', -apple-system, sans-serif;
+  letter-spacing: -1px;
 }
 
 .wb-info-row {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(245, 158, 11, 0.15);
+  background: #f8fafc;
   border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 12px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: background 0.2s ease;
+}
+
+.wb-info-row:hover {
+  background: #f1f5f9;
 }
 
 .wb-info-label {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #78350f;
-  /* Amber-900 */
-  font-size: 12px;
-  font-weight: 600;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
   margin-bottom: 6px;
+  letter-spacing: 0.3px;
 }
 
 .wb-info-val {
-  color: #92400e;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  color: #334155;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 12px;
   word-break: break-all;
-  line-height: 1.5;
-  background: rgba(255, 255, 255, 0.5);
-  padding: 4px 8px;
-  border-radius: 6px;
+  line-height: 1.6;
 }
 
-/* Guarantor Info Styles */
+/* ==================== 担保人信息 ==================== */
 .wb-guar-box {
-  background: #f0fdf4;
-  /* Emerald-50 */
-  border: 1px solid #86efac;
-  /* Emerald-300 */
-  border-radius: 10px;
-  padding: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
   margin-bottom: 12px;
 }
 
 .wb-guar-header {
   display: flex;
   align-items: center;
-  gap: 6px;
-  color: #166534;
-  /* Emerald-800 */
-  font-size: 13px;
+  gap: 8px;
+  color: #475569;
+  font-size: 12px;
   font-weight: 600;
-  margin-bottom: 8px;
+  margin-bottom: 12px;
+}
+
+.wb-guar-header::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #10b981;
+  border-radius: 2px;
 }
 
 .wb-guar-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
+  gap: 10px;
 }
 
 .wb-guar-item {
-  background: rgba(255, 255, 255, 0.6);
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: 1px solid rgba(22, 163, 74, 0.1);
+  background: #ffffff;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .wb-guar-label {
   font-size: 10px;
-  color: #15803d;
-  /* Emerald-700 */
-  margin-bottom: 2px;
+  color: #94a3b8;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .wb-guar-val {
-  font-size: 11px;
-  font-family: monospace;
-  color: #14532d;
-  /* Emerald-900 */
-  font-weight: 600;
+  font-size: 12px;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  color: #1e293b;
+  font-weight: 500;
 }
 
-/* Key Info Styles */
+/* ==================== 密钥信息 ==================== */
 .wb-key-box {
-  background: #fff7ed;
-  /* Orange-50 */
-  border: 1px solid #fdba74;
-  /* Orange-300 */
-  border-radius: 10px;
+  background: #f8fafc;
+  border-radius: 12px;
   overflow: hidden;
 }
 
 .wb-key-summary {
-  padding: 12px;
+  padding: 14px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
-  color: #9a3412;
-  /* Orange-800 */
-  font-size: 13px;
+  gap: 10px;
+  color: #475569;
+  font-size: 12px;
   font-weight: 600;
-  background: rgba(255, 237, 213, 0.5);
-  transition: background 0.2s;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.wb-key-summary::before {
+  content: '';
+  width: 3px;
+  height: 14px;
+  background: #f59e0b;
+  border-radius: 2px;
 }
 
 .wb-key-summary:hover {
-  background: rgba(255, 237, 213, 0.8);
+  background: #f1f5f9;
 }
 
 .wb-key-content {
-  padding: 12px;
-  border-top: 1px solid rgba(253, 186, 116, 0.3);
-  background: rgba(255, 255, 255, 0.4);
+  padding: 16px;
+  background: #ffffff;
+  border-top: 1px solid #e2e8f0;
 }
 
-/* Wallet Overview (Blue Theme) */
+/* ==================== 钱包概览卡片 ==================== */
 .wb-wallet-card {
-  background: #f0f9ff;
-  /* Sky-50 */
-  border: 1px solid #7dd3fc;
-  /* Sky-300 */
-  border-left: 4px solid #0ea5e9;
-  /* Sky-500 */
-  border-radius: 12px;
-  padding: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
   margin-bottom: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .wb-wallet-header {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 16px;
-  color: #075985;
-  /* Sky-800 */
-  font-size: 15px;
-  font-weight: 700;
+  gap: 10px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.wb-wallet-header::before {
+  content: '';
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4);
+  border-radius: 2px;
 }
 
 .wb-total-val-box {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
   border-radius: 12px;
-  padding: 16px;
+  padding: 24px;
   text-align: center;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 }
 
 .wb-total-label {
   color: #64748b;
-  font-size: 12px;
-  margin-bottom: 4px;
+  font-size: 11px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .wb-total-num {
-  color: #0284c7;
-  /* Sky-600 */
-  font-size: 28px;
+  color: #0369a1;
+  font-size: 32px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -1px;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
 .wb-asset-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .wb-asset-item {
-  border-radius: 8px;
-  padding: 8px;
+  border-radius: 12px;
+  padding: 16px 12px;
   text-align: center;
-  border: 1px solid transparent;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.wb-asset-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .wb-asset-pgc {
-  background: rgba(16, 185, 129, 0.1);
-  border-color: rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-color: #a7f3d0;
 }
 
 .wb-asset-btc {
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.2);
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+  border-color: #fde68a;
 }
 
 .wb-asset-eth {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.2);
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border-color: #bfdbfe;
 }
 
 .wb-asset-label {
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 600;
-  margin-bottom: 2px;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .wb-asset-val {
   font-weight: 700;
-  font-size: 14px;
+  font-size: 18px;
+  font-family: 'Inter', -apple-system, sans-serif;
 }
 
-.wb-asset-pgc .wb-asset-label {
-  color: #059669;
-}
+.wb-asset-pgc .wb-asset-label { color: #059669; }
+.wb-asset-pgc .wb-asset-val { color: #047857; }
+.wb-asset-btc .wb-asset-label { color: #d97706; }
+.wb-asset-btc .wb-asset-val { color: #b45309; }
+.wb-asset-eth .wb-asset-label { color: #2563eb; }
+.wb-asset-eth .wb-asset-val { color: #1d4ed8; }
 
-.wb-asset-pgc .wb-asset-val {
-  color: #047857;
-}
-
-.wb-asset-btc .wb-asset-label {
-  color: #d97706;
-}
-
-.wb-asset-btc .wb-asset-val {
-  color: #b45309;
-}
-
-.wb-asset-eth .wb-asset-label {
-  color: #2563eb;
-}
-
-.wb-asset-eth .wb-asset-val {
-  color: #1d4ed8;
-}
-
-
-/* Sub-addresses Styles */
+/* ==================== 子地址详情卡片 ==================== */
 .wb-detail-card {
-  background: #fff;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  margin-bottom: 8px;
+  border-radius: 12px;
+  margin-bottom: 10px;
   overflow: hidden;
-  transition: all .2s ease;
+  transition: all 0.2s ease;
 }
 
 .wb-detail-card:hover {
   border-color: #cbd5e1;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, .03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
 .wb-detail-card[open] {
-  border-color: #bfdbfe;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, .08);
+  border-color: #94a3b8;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .wb-summary {
-  padding: 10px 12px;
+  padding: 14px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -324,12 +334,12 @@
   font-size: 13px;
   font-weight: 500;
   color: #1e293b;
-  background: #f8fafc;
-  transition: background .15s;
+  background: #fafafa;
+  transition: background 0.15s ease;
 }
 
 .wb-summary:hover {
-  background: #f1f5f9;
+  background: #f5f5f5;
 }
 
 .wb-summary::-webkit-details-marker {
@@ -337,12 +347,15 @@
 }
 
 .wb-summary::after {
-  content: '+';
-  font-size: 16px;
-  color: #94a3b8;
-  font-weight: 300;
-  transition: transform .2s;
-  margin-left: 8px;
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid #94a3b8;
+  border-bottom: 2px solid #94a3b8;
+  transform: rotate(-45deg);
+  transition: transform 0.2s ease;
+  margin-left: 12px;
+  flex-shrink: 0;
 }
 
 .wb-detail-card[open] .wb-summary::after {
@@ -352,20 +365,20 @@
 .wb-summary-content {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   flex: 1;
   min-width: 0;
   overflow: hidden;
 }
 
 .wb-addr-short {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  color: #64748b;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  color: #475569;
   font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 60px;
+  min-width: 80px;
   flex-shrink: 1;
 }
 
@@ -377,27 +390,27 @@
 .wb-balance-tag {
   margin-left: auto;
   font-weight: 600;
-  font-size: 12px;
-  padding: 2px 8px;
-  background: #e0f2fe;
-  color: #0284c7;
-  border-radius: 4px;
+  font-size: 13px;
+  padding: 4px 12px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  color: #0369a1;
+  border-radius: 20px;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .wb-content {
-  padding: 12px;
-  border-top: 1px solid #e2e8f0;
-  background: #fff;
+  padding: 16px;
+  border-top: 1px solid #f1f5f9;
+  background: #ffffff;
 }
 
 .wb-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  padding: 5px 0;
-  border-bottom: 1px dashed #f1f5f9;
+  align-items: flex-start;
+  padding: 10px 0;
+  border-bottom: 1px solid #f8fafc;
   font-size: 13px;
 }
 
@@ -406,217 +419,211 @@
 }
 
 .wb-label {
-  color: #64748b;
+  color: #94a3b8;
   flex-shrink: 0;
+  font-size: 12px;
 }
 
 .wb-value {
   font-weight: 500;
   color: #334155;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'SF Mono', ui-monospace, monospace;
   text-align: right;
   word-break: break-all;
-  margin-left: 12px;
+  margin-left: 16px;
+  font-size: 12px;
 }
 
 .wb-code-box {
   background: #f8fafc;
   border: 1px solid #e2e8f0;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', ui-monospace, monospace;
   font-size: 11px;
   color: #475569;
   word-break: break-all;
-  margin-top: 4px;
-  margin-bottom: 10px;
+  margin-top: 6px;
+  margin-bottom: 12px;
+  line-height: 1.6;
 }
 
 .wb-sub-section {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid #e2e8f0;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
 }
 
 .wb-sub-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+}
+
+.wb-utxo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wb-utxo-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  gap: 12px;
+  transition: all 0.15s ease;
+}
+
+.wb-utxo-item:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.wb-utxo-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  flex: 1;
+}
+
+.wb-utxo-hash {
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 11px;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.wb-utxo-val {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.wb-btn-xs {
+  padding: 4px 12px;
+  font-size: 11px;
+  height: 28px;
+  line-height: 1;
+  min-width: auto;
+}
+
+/* ==================== TXCers 样式 ==================== */
+.wb-txcer-box {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  font-size: 11px;
+  word-break: break-all;
   margin-bottom: 8px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.wb-utxo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.wb-utxo-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  gap: 10px;
-}
-
-.wb-utxo-item:hover {
-  background: #fff;
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .02);
-}
-
-.wb-utxo-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.wb-utxo-hash {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  color: #334155;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wb-utxo-val {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.wb-btn-xs {
-  padding: 2px 8px;
-  font-size: 11px;
-  height: 24px;
-  line-height: 1;
-  min-width: auto;
-}
-
-/* New Styles for TXCers */
-.wb-txcer-box {
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  color: #7e22ce;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  word-break: break-all;
-  margin-bottom: 6px;
+  line-height: 1.6;
 }
 
 .wb-total-box {
-  background: #fef3f2;
-  padding: 12px;
-  border-radius: 10px;
-  border-left: 4px solid #ef4444;
-  margin-top: 12px;
+  background: #f8fafc;
+  padding: 16px;
+  border-radius: 12px;
+  margin-top: 16px;
+  border: 1px solid #e2e8f0;
+}
+
+.wb-total-box::before {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 16px;
+  background: #ef4444;
+  border-radius: 2px;
+  margin-right: 10px;
+  vertical-align: middle;
 }
 
 .wb-total-title {
-  margin: 0 0 8px 0;
-  color: #7f1d1d;
+  display: inline;
+  margin: 0;
+  color: #1e293b;
   font-size: 13px;
   font-weight: 600;
+  vertical-align: middle;
 }
 
 .wb-total-item {
-  font-size: 11px;
-  color: #7f1d1d;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  padding: 2px 0;
+  font-size: 12px;
+  color: #475569;
+  font-family: 'SF Mono', ui-monospace, monospace;
+  padding: 6px 0;
+  margin-top: 12px;
 }
 
-/* Utility classes for text colors and spacing */
-.wb-mb-sm {
-  margin-bottom: 4px;
-}
+/* ==================== 工具类 ==================== */
+.wb-mb-sm { margin-bottom: 6px; }
+.wb-text-success { color: #10b981; }
+.wb-text-purple { color: #8b5cf6; }
+.wb-text-blue-bold { color: #0369a1; font-weight: 600; }
+.wb-text-warning { color: #d97706; }
+.wb-sub-title-success { color: #059669; }
+.wb-sub-title-purple { color: #7c3aed; }
 
-.wb-text-success {
-  color: #10b981;
-}
-
-.wb-text-purple {
-  color: #8b5cf6;
-}
-
-.wb-text-blue-bold {
-  color: #0ea5e9;
-  font-weight: 700;
-}
-
-.wb-text-warning {
-  color: #f59e0b;
-}
-
-.wb-sub-title-success {
-  color: #16a34a;
-}
-
-.wb-sub-title-purple {
-  color: #9333ea;
-}
-
-/* Overwrite default pre styles and add CSS Grid animation */
+/* ==================== 容器动画样式 ==================== */
 #walletStructBox.wb-clean-box {
   white-space: normal;
   font-family: inherit;
-
-  /* CSS Grid Animation styles */
   display: grid;
   grid-template-rows: 0fr;
-
-  /* Reset JS height if any */
   height: auto;
-
   opacity: 0;
   overflow: hidden;
   padding: 0;
   margin-top: 0;
   border: 0 solid #e2e8f0;
-  background: #f8fafc;
-
+  background: #ffffff;
+  border-radius: 16px;
   transition:
-    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    grid-template-rows 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    margin 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    border-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 #walletStructBox.wb-clean-box.expanded {
   grid-template-rows: 1fr;
   opacity: 1;
-  padding: 12px;
-  margin-top: 12px;
+  padding: 20px;
+  margin-top: 16px;
   border-width: 1px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
 }
 
 .wb-inner-wrapper {
   min-height: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', -apple-system, sans-serif;
   font-size: 13px;
   line-height: 1.6;
 }
 
-/* Animation for Raw JSON Box */
+/* ==================== JSON 显示框 ==================== */
 .wb-json-box {
   white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-family: 'SF Mono', ui-monospace, monospace;
   font-size: 11px;
   color: #334155;
   overflow: hidden;
-
-  /* Collapsed state */
   height: 0;
   opacity: 0;
   padding: 0;
@@ -624,202 +631,6 @@
   border: 0 solid #e2e8f0;
   background: #f8fafc;
   border-radius: 8px;
-
-  transition:
-    height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s ease-out,
-    padding 0.35s ease,
-    margin 0.35s ease,
-    border-width 0.35s ease;
-}
-
-.wb-json-box.expanded {
-  height: auto;
-  opacity: 1;
-  padding: 12px;
-  margin-top: 12px;
-  align-items: center;
-  gap: 6px;
-}
-
-.wb-utxo-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.wb-utxo-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  gap: 10px;
-}
-
-.wb-utxo-item:hover {
-  background: #fff;
-  border-color: #cbd5e1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, .02);
-}
-
-.wb-utxo-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-  flex: 1;
-}
-
-.wb-utxo-hash {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  color: #334155;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.wb-utxo-val {
-  font-size: 11px;
-  color: #64748b;
-  font-weight: 500;
-}
-
-.wb-btn-xs {
-  padding: 2px 8px;
-  font-size: 11px;
-  height: 24px;
-  line-height: 1;
-  min-width: auto;
-}
-
-/* New Styles for TXCers */
-.wb-txcer-box {
-  background: #faf5ff;
-  border: 1px solid #e9d5ff;
-  color: #7e22ce;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  word-break: break-all;
-  margin-bottom: 6px;
-}
-
-.wb-total-box {
-  background: #fef3f2;
-  padding: 12px;
-  border-radius: 10px;
-  border-left: 4px solid #ef4444;
-  margin-top: 12px;
-}
-
-.wb-total-title {
-  margin: 0 0 8px 0;
-  color: #7f1d1d;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.wb-total-item {
-  font-size: 11px;
-  color: #7f1d1d;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  padding: 2px 0;
-}
-
-/* Utility classes for text colors and spacing */
-.wb-mb-sm {
-  margin-bottom: 4px;
-}
-
-.wb-text-success {
-  color: #10b981;
-}
-
-.wb-text-purple {
-  color: #8b5cf6;
-}
-
-.wb-text-blue-bold {
-  color: #0ea5e9;
-  font-weight: 700;
-}
-
-.wb-text-warning {
-  color: #f59e0b;
-}
-
-.wb-sub-title-success {
-  color: #16a34a;
-}
-
-.wb-sub-title-purple {
-  color: #9333ea;
-}
-
-/* Overwrite default pre styles and add CSS Grid animation */
-#walletStructBox.wb-clean-box {
-  white-space: normal;
-  font-family: inherit;
-
-  /* CSS Grid Animation styles */
-  display: grid;
-  grid-template-rows: 0fr;
-
-  /* Reset JS height if any */
-  height: auto;
-
-  opacity: 0;
-  overflow: hidden;
-  padding: 0;
-  margin-top: 0;
-  border: 0 solid #e2e8f0;
-  background: #f8fafc;
-
-  transition:
-    grid-template-rows 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    padding 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    margin 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    border-width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-#walletStructBox.wb-clean-box.expanded {
-  grid-template-rows: 1fr;
-  opacity: 1;
-  padding: 12px;
-  margin-top: 12px;
-  border-width: 1px;
-}
-
-.wb-inner-wrapper {
-  min-height: 0;
-  font-family: 'Inter', sans-serif;
-  font-size: 13px;
-  line-height: 1.6;
-}
-
-/* Animation for Raw JSON Box */
-.wb-json-box {
-  white-space: pre-wrap;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
-  color: #334155;
-  overflow: hidden;
-
-  /* Collapsed state */
-  height: 0;
-  opacity: 0;
-  padding: 0;
-  margin-top: 0;
-  border: 0 solid #e2e8f0;
-  background: #f8fafc;
-  border-radius: 8px;
-
   transition:
     height 0.35s cubic-bezier(0.4, 0, 0.2, 1),
     opacity 0.3s ease-out,
@@ -836,9 +647,7 @@
   border-width: 1px;
 }
 
-/* --- Layout Optimization v5 --- */
-
-/* 1. Container Card Style */
+/* ==================== 展开区域容器样式 ==================== */
 #walletStructPane {
   background: transparent;
   border-radius: 0;
@@ -850,46 +659,193 @@
   border: none;
 }
 
-/* 2. Toggle Button Optimization */
+/* ==================== 展开按钮样式 ==================== */
 #walletStructToggle {
   width: 100%;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  color: white;
+  background: transparent;
+  color: #52525b;
   border: none;
-  padding: 12px 20px;
-  font-size: 14px;
+  padding: 12px 16px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  justify-content: space-between;
+  gap: 10px;
   margin: 0;
+  position: relative;
+  box-shadow: none;
+}
+
+#walletStructToggle::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%);
+  border-radius: 2px;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
 }
 
 #walletStructToggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(99, 102, 241, 0.3);
-  background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+  background: rgba(139, 92, 246, 0.04);
+  color: #3f3f46;
+}
+
+#walletStructToggle:hover::before {
+  opacity: 1;
 }
 
 #walletStructToggle:active {
-  transform: translateY(0);
+  background: rgba(139, 92, 246, 0.08);
 }
 
-/* 3. Expanded Box Full Width Optimization */
+#walletStructToggle span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#walletStructToggle svg {
+  width: 16px;
+  height: 16px;
+  color: #8b5cf6;
+  opacity: 0.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#walletStructToggle:hover svg {
+  opacity: 1;
+}
+
+#walletStructToggle.active svg {
+  transform: rotate(180deg);
+  opacity: 1;
+}
+
+/* ==================== 展开内容区域样式 ==================== */
 #walletStructBox.wb-clean-box.expanded {
   margin-top: 12px;
   margin-left: 0;
   margin-right: 0;
   margin-bottom: 0;
   width: 100%;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   padding: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.06),
+              inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: structReveal 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes structReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 内部卡片覆盖样式 ==================== */
+#walletStructBox .wb-account-card {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.04) 0%, rgba(245, 158, 11, 0.02) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: none;
+}
+
+#walletStructBox .wb-account-header {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+#walletStructBox .wb-wallet-card {
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.04) 0%, rgba(56, 189, 248, 0.02) 100%);
+  border: 1px solid rgba(14, 165, 233, 0.12);
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: none;
+}
+
+#walletStructBox .wb-wallet-header {
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+#walletStructBox .wb-guar-box {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(52, 211, 153, 0.02) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.12);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+#walletStructBox .wb-detail-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow: hidden;
+  box-shadow: none;
+  transition: border-color 0.2s ease;
+}
+
+#walletStructBox .wb-detail-card:hover {
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+#walletStructBox .wb-detail-card[open] {
+  border-color: rgba(139, 92, 246, 0.25);
+}
+
+#walletStructBox .wb-summary {
+  padding: 12px 14px;
+  background: #fafafa;
+  font-size: 12px;
+}
+
+#walletStructBox .wb-summary:hover {
+  background: #f5f5f5;
+}
+
+#walletStructBox .wb-content {
+  padding: 12px 14px;
+  border-top: 1px solid #f1f5f9;
+  background: #fff;
+}
+
+#walletStructBox .wb-row {
+  font-size: 12px;
+  padding: 6px 0;
+  border-bottom: 1px solid #f8fafc;
+}
+
+#walletStructBox .wb-row:last-child {
+  border-bottom: none;
+}
+
+#walletStructBox .wb-label {
+  color: #71717a;
+  font-size: 11px;
+}
+
+#walletStructBox .wb-value {
+  font-size: 11px;
+  color: #3f3f46;
 }

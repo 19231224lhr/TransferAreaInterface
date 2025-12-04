@@ -174,7 +174,10 @@ function toAccount(basic, prev) {
     delete acc.wallet.addressMsg[mainAddr];
   }
   if (basic.wallet) {
-    acc.wallet.addressMsg = { ...acc.wallet.addressMsg, ...(basic.wallet.addressMsg || {}) };
+    // 如果 basic.wallet.addressMsg 是显式提供的对象，直接使用它（支持删除操作）
+    if (basic.wallet.addressMsg !== undefined) {
+      acc.wallet.addressMsg = { ...basic.wallet.addressMsg };
+    }
     if (basic.wallet.valueDivision) acc.wallet.valueDivision = { ...basic.wallet.valueDivision };
     if (basic.wallet.totalValue !== undefined) acc.wallet.totalValue = basic.wallet.totalValue;
     if (basic.wallet.TotalValue !== undefined) acc.wallet.TotalValue = basic.wallet.TotalValue;
@@ -1827,7 +1830,7 @@ function updateWalletStruct() {
 
   // Account Overview Section - 账户总览 (New Design)
   html += '<div class="wb-account-card">';
-  html += '<h4 class="wb-account-header"><span>👤</span> 账户总览</h4>';
+  html += '<h4 class="wb-account-header">账户总览</h4>';
 
   // Account ID Card
   html += '<div class="wb-account-id-box">';
@@ -1837,7 +1840,7 @@ function updateWalletStruct() {
 
   // Main Address Row
   html += '<div class="wb-info-row">';
-  html += '<div class="wb-info-label"><span>🏠</span> 主地址</div>';
+  html += '<div class="wb-info-label">主地址</div>';
   html += `<div class="wb-info-val">${u.address || '未设置'}</div>`;
   html += '</div>';
 
@@ -1868,7 +1871,7 @@ function updateWalletStruct() {
 
   if (guarantorInfo && guarantorInfo.groupID) {
     html += '<div class="wb-guar-box">';
-    html += '<div class="wb-guar-header"><span>🛡️</span> 担保组织信息</div>';
+    html += '<div class="wb-guar-header">担保组织信息</div>';
     
     // Grid for Group Info
     html += '<div class="wb-guar-grid">';
@@ -1887,7 +1890,7 @@ function updateWalletStruct() {
     html += '</div>';
   } else {
     html += '<div class="wb-info-row" style="display:flex;justify-content:space-between;align-items:center;">';
-    html += '<span style="color:#78350f;font-size:12px;font-weight:600;">🛡️ 担保组织</span>';
+    html += '<span style="color:#78350f;font-size:12px;font-weight:600;">担保组织</span>';
     html += '<span style="color:#6b7280;font-size:12px;">未加入</span>';
     html += '</div>';
   }
@@ -1898,18 +1901,18 @@ function updateWalletStruct() {
   const pubYHex = u.keys?.pubYHex || '';
   if (privHex || pubXHex || pubYHex) {
     html += '<details class="wb-key-box">';
-    html += '<summary class="wb-key-summary"><span>🔑</span> 查看账户密钥</summary>';
+    html += '<summary class="wb-key-summary">查看账户密钥</summary>';
     html += '<div class="wb-key-content">';
     if (privHex) {
-      html += '<div style="margin-bottom:8px;padding:8px;background:rgba(254,242,242,0.8);border-left:3px solid #ef4444;border-radius:4px;max-width:100%;overflow:hidden;">';
-      html += '<div style="color:#991b1b;font-size:11px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;gap:4px;"><span>⚠️</span> 私钥 (请勿泄露)</div>';
-      html += `<code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#7f1d1d;display:block;font-family:monospace;">${privHex}</code>`;
+      html += '<div style="margin-bottom:8px;padding:10px 12px;background:#fef2f2;border-radius:8px;max-width:100%;overflow:hidden;">';
+      html += '<div style="color:#991b1b;font-size:11px;font-weight:600;margin-bottom:6px;">私钥 (请勿泄露)</div>';
+      html += `<code style="font-size:10px;word-break:break-all;overflow-wrap:break-word;color:#7f1d1d;display:block;font-family:\'SF Mono\',ui-monospace,monospace;">${privHex}</code>`;
       html += '</div>';
     }
     if (pubXHex && pubYHex) {
-      html += '<div style="display:flex;flex-direction:column;gap:6px;">';
-      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#92400e;font-size:10px;margin-bottom:2px;">公钥 X</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#78350f;display:block;background:rgba(255,255,255,0.6);padding:4px;border-radius:4px;border:1px solid rgba(245,158,11,0.1);">${pubXHex}</code></div>`;
-      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#92400e;font-size:10px;margin-bottom:2px;">公钥 Y</div><code style="font-size:9px;word-break:break-all;overflow-wrap:break-word;color:#78350f;display:block;background:rgba(255,255,255,0.6);padding:4px;border-radius:4px;border:1px solid rgba(245,158,11,0.1);">${pubYHex}</code></div>`;
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">';
+      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#64748b;font-size:10px;margin-bottom:4px;font-weight:500;">公钥 X</div><code style="font-size:10px;word-break:break-all;overflow-wrap:break-word;color:#334155;display:block;background:#f8fafc;padding:8px 10px;border-radius:6px;border:1px solid #e2e8f0;font-family:\'SF Mono\',ui-monospace,monospace;">${pubXHex}</code></div>`;
+      html += `<div style="max-width:100%;overflow:hidden;"><div style="color:#64748b;font-size:10px;margin-bottom:4px;font-weight:500;">公钥 Y</div><code style="font-size:10px;word-break:break-all;overflow-wrap:break-word;color:#334155;display:block;background:#f8fafc;padding:8px 10px;border-radius:6px;border:1px solid #e2e8f0;font-family:\'SF Mono\',ui-monospace,monospace;">${pubYHex}</code></div>`;
       html += '</div>';
     }
     html += '</div>';
@@ -1919,7 +1922,7 @@ function updateWalletStruct() {
 
   // Wallet Summary Section - 钱包总览 (New Design)
   html += '<div class="wb-wallet-card">';
-  html += '<h4 class="wb-wallet-header"><span>📊</span> 钱包总览</h4>';
+  html += '<h4 class="wb-wallet-header">钱包总览</h4>';
 
   // Total Value Card
   html += '<div class="wb-total-val-box">';
@@ -1951,14 +1954,14 @@ function updateWalletStruct() {
   html += '</div>'; // End Grid
 
   // Footer Info
-  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#64748b;padding-top:8px;border-top:1px dashed rgba(14,165,233,0.2);">';
+  html += '<div style="display:flex;justify-content:space-between;align-items:center;font-size:11px;color:#94a3b8;padding-top:12px;border-top:1px solid #f1f5f9;margin-top:8px;">';
   if (w.updateTime) {
     const ts = Number(w.updateTime);
     const date = new Date(ts > 100000000000 ? ts : ts * 1000);
-    html += `<div>🕒 ${date.toLocaleString()}</div>`;
+    html += `<div>更新时间: ${date.toLocaleString()}</div>`;
   }
   if (w.updateBlock) {
-    html += `<div>📦 区块: ${w.updateBlock}</div>`;
+    html += `<div>区块: ${w.updateBlock}</div>`;
   }
   html += '</div>';
 
@@ -1967,7 +1970,7 @@ function updateWalletStruct() {
   // Addresses Section
   const addresses = Object.keys(addr);
   if (addresses.length > 0) {
-    html += `<h4 class="wb-title">🏦 子地址 (${addresses.length})</h4>`;
+    html += `<h4 class="wb-title">子地址 (${addresses.length})</h4>`;
 
     addresses.forEach((addrKey, idx) => {
       const m = addr[addrKey] || {};
@@ -2002,7 +2005,7 @@ function updateWalletStruct() {
       // UTXOs subsection
       if (utxoCount > 0) {
         html += '<div class="wb-sub-section">';
-        html += `<div class="wb-sub-title wb-sub-title-success">💰 UTXOs (${utxoCount})</div>`;
+        html += `<div class="wb-sub-title wb-sub-title-success">UTXOs (${utxoCount})</div>`;
         html += '<div class="wb-utxo-list">';
         Object.keys(utxos).forEach((utxoKey) => {
           const utxo = utxos[utxoKey];
@@ -2020,7 +2023,7 @@ function updateWalletStruct() {
       // TXCers subsection
       if (txCerCount > 0) {
         html += '<div class="wb-sub-section">';
-        html += `<div class="wb-sub-title wb-sub-title-purple">📜 TXCers (${txCerCount})</div>`;
+        html += `<div class="wb-sub-title wb-sub-title-purple">TXCers (${txCerCount})</div>`;
         Object.keys(txCers).forEach((txCerKey) => {
           const txCerVal = txCers[txCerKey];
           html += `<div class="wb-txcer-box">${txCerKey}: ${txCerVal}</div>`;
@@ -2036,7 +2039,7 @@ function updateWalletStruct() {
   const totalTXCersKeys = Object.keys(w.totalTXCers || {});
   if (totalTXCersKeys.length > 0) {
     html += '<div class="wb-total-box">';
-    html += `<h4 class="wb-total-title">📜 总TXCers (${totalTXCersKeys.length})</h4>`;
+    html += `<h4 class="wb-total-title">总TXCers (${totalTXCersKeys.length})</h4>`;
     html += '<div>';
     totalTXCersKeys.forEach(key => {
       html += `<div style="font-size:11px;color:#7f1d1d;font-family:monospace;padding:4px 0;">${key}: ${w.totalTXCers[key]}</div>`;

@@ -163,7 +163,7 @@
    ======================================== */
 .main-v2 {
   min-height: calc(100vh - 72px);
-  background: var(--bg-page);
+  background: transparent;
   padding: 20px 24px;
   width: 100%;
 }
@@ -219,7 +219,7 @@
   background: var(--wallet-gradient);
   padding: 24px;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
   min-height: 280px;
   display: flex;
@@ -472,13 +472,22 @@
   opacity: 0;
   transform: translateX(-50%) translateY(-8px);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  z-index: 10;
+  z-index: 1000;
   white-space: nowrap;
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* 右侧边缘的tooltip向左偏移 */
+.chart-tooltip.edge-right {
+  transform: translateX(-85%) translateY(-8px);
+}
+
+.chart-tooltip.edge-right.visible {
+  transform: translateX(-85%) translateY(0);
 }
 
 .chart-tooltip.visible {
@@ -514,14 +523,16 @@
   transform: translateY(-2px);
 }
 
+/* ========================================
+   地址卡片样式 - 优化悬停动画
+   使用GPU加速和流畅的过渡效果
+   ======================================== */
 .main-v2 .addr-card {
   background: #f1f5f9 !important;
   /* neutral-100 */
   border-radius: var(--radius-md) !important;
   overflow: hidden !important;
   /* 收起时裁剪内容 */
-  transition: background 0.2s ease,
-    box-shadow 0.2s ease !important;
   cursor: pointer !important;
   border: none !important;
   padding: 0 !important;
@@ -530,6 +541,12 @@
   backdrop-filter: none !important;
   position: relative !important;
   z-index: 1;
+  /* 使用GPU加速的transform进行流畅动画 */
+  transform: translateY(0) translateZ(0);
+  will-change: transform, background-color, box-shadow;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .main-v2 .addr-card.expanded {
@@ -545,11 +562,27 @@
   overflow: visible !important;
 }
 
+/* 悬停效果 - 柔和的上浮动画 */
 .main-v2 .addr-card:hover {
   background: #e2e8f0 !important;
   /* neutral-200 */
   z-index: 10 !important;
   /* 悬浮时提升层级，防止菜单被下方卡片遮挡 */
+  transform: translateY(-3px) translateZ(0) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 点击反馈 */
+.main-v2 .addr-card:active {
+  transform: translateY(-1px) translateZ(0) !important;
+  transition-duration: 0.1s !important;
+}
+
+/* 展开状态保持稳定 */
+.main-v2 .addr-card.expanded:hover {
+  transform: translateY(0) translateZ(0) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08) !important;
 }
 
 .coin-icon {
@@ -707,6 +740,8 @@
   overflow: visible;
   background: var(--bg-card-solid);
   position: relative;
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  min-height: 261px;
 }
 
 /* 底部插画容器 */
@@ -715,7 +750,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 120px;
+  height: 300px;
   pointer-events: none;
   z-index: 0;
   overflow: hidden;
@@ -744,8 +779,8 @@
 }
 
 .address-list {
-  padding: 8px 12px 100px;
-  /* 增加底部内边距，防止菜单被遮挡 */
+  padding: 8px 12px 40px;
+  /* 底部内边距 */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -1256,21 +1291,29 @@ Already defined above with darker background
   --field-label-width: 96px;
 }
 
+/* FROM/TO 标签 - 与高级选项风格统一 */
 .transfer-section-label {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  margin-bottom: 6px;
-  background: linear-gradient(135deg, var(--transfer-primary-light) 0%, var(--transfer-primary) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius-md);
-  box-shadow: 0 1px 4px rgba(29, 78, 216, 0.12);
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.transfer-section-label svg {
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
 }
 
 .transfer-from {
@@ -1343,20 +1386,28 @@ Already defined above with darker background
   padding: 0;
 }
 
+/* TO 标签 - 与 FROM 样式统一 */
 .recipients-title {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #fff;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  background: linear-gradient(135deg, var(--transfer-primary-light) 0%, var(--transfer-primary) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  border-radius: var(--radius-md);
-  box-shadow: 0 1px 4px rgba(29, 78, 216, 0.12);
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.recipients-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
 }
 
 /* 隐藏图标和计数，保持简洁 */

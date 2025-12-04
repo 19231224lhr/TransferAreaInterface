@@ -23,10 +23,10 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251204b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251204q" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251204u" />
 
   <!-- 其他样式 -->
-  <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
+  <link rel="stylesheet" href="/wallet_struct_styles.css?v=3" />
   <style>
     /* Ensure detail modal styles are present */
     .detail-content {
@@ -1937,24 +1937,49 @@
                   <div id="walletAddrList" class="address-list"></div>
                   <!-- 底部背景插画 -->
                   <div class="address-bg-illustration">
-                    <svg viewBox="0 0 600 200" fill="none" stroke="currentColor" stroke-width="1"
+                    <svg viewBox="0 0 600 300" fill="none" stroke="currentColor" stroke-width="1"
                       preserveAspectRatio="xMidYMax slice">
                       <defs>
                         <linearGradient id="fadeGrad" x1="0" y1="0" x2="1" y2="0">
-                          <stop offset="0%" stop-color="currentColor" stop-opacity="0.1" />
+                          <stop offset="0%" stop-color="currentColor" stop-opacity="0.15" />
+                          <stop offset="50%" stop-color="currentColor" stop-opacity="0.08" />
                           <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                        </linearGradient>
+                        <linearGradient id="fadeGradV" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stop-color="currentColor" stop-opacity="0" />
+                          <stop offset="100%" stop-color="currentColor" stop-opacity="0.1" />
                         </linearGradient>
                       </defs>
 
                       <!-- 背景网格透视 -->
-                      <path
-                        d="M0 180 L600 180 M-50 220 L650 220 M100 180 L50 220 M200 180 L180 220 M300 180 L310 220 M400 180 L440 220 M500 180 L570 220"
-                        stroke="currentColor" stroke-opacity="0.05" stroke-width="1" />
+                      <path d="M0 280 L600 280" stroke="currentColor" stroke-opacity="0.04" stroke-width="1" />
+                      <path d="M0 240 L600 240" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
+                      <path d="M0 200 L600 200" stroke="currentColor" stroke-opacity="0.02" stroke-width="1" />
+                      
+                      <!-- 垂直透视线 -->
+                      <path d="M100 150 L80 300" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
+                      <path d="M200 150 L190 300" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
+                      <path d="M300 150 L300 300" stroke="currentColor" stroke-opacity="0.04" stroke-width="1" />
+                      <path d="M400 150 L410 300" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
+                      <path d="M500 150 L520 300" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
 
-                      <!-- 装饰性数据流线条 (底部) -->
-                      <path d="M0 190 Q 150 160 300 190 T 600 180" stroke="url(#fadeGrad)" stroke-width="1.5"
-                        fill="none" />
-                      <path d="M50 200 Q 200 170 350 200" stroke="url(#fadeGrad)" stroke-width="1" fill="none" />
+                      <!-- 装饰性数据流线条 -->
+                      <path d="M-50 220 Q 100 180 250 210 T 500 190 T 650 220" stroke="url(#fadeGrad)" stroke-width="1.5" fill="none" />
+                      <path d="M0 250 Q 150 210 300 240 T 600 230" stroke="url(#fadeGrad)" stroke-width="1.2" fill="none" />
+                      <path d="M50 280 Q 200 250 350 275 T 600 265" stroke="url(#fadeGrad)" stroke-width="1" fill="none" />
+                      
+                      <!-- 装饰性圆圈 -->
+                      <circle cx="120" cy="240" r="25" stroke="currentColor" stroke-opacity="0.04" fill="none" />
+                      <circle cx="120" cy="240" r="15" stroke="currentColor" stroke-opacity="0.03" fill="none" />
+                      <circle cx="480" cy="220" r="30" stroke="currentColor" stroke-opacity="0.04" fill="none" />
+                      <circle cx="480" cy="220" r="18" stroke="currentColor" stroke-opacity="0.03" fill="none" />
+                      <circle cx="300" cy="260" r="40" stroke="currentColor" stroke-opacity="0.03" fill="none" />
+                      
+                      <!-- 连接线条 -->
+                      <path d="M80 200 L180 230" stroke="currentColor" stroke-opacity="0.04" stroke-width="0.5" stroke-dasharray="3 3" />
+                      <path d="M180 230 L350 210" stroke="currentColor" stroke-opacity="0.04" stroke-width="0.5" stroke-dasharray="3 3" />
+                      <path d="M350 210 L420 250" stroke="currentColor" stroke-opacity="0.04" stroke-width="0.5" stroke-dasharray="3 3" />
+                      <path d="M420 250 L530 235" stroke="currentColor" stroke-opacity="0.04" stroke-width="0.5" stroke-dasharray="3 3" />
                     </svg>
                   </div>
                 </div>
@@ -2041,7 +2066,14 @@
               <div class="transfer-flow">
                 <!-- From: 来源地址 -->
                 <div class="transfer-from">
-                  <div class="transfer-section-label">从 · FROM</div>
+                  <div class="transfer-section-label">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                      <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                      <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"></path>
+                    </svg>
+                    从 · FROM
+                  </div>
                   <div id="srcAddrList" class="tx-addr-list" role="list"></div>
                 </div>
 
@@ -2058,7 +2090,13 @@
                 <!-- To: 收款方模块 -->
                 <div class="recipients-section">
                   <div class="recipients-header">
-                    <div class="recipients-title">转至 · TO</div>
+                    <div class="recipients-title">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 2L11 13"></path>
+                        <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
+                      </svg>
+                      转至 · TO
+                    </div>
                     <!-- 添加按钮已移动至卡片底部操作栏，与删除并排 -->
                   </div>
                   <div id="billList" class="recipients-list" role="list"></div>
