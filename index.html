@@ -23,7 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251204a" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251204h" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -2094,58 +2094,77 @@
 
                 <div class="options-content" id="optionsContent">
                   <div class="options-grid">
-                    <div class="option-field">
-                      <label class="option-field-label" for="extraGasPGC">额外Gas兑换</label>
-                      <div class="option-input-wrapper">
-                        <input id="extraGasPGC" class="option-input" type="number" placeholder="0" value="0" />
-                        <span class="option-suffix">PGC</span>
+                    <!-- 第一行：两列并排 -->
+                    <div class="options-split-row">
+                      <div class="options-split-group">
+                        <label class="option-field-label" for="extraGasPGC">额外Gas兑换</label>
+                        <div class="option-input-wrapper">
+                          <input id="extraGasPGC" class="option-input" type="number" placeholder="0" value="0" />
+                          <span class="option-suffix option-suffix--pgc">PGC</span>
+                        </div>
+                      </div>
+                      <div class="options-split-group">
+                        <label class="option-field-label" for="txGasInput">交易Gas</label>
+                        <div class="option-input-wrapper">
+                          <input id="txGasInput" class="option-input" type="number" placeholder="1" value="1" />
+                          <span class="option-suffix option-suffix--gas">GAS</span>
+                        </div>
                       </div>
                     </div>
-                    <div class="option-field">
-                      <label class="option-field-label" for="txGasInput">交易Gas</label>
-                      <div class="option-input-wrapper">
-                        <input id="txGasInput" class="option-input" type="number" placeholder="1" value="1" />
-                        <span class="option-suffix">Gas</span>
-                      </div>
-                    </div>
+                    <!-- PGC 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label">PGC 找零地址</label>
                       <select id="chAddrPGC" class="input" style="display:none"></select>
                       <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="PGC">
                         <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span
-                            class="addr-val" style="margin-left:6px"></span></span>
-                        <span class="custom-select__arrow">▾</span>
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </span>
                         <div class="custom-select__menu"></div>
                       </div>
                     </div>
+                    <!-- BTC 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label">BTC 找零地址</label>
                       <select id="chAddrBTC" class="input" style="display:none"></select>
                       <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="BTC">
                         <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span
-                            class="addr-val" style="margin-left:6px"></span></span>
-                        <span class="custom-select__arrow">▾</span>
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </span>
                         <div class="custom-select__menu"></div>
                       </div>
                     </div>
+                    <!-- ETH 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label">ETH 找零地址</label>
                       <select id="chAddrETH" class="input" style="display:none"></select>
                       <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="ETH">
                         <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span
-                            class="addr-val" style="margin-left:6px"></span></span>
-                        <span class="custom-select__arrow">▾</span>
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </span>
                         <div class="custom-select__menu"></div>
                       </div>
                     </div>
+                    <!-- PreTXCer 开关 -->
                     <div class="option-field">
                       <label class="option-field-label">PreTXCer</label>
-                      <div style="display: flex; align-items: center; gap: 12px; padding: 12px 0;">
+                      <div class="option-toggle-wrapper">
                         <label class="toggle-switch">
-                          <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" />
+                          <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" checked />
                           <span class="toggle-slider"></span>
                         </label>
                       </div>

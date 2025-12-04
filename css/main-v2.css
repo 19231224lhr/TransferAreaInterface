@@ -1235,7 +1235,7 @@ Already defined above with darker background
 /* 转账流程区域 */
 .transfer-flow {
   flex: 1;
-  padding: 12px 20px;
+  padding: 6px 20px 12px;
   overflow: visible;
   --field-label-width: 96px;
 }
@@ -1258,7 +1258,11 @@ Already defined above with darker background
 }
 
 .transfer-from {
-  margin-bottom: 6px;
+  margin-bottom: 0;
+}
+
+.transfer-from .transfer-section-label {
+  margin-bottom: 8px;
 }
 
 /* 来源地址列表 */
@@ -1814,156 +1818,631 @@ Already defined above with darker background
   }
 }
 
-/* 高级选项 */
+/* ========================================
+   高级选项 - Premium Form Design
+   现代玻璃拟态风格，流畅动画
+   ======================================== */
+
 .transfer-options {
-  border-top: 1px solid var(--neutral-100);
+  border-top: 1px solid rgba(226, 232, 240, 0.6);
   flex-shrink: 0;
+  position: relative;
 }
 
+/* 折叠按钮 */
 .options-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 10px 20px;
+  padding: 14px 24px;
   cursor: pointer;
-  transition: background var(--duration-fast) ease;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+}
+
+.options-toggle::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), rgba(139, 92, 246, 0.01));
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.options-toggle:hover::before {
+  opacity: 1;
 }
 
 .options-toggle:hover {
-  background: var(--neutral-50);
+  background: rgba(248, 250, 252, 0.8);
 }
 
 .options-toggle-left {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 12px;
-  font-weight: 500;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
 }
 
 .options-toggle-left svg {
-  width: 14px;
-  height: 14px;
-  color: var(--text-muted);
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.options-toggle:hover .options-toggle-left svg {
+  opacity: 1;
+  transform: rotate(30deg);
+}
+
+.options-toggle.active .options-toggle-left svg {
+  opacity: 1;
+  color: var(--transfer-primary);
 }
 
 .options-toggle-arrow {
-  transition: transform var(--duration-fast) ease;
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.options-toggle:hover .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.1);
 }
 
 .options-toggle-arrow svg {
   width: 14px;
   height: 14px;
-  color: var(--text-muted);
+  color: var(--transfer-primary);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .options-toggle.active .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.options-toggle.active .options-toggle-arrow svg {
   transform: rotate(180deg);
 }
 
+/* 内容区域 - 流畅展开动画 */
 .options-content {
-  display: grid;
-  grid-template-rows: 0fr;
+  max-height: 0;
   opacity: 0;
-  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-              opacity 0.25s ease,
-              padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 0 24px;
-  height: 0;
-}
-
-.options-content > * {
   overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.25s ease,
+              padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0 24px;
 }
 
 .options-content.show {
-  grid-template-rows: 1fr;
+  max-height: 600px;
   opacity: 1;
-  padding: 0 24px 10px;
-  height: auto;
-}
-
-.options-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  padding: 8px 0;
+  padding: 0 24px 20px;
   overflow: visible;
 }
 
-/* 高级选项：统一为单列、一致的标签宽度，确保上下对齐 */
-.transfer-options .options-grid {
-  grid-template-columns: repeat(2, 1fr);
-  --field-label-width: 120px;
+/* 玻璃拟态表单容器 */
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(31, 38, 135, 0.07),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
+  overflow: visible;
+  animation: optionsReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
-.transfer-options .options-grid .option-field { grid-column: span 2; }
-.transfer-options .options-grid .option-field:nth-child(1),
-.transfer-options .options-grid .option-field:nth-child(2) { grid-column: span 1; }
 
+@keyframes optionsReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 第一行：两列并排布局 */
+.options-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.05s;
+}
+
+.options-split-group {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 16px;
+}
+
+.options-split-group .option-field-label {
+  white-space: nowrap;
+}
+
+.options-split-group .option-input-wrapper {
+  min-width: 0;
+}
+
+/* Toggle 开关容器 */
+.option-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+/* 表单行布局 */
 .option-field {
   display: grid;
-  grid-template-columns: var(--field-label-width) 1fr;
+  grid-template-columns: 110px 1fr;
   align-items: center;
-  gap: 6px;
+  gap: 16px;
+  animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 错开动画 */
+.option-field:nth-child(1) { animation-delay: 0.05s; }
+.option-field:nth-child(2) { animation-delay: 0.08s; }
+.option-field:nth-child(3) { animation-delay: 0.11s; }
+.option-field:nth-child(4) { animation-delay: 0.14s; }
+.option-field:nth-child(5) { animation-delay: 0.17s; }
+.option-field:nth-child(6) { animation-delay: 0.20s; }
+
+@keyframes fieldFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .option-field > div:not(.option-input-wrapper):not(.custom-select) {
   display: flex;
   align-items: center;
-  gap: 8px !important;
+  gap: 12px !important;
   padding: 0 !important;
 }
 
+/* 标签样式 */
 .option-field-label {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
-  color: var(--text-primary);
-  letter-spacing: 0.2px;
+  color: #111827;
+  white-space: nowrap;
+  letter-spacing: 0.1px;
 }
 
+/* 输入框容器 - 玻璃质感 */
 .option-input-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
-  background: var(--neutral-50);
-  border: 1px solid var(--neutral-200);
-  border-radius: var(--radius-sm);
+  width: 100%;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
   overflow: hidden;
-  transition: all var(--duration-fast) ease;
-  min-height: 36px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 44px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+}
+
+.option-input-wrapper:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #cbd5e1;
+}
+
+.option-input-wrapper:focus-within {
+  background: #ffffff;
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
 }
 
 /* 自定义选择器需要允许下拉菜单溢出显示 */
 .option-input-wrapper.custom-select {
   position: relative;
   overflow: visible;
+  cursor: pointer;
 }
 
-.option-input-wrapper:focus-within {
+.option-input-wrapper.custom-select:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: #cbd5e1;
+}
+
+.option-input-wrapper.custom-select.open {
+  background: #ffffff;
   border-color: var(--transfer-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  border-radius: 12px;
+  z-index: 101;
 }
 
+/* 输入框 */
 .option-input {
   flex: 1;
-  padding: 8px 10px;
-  font-size: 12px;
+  min-width: 0;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
   color: var(--text-primary);
   background: transparent;
   border: none;
   outline: none;
-  height: 36px;
+  height: 44px;
+  transition: color 0.2s ease;
 }
 
+/* 隐藏 number 输入框的上下箭头 */
+.option-input[type="number"]::-webkit-inner-spin-button,
+.option-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.option-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.option-input::placeholder {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
+.option-input[readonly] {
+  color: var(--text-secondary);
+  cursor: default;
+  background: rgba(243, 244, 246, 0.4);
+}
+
+/* 后缀标签 - 精致胶囊设计 */
 .option-suffix {
-  padding: 0 10px;
-  font-size: 10px;
-  font-weight: 500;
-  color: var(--text-muted);
-  background: var(--neutral-100);
-  height: 100%;
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  height: 32px;
   display: flex;
   align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 6px 8px 6px 0;
+  min-width: 44px;
+  flex-shrink: 0;
+}
+
+/* PGC 后缀 - 浅绿色 */
+.option-suffix--pgc {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #047857;
+}
+
+/* GAS 后缀 - 蓝色 */
+.option-suffix--gas {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1d4ed8;
+}
+
+/* ========================================
+   Premium Toggle Switch
+   ======================================== */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 48px;
+  height: 26px;
+  cursor: pointer;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background-color: #e2e8f0;
+  border-radius: 13px;
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--transfer-primary);
+}
+
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(22px);
+}
+
+.toggle-switch:hover .toggle-slider::before {
+  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.toggle-switch:hover input:checked + .toggle-slider::before {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+/* ========================================
+   Premium Custom Select (地址选择器)
+   ======================================== */
+.option-input-wrapper.custom-select .custom-select__value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.option-input-wrapper.custom-select .custom-select__value .addr-val {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+.option-input-wrapper.custom-select .custom-select__arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: transform 0.3s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.option-input-wrapper.custom-select .custom-select__arrow svg {
+  width: 10px;
+  height: 6px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.option-input-wrapper.custom-select.open .custom-select__arrow {
+  color: var(--transfer-primary);
+}
+
+.option-input-wrapper.custom-select.open .custom-select__arrow svg {
+  transform: rotate(180deg);
+}
+
+/* 下拉菜单 - 独立浮动设计 */
+.option-input-wrapper.custom-select .custom-select__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 
+    0 10px 40px -5px rgba(0, 0, 0, 0.12),
+    0 4px 16px -2px rgba(59, 130, 246, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+}
+
+.option-input-wrapper.custom-select.open .custom-select__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+/* 下拉选项 - 清爽无边框设计 */
+.option-input-wrapper.custom-select .custom-select__item {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 2px 0;
+}
+
+.option-input-wrapper.custom-select .custom-select__item:hover {
+  background: rgba(59, 130, 246, 0.06) !important;
+  color: var(--transfer-primary);
+}
+
+.option-input-wrapper.custom-select .custom-select__item.selected {
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: var(--transfer-primary);
+  font-weight: 600;
+}
+
+/* 移除下拉选项中code标签的灰色背景框 */
+.option-input-wrapper.custom-select .custom-select__item code,
+.option-input-wrapper.custom-select .custom-select__item code.break {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: inherit;
+  border-radius: 0 !important;
+}
+
+.option-input-wrapper.custom-select .custom-select__item.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--transfer-primary);
+  font-weight: 600;
+}
+
+/* 币种图标在选择器中 */
+.option-input-wrapper.custom-select .coin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: white;
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--pgc,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--pgc {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--btc,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--btc {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--eth,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--eth {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+}
+
+/* ========================================
+   响应式：移动端适配
+   ======================================== */
+@media (max-width: 768px) {
+  .options-split-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  
+  .options-split-group {
+    grid-template-columns: 100px 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .options-grid {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .options-split-row {
+    gap: 14px;
+  }
+  
+  .options-split-group {
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+  }
+  
+  .option-field {
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+  }
+  
+  .option-field-label {
+    font-size: 13px;
+  }
+  
+  .option-input-wrapper {
+    min-height: 40px;
+  }
+  
+  .option-input {
+    height: 40px;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+  
+  .toggle-slider::before {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(20px);
+  }
 }
 
 /* 提交区域 */
