@@ -71,6 +71,8 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  cursor: pointer;
+  user-select: none;
 }
 
 .logo-icon {
@@ -79,43 +81,209 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
   background: linear-gradient(
     145deg,
-    rgba(14, 165, 233, 0.12) 0%,
-    rgba(139, 92, 246, 0.08) 100%
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
   );
   border-radius: 12px;
-  border: 1px solid rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.15);
   box-shadow: 
-    0 2px 8px rgba(14, 165, 233, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.5);
-  transition: all 0.3s ease;
+    0 4px 12px rgba(14, 165, 233, 0.12),
+    0 2px 6px rgba(139, 92, 246, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  overflow: hidden;
 }
 
+/* Logo 图片 */
+.logo-image {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  position: relative;
+  z-index: 2;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.08));
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+/* Logo 浮动动画 */
+@keyframes logoFloat {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.02);
+  }
+}
+
+/* Logo 光晕效果 */
+.logo-glow {
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(
+    circle at center,
+    rgba(14, 165, 233, 0.3) 0%,
+    rgba(139, 92, 246, 0.2) 40%,
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  animation: logoGlowPulse 3s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+}
+
+@keyframes logoGlowPulse {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.2);
+  }
+}
+
+/* 悬浮效果 */
 .header-logo:hover .logo-icon {
-  transform: rotate(-5deg) scale(1.05);
+  transform: translateY(-3px) scale(1.05);
   background: linear-gradient(
     145deg,
-    rgba(14, 165, 233, 0.18) 0%,
-    rgba(139, 92, 246, 0.12) 100%
+    rgba(255, 255, 255, 1) 0%,
+    rgba(240, 249, 255, 0.95) 100%
   );
+  border-color: rgba(14, 165, 233, 0.3);
+  box-shadow: 
+    0 8px 24px rgba(14, 165, 233, 0.2),
+    0 4px 12px rgba(139, 92, 246, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.header-logo:hover .logo-image {
+  transform: translateY(-1px) scale(1.08) rotate(5deg);
+  filter: drop-shadow(0 4px 8px rgba(14, 165, 233, 0.3));
+}
+
+.header-logo:hover .logo-glow {
+  opacity: 0.8;
+  animation: logoGlowPulse 1.5s ease-in-out infinite;
+}
+
+/* 点击效果 */
+.header-logo:active .logo-icon {
+  transform: translateY(-1px) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+.header-logo:active .logo-image {
+  transform: scale(0.95);
+  transition-duration: 0.1s;
+}
+
+/* 性能优化 - GPU 加速 */
+.logo-icon,
+.logo-image,
+.logo-glow,
+.logo-text {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 减少动画在非悬浮状态下的性能消耗 */
+@media (prefers-reduced-motion: reduce) {
+  .logo-image,
+  .logo-glow,
+  .logo-text {
+    animation: none !important;
+  }
+  
+  .header-logo:hover .logo-icon,
+  .header-logo:hover .logo-image,
+  .header-logo:hover .logo-text {
+    transition-duration: 0.2s;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .logo-icon {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .logo-image {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .logo-text {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .header-logo {
+    gap: 8px;
+  }
+  
+  .logo-icon {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .logo-image {
+    width: 20px;
+    height: 20px;
+  }
+  
+  .logo-text {
+    font-size: 14px;
+  }
 }
 
 .logo-text {
   font-size: 18px;
   font-weight: 700;
-  background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%);
-  background-size: 200% auto;
+  background: linear-gradient(
+    135deg,
+    #0ea5e9 0%,
+    #3b82f6 25%,
+    #6366f1 50%,
+    #8b5cf6 75%,
+    #a78bfa 100%
+  );
+  background-size: 300% auto;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: -0.03em;
-  animation: logoShimmer 3s ease-in-out infinite;
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: logoShimmer 4s ease-in-out infinite;
 }
 
 @keyframes logoShimmer {
-  0%, 100% { background-position: 0% center; }
-  50% { background-position: 100% center; }
+  0%, 100% {
+    background-position: 0% center;
+    filter: brightness(1);
+  }
+  50% {
+    background-position: 100% center;
+    filter: brightness(1.2);
+  }
+}
+
+/* Logo 文字悬浮效果 */
+.header-logo:hover .logo-text {
+  letter-spacing: 0.01em;
+  transform: translateX(2px);
+  animation: logoShimmer 2s ease-in-out infinite;
 }
 
 /* 用户按钮 */
