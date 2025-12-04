@@ -22,6 +22,140 @@ body {
   background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%);
   background-attachment: fixed;
   min-width: 100vw;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 全局背景装饰 - 渐变光球效果 */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px;
+  right: -100px;
+  width: 600px;
+  height: 600px;
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: -1;
+  animation: orbFloat1 8s ease-in-out infinite;
+}
+
+body::after {
+  content: '';
+  position: fixed;
+  bottom: -150px;
+  left: -100px;
+  width: 500px;
+  height: 500px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: -1;
+  animation: orbFloat2 8s ease-in-out infinite;
+  animation-delay: -2s;
+  /* 流畅丝滑的颜色流转效果 */
+  transition: 
+    background 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important,
+    opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important,
+    filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.95);
+  }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(-30px, 30px) scale(1.1);
+  }
+  66% {
+    transform: translate(20px, -20px) scale(0.95);
+  }
+}
+
+/* ========================================
+   页面主题色 - 智能背景色块切换
+   流畅丝滑的颜色流转动效
+   ======================================== */
+
+/* 首页 - 蓝紫渐变 (默认) */
+body:has(#welcomeCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%) !important;
+  opacity: 0.35 !important;
+  filter: blur(80px) brightness(1) !important;
+}
+
+/* 登录页面 - 绿色主题 */
+body:has(#loginCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  opacity: 0.35 !important;
+  filter: blur(85px) brightness(1.05) !important;
+}
+
+/* 新建账户页面 - 紫色渐变 */
+body:has(#newUserCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%) !important;
+  opacity: 0.35 !important;
+  filter: blur(80px) brightness(1) !important;
+}
+
+/* 导入钱包页面 - 黄色渐变 */
+body:has(#importCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  opacity: 0.38 !important;
+  filter: blur(82px) brightness(1.08) !important;
+}
+
+/* 钱包管理入口页面 - 青色渐变 */
+body:has(#entryCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%) !important;
+  opacity: 0.36 !important;
+  filter: blur(83px) brightness(1.02) !important;
+}
+
+/* 加入担保组织页面 - 蓝色渐变 */
+body:has(#nextCard:not(.hidden))::after,
+body:has(#groupDetailCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%) !important;
+  opacity: 0.37 !important;
+  filter: blur(84px) brightness(1.04) !important;
+}
+
+/* 查询页面 - 蓝色渐变（与右上角对称） */
+body:has(#inquiryCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%) !important;
+  opacity: 0.36 !important;
+  filter: blur(81px) brightness(1.03) !important;
+}
+
+/* 钱包主页面 - 浅绿色渐变 */
+body:has(#walletCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  opacity: 0.35 !important;
+  filter: blur(85px) brightness(1.05) !important;
+}
+
+/* 会员信息页面 - 玫瑰色主题 */
+body:has(#memberInfoCard:not(.hidden))::after {
+  background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%) !important;
+  opacity: 0.32 !important;
+  filter: blur(86px) brightness(1.06) !important;
 }
 
 .container {

@@ -119,21 +119,15 @@
   }
 }
 
-/* Logo 光晕效果 */
+/* Logo 光晕效果 - 已禁用以保持白色背景 */
 .logo-glow {
   position: absolute;
   inset: -20%;
-  background: radial-gradient(
-    circle at center,
-    rgba(14, 165, 233, 0.3) 0%,
-    rgba(139, 92, 246, 0.2) 40%,
-    transparent 70%
-  );
+  background: transparent;
   opacity: 0;
-  transition: opacity 0.4s ease;
-  animation: logoGlowPulse 3s ease-in-out infinite;
   pointer-events: none;
   z-index: 1;
+  display: none;
 }
 
 @keyframes logoGlowPulse {
@@ -142,7 +136,7 @@
     transform: scale(0.8);
   }
   50% {
-    opacity: 0.6;
+    opacity: 0;
     transform: scale(1.2);
   }
 }
@@ -152,14 +146,14 @@
   transform: translateY(-3px) scale(1.05);
   background: linear-gradient(
     145deg,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(240, 249, 255, 0.95) 100%
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(248, 250, 252, 0.9) 100%
   );
   border-color: rgba(14, 165, 233, 0.3);
   box-shadow: 
     0 8px 24px rgba(14, 165, 233, 0.2),
     0 4px 12px rgba(139, 92, 246, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 1);
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .header-logo:hover .logo-image {
@@ -168,8 +162,8 @@
 }
 
 .header-logo:hover .logo-glow {
-  opacity: 0.8;
-  animation: logoGlowPulse 1.5s ease-in-out infinite;
+  opacity: 0;
+  display: none;
 }
 
 /* 点击效果 */
