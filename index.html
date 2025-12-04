@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="/css/base.css?v=20251203b" />
   <link rel="stylesheet" href="/css/animations.css?v=20251201" />
   <link rel="stylesheet" href="/css/utilities.css?v=20251201" />
-  <link rel="stylesheet" href="/css/components.css?v=20251201b" />
+  <link rel="stylesheet" href="/css/components.css?v=20251204a" />
   <link rel="stylesheet" href="/css/header.css?v=20251201g" />
   <link rel="stylesheet" href="/css/welcome.css?v=20251203a" />
   <link rel="stylesheet" href="/css/toast.css?v=20251202" />
@@ -20,10 +20,10 @@
   <link rel="stylesheet" href="/css/wallet.css?v=20251202" />
   <link rel="stylesheet" href="/css/transaction.css?v=20251202" />
   <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
-  <link rel="stylesheet" href="/css/join-group.css?v=20251202b" />
+  <link rel="stylesheet" href="/css/join-group.css?v=20251204b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/main-v2.css?v=20251204i" />
+  <link rel="stylesheet" href="/css/main-v2.css?v=20251204q" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=2" />
@@ -1530,10 +1530,6 @@
                     <span class="join-org-id" id="recGroupID">10000000</span>
                     <span class="join-org-type">担保组织</span>
                   </div>
-                  <div class="join-org-status">
-                    <span class="status-dot"></span>
-                    <span>在线</span>
-                  </div>
                 </div>
                 <!-- 组织详情 -->
                 <div class="join-org-details">
@@ -1617,10 +1613,6 @@
                   <div class="join-org-identity">
                     <span class="join-org-id" id="srGroupID"></span>
                     <span class="join-org-type">担保组织</span>
-                  </div>
-                  <div class="join-org-status">
-                    <span class="status-dot"></span>
-                    <span>在线</span>
                   </div>
                 </div>
                 <!-- 组织详情 -->
@@ -2205,13 +2197,25 @@
               <!-- 错误提示 -->
               <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
 
-              <!-- 结果预览 -->
-              <pre id="txPreview" class="result hidden"
-                style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-lg);padding:var(--space-md);background:var(--surface-light-2);border-radius:var(--radius-sm);border:1px solid var(--surface-light-3);"
-                aria-live="polite"></pre>
-              <pre id="txFinalPreview" class="result hidden"
-                style="white-space:pre-wrap;word-break:break-word;margin-top:var(--space-md);padding:var(--space-md);background:linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(52, 211, 153, 0.03));border-radius:var(--radius-sm);border-left:4px solid var(--coin-pgc);"
-                aria-live="polite"></pre>
+              <!-- 交易信息查看按钮 -->
+              <div id="txResultActions" class="tx-result-actions hidden">
+                <button id="viewBuildInfoBtn" class="tx-view-btn tx-view-btn--struct" type="button">
+                  <svg class="tx-view-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                  </svg>
+                  <span>查看交易结构体</span>
+                </button>
+                <button id="viewTxInfoBtn" class="tx-view-btn tx-view-btn--tx hidden" type="button">
+                  <svg class="tx-view-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                  <span>查看交易信息</span>
+                </button>
+              </div>
             </div>
 
             <!-- 底部担保组织面板 - 已移至独立页面 -->
@@ -2561,9 +2565,13 @@
         </div>
         <!-- 成功状态 -->
         <div class="unified-success hidden" id="unifiedSuccess">
-          <div class="success-icon-wrap">
-            <svg class="success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <div class="success-icon-wrap" id="unifiedIconWrap">
+            <svg class="success-icon" id="unifiedSuccessIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <polyline points="20 6 9 17 4 12" />
+            </svg>
+            <svg class="error-icon hidden" id="unifiedErrorIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </div>
           <h3 class="success-title" id="unifiedTitle">操作成功</h3>
@@ -2657,6 +2665,33 @@
         </div>
       </div>
     </div>
+    <!-- 交易详情查看弹窗 -->
+    <div id="txDetailModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="dialog tx-detail-dialog">
+        <div class="tx-detail-header">
+          <h3 id="txDetailTitle">交易结构体</h3>
+          <button id="txDetailClose" class="tx-detail-close" type="button" aria-label="关闭">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="tx-detail-content">
+          <pre id="txDetailContent" class="tx-detail-code"></pre>
+        </div>
+        <div class="tx-detail-footer">
+          <button id="txDetailCopy" class="tx-detail-btn tx-detail-btn--copy" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>复制内容</span>
+          </button>
+          <button id="txDetailOk" class="tx-detail-btn tx-detail-btn--ok" type="button">确定</button>
+        </div>
+      </div>
+    </div>
     <div id="confirmGasModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
         <h3 id="confirmGasTitle">确认兑换 Gas</h3>
@@ -2713,7 +2748,7 @@
     </div>
   </footer>
 
-  <script src="/app.js?v=20251202a"></script>
+  <script src="/app.js?v=20251204n"></script>
 </body>
 
 </html>

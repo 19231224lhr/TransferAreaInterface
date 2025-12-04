@@ -449,17 +449,43 @@ function showUnifiedLoading(text) {
  * @param {string} text - 成功描述
  * @param {Function} onOk - 确认按钮回调
  * @param {Function} onCancel - 取消按钮回调（可选，传入则显示取消按钮）
+ * @param {boolean} isError - 是否为错误状态
  */
-function showUnifiedSuccess(title, text, onOk, onCancel) {
+function showUnifiedSuccess(title, text, onOk, onCancel, isError = false) {
   const loading = document.getElementById('unifiedLoading');
   const success = document.getElementById('unifiedSuccess');
   const titleEl = document.getElementById('unifiedTitle');
   const textEl = document.getElementById('unifiedText');
   const okBtn = document.getElementById('unifiedOkBtn');
   const cancelBtn = document.getElementById('unifiedCancelBtn');
+  const iconWrap = document.getElementById('unifiedIconWrap');
+  const successIcon = document.getElementById('unifiedSuccessIcon');
+  const errorIcon = document.getElementById('unifiedErrorIcon');
   
-  if (titleEl) titleEl.textContent = title || '操作成功';
+  if (titleEl) titleEl.textContent = title || (isError ? '操作失败' : '操作成功');
   if (textEl) textEl.textContent = text || '';
+  
+  // 处理错误/成功状态的图标和样式
+  if (iconWrap) {
+    if (isError) {
+      iconWrap.classList.add('error-state');
+      if (successIcon) successIcon.classList.add('hidden');
+      if (errorIcon) errorIcon.classList.remove('hidden');
+    } else {
+      iconWrap.classList.remove('error-state');
+      if (successIcon) successIcon.classList.remove('hidden');
+      if (errorIcon) errorIcon.classList.add('hidden');
+    }
+  }
+  
+  // 添加/移除错误模式类
+  if (success) {
+    if (isError) {
+      success.classList.add('error-mode');
+    } else {
+      success.classList.remove('error-mode');
+    }
+  }
   
   // 隐藏加载，显示成功
   if (loading) loading.classList.add('hidden');
@@ -501,11 +527,21 @@ function hideUnifiedOverlay() {
   const overlay = document.getElementById('actionOverlay');
   const loading = document.getElementById('unifiedLoading');
   const success = document.getElementById('unifiedSuccess');
+  const successIcon = document.getElementById('successIconWrap');
+  const errorIcon = document.getElementById('errorIconWrap');
+  const titleEl = document.getElementById('unifiedTitle');
   
   if (overlay) overlay.classList.add('hidden');
   // 重置状态
   if (loading) loading.classList.remove('hidden');
-  if (success) success.classList.add('hidden');
+  if (success) {
+    success.classList.add('hidden');
+    success.classList.remove('is-error');
+  }
+  // 重置图标状态
+  if (successIcon) successIcon.classList.remove('hidden');
+  if (errorIcon) errorIcon.classList.add('hidden');
+  if (titleEl) titleEl.style.color = '';
 }
 
 // 保留旧API兼容性，但重定向到统一组件
@@ -531,16 +567,33 @@ function getActionModalElements() {
 function showModalTip(title, html, isError) {
   const loading = document.getElementById('unifiedLoading');
   const success = document.getElementById('unifiedSuccess');
+  const iconWrap = document.getElementById('unifiedIconWrap');
+  const successIcon = document.getElementById('unifiedSuccessIcon');
+  const errorIcon = document.getElementById('unifiedErrorIcon');
   if (loading) loading.classList.add('hidden');
   if (success) {
     success.classList.remove('hidden');
     success.style.animation = 'none';
     success.offsetHeight;
     success.style.animation = '';
+    // 根据是否错误显示不同图标
+    if (isError) {
+      success.classList.add('error-mode');
+      if (iconWrap) iconWrap.classList.add('error-state');
+      if (successIcon) successIcon.classList.add('hidden');
+      if (errorIcon) errorIcon.classList.remove('hidden');
+    } else {
+      success.classList.remove('error-mode');
+      if (iconWrap) iconWrap.classList.remove('error-state');
+      if (successIcon) successIcon.classList.remove('hidden');
+      if (errorIcon) errorIcon.classList.add('hidden');
+    }
   }
   
   const { modal, titleEl, textEl, okEl } = getActionModalElements();
-  if (titleEl) titleEl.textContent = title || '';
+  if (titleEl) {
+    titleEl.textContent = title || '';
+  }
   if (textEl) {
     if (isError) textEl.classList.add('tip--error'); else textEl.classList.remove('tip--error');
     textEl.innerHTML = html || '';
@@ -551,6 +604,11 @@ function showModalTip(title, html, isError) {
     // 重置状态
     if (loading) loading.classList.remove('hidden');
     if (success) success.classList.add('hidden');
+    // 重置图标状态
+    if (iconWrap) iconWrap.classList.remove('error-state');
+    if (successIcon) successIcon.classList.remove('hidden');
+    if (errorIcon) errorIcon.classList.add('hidden');
+    if (success) success.classList.remove('error-mode');
     okEl && okEl.removeEventListener('click', handler); 
   };
   okEl && okEl.addEventListener('click', handler);
@@ -2508,12 +2566,12 @@ if (importBtn) {
         const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
         const addr = (data.address || '').toLowerCase();
         if (!addr) {
-          showUnifiedSuccess('导入失败', '无法解析地址', () => {});
+          showUnifiedSuccess('导入失败', '无法解析地址', () => {}, null, true);
           return;
         }
         const exists = (acc.wallet && acc.wallet.addressMsg && acc.wallet.addressMsg[addr]) || (u2.address && String(u2.address).toLowerCase() === addr);
         if (exists) {
-          showUnifiedSuccess('导入失败', '该公钥地址已存在，不能重复导入', () => {});
+          showUnifiedSuccess('导入失败', '该公钥地址已存在，不能重复导入', () => {}, null, true);
           return;
         }
         if (addr) acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported', privHex: (data.privHex || normalized) };
@@ -4406,7 +4464,7 @@ function renderWallet() {
     const isPledge = document.getElementById('isPledge');
     const useTXCerChk = document.getElementById('useTXCerChk');
     const txErr = document.getElementById('txError');
-    const txPreview = document.getElementById('txPreview');
+    const txResultActions = document.getElementById('txResultActions');
     const currentOrgId = (typeof computeCurrentOrgId === 'function' ? computeCurrentOrgId() : '');
     const hasOrg = !!String(currentOrgId || '').trim();
     if (tfModeQuick && tfModeQuick.parentNode) {
@@ -4453,12 +4511,12 @@ function renderWallet() {
     };
     let srcAddrs = Object.keys(walletMap);
     const currencyLabels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
-    const showTxValidationError = (msg, focusEl) => {
+    const showTxValidationError = (msg, focusEl, title = '参数校验失败') => {
       if (txErr) {
         txErr.textContent = msg;
         txErr.classList.remove('hidden');
       }
-      showModalTip('参数校验失败', msg, true);
+      showModalTip(title, msg, true);
       if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
     };
     const normalizeAddrInput = (addr) => (addr ? String(addr).trim().toLowerCase() : '');
@@ -4537,7 +4595,52 @@ function renderWallet() {
           <div class="selection-outline"></div>
         </label>`;
       }).join('');
+      
+      // 自动选择逻辑：如果只有一个地址，或只有一个地址有余额，自动选中
+      autoSelectFromAddress();
     };
+    
+    // 自动选择From地址的逻辑
+    const autoSelectFromAddress = () => {
+      const checkboxes = addrList.querySelectorAll('input[type="checkbox"]');
+      const labels = addrList.querySelectorAll('label.src-addr-item');
+      
+      // 如果已经有选中的地址，不自动选择
+      const alreadySelected = Array.from(checkboxes).some(cb => cb.checked);
+      if (alreadySelected) return;
+      
+      // 情况1：只有一个地址，自动选中
+      if (srcAddrs.length === 1) {
+        const cb = checkboxes[0];
+        const label = labels[0];
+        if (cb && label) {
+          cb.checked = true;
+          label.classList.add('selected');
+        }
+        return;
+      }
+      
+      // 情况2：有多个地址，但只有一个有余额，自动选中有余额的那个
+      const addrsWithBalance = srcAddrs.filter(addr => {
+        const meta = walletMap[addr];
+        const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
+        return amt > 0;
+      });
+      
+      if (addrsWithBalance.length === 1) {
+        const targetAddr = addrsWithBalance[0];
+        labels.forEach((label, idx) => {
+          if (label.dataset.addr === targetAddr) {
+            const cb = checkboxes[idx];
+            if (cb) {
+              cb.checked = true;
+              label.classList.add('selected');
+            }
+          }
+        });
+      }
+    };
+    
     rebuildAddrList();
     const fillChange = () => {
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
@@ -4785,11 +4888,11 @@ function renderWallet() {
           const raw = addrInputEl.value || '';
           const normalized = normalizeAddrInput(raw);
           if (!normalized) {
-            showTxValidationError('请先填写要查询的地址', addrInputEl);
+            showTxValidationError('请先填写要查询的地址', addrInputEl, '地址为空');
             return;
           }
           if (!isValidAddressFormat(normalized)) {
-            showTxValidationError('目标地址格式错误，应为40位十六进制字符串', addrInputEl);
+            showTxValidationError('目标地址格式错误，应为40位十六进制字符串', addrInputEl, '地址格式错误');
             return;
           }
           lookupBtn.dataset.loading = '1';
@@ -4934,19 +5037,24 @@ function renderWallet() {
     tfBtn.addEventListener('click', async () => {
       refreshWalletSnapshot();
       if (txErr) { txErr.textContent = ''; txErr.classList.add('hidden'); }
-      if (txPreview) { txPreview.classList.add('hidden'); txPreview.textContent = ''; }
+      // 隐藏之前的交易结果按钮
+      const txResultActions = document.getElementById('txResultActions');
+      const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+      if (txResultActions) txResultActions.classList.add('hidden');
+      if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
+      
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
-      if (sel.length === 0) { showTxValidationError('请选择至少一个来源地址'); return; }
+      if (sel.length === 0) { showTxValidationError('请选择至少一个来源地址', null, '地址未选择'); return; }
       for (const addr of sel) {
         if (!getAddrMeta(addr)) {
-          showTxValidationError('部分来源地址不存在，请刷新后重试');
+          showTxValidationError('部分来源地址不存在，请刷新后重试', null, '地址错误');
           return;
         }
       }
       const rows = Array.from(billList.querySelectorAll('.recipient-card'));
-      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账'); return; }
+      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账', null, '转账信息缺失'); return; }
       const isCross = tfMode.value === 'cross';
-      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔转账'); return; }
+      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔转账', null, '跨链交易限制'); return; }
       const changeMap = {};
       if (chPGC.value) changeMap[0] = chPGC.value;
       if (chBTC.value) changeMap[1] = chBTC.value;
@@ -4990,25 +5098,25 @@ function renderWallet() {
         const parsedPub = parsePub(comb);
         const { x: px, y: py, ok: pubOk } = parsedPub;
         const tInt = Number((gasEl && gasEl.value) || 0);
-        if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl); return; }
-        if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl); return; }
-        if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种'); return; }
-        if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl); return; }
-        if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl); return; }
-        if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl); return; }
-        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl); return; }
-        if (isCross && mt !== 0) { showTxValidationError('跨链交易只能使用主货币'); return; }
-        if (bills[normalizedTo]) { showTxValidationError('同一地址仅允许一笔账单'); return; }
+        if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl, '账单信息不完整'); return; }
+        if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl, '地址格式错误'); return; }
+        if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种', null, '币种错误'); return; }
+        if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl, '组织ID格式错误'); return; }
+        if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl, '公钥格式错误'); return; }
+        if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl, '金额错误'); return; }
+        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl, 'Gas参数错误'); return; }
+        if (isCross && mt !== 0) { showTxValidationError('跨链交易只能使用主货币', null, '跨链交易限制'); return; }
+        if (bills[normalizedTo]) { showTxValidationError('同一地址仅允许一笔账单', null, '地址重复'); return; }
         bills[normalizedTo] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };
         vd[mt] += val;
         outInterest += Math.max(0, tInt || 0);
       }
       const extraPGC = Number(gasInput.value || 0);
-      if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput); return; }
+      if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput, 'Gas参数错误'); return; }
       const interestGas = extraPGC > 0 ? extraPGC : 0;
       vd[0] += extraPGC;
       const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
-      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError('交易Gas 需为不小于 0 的数字', txGasInput); return; }
+      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError('交易Gas 需为不小于 0 的数字', txGasInput, 'Gas参数错误'); return; }
       const typeBalances = { 0: 0, 1: 0, 2: 0 };
       const availableGas = walletGasTotal;
       sel.forEach((addr) => {
@@ -5023,15 +5131,15 @@ function renderWallet() {
         const need = vd[typeId] || 0;
         if (need <= 0) return true;
         const addr = changeMap[typeId];
-        if (!addr) { showTxValidationError(`请为 ${currencyLabels[typeId]} 选择找零地址`); return false; }
+        if (!addr) { showTxValidationError(`请为 ${currencyLabels[typeId]} 选择找零地址`, null, '找零地址缺失'); return false; }
         const meta = getAddrMeta(addr);
-        if (!meta) { showTxValidationError('找零地址不存在，请重新选择'); return false; }
-        if (Number(meta.type || 0) !== Number(typeId)) { showTxValidationError(`${currencyLabels[typeId]} 找零地址的币种不匹配`); return false; }
+        if (!meta) { showTxValidationError('找零地址不存在，请重新选择', null, '找零地址错误'); return false; }
+        if (Number(meta.type || 0) !== Number(typeId)) { showTxValidationError(`${currencyLabels[typeId]} 找零地址的币种不匹配`, null, '找零地址错误'); return false; }
         return true;
       };
       if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
         const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
-        showTxValidationError(`${currencyLabels[lackType]} 余额不足，无法覆盖转出与兑换需求`);
+        showTxValidationError(`${currencyLabels[lackType]} 余额不足，无法覆盖转出与兑换需求`, null, '余额不足');
         return;
       }
       if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
@@ -5116,9 +5224,17 @@ function renderWallet() {
         Data: '',
         InterestAssign: { Gas: baseTxGas, Output: outInterest, BackAssign: backAssign }
       };
-      if (isCross && finalSel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址'); return; }
-      if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址'); return; }
-      if (txPreview) { txPreview.textContent = JSON.stringify(build, null, 2); txPreview.classList.remove('hidden'); }
+      if (isCross && finalSel.length !== 1) { showTxValidationError('跨链交易只能有一个来源地址', null, '跨链交易限制'); return; }
+      if (isCross && !changeMap[0]) { showTxValidationError('请为跨链交易选择主货币找零地址', null, '找零地址缺失'); return; }
+      
+      // 保存交易结构体数据并显示查看按钮
+      if (txResultActions) {
+        txResultActions.classList.remove('hidden');
+        const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
+        if (viewBuildInfoBtn) {
+          viewBuildInfoBtn.dataset.txData = JSON.stringify(build, null, 2);
+        }
+      }
 
       // 显示"构造交易"按钮并保存 BuildTXInfo
       const buildTxBtn = document.getElementById('buildTxBtn');
@@ -5130,14 +5246,10 @@ function renderWallet() {
 
     // 绑定"构造交易"按钮事件
     const buildTxBtn = document.getElementById('buildTxBtn');
-    const txFinalPreview = document.getElementById('txFinalPreview');
     if (buildTxBtn && !buildTxBtn.dataset._buildBind) {
       buildTxBtn.addEventListener('click', async () => {
         try {
-          if (txFinalPreview) {
-            txFinalPreview.textContent = '正在构造交易...';
-            txFinalPreview.classList.remove('hidden');
-          }
+          showModalTip('构造交易', '正在构造交易...', false);
 
           const buildInfoStr = buildTxBtn.dataset.buildInfo || '{}';
           const buildInfo = JSON.parse(buildInfoStr);
@@ -5145,25 +5257,22 @@ function renderWallet() {
 
           if (!user || !user.accountId) {
             showModalTip('未登录', '请先登录账户', true);
-            if (txFinalPreview) txFinalPreview.classList.add('hidden');
             return;
           }
 
           // 调用 buildNewTX 构造交易
           const transaction = await buildNewTX(buildInfo, user);
 
-          // 显示交易结构体
-          if (txFinalPreview) {
-            const formatted = JSON.stringify(transaction, null, 2);
-            txFinalPreview.textContent = '✓ Transaction 结构体\n\n' + formatted;
+          // 保存交易数据并显示查看按钮
+          const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+          if (viewTxInfoBtn) {
+            viewTxInfoBtn.dataset.txData = JSON.stringify(transaction, null, 2);
+            viewTxInfoBtn.classList.remove('hidden');
           }
 
-          showModalTip('交易构造成功', '已成功构造 Transaction 结构体，请查看下方预览', false);
+          showModalTip('交易构造成功', '已成功构造 Transaction 结构体，点击下方按钮查看详情', false);
         } catch (err) {
           const errMsg = err.message || String(err);
-          if (txFinalPreview) {
-            txFinalPreview.textContent = '✗ 构造失败\n\n' + errMsg;
-          }
           showModalTip('构造失败', errMsg, true);
         }
       });
@@ -5179,6 +5288,92 @@ function renderWallet() {
     };
     tfBtn.dataset._bind = '1';
   }
+
+  // 交易详情弹窗逻辑
+  const setupTxDetailModal = () => {
+    const modal = document.getElementById('txDetailModal');
+    const titleEl = document.getElementById('txDetailTitle');
+    const contentEl = document.getElementById('txDetailContent');
+    const closeBtn = document.getElementById('txDetailClose');
+    const copyBtn = document.getElementById('txDetailCopy');
+    const okBtn = document.getElementById('txDetailOk');
+    const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
+    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+    
+    if (!modal) return;
+    
+    const showTxDetail = (title, data) => {
+      if (titleEl) titleEl.textContent = title;
+      if (contentEl) {
+        // 语法高亮 JSON
+        const highlighted = data
+          .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+          .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+          .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+          .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+        contentEl.innerHTML = highlighted;
+      }
+      modal.classList.remove('hidden');
+    };
+    
+    const hideTxDetail = () => {
+      modal.classList.add('hidden');
+    };
+    
+    // 查看交易结构体按钮
+    if (viewBuildInfoBtn) {
+      viewBuildInfoBtn.addEventListener('click', () => {
+        const data = viewBuildInfoBtn.dataset.txData || '{}';
+        showTxDetail('BuildTXInfo 交易结构体', data);
+      });
+    }
+    
+    // 查看交易信息按钮
+    if (viewTxInfoBtn) {
+      viewTxInfoBtn.addEventListener('click', () => {
+        const data = viewTxInfoBtn.dataset.txData || '{}';
+        showTxDetail('Transaction 交易信息', data);
+      });
+    }
+    
+    // 关闭按钮
+    if (closeBtn) {
+      closeBtn.addEventListener('click', hideTxDetail);
+    }
+    
+    // 确定按钮
+    if (okBtn) {
+      okBtn.addEventListener('click', hideTxDetail);
+    }
+    
+    // 复制按钮
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async () => {
+        const text = contentEl ? contentEl.textContent : '';
+        try {
+          await navigator.clipboard.writeText(text);
+          const originalText = copyBtn.querySelector('span');
+          if (originalText) {
+            const oldText = originalText.textContent;
+            originalText.textContent = '已复制！';
+            setTimeout(() => {
+              originalText.textContent = oldText;
+            }, 1500);
+          }
+        } catch (err) {
+          console.error('复制失败:', err);
+        }
+      });
+    }
+    
+    // 点击遮罩关闭
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        hideTxDetail();
+      }
+    });
+  };
+  setupTxDetailModal();
 
   // Fallback: 委托事件，确保地址选择器可打开并选择
   document.addEventListener('click', (ev) => {

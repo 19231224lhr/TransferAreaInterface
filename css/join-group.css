@@ -327,6 +327,8 @@
   padding: 0;
   margin-bottom: 24px;
   overflow: hidden;
+  max-width: 100%;
+  position: relative;
 }
 
 /* 组织头部 */
@@ -388,6 +390,9 @@
   font-size: 12px;
   font-weight: 600;
   color: #16a34a;
+  position: absolute;
+  top: 20px;
+  right: 24px;
 }
 
 .join-org-status .status-dot {
@@ -800,16 +805,14 @@
   }
 
   .join-org-header {
-    flex-wrap: wrap;
-    justify-content: center;
-    text-align: center;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    text-align: left;
   }
 
   .join-org-identity {
-    width: 100%;
-    align-items: center;
-    order: 2;
-    margin-top: 12px;
+    flex: 1;
+    align-items: flex-start;
   }
 
   .join-org-avatar {
