@@ -954,9 +954,12 @@ function handleProfileSave() {
   showSuccessToast('个人信息已保存');
 }
 
-// 页面加载后更新显示
+// 页面加载后更新显示（仅在已登录时更新）
 window.addEventListener('load', () => {
-  updateProfileDisplay();
+  const u = loadUser();
+  if (u && u.accountId) {
+    updateProfileDisplay();
+  }
 });
 
 // ============================================
@@ -2123,6 +2126,8 @@ if (!location.hash) {
 }
 // 执行一次路由以同步初始视图
 router();
+// 初始化用户菜单状态，确保头像正确显示
+updateHeaderUser(initialUser);
 
 // 使用 popstate 拦截浏览器返回，先确认再跳转
 window.addEventListener('popstate', (e) => {
