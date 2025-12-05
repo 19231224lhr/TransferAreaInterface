@@ -151,6 +151,7 @@
   align-items: center;
   justify-content: center;
   padding: 32px 0;
+  margin-top: -250px;
 }
 
 .profile-avatar-container {
@@ -726,7 +727,7 @@
   }
 
   .profile-brand {
-    margin-bottom: 24px;
+    margin-bottom: 0;
     text-align: center;
   }
 
@@ -738,17 +739,13 @@
     font-size: 24px;
   }
 
+  .profile-brand-desc {
+    display: none;
+  }
+
+  /* 移动端隐藏头像预览区，只显示品牌标题 */
   .profile-avatar-preview {
-    padding: 24px 0;
-  }
-
-  .profile-avatar-large {
-    width: 100px;
-    height: 100px;
-  }
-
-  .profile-avatar-name {
-    font-size: 18px;
+    display: none;
   }
 
   .profile-sidebar-footer {
