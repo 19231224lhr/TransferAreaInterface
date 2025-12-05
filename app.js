@@ -253,11 +253,42 @@ function updateHeaderUser(user) {
   const menuHeaderAvatar = document.getElementById('menuHeaderAvatar');
   if (!labelEl || !avatarEl) return; // header 不存在时忽略
   if (user && user.accountId) {
-    // 显示用户名而不是 Account ID
-    labelEl.textContent = 'Amiya';
+    // 显示用户昵称
+    const profile = loadUserProfile();
+    labelEl.textContent = profile.nickname || 'Amiya';
+    // 更新菜单头部标题
+    const menuHeaderTitleEl = document.getElementById('menuHeaderTitle');
+    if (menuHeaderTitleEl) {
+      menuHeaderTitleEl.textContent = profile.nickname || 'Amiya';
+    }
     // 登录后显示自定义头像
     avatarEl.classList.add('avatar--active');
     if (menuHeaderAvatar) menuHeaderAvatar.classList.add('avatar--active');
+    
+    // 更新头像显示
+    const avatarImg = avatarEl.querySelector('.avatar-img');
+    const menuAvatarImg = menuHeaderAvatar?.querySelector('.avatar-img');
+    if (profile.avatar) {
+      if (avatarImg) {
+        avatarImg.src = profile.avatar;
+        avatarImg.classList.remove('hidden');
+      }
+      if (menuAvatarImg) {
+        menuAvatarImg.src = profile.avatar;
+        menuAvatarImg.classList.remove('hidden');
+      }
+    } else {
+      // 使用默认头像
+      if (avatarImg) {
+        avatarImg.src = '/assets/avatar.png';
+        avatarImg.classList.remove('hidden');
+      }
+      if (menuAvatarImg) {
+        menuAvatarImg.src = '/assets/avatar.png';
+        menuAvatarImg.classList.remove('hidden');
+      }
+    }
+    
     // 显示头部和卡片区
     if (menuHeader) menuHeader.classList.remove('hidden');
     if (menuCards) menuCards.classList.remove('hidden');
@@ -383,6 +414,19 @@ function updateHeaderUser(user) {
     });
     menuOrgItem.dataset._bind = '1';
   }
+  // 菜单头部点击事件绑定 - 跳转到个人信息页
+  if (menuHeader && !menuHeader.dataset._bind) {
+    menuHeader.addEventListener('click', (e) => {
+      e.stopPropagation();
+      // 关闭用户菜单
+      const userMenu = document.getElementById('userMenu');
+      if (userMenu) userMenu.classList.add('hidden');
+      // 跳转到个人信息页
+      routeTo('#/profile');
+    });
+    menuHeader.style.cursor = 'pointer';
+    menuHeader.dataset._bind = '1';
+  }
 }
 function saveUser(user) {
   try {
@@ -425,6 +469,434 @@ function saveUser(user) {
     console.warn('保存本地用户信息失败', e);
   }
 }
+
+// ============================================
+// 个人信息页面功能
+// ============================================
+
+const PROFILE_STORAGE_KEY = 'userProfile';
+
+/**
+ * 加载用户个人信息（头像和昵称）
+ */
+function loadUserProfile() {
+  try {
+    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn('加载用户个人信息失败', e);
+  }
+  return { nickname: 'Amiya', avatar: null };
+}
+
+/**
+ * 保存用户个人信息
+ */
+function saveUserProfile(profile) {
+  try {
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    // 更新界面显示
+    updateProfileDisplay();
+  } catch (e) {
+    console.warn('保存用户个人信息失败', e);
+  }
+}
+
+/**
+ * 更新所有界面上的用户信息显示
+ */
+function updateProfileDisplay() {
+  const profile = loadUserProfile();
+  const nickname = profile.nickname || 'Amiya';
+  const avatar = profile.avatar;
+  
+  // 更新顶部导航栏
+  const userLabel = document.getElementById('userLabel');
+  if (userLabel) {
+    const u = loadUser();
+    if (u && u.accountId) {
+      userLabel.textContent = nickname;
+    }
+  }
+  
+  // 更新菜单头部标题
+  const menuHeaderTitle = document.getElementById('menuHeaderTitle');
+  if (menuHeaderTitle) {
+    menuHeaderTitle.textContent = nickname;
+  }
+  
+  // 更新所有头像
+  const avatarTargets = [
+    { container: document.getElementById('userAvatar'), img: document.querySelector('#userAvatar .avatar-img') },
+    { container: document.getElementById('menuHeaderAvatar'), img: document.querySelector('#menuHeaderAvatar .avatar-img') }
+  ];
+  
+  avatarTargets.forEach(({ container, img }) => {
+    if (!container || !img) return;
+    if (avatar) {
+      img.src = avatar;
+      img.classList.remove('hidden');
+      container.classList.add('avatar--active');
+    } else {
+      img.classList.add('hidden');
+      const u = loadUser();
+      if (u && u.accountId) {
+        // 登录状态但无自定义头像，显示默认头像
+        container.classList.add('avatar--active');
+        img.src = '/assets/avatar.png';
+        img.classList.remove('hidden');
+      } else {
+        container.classList.remove('avatar--active');
+      }
+    }
+  });
+}
+
+/**
+ * 初始化个人信息页面
+ */
+function initProfilePage() {
+  const profile = loadUserProfile();
+  const user = loadUser();
+  
+  // 填充当前数据
+  const nicknameInput = document.getElementById('nicknameInput');
+  const nicknameCharCount = document.getElementById('nicknameCharCount');
+  const profileDisplayName = document.getElementById('profileDisplayName');
+  const profileAccountId = document.getElementById('profileAccountId');
+  const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+  const avatarUploadPreview = document.getElementById('avatarUploadPreview');
+  const profileAvatarPreview = document.getElementById('profileAvatarPreview');
+  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  
+  // 设置昵称
+  if (nicknameInput) {
+    nicknameInput.value = profile.nickname || 'Amiya';
+    updateCharCount();
+  }
+  
+  // 设置显示名称
+  if (profileDisplayName) {
+    profileDisplayName.textContent = profile.nickname || 'Amiya';
+  }
+  
+  // 设置Account ID
+  if (profileAccountId && user) {
+    profileAccountId.textContent = user.accountId || 'Account ID';
+  }
+  
+  // 设置头像预览
+  if (profile.avatar) {
+    if (avatarPreviewImg) {
+      avatarPreviewImg.src = profile.avatar;
+      avatarPreviewImg.classList.remove('hidden');
+      const placeholder = avatarUploadPreview?.querySelector('.preview-placeholder');
+      if (placeholder) placeholder.classList.add('hidden');
+    }
+    if (profileAvatarPreview) {
+      profileAvatarPreview.src = profile.avatar;
+      profileAvatarPreview.classList.remove('hidden');
+      const placeholder = profileAvatarLarge?.querySelector('.avatar-placeholder');
+      if (placeholder) placeholder.classList.add('hidden');
+    }
+  } else {
+    if (avatarPreviewImg) {
+      avatarPreviewImg.classList.add('hidden');
+      const placeholder = avatarUploadPreview?.querySelector('.preview-placeholder');
+      if (placeholder) placeholder.classList.remove('hidden');
+    }
+    if (profileAvatarPreview) {
+      profileAvatarPreview.classList.add('hidden');
+      const placeholder = profileAvatarLarge?.querySelector('.avatar-placeholder');
+      if (placeholder) placeholder.classList.remove('hidden');
+    }
+  }
+  
+  // 绑定事件（只绑定一次）
+  bindProfileEvents();
+}
+
+/**
+ * 更新字符计数
+ */
+function updateCharCount() {
+  const nicknameInput = document.getElementById('nicknameInput');
+  const nicknameCharCount = document.getElementById('nicknameCharCount');
+  if (nicknameInput && nicknameCharCount) {
+    const len = nicknameInput.value.length;
+    nicknameCharCount.textContent = `${len}/20`;
+  }
+}
+
+/**
+ * 绑定个人信息页面事件
+ */
+function bindProfileEvents() {
+  // 返回按钮
+  const profileBackBtn = document.getElementById('profileBackBtn');
+  if (profileBackBtn && !profileBackBtn.dataset._bind) {
+    profileBackBtn.addEventListener('click', () => {
+      routeTo('#/main');
+    });
+    profileBackBtn.dataset._bind = '1';
+  }
+  
+  // 取消按钮
+  const profileCancelBtn = document.getElementById('profileCancelBtn');
+  if (profileCancelBtn && !profileCancelBtn.dataset._bind) {
+    profileCancelBtn.addEventListener('click', () => {
+      routeTo('#/main');
+    });
+    profileCancelBtn.dataset._bind = '1';
+  }
+  
+  // 昵称输入框
+  const nicknameInput = document.getElementById('nicknameInput');
+  if (nicknameInput && !nicknameInput.dataset._bind) {
+    nicknameInput.addEventListener('input', () => {
+      updateCharCount();
+      // 实时更新左侧预览
+      const profileDisplayName = document.getElementById('profileDisplayName');
+      if (profileDisplayName) {
+        profileDisplayName.textContent = nicknameInput.value || 'Amiya';
+      }
+    });
+    nicknameInput.dataset._bind = '1';
+  }
+  
+  // 头像上传按钮
+  const avatarUploadBtn = document.getElementById('avatarUploadBtn');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  if (avatarUploadBtn && avatarFileInput && !avatarUploadBtn.dataset._bind) {
+    avatarUploadBtn.addEventListener('click', () => {
+      avatarFileInput.click();
+    });
+    avatarUploadBtn.dataset._bind = '1';
+  }
+  
+  // 头像文件选择
+  if (avatarFileInput && !avatarFileInput.dataset._bind) {
+    avatarFileInput.addEventListener('change', handleAvatarFileSelect);
+    avatarFileInput.dataset._bind = '1';
+  }
+  
+  // 移除头像按钮
+  const avatarRemoveBtn = document.getElementById('avatarRemoveBtn');
+  if (avatarRemoveBtn && !avatarRemoveBtn.dataset._bind) {
+    avatarRemoveBtn.addEventListener('click', handleAvatarRemove);
+    avatarRemoveBtn.dataset._bind = '1';
+  }
+  
+  // 保存按钮
+  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  if (profileSaveBtn && !profileSaveBtn.dataset._bind) {
+    profileSaveBtn.addEventListener('click', handleProfileSave);
+    profileSaveBtn.dataset._bind = '1';
+  }
+}
+
+/**
+ * 处理头像文件选择
+ */
+function handleAvatarFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  
+  // 验证文件类型
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  if (!validTypes.includes(file.type)) {
+    showErrorToast('请选择 JPG、PNG 或 GIF 格式的图片');
+    return;
+  }
+  
+  // 验证文件大小（最大 2MB）
+  if (file.size > 2 * 1024 * 1024) {
+    showErrorToast('图片大小不能超过 2MB');
+    return;
+  }
+  
+  // 读取并预览
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    const dataUrl = event.target.result;
+    
+    // 压缩图片
+    compressImage(dataUrl, 200, 200, 0.8, (compressedUrl) => {
+      // 更新预览
+      updateAvatarPreview(compressedUrl);
+      
+      // 临时存储到页面数据
+      const avatarFileInput = document.getElementById('avatarFileInput');
+      if (avatarFileInput) {
+        avatarFileInput.dataset.pendingAvatar = compressedUrl;
+      }
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+/**
+ * 压缩图片
+ */
+function compressImage(dataUrl, maxWidth, maxHeight, quality, callback) {
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.createElement('canvas');
+    let width = img.width;
+    let height = img.height;
+    
+    // 计算缩放比例
+    if (width > height) {
+      if (width > maxWidth) {
+        height = Math.round((height * maxWidth) / width);
+        width = maxWidth;
+      }
+    } else {
+      if (height > maxHeight) {
+        width = Math.round((width * maxHeight) / height);
+        height = maxHeight;
+      }
+    }
+    
+    canvas.width = width;
+    canvas.height = height;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, width, height);
+    
+    callback(canvas.toDataURL('image/jpeg', quality));
+  };
+  img.src = dataUrl;
+}
+
+/**
+ * 更新头像预览
+ */
+function updateAvatarPreview(avatarUrl) {
+  // 更新右侧小预览
+  const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+  const avatarUploadPreview = document.getElementById('avatarUploadPreview');
+  if (avatarPreviewImg && avatarUploadPreview) {
+    avatarPreviewImg.src = avatarUrl;
+    avatarPreviewImg.classList.remove('hidden');
+    const placeholder = avatarUploadPreview.querySelector('.preview-placeholder');
+    if (placeholder) placeholder.classList.add('hidden');
+  }
+  
+  // 更新左侧大预览
+  const profileAvatarPreview = document.getElementById('profileAvatarPreview');
+  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  if (profileAvatarPreview && profileAvatarLarge) {
+    profileAvatarPreview.src = avatarUrl;
+    profileAvatarPreview.classList.remove('hidden');
+    const placeholder = profileAvatarLarge.querySelector('.avatar-placeholder');
+    if (placeholder) placeholder.classList.add('hidden');
+  }
+}
+
+/**
+ * 处理移除头像
+ */
+function handleAvatarRemove() {
+  // 清除预览
+  const avatarPreviewImg = document.getElementById('avatarPreviewImg');
+  const avatarUploadPreview = document.getElementById('avatarUploadPreview');
+  if (avatarPreviewImg && avatarUploadPreview) {
+    avatarPreviewImg.src = '';
+    avatarPreviewImg.classList.add('hidden');
+    const placeholder = avatarUploadPreview.querySelector('.preview-placeholder');
+    if (placeholder) placeholder.classList.remove('hidden');
+  }
+  
+  // 清除左侧预览
+  const profileAvatarPreview = document.getElementById('profileAvatarPreview');
+  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  if (profileAvatarPreview && profileAvatarLarge) {
+    profileAvatarPreview.src = '';
+    profileAvatarPreview.classList.add('hidden');
+    const placeholder = profileAvatarLarge.querySelector('.avatar-placeholder');
+    if (placeholder) placeholder.classList.remove('hidden');
+  }
+  
+  // 清除待保存的头像
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  if (avatarFileInput) {
+    avatarFileInput.value = '';
+    avatarFileInput.dataset.pendingAvatar = '';
+    avatarFileInput.dataset.removeAvatar = '1';
+  }
+}
+
+/**
+ * 处理保存个人信息
+ */
+function handleProfileSave() {
+  const nicknameInput = document.getElementById('nicknameInput');
+  const avatarFileInput = document.getElementById('avatarFileInput');
+  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  
+  const nickname = nicknameInput?.value?.trim() || 'Amiya';
+  const pendingAvatar = avatarFileInput?.dataset.pendingAvatar || null;
+  const removeAvatar = avatarFileInput?.dataset.removeAvatar === '1';
+  
+  // 验证昵称
+  if (nickname.length === 0) {
+    showErrorToast('昵称不能为空');
+    return;
+  }
+  if (nickname.length > 20) {
+    showErrorToast('昵称不能超过20个字符');
+    return;
+  }
+  
+  // 获取当前配置
+  const profile = loadUserProfile();
+  
+  // 更新昵称
+  profile.nickname = nickname;
+  
+  // 更新头像
+  if (removeAvatar) {
+    profile.avatar = null;
+  } else if (pendingAvatar) {
+    profile.avatar = pendingAvatar;
+  }
+  
+  // 保存
+  saveUserProfile(profile);
+  
+  // 清除临时数据
+  if (avatarFileInput) {
+    avatarFileInput.dataset.pendingAvatar = '';
+    avatarFileInput.dataset.removeAvatar = '';
+  }
+  
+  // 显示保存成功动画
+  if (profileSaveBtn) {
+    const originalHtml = profileSaveBtn.innerHTML;
+    profileSaveBtn.classList.add('profile-action-btn--success');
+    profileSaveBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="20 6 9 17 4 12" />
+      </svg>
+      保存成功
+    `;
+    
+    setTimeout(() => {
+      profileSaveBtn.classList.remove('profile-action-btn--success');
+      profileSaveBtn.innerHTML = originalHtml;
+    }, 1500);
+  }
+  
+  showSuccessToast('个人信息已保存');
+}
+
+// 页面加载后更新显示
+window.addEventListener('load', () => {
+  updateProfileDisplay();
+});
 
 // ============================================
 // 统一操作反馈组件 API
@@ -1050,6 +1522,8 @@ function showCard(card) {
   if (inquiryCard) inquiryCard.classList.add('hidden');
   const memberInfoCard = document.getElementById('memberInfoCard');
   if (memberInfoCard) memberInfoCard.classList.add('hidden');
+  const profileCard = document.getElementById('profileCard');
+  if (profileCard) profileCard.classList.add('hidden');
   const newLoader = document.getElementById('newLoader');
   if (newLoader) newLoader.classList.add('hidden');
   const importLoader = document.getElementById('importLoader');
@@ -1072,12 +1546,12 @@ function showCard(card) {
   if (recPane2) recPane2.classList.remove('collapsed');
   const gs2 = document.getElementById('groupSearch');
   if (gs2) gs2.value = '';
-  const allCards = document.querySelectorAll('.card, .welcome-hero, #entryCard, #loginCard, #importCard, #newUserCard');
+  const allCards = document.querySelectorAll('.card, .welcome-hero, #entryCard, #loginCard, #importCard, #newUserCard, #profileCard');
   allCards.forEach(el => { if (el !== card) el.classList.add('hidden'); });
   // 显示指定卡片
   card.classList.remove('hidden');
   // 确保内部页面容器也显示
-  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page');
+  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page, .profile-page');
   if (innerPage) innerPage.classList.remove('hidden');
   // 滚动到页面顶部 - 使用 requestAnimationFrame 确保 DOM 更新后再滚动
   requestAnimationFrame(() => {
@@ -1518,6 +1992,10 @@ function router() {
       break;
     case '/import-next':
       showCard(document.getElementById('importNextCard'));
+      break;
+    case '/profile':
+      showCard(document.getElementById('profileCard'));
+      initProfilePage();
       break;
     default:
       routeTo('#/welcome');

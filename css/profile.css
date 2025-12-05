@@ -1,0 +1,808 @@
+/**
+ * ========================================
+ * 个人信息页面样式模块 - profile.css
+ * 全新左右布局设计 - 现代高级质感
+ * ========================================
+ */
+
+/* ========================================
+   页面容器 - 左右布局
+   ======================================== */
+
+#profileCard {
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+
+.profile-page {
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  min-height: calc(100vh - 120px);
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.06),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  /* 进场动画 - 简洁优雅 */
+  animation: profileSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@keyframes profileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ========================================
+   左侧边栏 - 品牌展示区
+   ======================================== */
+
+.profile-sidebar {
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+  padding: 48px 32px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 装饰效果 */
+.profile-sidebar::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
+  pointer-events: none;
+  animation: sidebarGlow 8s ease-in-out infinite;
+}
+
+@keyframes sidebarGlow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate(-10%, 10%) scale(1.1);
+    opacity: 1;
+  }
+}
+
+.profile-sidebar::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -30%;
+  width: 80%;
+  height: 80%;
+  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+.profile-sidebar-content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* ========================================
+   品牌区域
+   ======================================== */
+
+.profile-brand {
+  margin-bottom: 40px;
+}
+
+.profile-brand-icon {
+  width: 64px;
+  height: 64px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 24px;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.3s ease;
+}
+
+.profile-brand-icon:hover {
+  transform: scale(1.05) rotate(5deg);
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.profile-brand-icon svg {
+  width: 32px;
+  height: 32px;
+  color: white;
+}
+
+.profile-brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.profile-brand-desc {
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========================================
+   头像预览区
+   ======================================== */
+
+.profile-avatar-preview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.profile-avatar-container {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.profile-avatar-ring {
+  position: absolute;
+  inset: -8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  animation: avatarRingPulse 3s ease-in-out infinite;
+}
+
+@keyframes avatarRingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 1;
+  }
+}
+
+.profile-avatar-ring::before {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 50%;
+}
+
+.profile-avatar-large {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 3px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.15),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.profile-avatar-large:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(255, 255, 255, 0.3);
+}
+
+.profile-avatar-large .avatar-placeholder {
+  width: 60px;
+  height: 60px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-avatar-large .avatar-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.profile-avatar-large:hover .avatar-image {
+  transform: scale(1.08);
+}
+
+.profile-avatar-name {
+  font-size: 22px;
+  font-weight: 700;
+  color: white;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.profile-avatar-id {
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: 'SF Mono', 'Monaco', monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* ========================================
+   侧边栏底部
+   ======================================== */
+
+.profile-sidebar-footer {
+  margin-top: auto;
+  padding-top: 32px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.profile-tips {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.profile-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-tip svg {
+  width: 16px;
+  height: 16px;
+  color: rgba(255, 255, 255, 0.6);
+  flex-shrink: 0;
+}
+
+/* ========================================
+   右侧主区域
+   ======================================== */
+
+.profile-main {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+}
+
+.profile-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  margin-bottom: 24px;
+  width: fit-content;
+}
+
+.profile-back-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease;
+}
+
+.profile-back-btn:hover {
+  color: #0ea5e9;
+  border-color: #0ea5e9;
+  background: #f0f9ff;
+}
+
+.profile-back-btn:hover svg {
+  transform: translateX(-3px);
+}
+
+/* ========================================
+   页面头部
+   ======================================== */
+
+.profile-header {
+  margin-bottom: 32px;
+}
+
+.profile-header-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  color: white;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.profile-header-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.profile-header-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* ========================================
+   设置区域
+   ======================================== */
+
+.profile-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1;
+}
+
+.profile-setting-group {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.profile-setting-group:hover {
+  border-color: rgba(14, 165, 233, 0.3);
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.08);
+}
+
+.profile-setting-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.profile-setting-icon {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-setting-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #0ea5e9;
+}
+
+.profile-setting-title h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* ========================================
+   头像上传区
+   ======================================== */
+
+.avatar-upload-area {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.avatar-upload-preview {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid #e2e8f0;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.avatar-upload-preview:hover {
+  border-color: #0ea5e9;
+  transform: scale(1.02);
+}
+
+.avatar-upload-preview .preview-placeholder {
+  width: 32px;
+  height: 32px;
+  color: #94a3b8;
+}
+
+.avatar-upload-preview .preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-upload-actions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.avatar-upload-hint {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
+
+.avatar-upload-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.avatar-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.avatar-upload-btn--primary {
+  color: white;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 2px 8px rgba(14, 165, 233, 0.25);
+}
+
+.avatar-upload-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.35);
+}
+
+.avatar-upload-btn--primary:active {
+  transform: translateY(0);
+}
+
+.avatar-upload-btn--secondary {
+  color: #64748b;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.avatar-upload-btn--secondary:hover {
+  color: #ef4444;
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+.avatar-upload-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 隐藏的文件输入 */
+#avatarFileInput {
+  display: none;
+}
+
+/* ========================================
+   昵称编辑区
+   ======================================== */
+
+.nickname-edit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.nickname-input-wrap {
+  position: relative;
+}
+
+.nickname-input {
+  width: 100%;
+  padding: 14px 18px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  outline: none;
+}
+
+.nickname-input:focus {
+  background: white;
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+}
+
+.nickname-input::placeholder {
+  color: #94a3b8;
+}
+
+.nickname-char-count {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.nickname-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* ========================================
+   底部操作按钮
+   ======================================== */
+
+.profile-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.profile-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.profile-action-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.profile-action-btn--secondary {
+  color: #475569;
+  background: white;
+  border: 1px solid #e2e8f0;
+}
+
+.profile-action-btn--secondary:hover {
+  color: #1e293b;
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.profile-action-btn--primary {
+  flex: 1;
+  color: white;
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  box-shadow: 0 4px 16px rgba(14, 165, 233, 0.3);
+}
+
+.profile-action-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
+}
+
+.profile-action-btn--primary:active {
+  transform: translateY(0);
+}
+
+.profile-action-btn--primary svg {
+  transition: transform 0.2s ease;
+}
+
+.profile-action-btn--primary:hover svg {
+  transform: scale(1.1);
+}
+
+/* 保存成功动画 */
+.profile-action-btn--success {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3) !important;
+  pointer-events: none;
+}
+
+.profile-action-btn--success:hover {
+  transform: none;
+}
+
+/* ========================================
+   响应式设计
+   ======================================== */
+
+@media (max-width: 900px) {
+  .profile-page {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .profile-sidebar {
+    padding: 32px 24px;
+    order: -1;
+  }
+
+  .profile-brand {
+    margin-bottom: 24px;
+    text-align: center;
+  }
+
+  .profile-brand-icon {
+    margin: 0 auto 16px;
+  }
+
+  .profile-brand-title {
+    font-size: 24px;
+  }
+
+  .profile-avatar-preview {
+    padding: 24px 0;
+  }
+
+  .profile-avatar-large {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-avatar-name {
+    font-size: 18px;
+  }
+
+  .profile-sidebar-footer {
+    display: none;
+  }
+
+  .profile-main {
+    padding: 24px;
+  }
+
+  .avatar-upload-area {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .avatar-upload-actions {
+    align-items: center;
+  }
+
+  .profile-actions {
+    flex-direction: column;
+  }
+
+  .profile-action-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-page {
+    border-radius: 16px;
+  }
+
+  .profile-sidebar {
+    padding: 24px 20px;
+  }
+
+  .profile-main {
+    padding: 20px;
+  }
+
+  .profile-setting-group {
+    padding: 18px;
+  }
+
+  .avatar-upload-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .avatar-upload-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ========================================
+   性能优化
+   ======================================== */
+
+.profile-page,
+.profile-sidebar,
+.profile-avatar-large,
+.profile-action-btn {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .profile-page,
+  .profile-avatar-ring,
+  .profile-sidebar::before {
+    animation: none !important;
+  }
+
+  .profile-back-btn,
+  .avatar-upload-btn,
+  .profile-action-btn {
+    transition-duration: 0.1s;
+  }
+}
+
+/* ========================================
+   额外装饰动画（可选）
+   ======================================== */
+
+.profile-setting-group {
+  animation: settingGroupFadeIn 0.4s ease-out both;
+}
+
+.profile-setting-group:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.profile-setting-group:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+@keyframes settingGroupFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

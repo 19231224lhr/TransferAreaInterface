@@ -23,6 +23,7 @@
   <link rel="stylesheet" href="/css/join-group.css?v=20251204b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
+  <link rel="stylesheet" href="/css/profile.css?v=20251205a" />
   <link rel="stylesheet" href="/css/main-v2.css?v=20251204u" />
 
   <!-- 其他样式 -->
@@ -108,8 +109,8 @@
           </svg>
         </button>
         <div id="userMenu" class="user-menu hidden">
-          <!-- 用户信息头部 -->
-          <div class="menu-header">
+          <!-- 用户信息头部 - 点击进入个人信息页 -->
+          <div class="menu-header" title="点击编辑个人信息">
             <div class="menu-header-avatar" id="menuHeaderAvatar">
               <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -121,6 +122,10 @@
               <span class="menu-header-title" id="menuHeaderTitle">Amiya</span>
               <span class="menu-header-sub" id="menuHeaderSub">欢迎回来 👋</span>
             </div>
+            <svg class="menu-header-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
           </div>
 
           <!-- 信息卡片区 -->
@@ -2583,6 +2588,167 @@
                 </div>
               </div>
             </div>
+          </div>
+        </main>
+      </div>
+    </section>
+
+    <!-- 个人信息页面 - 左右布局设计 -->
+    <section class="card hidden" id="profileCard">
+      <div class="profile-page">
+        <!-- 左侧：品牌展示区 -->
+        <aside class="profile-sidebar">
+          <div class="profile-sidebar-content">
+            <!-- 品牌区域 -->
+            <div class="profile-brand">
+              <div class="profile-brand-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+              </div>
+              <h1 class="profile-brand-title">个人信息</h1>
+              <p class="profile-brand-desc">管理您的账户头像与昵称，打造专属个人形象</p>
+            </div>
+
+            <!-- 头像预览区 -->
+            <div class="profile-avatar-preview">
+              <div class="profile-avatar-container">
+                <div class="profile-avatar-ring"></div>
+                <div class="profile-avatar-large" id="profileAvatarLarge">
+                  <svg class="avatar-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <img class="avatar-image hidden" id="profileAvatarPreview" src="" alt="头像预览">
+                </div>
+              </div>
+              <h3 class="profile-avatar-name" id="profileDisplayName">Amiya</h3>
+              <code class="profile-avatar-id" id="profileAccountId">Account ID</code>
+            </div>
+
+            <!-- 侧边栏底部 -->
+            <div class="profile-sidebar-footer">
+              <div class="profile-tips">
+                <div class="profile-tip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <span>头像仅存储在本地浏览器</span>
+                </div>
+                <div class="profile-tip">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                  </svg>
+                  <span>建议使用正方形图片</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- 右侧：设置区域 -->
+        <main class="profile-main">
+          <!-- 返回按钮 -->
+          <button id="profileBackBtn" class="profile-back-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            返回
+          </button>
+
+          <!-- 页面头部 -->
+          <div class="profile-header">
+            <span class="profile-header-badge">设置</span>
+            <h2 class="profile-header-title">个人信息设置</h2>
+            <p class="profile-header-desc">自定义您的头像和昵称，让您的账户更具个性</p>
+          </div>
+
+          <!-- 设置区域 -->
+          <div class="profile-settings">
+            <!-- 头像设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <circle cx="8.5" cy="8.5" r="1.5" />
+                    <polyline points="21 15 16 10 5 21" />
+                  </svg>
+                </div>
+                <h3>头像设置</h3>
+              </div>
+              <div class="avatar-upload-area">
+                <div class="avatar-upload-preview" id="avatarUploadPreview">
+                  <svg class="preview-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <img class="preview-image hidden" id="avatarPreviewImg" src="" alt="头像预览">
+                </div>
+                <div class="avatar-upload-actions">
+                  <p class="avatar-upload-hint">支持 JPG、PNG、GIF 格式，建议尺寸 200x200 像素</p>
+                  <div class="avatar-upload-buttons">
+                    <button id="avatarUploadBtn" class="avatar-upload-btn avatar-upload-btn--primary">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      选择图片
+                    </button>
+                    <button id="avatarRemoveBtn" class="avatar-upload-btn avatar-upload-btn--secondary">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                      </svg>
+                      移除头像
+                    </button>
+                  </div>
+                </div>
+                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/gif" />
+              </div>
+            </div>
+
+            <!-- 昵称设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                    <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+                  </svg>
+                </div>
+                <h3>昵称设置</h3>
+              </div>
+              <div class="nickname-edit-area">
+                <div class="nickname-input-wrap">
+                  <input type="text" id="nicknameInput" class="nickname-input" placeholder="请输入昵称" maxlength="20" />
+                  <span class="nickname-char-count" id="nicknameCharCount">0/20</span>
+                </div>
+                <p class="nickname-hint">昵称将显示在界面各处，支持中英文字符，最多20个字符</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 底部操作按钮 -->
+          <div class="profile-actions">
+            <button id="profileCancelBtn" class="profile-action-btn profile-action-btn--secondary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+              取消
+            </button>
+            <button id="profileSaveBtn" class="profile-action-btn profile-action-btn--primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              保存设置
+            </button>
           </div>
         </main>
       </div>
