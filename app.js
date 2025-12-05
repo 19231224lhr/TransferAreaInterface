@@ -1318,6 +1318,13 @@ async function handleCreate() {
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) await wait(1000 - elapsed);
     if (loader) loader.classList.add('hidden');
+    
+    // 隐藏成功提示框，改用顶部Toast通知
+    const successBanner = resultEl.querySelector('.new-result-success');
+    if (successBanner) {
+      successBanner.style.display = 'none';
+    }
+    
     resultEl.classList.remove('hidden');
     resultEl.classList.remove('fade-in');
     resultEl.classList.remove('reveal');
@@ -1330,6 +1337,9 @@ async function handleCreate() {
     saveUser({ accountId: data.accountId, address: data.address, privHex: data.privHex, pubXHex: data.pubXHex, pubYHex: data.pubYHex, flowOrigin: 'new' });
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
+    
+    // 显示顶部成功通知
+    showSuccessToast('账户创建成功！密钥已安全生成', '创建成功');
   } catch (err) {
     alert('创建用户失败：' + err);
     console.error(err);
