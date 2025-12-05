@@ -581,11 +581,10 @@
         <!-- 右侧：主操作区 -->
         <main class="entry-main">
           <!-- 返回按钮 -->
-          <button class="entry-back-btn" id="entryBackBtn">
+          <button class="entry-back-btn" id="entryBackBtn" title="返回">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>返回</span>
           </button>
 
           <div class="entry-main-content">
@@ -631,15 +630,6 @@
               </button>
             </div>
 
-            <!-- 提示信息 -->
-            <div class="entry-tip-block">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10" />
-                <path d="M12 16v-4M12 8h.01" />
-              </svg>
-              <span>每次新建或导入都会加入到当前账户的钱包列表</span>
-            </div>
-
             <!-- 钱包列表区 -->
             <div class="entry-wallet-block">
               <div class="entry-wallet-header">
@@ -663,10 +653,10 @@
                 </svg>
               </button>
               <div id="walletEmptyTip" class="entry-empty-tip hidden">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
                   <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                   <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                  <circle cx="12" cy="17" r="0.5" fill="currentColor" />
                 </svg>
                 <span>请先添加至少一个钱包地址</span>
               </div>
@@ -760,11 +750,10 @@
         <!-- 右侧：主操作区 -->
         <main class="new-main">
           <!-- 返回按钮 -->
-          <button class="new-back-btn" id="newBackBtn">
+          <button class="new-back-btn" id="newBackBtn" title="返回">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>返回</span>
           </button>
 
           <div class="new-main-content">
@@ -858,14 +847,6 @@
               </div>
 
               <!-- 警告提示 -->
-              <div class="new-result-tip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
-              </div>
             </div>
 
             <!-- 操作按钮 -->
@@ -968,11 +949,10 @@
         <!-- 右侧：主操作区 -->
         <main class="login-main">
           <!-- 返回按钮 -->
-          <button class="login-back-btn" id="loginBackBtn">
+          <button class="login-back-btn" id="loginBackBtn" title="返回">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>返回</span>
           </button>
 
           <div class="login-main-content">
@@ -1206,11 +1186,10 @@
         <!-- 右侧：主操作区 -->
         <main class="import-main">
           <!-- 返回按钮 -->
-          <button class="import-back-btn" id="importBackBtn">
+          <button class="import-back-btn" id="importBackBtn" title="返回">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
-            <span>返回</span>
           </button>
 
           <div class="import-main-content">
@@ -1351,16 +1330,6 @@
                   <code id="importPubX" class="import-result-value"></code>
                   <code id="importPubY" class="import-result-value"></code>
                 </div>
-              </div>
-
-              <!-- 警告提示 -->
-              <div class="import-result-tip">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-                  <line x1="12" y1="9" x2="12" y2="13" />
-                  <line x1="12" y1="17" x2="12.01" y2="17" />
-                </svg>
-                <span>请妥善保存以上信息，私钥一旦丢失将无法找回！</span>
               </div>
 
               <!-- 操作按钮 -->
@@ -2644,12 +2613,11 @@
         <!-- 右侧：设置区域 -->
         <main class="profile-main">
           <!-- 返回按钮 -->
-          <button id="profileBackBtn" class="profile-back-btn">
+          <button id="profileBackBtn" class="profile-back-btn" title="返回">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            返回
           </button>
 
           <!-- 页面头部 -->

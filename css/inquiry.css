@@ -173,62 +173,84 @@
 /* 行星1 - 网络图标 (蓝色) - 最外圈 */
 .inquiry-planet-track:nth-child(3) .inquiry-planet {
   background: linear-gradient(145deg, #60a5fa 0%, #3b82f6 100%);
-  animation: planet1Orbit 5s ease-in-out infinite;
+  animation: planet1Orbit 6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 /* 行星2 - 安全盾牌图标 (紫色) - 中圈 */
 .inquiry-planet-track:nth-child(4) .inquiry-planet {
   background: linear-gradient(145deg, #a78bfa 0%, #8b5cf6 100%);
-  animation: planet2Orbit 6s ease-in-out infinite;
+  animation: planet2Orbit 7s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 /* 行星3 - 验证图标 (青色) - 内圈 */
 .inquiry-planet-track:nth-child(5) .inquiry-planet {
   background: linear-gradient(145deg, #22d3ee 0%, #06b6d4 100%);
-  animation: planet3Orbit 4s ease-in-out infinite;
+  animation: planet3Orbit 5s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
 }
 
 /* 行星1轨道动画 - 外圈顺时针 
    后方(y>0)时被遮挡opacity降低 */
 @keyframes planet1Orbit {
   0% {
-    left: 50%;
+    left: calc(50% + 80px);
     top: 50%;
-    transform: translate(-50%, -50%) translate(80px, 0) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.95);
     z-index: 5;
     opacity: 1;
   }
-  15% {
-    opacity: 0.6;
+  12.5% {
+    left: calc(50% + 56px);
+    top: calc(50% + 16px);
+    transform: translate(-50%, -50%) scale(0.85);
+    z-index: 3;
+    opacity: 0.7;
   }
   25% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, 32px) scale(0.75);
+    top: calc(50% + 32px);
+    transform: translate(-50%, -50%) scale(0.75);
     z-index: 1;
-    opacity: 0;
+    opacity: 0.3;
   }
-  35% {
-    opacity: 0.6;
+  37.5% {
+    left: calc(50% - 56px);
+    top: calc(50% + 16px);
+    transform: translate(-50%, -50%) scale(0.85);
+    z-index: 3;
+    opacity: 0.7;
   }
   50% {
-    left: 50%;
+    left: calc(50% - 80px);
     top: 50%;
-    transform: translate(-50%, -50%) translate(-80px, 0) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.95);
     z-index: 5;
+    opacity: 1;
+  }
+  62.5% {
+    left: calc(50% - 56px);
+    top: calc(50% - 16px);
+    transform: translate(-50%, -50%) scale(1.05);
+    z-index: 15;
     opacity: 1;
   }
   75% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, -32px) scale(1.1);
+    top: calc(50% - 32px);
+    transform: translate(-50%, -50%) scale(1.1);
     z-index: 20;
     opacity: 1;
   }
+  87.5% {
+    left: calc(50% + 56px);
+    top: calc(50% - 16px);
+    transform: translate(-50%, -50%) scale(1.05);
+    z-index: 15;
+    opacity: 1;
+  }
   100% {
-    left: 50%;
+    left: calc(50% + 80px);
     top: 50%;
-    transform: translate(-50%, -50%) translate(80px, 0) scale(0.9);
+    transform: translate(-50%, -50%) scale(0.95);
     z-index: 5;
     opacity: 1;
   }
@@ -238,45 +260,67 @@
    后方(y>0)时被遮挡 */
 @keyframes planet2Orbit {
   0% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(-65px, 15px) scale(0.85);
+    left: calc(50% - 65px);
+    top: calc(50% + 12px);
+    transform: translate(-50%, -50%) scale(0.85);
     z-index: 4;
-    opacity: 0.7;
+    opacity: 0.75;
+  }
+  12.5% {
+    left: calc(50% - 46px);
+    top: calc(50% - 10px);
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 12;
+    opacity: 0.95;
   }
   25% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, -28px) scale(1.05);
+    top: calc(50% - 28px);
+    transform: translate(-50%, -50%) scale(1.05);
     z-index: 20;
     opacity: 1;
   }
-  50% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(65px, 15px) scale(0.85);
-    z-index: 4;
-    opacity: 0.7;
+  37.5% {
+    left: calc(50% + 46px);
+    top: calc(50% - 10px);
+    transform: translate(-50%, -50%) scale(0.95);
+    z-index: 12;
+    opacity: 0.95;
   }
-  65% {
-    opacity: 0.3;
+  50% {
+    left: calc(50% + 65px);
+    top: calc(50% + 12px);
+    transform: translate(-50%, -50%) scale(0.85);
+    z-index: 4;
+    opacity: 0.75;
+  }
+  62.5% {
+    left: calc(50% + 46px);
+    top: calc(50% + 22px);
+    transform: translate(-50%, -50%) scale(0.75);
+    z-index: 2;
+    opacity: 0.5;
   }
   75% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, 28px) scale(0.7);
+    top: calc(50% + 28px);
+    transform: translate(-50%, -50%) scale(0.7);
     z-index: 1;
-    opacity: 0;
-  }
-  85% {
     opacity: 0.3;
   }
+  87.5% {
+    left: calc(50% - 46px);
+    top: calc(50% + 22px);
+    transform: translate(-50%, -50%) scale(0.75);
+    z-index: 2;
+    opacity: 0.5;
+  }
   100% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(-65px, 15px) scale(0.85);
+    left: calc(50% - 65px);
+    top: calc(50% + 12px);
+    transform: translate(-50%, -50%) scale(0.85);
     z-index: 4;
-    opacity: 0.7;
+    opacity: 0.75;
   }
 }
 
@@ -285,42 +329,64 @@
 @keyframes planet3Orbit {
   0% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, -25px) scale(1.1);
+    top: calc(50% - 25px);
+    transform: translate(-50%, -50%) scale(1.1);
     z-index: 20;
     opacity: 1;
   }
+  12.5% {
+    left: calc(50% + 39px);
+    top: calc(50% - 12px);
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 10;
+    opacity: 0.95;
+  }
   25% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(55px, 8px) scale(0.85);
+    left: calc(50% + 55px);
+    top: calc(50% + 6px);
+    transform: translate(-50%, -50%) scale(0.85);
     z-index: 5;
     opacity: 0.8;
   }
-  40% {
-    opacity: 0.3;
+  37.5% {
+    left: calc(50% + 39px);
+    top: calc(50% + 18px);
+    transform: translate(-50%, -50%) scale(0.75);
+    z-index: 2;
+    opacity: 0.5;
   }
   50% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, 25px) scale(0.7);
+    top: calc(50% + 25px);
+    transform: translate(-50%, -50%) scale(0.7);
     z-index: 1;
-    opacity: 0;
-  }
-  60% {
     opacity: 0.3;
   }
+  62.5% {
+    left: calc(50% - 39px);
+    top: calc(50% + 18px);
+    transform: translate(-50%, -50%) scale(0.75);
+    z-index: 2;
+    opacity: 0.5;
+  }
   75% {
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(-55px, 8px) scale(0.85);
+    left: calc(50% - 55px);
+    top: calc(50% + 6px);
+    transform: translate(-50%, -50%) scale(0.85);
     z-index: 5;
     opacity: 0.8;
   }
+  87.5% {
+    left: calc(50% - 39px);
+    top: calc(50% - 12px);
+    transform: translate(-50%, -50%) scale(1);
+    z-index: 10;
+    opacity: 0.95;
+  }
   100% {
     left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%) translate(0, -25px) scale(1.1);
+    top: calc(50% - 25px);
+    transform: translate(-50%, -50%) scale(1.1);
     z-index: 20;
     opacity: 1;
   }
