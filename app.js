@@ -326,9 +326,16 @@ function updateHeaderUser(user) {
     }
   } else {
     labelEl.textContent = '未登录';
-    // 未登录时移除头像激活状态
+    // 未登录时移除头像激活状态，确保显示默认人形图标
     avatarEl.classList.remove('avatar--active');
     if (menuHeaderAvatar) menuHeaderAvatar.classList.remove('avatar--active');
+    
+    // 确保头像图片隐藏，显示默认人形图标
+    const avatarImg = avatarEl.querySelector('.avatar-img');
+    const menuAvatarImg = menuHeaderAvatar?.querySelector('.avatar-img');
+    if (avatarImg) avatarImg.classList.add('hidden');
+    if (menuAvatarImg) menuAvatarImg.classList.add('hidden');
+    
     // 隐藏头部和卡片区
     if (menuHeader) menuHeader.classList.add('hidden');
     if (menuCards) menuCards.classList.add('hidden');
