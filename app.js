@@ -477,7 +477,7 @@ function saveUser(user) {
 const PROFILE_STORAGE_KEY = 'userProfile';
 
 /**
- * 加载用户个人信息（头像和昵称）
+ * 加载用户个人信息（头像、昵称和个性签名）
  */
 function loadUserProfile() {
   try {
@@ -488,7 +488,7 @@ function loadUserProfile() {
   } catch (e) {
     console.warn('加载用户个人信息失败', e);
   }
-  return { nickname: 'Amiya', avatar: null };
+  return { nickname: 'Amiya', avatar: null, signature: '这个人很懒，还没有修改这里。' };
 }
 
 /**
@@ -511,6 +511,7 @@ function updateProfileDisplay() {
   const profile = loadUserProfile();
   const nickname = profile.nickname || 'Amiya';
   const avatar = profile.avatar;
+  const signature = profile.signature || '这个人很懒，还没有修改这里。';
   
   // 更新顶部导航栏
   const userLabel = document.getElementById('userLabel');
@@ -525,6 +526,12 @@ function updateProfileDisplay() {
   const menuHeaderTitle = document.getElementById('menuHeaderTitle');
   if (menuHeaderTitle) {
     menuHeaderTitle.textContent = nickname;
+  }
+  
+  // 更新菜单头部签名
+  const menuHeaderSub = document.getElementById('menuHeaderSub');
+  if (menuHeaderSub) {
+    menuHeaderSub.textContent = signature;
   }
   
   // 更新所有头像
@@ -577,6 +584,14 @@ function initProfilePage() {
     updateCharCount();
   }
   
+  // 设置签名
+  const signatureInput = document.getElementById('signatureInput');
+  const signatureCharCount = document.getElementById('signatureCharCount');
+  if (signatureInput) {
+    signatureInput.value = profile.signature || '这个人很懒，还没有修改这里。';
+    updateSignatureCharCount();
+  }
+  
   // 设置显示名称
   if (profileDisplayName) {
     profileDisplayName.textContent = profile.nickname || 'Amiya';
@@ -587,16 +602,22 @@ function initProfilePage() {
     profileAccountId.textContent = user.accountId || 'Account ID';
   }
   
-  // 设置头像预览
-  if (profile.avatar) {
+  // 设置头像预览 - 优先使用自定义头像，其次使用默认头像
+  const avatarSrc = profile.avatar || '/assets/avatar.png';
+  const hasCustomAvatar = !!profile.avatar;
+  
+  // 检查默认头像是否存在（通过检测用户是否已登录）
+  const hasDefaultAvatar = user && user.accountId;
+  
+  if (hasCustomAvatar || hasDefaultAvatar) {
     if (avatarPreviewImg) {
-      avatarPreviewImg.src = profile.avatar;
+      avatarPreviewImg.src = avatarSrc;
       avatarPreviewImg.classList.remove('hidden');
       const placeholder = avatarUploadPreview?.querySelector('.preview-placeholder');
       if (placeholder) placeholder.classList.add('hidden');
     }
     if (profileAvatarPreview) {
-      profileAvatarPreview.src = profile.avatar;
+      profileAvatarPreview.src = avatarSrc;
       profileAvatarPreview.classList.remove('hidden');
       const placeholder = profileAvatarLarge?.querySelector('.avatar-placeholder');
       if (placeholder) placeholder.classList.add('hidden');
@@ -619,7 +640,7 @@ function initProfilePage() {
 }
 
 /**
- * 更新字符计数
+ * 更新昵称字符计数
  */
 function updateCharCount() {
   const nicknameInput = document.getElementById('nicknameInput');
@@ -627,6 +648,18 @@ function updateCharCount() {
   if (nicknameInput && nicknameCharCount) {
     const len = nicknameInput.value.length;
     nicknameCharCount.textContent = `${len}/20`;
+  }
+}
+
+/**
+ * 更新签名字符计数
+ */
+function updateSignatureCharCount() {
+  const signatureInput = document.getElementById('signatureInput');
+  const signatureCharCount = document.getElementById('signatureCharCount');
+  if (signatureInput && signatureCharCount) {
+    const len = signatureInput.value.length;
+    signatureCharCount.textContent = `${len}/50`;
   }
 }
 
@@ -664,6 +697,15 @@ function bindProfileEvents() {
       }
     });
     nicknameInput.dataset._bind = '1';
+  }
+  
+  // 签名输入框
+  const signatureInput = document.getElementById('signatureInput');
+  if (signatureInput && !signatureInput.dataset._bind) {
+    signatureInput.addEventListener('input', () => {
+      updateSignatureCharCount();
+    });
+    signatureInput.dataset._bind = '1';
   }
   
   // 头像上传按钮
@@ -705,15 +747,16 @@ function handleAvatarFileSelect(e) {
   if (!file) return;
   
   // 验证文件类型
-  const validTypes = ['image/jpeg', 'image/png', 'image/gif'];
+  const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (!validTypes.includes(file.type)) {
-    showErrorToast('请选择 JPG、PNG 或 GIF 格式的图片');
+    showErrorToast('请选择 JPG、PNG、GIF 或 WebP 格式的图片');
     return;
   }
   
-  // 验证文件大小（最大 2MB）
-  if (file.size > 2 * 1024 * 1024) {
-    showErrorToast('图片大小不能超过 2MB');
+  // 验证文件大小（最大 5MB，因为会压缩）
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    showErrorToast(`图片大小不能超过 5MB，当前大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
     return;
   }
   
@@ -834,10 +877,12 @@ function handleAvatarRemove() {
  */
 function handleProfileSave() {
   const nicknameInput = document.getElementById('nicknameInput');
+  const signatureInput = document.getElementById('signatureInput');
   const avatarFileInput = document.getElementById('avatarFileInput');
   const profileSaveBtn = document.getElementById('profileSaveBtn');
   
   const nickname = nicknameInput?.value?.trim() || 'Amiya';
+  const signature = signatureInput?.value?.trim() || '这个人很懒，还没有修改这里。';
   const pendingAvatar = avatarFileInput?.dataset.pendingAvatar || null;
   const removeAvatar = avatarFileInput?.dataset.removeAvatar === '1';
   
@@ -851,11 +896,20 @@ function handleProfileSave() {
     return;
   }
   
+  // 验证签名
+  if (signature.length > 50) {
+    showErrorToast('签名不能超过50个字符');
+    return;
+  }
+  
   // 获取当前配置
   const profile = loadUserProfile();
   
   // 更新昵称
   profile.nickname = nickname;
+  
+  // 更新签名
+  profile.signature = signature;
   
   // 更新头像
   if (removeAvatar) {

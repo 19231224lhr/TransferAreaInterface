@@ -50,7 +50,7 @@ body::after {
   left: -100px;
   width: 500px;
   height: 500px;
-  background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
   border-radius: 50%;
   filter: blur(80px);
   opacity: 0.35;

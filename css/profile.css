@@ -50,7 +50,7 @@
    ======================================== */
 
 .profile-sidebar {
-  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 50%, #0369a1 100%);
+  background: linear-gradient(180deg, #0ea5e9 0%, #0284c7 40%, #6366f1 100%);
   padding: 48px 32px;
   display: flex;
   flex-direction: column;
@@ -58,7 +58,7 @@
   overflow: hidden;
 }
 
-/* 装饰效果 */
+/* 装饰效果 - 右上角光晕（静态，减少性能开销）*/
 .profile-sidebar::before {
   content: '';
   position: absolute;
@@ -68,29 +68,20 @@
   height: 100%;
   background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
   pointer-events: none;
-  animation: sidebarGlow 8s ease-in-out infinite;
+  opacity: 0.9;
 }
 
-@keyframes sidebarGlow {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-    opacity: 0.8;
-  }
-  50% {
-    transform: translate(-10%, 10%) scale(1.1);
-    opacity: 1;
-  }
-}
-
+/* 左下角蓝紫渐变光晕（静态，减少性能开销）*/
 .profile-sidebar::after {
   content: '';
   position: absolute;
-  bottom: -30%;
-  left: -30%;
-  width: 80%;
-  height: 80%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  bottom: -40%;
+  left: -40%;
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(139, 92, 246, 0.15) 30%, transparent 60%);
   pointer-events: none;
+  opacity: 0.85;
 }
 
 .profile-sidebar-content {
@@ -170,20 +161,15 @@
 .profile-avatar-ring {
   position: absolute;
   inset: -8px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.35);
   border-radius: 50%;
-  animation: avatarRingPulse 3s ease-in-out infinite;
+  /* 静态样式，hover时才有动画 */
+  transition: transform 0.3s ease, opacity 0.3s ease;
 }
 
-@keyframes avatarRingPulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 0.6;
-  }
-  50% {
-    transform: scale(1.05);
-    opacity: 1;
-  }
+.profile-avatar-container:hover .profile-avatar-ring {
+  transform: scale(1.05);
+  opacity: 0.8;
 }
 
 .profile-avatar-ring::before {
@@ -581,6 +567,72 @@
 }
 
 /* ========================================
+   个性签名编辑区
+   ======================================== */
+
+.signature-edit-area {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.signature-input-wrap {
+  position: relative;
+}
+
+.signature-input {
+  width: 100%;
+  padding: 14px 18px;
+  padding-bottom: 32px;
+  font-size: 14px;
+  font-weight: 400;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  outline: none;
+  resize: none;
+  min-height: 80px;
+  line-height: 1.5;
+  font-family: inherit;
+}
+
+.signature-input:focus {
+  background: white;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.1);
+}
+
+.signature-input::placeholder {
+  color: #94a3b8;
+}
+
+.signature-char-count {
+  position: absolute;
+  right: 14px;
+  bottom: 10px;
+  font-size: 12px;
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.signature-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* 紫色图标样式 */
+.profile-setting-icon--purple {
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(139, 92, 246, 0.05)) !important;
+}
+
+.profile-setting-icon--purple svg {
+  color: #8b5cf6 !important;
+}
+
+/* ========================================
    底部操作按钮
    ======================================== */
 
@@ -757,26 +809,23 @@
    性能优化
    ======================================== */
 
-.profile-page,
-.profile-sidebar,
-.profile-avatar-large,
-.profile-action-btn {
-  will-change: transform;
+/* 仅在需要时使用GPU加速 */
+.profile-page {
   transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
+/* 减少动画对于偏好减少动效的用户 */
 @media (prefers-reduced-motion: reduce) {
-  .profile-page,
-  .profile-avatar-ring,
-  .profile-sidebar::before {
+  .profile-page {
     animation: none !important;
   }
 
   .profile-back-btn,
   .avatar-upload-btn,
-  .profile-action-btn {
-    transition-duration: 0.1s;
+  .profile-action-btn,
+  .profile-setting-group {
+    animation: none !important;
+    transition-duration: 0.1s !important;
   }
 }
 

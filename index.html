@@ -120,12 +120,8 @@
             </div>
             <div class="menu-header-info">
               <span class="menu-header-title" id="menuHeaderTitle">Amiya</span>
-              <span class="menu-header-sub" id="menuHeaderSub">欢迎回来 👋</span>
+              <span class="menu-header-sub" id="menuHeaderSub">这个人很懒，还没有修改这里。</span>
             </div>
-            <svg class="menu-header-edit" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
-              <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
-            </svg>
           </div>
 
           <!-- 信息卡片区 -->
@@ -2662,9 +2658,8 @@
 
           <!-- 页面头部 -->
           <div class="profile-header">
-            <span class="profile-header-badge">设置</span>
             <h2 class="profile-header-title">个人信息设置</h2>
-            <p class="profile-header-desc">自定义您的头像和昵称，让您的账户更具个性</p>
+            <p class="profile-header-desc">自定义您的头像、昵称和个性签名，让您的账户更具个性</p>
           </div>
 
           <!-- 设置区域 -->
@@ -2690,7 +2685,7 @@
                   <img class="preview-image hidden" id="avatarPreviewImg" src="" alt="头像预览">
                 </div>
                 <div class="avatar-upload-actions">
-                  <p class="avatar-upload-hint">支持 JPG、PNG、GIF 格式，建议尺寸 200x200 像素</p>
+                  <p class="avatar-upload-hint">支持 JPG、PNG、GIF、WebP 格式，建议尺寸 200x200 像素</p>
                   <div class="avatar-upload-buttons">
                     <button id="avatarUploadBtn" class="avatar-upload-btn avatar-upload-btn--primary">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2709,7 +2704,7 @@
                     </button>
                   </div>
                 </div>
-                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/gif" />
+                <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp" />
               </div>
             </div>
 
@@ -2730,6 +2725,25 @@
                   <span class="nickname-char-count" id="nicknameCharCount">0/20</span>
                 </div>
                 <p class="nickname-hint">昵称将显示在界面各处，支持中英文字符，最多20个字符</p>
+              </div>
+            </div>
+
+            <!-- 个性签名设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon profile-setting-icon--purple">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                  </svg>
+                </div>
+                <h3>个性签名</h3>
+              </div>
+              <div class="signature-edit-area">
+                <div class="signature-input-wrap">
+                  <textarea id="signatureInput" class="signature-input" placeholder="这个人很懒，还没有修改这里。" maxlength="50"></textarea>
+                  <span class="signature-char-count" id="signatureCharCount">0/50</span>
+                </div>
+                <p class="signature-hint">个性签名将显示在个人信息栏下方，最多50个字符</p>
               </div>
             </div>
           </div>
