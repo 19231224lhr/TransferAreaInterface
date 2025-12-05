@@ -777,10 +777,9 @@
 
             <!-- 加载动画 -->
             <div id="newLoader" class="new-loader hidden">
-              <div class="new-loader-spinner">
-                <div class="spinner-ring"></div>
-                <div class="spinner-ring"></div>
-                <div class="spinner-ring"></div>
+              <div class="new-loader-logo">
+                <img src="assets/logo.png" alt="Loading" class="loader-logo-img" width="56" height="56" />
+                <div class="loader-logo-glow"></div>
               </div>
               <div class="new-loader-text">
                 <span>正在生成密钥</span>
@@ -1717,11 +1716,9 @@
               </div>
             </div>
 
-            <!-- 中心图标 - 恒星 -->
+            <!-- 中心图标 - Logo -->
             <div class="inquiry-icon" id="inquiryIcon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-pulse">
-                <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-              </svg>
+              <img src="assets/logo.png" alt="Logo" class="loader-logo-img icon-pulse" width="48" height="48" />
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-check"
                 style="display:none">
                 <polyline points="20 6 9 17 4 12" />
@@ -2598,9 +2595,10 @@
         <!-- 加载状态 -->
         <div class="unified-loading" id="unifiedLoading">
           <div class="overlay-loader-visual">
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
-            <div class="loader-dot"></div>
+            <div class="new-loader-logo">
+              <img src="assets/logo.png" alt="Loading" class="loader-logo-img" width="56" height="56" />
+              <div class="loader-logo-glow"></div>
+            </div>
           </div>
           <span id="actionOverlayText" class="overlay-loader-text">正在处理...</span>
         </div>

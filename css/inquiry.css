@@ -363,38 +363,45 @@
   }
 }
 
-/* 中心图标 - 恒星 */
+/* 中心图标 - Logo（无外框） */
 .inquiry-icon {
   position: relative;
   z-index: 15;
-  width: 64px;
-  height: 64px;
-  background: linear-gradient(145deg, #4f8ef7 0%, #3b82f6 40%, #6366f1 100%);
-  border-radius: 20px;
+  width: 72px;
+  height: 72px;
+  background: transparent;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 
-    0 0 40px rgba(59, 130, 246, 0.3),
-    0 8px 32px rgba(59, 130, 246, 0.25),
-    0 2px 8px rgba(59, 130, 246, 0.15),
-    inset 0 2px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.1);
-  animation: iconBreath 3s ease-in-out infinite;
+  box-shadow: none;
+  animation: none;
   transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
+/* Logo 图片样式 - 使用 new-user.css 中的 .loader-logo-img */
+.inquiry-icon .loader-logo-img {
+  width: 56px !important;
+  height: 56px !important;
+  max-width: 56px !important;
+  max-height: 56px !important;
+  filter: drop-shadow(0 4px 20px rgba(139, 92, 246, 0.35));
+}
+
 .inquiry-icon svg {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   color: white;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
   transition: all 0.4s ease;
 }
 
-/* 成功状态图标 */
+/* 成功状态图标 - 显示绿色圆形背景 */
 .inquiry-icon.success {
+  width: 72px;
+  height: 72px;
   background: linear-gradient(145deg, #34d399 0%, #10b981 40%, #059669 100%);
+  border-radius: 50%;
   box-shadow: 
     0 0 40px rgba(16, 185, 129, 0.35),
     0 8px 32px rgba(16, 185, 129, 0.25),
@@ -404,24 +411,32 @@
   transform: scale(1.1);
 }
 
+.inquiry-icon.success .loader-logo-img {
+  display: none;
+}
+
+.inquiry-icon.success svg {
+  color: white;
+}
+
 @keyframes iconBreath {
   0%, 100% { 
     transform: scale(1);
     box-shadow: 
-      0 0 40px rgba(59, 130, 246, 0.25),
-      0 8px 32px rgba(59, 130, 246, 0.2),
-      0 2px 8px rgba(59, 130, 246, 0.15),
-      inset 0 2px 0 rgba(255, 255, 255, 0.2),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+      0 0 40px rgba(139, 92, 246, 0.2),
+      0 8px 32px rgba(139, 92, 246, 0.15),
+      0 2px 8px rgba(139, 92, 246, 0.1),
+      inset 0 2px 0 rgba(255, 255, 255, 0.8),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.03);
   }
   50% { 
     transform: scale(1.05);
     box-shadow: 
-      0 0 50px rgba(59, 130, 246, 0.35),
-      0 12px 40px rgba(59, 130, 246, 0.3),
-      0 4px 12px rgba(59, 130, 246, 0.2),
-      inset 0 2px 0 rgba(255, 255, 255, 0.25),
-      inset 0 -2px 4px rgba(0, 0, 0, 0.1);
+      0 0 50px rgba(139, 92, 246, 0.3),
+      0 12px 40px rgba(139, 92, 246, 0.25),
+      0 4px 12px rgba(139, 92, 246, 0.15),
+      inset 0 2px 0 rgba(255, 255, 255, 0.9),
+      inset 0 -2px 4px rgba(0, 0, 0, 0.03);
   }
 }
 
