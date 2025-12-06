@@ -882,6 +882,47 @@ function updatePageTranslations() {
     }
   });
   
+  // 更新动态生成的收款人卡片中的文本
+  document.querySelectorAll('.recipient-card').forEach(card => {
+    // 更新字段标签
+    const labels = card.querySelectorAll('.recipient-field-label');
+    if (labels.length >= 5) {
+      labels[0].textContent = t('transfer.recipientAddress');
+      labels[1].textContent = t('transfer.amount');
+      labels[2].textContent = t('transfer.currency');
+      labels[3].textContent = t('transfer.publicKey');
+      labels[4].textContent = t('transfer.guarantorOrgId');
+      if (labels[5]) labels[5].textContent = t('transfer.transferGas');
+    }
+    
+    // 更新按钮文本
+    const expandBtn = card.querySelector('[data-role="expand"] span');
+    if (expandBtn) {
+      const isExpanded = card.querySelector('.recipient-details')?.classList.contains('expanded');
+      expandBtn.textContent = isExpanded ? t('transfer.collapseOptions') : t('wallet.advancedOptions');
+    }
+    
+    const removeBtn = card.querySelector('[data-role="remove"] span');
+    if (removeBtn) removeBtn.textContent = t('transfer.delete');
+    
+    const addBtn = card.querySelector('[data-role="add"] span');
+    if (addBtn) addBtn.textContent = t('transfer.addRecipient');
+    
+    // 更新placeholder
+    const addrInput = card.querySelector('[data-name="to"]');
+    if (addrInput) addrInput.placeholder = t('transfer.enterRecipientAddress');
+    
+    const gidInput = card.querySelector('[data-name="gid"]');
+    if (gidInput) gidInput.placeholder = t('transfer.optional');
+  });
+  
+  // 更新地址选择下拉框中的"无可用地址"文本
+  document.querySelectorAll('.custom-select__item.disabled').forEach(item => {
+    if (item.textContent.includes('无可用地址') || item.textContent.includes('No address available')) {
+      item.textContent = t('transfer.noAddressAvailable');
+    }
+  });
+  
   // 更新语言选择器的显示状态
   updateLanguageSelectorUI();
 }
