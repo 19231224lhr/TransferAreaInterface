@@ -1,4 +1,4 @@
-# UTXO Wallet - 转账区钱包接口
+# UTXO Wallet
 
 基于 UTXO 模型的新一代区块链钱包前端界面与后端核心代码实现。
 
