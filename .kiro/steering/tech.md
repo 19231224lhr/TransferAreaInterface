@@ -13,6 +13,7 @@
 - **Crypto API**: WebCrypto API for client-side key generation
 - **Storage**: localStorage for account persistence
 - **Design**: Glassmorphism style with CSS gradients and backdrop-filter
+- **Internationalization**: Built-in i18n system supporting Chinese (zh-CN) and English (en)
 
 ## Web Server
 
@@ -53,6 +54,44 @@ go build ./backend/cmd/webserver
 - Standard Go crypto packages (`crypto/ecdsa`, `crypto/elliptic`, `crypto/sha256`)
 - No external Go dependencies (pure stdlib)
 - No npm/node dependencies for frontend
+
+## Internationalization (i18n)
+
+### Supported Languages
+
+- **Chinese (Simplified)**: `zh-CN` (default)
+- **English**: `en`
+
+### Implementation
+
+- **Storage Key**: `appLanguage` in localStorage
+- **Translation Function**: `t(key, params)` for dynamic text
+- **HTML Attributes**: 
+  - `data-i18n` for text content
+  - `data-i18n-placeholder` for input placeholders
+  - `data-i18n-title` for tooltips and titles
+- **Auto-update**: `updatePageTranslations()` called on route changes
+- **Language Selector**: Available in Profile page with flag emojis (🇨🇳/🇺🇸)
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `t(key, params)` | Get translated text with optional parameter substitution |
+| `setLanguage(lang)` | Change current language and update UI |
+| `getCurrentLanguage()` | Get current language code |
+| `updatePageTranslations()` | Update all elements with i18n attributes |
+
+### Translation Keys Structure
+
+- `common.*` - Common UI elements (buttons, labels)
+- `header.*` - Header and navigation
+- `welcome.*` - Welcome/landing page
+- `wallet.*` - Wallet management
+- `transfer.*` - Transaction forms
+- `modal.*` - Modal dialogs
+- `toast.*` - Toast notifications
+- `profile.*` - User profile settings
 
 ## Environment Variables
 

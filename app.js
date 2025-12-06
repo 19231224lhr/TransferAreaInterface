@@ -7,6 +7,907 @@ try { window.addEventListener('error', function (e) { var m = String((e && e.mes
 try { window.addEventListener('unhandledrejection', function () { }, true); } catch (_) { }
 
 // ========================================
+// 国际化 (i18n) 系统
+// ========================================
+
+const I18N_STORAGE_KEY = 'appLanguage';
+
+// 翻译字典
+const translations = {
+  'zh-CN': {
+    // 通用
+    'common.cancel': '取消',
+    'common.save': '保存',
+    'common.back': '返回',
+    'common.confirm': '确认',
+    'common.loading': '加载中...',
+    'common.processing': '正在处理...',
+    'common.success': '成功',
+    'common.error': '错误',
+    'common.warning': '警告',
+    'common.info': '提示',
+    'common.notLoggedIn': '未登录',
+    'common.logout': '退出登录',
+    'common.next': '继续下一步',
+    'common.regenerate': '重新生成',
+    'common.expandMore': '展开更多',
+    'common.collapseMore': '收起',
+    
+    // 页面标题
+    'page.title': 'UTXO 钱包 - 钱包操作',
+    
+    // 头部菜单
+    'header.userInfo': '用户信息',
+    'header.editProfile': '点击编辑个人信息',
+    'header.accountId': '账户 ID',
+    'header.addressInfo': '地址信息',
+    'header.guarantorOrg': '担保组织',
+    'header.balance': '余额',
+    'header.exchangeRate': '汇率: 1 PGC = 1 USDT, 1 BTC = 100 USDT, 1 ETH = 10 USDT',
+    'header.notLoggedIn': '尚未登录',
+    'header.loginHint': '请先创建或导入账户',
+    'header.addresses': '{count} 个地址',
+    'header.noOrg': '暂未加入担保组织',
+    
+    // 欢迎页面
+    'welcome.badge': '安全 · 快速 · 去中心化',
+    'welcome.titleLine1': '开启您的',
+    'welcome.titleLine2': '数字资产之旅',
+    'welcome.subtitle': '基于 UTXO 模型的新一代区块链钱包，为您提供安全可靠的资产管理体验',
+    'welcome.feature1.title': '安全保障',
+    'welcome.feature1.desc': '本地加密存储，私钥永不上传',
+    'welcome.feature2.title': '极速转账',
+    'welcome.feature2.desc': '优化的 UTXO 算法，秒级确认',
+    'welcome.feature3.title': '跨链互通',
+    'welcome.feature3.desc': '支持多链资产，一站式管理',
+    'welcome.getStarted': '立即开始',
+    'welcome.hasAccount': '已有账户？登录',
+    'welcome.activeUsers': '活跃用户',
+    'welcome.totalVolume': '交易总额',
+    'welcome.security': '安全保障',
+    'welcome.cardHolder': '持卡人',
+    'welcome.expiry': '有效期',
+    
+    // 钱包管理页面
+    'entry.title': '钱包管理',
+    'entry.description': '安全管理您的数字资产，支持多地址统一管理',
+    'entry.benefit1.title': '安全加密存储',
+    'entry.benefit1.desc': '采用高强度加密算法，确保私钥安全',
+    'entry.benefit2.title': '多地址管理',
+    'entry.benefit2.desc': '同时管理多个钱包地址，便捷切换',
+    'entry.benefit3.title': '一键导入',
+    'entry.benefit3.desc': '支持通过私钥快速导入现有钱包',
+    'entry.walletsAdded': '已添加钱包',
+    'entry.encryptionAlgo': '加密算法',
+    'entry.selectAction': '选择操作方式',
+    'entry.selectActionDesc': '生成新钱包或导入已有钱包，开启您的数字资产之旅',
+    'entry.createWallet': '新建钱包',
+    'entry.createWalletDesc': '生成全新的密钥对',
+    'entry.importWallet': '导入钱包',
+    'entry.importWalletDesc': '使用已有私钥导入',
+    'entry.addWalletFirst': '请先添加至少一个钱包地址',
+    'entry.enterPrivateKeyHex': '请输入私钥 Hex',
+    
+    // 新建账户页面
+    'new.title': '创建新账户',
+    'new.description': '安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅',
+    'new.benefit1.title': '安全密钥生成',
+    'new.benefit1.desc': '采用 P-256 椭圆曲线算法生成密钥对',
+    'new.benefit2.title': '本地加密存储',
+    'new.benefit2.desc': '私钥仅存储在本地浏览器中',
+    'new.benefit3.title': '一键添加钱包',
+    'new.benefit3.desc': '生成后可直接添加到钱包列表',
+    'new.ellipticCurve': '椭圆曲线',
+    'new.signatureAlgo': '签名算法',
+    'new.generateKeys': '生成密钥对',
+    'new.generateKeysDesc': '系统将自动生成安全的密钥对，请妥善保管您的私钥',
+    'new.generating': '正在生成密钥',
+    'new.accountCreated': '账户创建成功',
+    'new.mainAddress': '主地址',
+    'new.privateKey': '私钥（Hex）',
+    'new.publicKey': '公钥（X / Y Hex）',
+    'new.doNotShare': '请勿泄露',
+    'new.addWalletAddress': '添加钱包地址',
+    
+    // 登录页面
+    'login.title': '登录账户',
+    'login.description': '使用私钥安全登录，恢复您的账户信息',
+    'login.benefit1.title': '安全验证',
+    'login.benefit1.desc': '私钥不会上传，仅在本地验证',
+    'login.benefit2.title': '账户恢复',
+    'login.benefit2.desc': '通过私钥恢复完整账户信息',
+    'login.benefit3.title': '钱包管理',
+    'login.benefit3.desc': '登录后可管理所有钱包地址',
+    'login.dataStorage': '数据存储',
+    'login.local': '本地',
+    'login.accountLogin': '账户登录',
+    'login.accountLoginDesc': '输入您的私钥以恢复账户并访问钱包管理功能',
+    'login.privateKeyHex': '私钥（Hex）',
+    'login.enterPrivateKey': '请输入您的私钥 Hex...',
+    'login.secureLogin': '安全登录',
+    'login.securityTip': '请确保在安全的环境中输入私钥，切勿泄露给他人',
+    'login.verifying': '正在验证身份',
+    'login.success': '登录成功',
+    'login.sensitiveInfo': '敏感信息',
+    'login.reLogin': '重新登录',
+    'login.enterWallet': '进入钱包管理',
+    'login.verifyingAndRedirecting': '验证通过，正在为您跳转...',
+    'login.connectingNetwork': '正在连接到网络',
+    'login.establishingConnection': '正在建立安全连接，验证账户信息',
+    'login.inquiringNetwork': '正在发起网络问询以确定账户所属关系，请稍候',
+    'login.stepInitialize': '初始化',
+    'login.stepConnecting': '连接网络',
+    'login.stepVerifying': '验证账户',
+    
+    // 导入钱包页面
+    'import.title': '导入钱包',
+    'import.description': '通过私钥恢复您的钱包地址，安全快捷',
+    'import.benefit1.title': '本地安全',
+    'import.benefit1.desc': '私钥仅在本地存储，不会上传服务器',
+    'import.benefit2.title': '钱包恢复',
+    'import.benefit2.desc': '使用私钥快速恢复您的钱包',
+    'import.benefit3.title': '密钥兼容',
+    'import.benefit3.desc': '支持多种格式的私钥导入',
+    'import.keyLength': '密钥长度',
+    'import.importWallet': '导入钱包',
+    'import.importWalletDesc': '输入您的私钥以恢复钱包地址并管理资产',
+    'import.enterPrivateKey': '请输入 64 位十六进制私钥',
+    'import.formatHint': '支持带 0x 前缀或纯 64 位十六进制格式',
+    'import.securityTip': '请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中',
+    'import.verifying': '正在验证并导入',
+    'import.success': '钱包导入成功',
+    'import.reImport': '重新导入',
+    
+    // 页脚
+    'footer.text': '区块链与你同频，信息予你无限。 Blockchain resonates with you. Infinity within your reach.',
+    
+    // 主钱包页面
+    'wallet.myWallet': '我的钱包',
+    'wallet.secureManagement': '安全管理数字资产',
+    'wallet.refresh': '刷新',
+    'wallet.create': '新建',
+    'wallet.import': '导入',
+    'wallet.totalAssets': '总资产估值',
+    'wallet.addressManagement': '地址管理',
+    'wallet.addressCount': '{count} 个地址',
+    'wallet.transfer': '转账交易',
+    'wallet.fastTransfer': '快速安全的转账体验',
+    'wallet.download': '下载',
+    'wallet.upload': '上传',
+    'wallet.latency': '延迟',
+    'wallet.quickTransfer': '快速转账',
+    'wallet.crossChain': '跨链转账',
+    'wallet.pledge': '质押交易',
+    'wallet.normalTransfer': '普通转账',
+    'wallet.from': '从 · FROM',
+    'wallet.to': '转至 · TO',
+    'wallet.advancedOptions': '高级选项',
+    'wallet.extraGas': '额外Gas',
+    'wallet.txGas': '交易Gas',
+    'wallet.addRecipient': '添加收款方',
+    'wallet.send': '发送交易',
+    'wallet.addressListTip': '提示：登录账号的地址不计入列表',
+    'wallet.noAddress': '暂无地址',
+    'wallet.deleteAddress': '删除地址',
+    'wallet.exportPrivateKey': '导出私钥',
+    'wallet.deleteSuccess': '删除成功',
+    'wallet.deleteSuccessDesc': '已删除该地址及其相关本地数据',
+    'wallet.exportPrivateKey': '导出私钥',
+    'wallet.exportFailed': '导出失败',
+    'wallet.noPrivateKey': '该地址无可导出私钥',
+    'wallet.copied': '已复制！',
+    'wallet.syncing': '同步中...',
+    
+    // 加入担保组织页面
+    'join.title': '加入担保组织',
+    'join.description': '获得更稳定的交易服务与全方位账户保障',
+    'join.benefit1.title': '加速交易确认',
+    'join.benefit1.desc': '享受优先确认通道，交易更快完成',
+    'join.benefit2.title': '跨区保障权益',
+    'join.benefit2.desc': '多区域联保机制，资产更加安全',
+    'join.benefit3.title': '个性化地址',
+    'join.benefit3.desc': '支持自定义地址标签与管理',
+    'join.benefit4.title': '收益统计',
+    'join.benefit4.desc': '清晰的利息收益与交易分析',
+    'join.availability': '服务可用性',
+    'join.support247': '全天候保障',
+    'join.systemRecommend': '系统推荐',
+    'join.searchOrg': '搜索组织',
+    'join.recommended': '推荐',
+    'join.bestMatch': '为您匹配的最优组织',
+    'join.bestMatchDesc': '系统已根据网络状况为您选择最佳担保组织',
+    'join.guarantorOrg': '担保组织',
+    'join.joinThisOrg': '加入此组织',
+    'join.searchGuarantorOrg': '搜索担保组织',
+    'join.searchOrgDesc': '输入组织编号查找特定担保组织',
+    'join.enterOrgNumber': '输入担保组织编号...',
+    'join.startSearch': '输入组织编号开始搜索',
+    'join.skipJoin': '暂不加入担保组织',
+    'join.joiningOrg': '正在加入担保组织...',
+    'join.notJoined': '未加入担保组织',
+    'join.notJoinedDesc': '加入担保组织可享受更安全的交易保障和专属福利服务',
+    'join.notJoinedLongDesc': '加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。',
+    'join.confirmSkip': '确认不加入担保组织',
+    'join.confirmSkipDesc': '这是一个警告操作，确认后将不加入担保组织并进入下一步。',
+    'join.joined': '已加入',
+    'join.leavingOrg': '正在退出担保组织...',
+    
+    // 转账表单
+    'transfer.recipientAddress': '收款地址',
+    'transfer.enterRecipientAddress': '输入收款方地址',
+    'transfer.amount': '转账金额',
+    'transfer.currency': '币种',
+    'transfer.publicKey': '公钥',
+    'transfer.guarantorOrgId': '担保组织ID',
+    'transfer.optional': '可选',
+    'transfer.transferGas': '转移Gas',
+    'transfer.delete': '删除',
+    'transfer.addRecipient': '添加',
+    'transfer.pgcReceiveAddress': 'PGC 找零',
+    'transfer.btcReceiveAddress': 'BTC 找零',
+    'transfer.ethReceiveAddress': 'ETH 找零',
+    'transfer.noAddressAvailable': '无可用地址',
+    'transfer.generateTxStruct': '生成交易结构体',
+    'transfer.collapseInfo': '收起完整信息',
+    'transfer.showFullInfo': '展示完整信息',
+    'transfer.collapseStruct': '收起账户结构体',
+    'transfer.expandStruct': '展开账户结构体',
+    'transfer.cannotDeleteLast': '仅剩一笔转账不允许删除',
+    'transfer.collapseOptions': '收起选项',
+    
+    // 模态框和提示
+    'modal.confirmSubAddress': '确认导入子地址',
+    'modal.currentSubAddressCount': '当前子地址数：{count}，是否确认继续下一步？',
+    'modal.cancel': '取消',
+    'modal.confirm': '确认',
+    'modal.addingWalletAddress': '正在新增钱包地址...',
+    'modal.walletAddSuccess': '新增钱包成功',
+    'modal.walletAddSuccessDesc': '已新增一个钱包地址',
+    'modal.ok': '好的',
+    'modal.inputError': '输入错误',
+    'modal.pleaseEnterPrivateKey': '请输入私钥 Hex',
+    'modal.formatError': '格式错误',
+    'modal.privateKeyFormatError': '私钥格式不正确：需为 64 位十六进制字符串',
+    'modal.operationFailed': '操作失败',
+    'modal.pleaseLoginFirst': '请先登录或注册账户',
+    'modal.systemError': '系统错误',
+    'modal.importFailed': '导入失败：{error}',
+    'modal.inputIncomplete': '输入不完整',
+    'modal.pleaseEnterPrivateKeyHex': '请输入您的私钥 Hex 字符串',
+    'modal.privateKeyFormat64': '私钥需为 64 位十六进制字符串（可带 0x 前缀）',
+    'modal.loginFailed': '登录失败',
+    'modal.cannotRecognizeKey': '无法识别该私钥，请检查输入是否正确',
+    'modal.enteringWalletPage': '正在进入生成或导入钱包页面...',
+    'modal.newAddress': '新建',
+    'modal.leaveOrgTitle': '退出担保组织',
+    'modal.leaveOrgDesc': '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？',
+    
+    // 个人信息页面
+    'profile.title': '个人信息',
+    'profile.description': '管理您的账户头像与昵称，打造专属个人形象',
+    'profile.settings.title': '个人信息设置',
+    'profile.settings.description': '自定义您的头像、昵称和个性签名，让您的账户更具个性',
+    'profile.avatar.title': '头像设置',
+    'profile.avatar.hint': '支持 JPG、PNG、GIF、WebP 格式，建议尺寸 200x200 像素',
+    'profile.avatar.upload': '选择图片',
+    'profile.avatar.remove': '移除头像',
+    'profile.avatar.preview': '头像预览',
+    'profile.nickname.title': '昵称设置',
+    'profile.nickname.placeholder': '请输入昵称',
+    'profile.nickname.hint': '昵称将显示在界面各处，支持中英文字符，最多20个字符',
+    'profile.signature.title': '个性签名',
+    'profile.signature.placeholder': '这个人很懒，还没有修改这里。',
+    'profile.signature.hint': '个性签名将显示在个人信息栏下方，最多50个字符',
+    'profile.language.title': '语言设置',
+    'profile.language.hint': '选择您偏好的界面语言',
+    'profile.action.cancel': '取消',
+    'profile.action.save': '保存设置',
+    'profile.action.saved': '已保存',
+    'profile.tip.localStorage': '头像仅存储在本地浏览器',
+    'profile.tip.squareImage': '建议使用正方形图片',
+    
+    // Toast 消息
+    'toast.profile.saved': '个人信息保存成功',
+    'toast.profile.saveTitle': '保存成功',
+    'toast.avatar.formatError': '请选择 JPG、PNG、GIF 或 WebP 格式的图片',
+    'toast.avatar.sizeError': '图片大小不能超过 5MB，当前大小: {size}MB',
+    'toast.language.changed': '语言已切换',
+    'toast.account.created': '账户创建成功！密钥已安全生成',
+    'toast.account.createTitle': '创建成功',
+    'toast.login.success': '登录成功',
+    'toast.login.successDesc': '账户信息已成功恢复',
+    'toast.login.failed': '登录失败',
+    'toast.copied': '已复制到剪贴板',
+    'toast.copyFailed': '复制失败',
+    'toast.leftOrg': '已退出担保组织',
+    'toast.leftOrgDesc': '当前账户已退出担保组织，可稍后重新加入。',
+    'toast.addressOptimized': '已优化来源地址',
+    'toast.buildingTx': '正在构造交易...',
+    'toast.buildTxSuccess': '交易构造成功',
+    'toast.buildTxSuccessDesc': '已成功构造 Transaction 结构体，点击下方按钮查看详情',
+    'toast.buildTxFailed': '构造失败',
+    'toast.importFailed': '导入失败',
+    'toast.cannotParseAddress': '无法解析地址',
+    'toast.addressExists': '该地址已存在，不能重复导入',
+    
+    // 验证消息
+    'validation.nickname.empty': '昵称不能为空',
+    'validation.nickname.tooLong': '昵称不能超过20个字符',
+    'validation.signature.tooLong': '签名不能超过50个字符',
+    
+    // 地址详情
+    'address.fullAddress': '完整地址',
+    'address.balance': '余额',
+    'address.add': '增加',
+    'address.clear': '清空',
+    'address.confirmDelete': '是否删除地址',
+    'address.confirmDeleteDesc': '及其本地数据？',
+    'address.deleteConfirm': '确认',
+    'address.deleteCancel': '取消',
+    
+    // 加载阶段
+    'loading.initializing': '正在初始化',
+    'loading.initializingDesc': '准备连接组件...',
+    'loading.connecting': '正在连接网络',
+    'loading.connectingDesc': '正在建立安全连接，验证账户信息',
+    'loading.verifying': '正在验证账户',
+    'loading.verifyingDesc': '校验账户信息与组织关系...',
+    'loading.success': '连接成功',
+    'loading.successDesc': '账户验证通过，即将进入系统',
+    
+    // 交易验证错误
+    'tx.addressEmpty': '地址为空',
+    'tx.insufficientBalance': '余额不足',
+    'tx.addressNotSelected': '地址未选择',
+    'tx.addressError': '地址错误',
+    'tx.missingTransferInfo': '转账信息缺失',
+    'tx.crossChainLimit': '跨链交易限制',
+    'tx.changeAddressMissing': '找零地址缺失',
+    'tx.changeAddressError': '找零地址错误',
+    'tx.incompleteInfo': '账单信息不完整',
+    'tx.addressFormatError': '地址格式错误',
+    'tx.addressFormatErrorDesc': '目标地址格式错误，应为40位十六进制字符串',
+    'tx.currencyError': '币种错误',
+    'tx.orgIdFormatError': '组织ID格式错误',
+    'tx.publicKeyFormatError': '公钥格式错误',
+    'tx.amountError': '金额错误',
+    'tx.gasParamError': 'Gas参数错误',
+    'tx.duplicateAddress': '地址重复',
+    'tx.addressNotFound': '未找到该地址信息',
+    'tx.queryFailed': '查询失败，请稍后重试',
+    
+    // 钱包地址模态框
+    'walletModal.createAddress': '新建地址',
+    'walletModal.importAddress': '导入地址',
+    'walletModal.createConfirm': '确认新建一个子地址并加入当前账户。',
+    'walletModal.privateKeyLabel': '私钥（Hex）',
+    'walletModal.privateKeyDoNotShare': '私钥 (请勿泄露)',
+    'walletModal.privateKeyFormatError': '私钥格式不正确：需为 64 位十六进制字符串',
+    'walletModal.pleaseEnterPrivateKey': '请输入私钥 Hex',
+    
+    // 担保组织详情页
+    'groupDetail.title': '担保组织',
+    'groupDetail.description': '查看您当前加入的担保组织详细信息',
+    'groupDetail.orgDetails': '组织详情',
+    'groupDetail.orgDetailsDesc': '您当前加入的担保组织信息',
+    'groupDetail.joined': '已加入',
+    'groupDetail.guarantorOrg': '担保组织',
+    'groupDetail.leaveOrg': '退出担保组织',
+    'groupDetail.backToMain': '返回主页',
+    'groupDetail.notJoinedTitle': '您尚未加入担保组织',
+    'groupDetail.notJoinedDesc': '加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。',
+    'groupDetail.joinNow': '立即加入',
+  },
+  'en': {
+    // Common
+    'common.cancel': 'Cancel',
+    'common.save': 'Save',
+    'common.back': 'Back',
+    'common.confirm': 'Confirm',
+    'common.loading': 'Loading...',
+    'common.processing': 'Processing...',
+    'common.success': 'Success',
+    'common.error': 'Error',
+    'common.warning': 'Warning',
+    'common.info': 'Info',
+    'common.notLoggedIn': 'Not Logged In',
+    'common.logout': 'Log Out',
+    'common.next': 'Continue',
+    'common.regenerate': 'Regenerate',
+    'common.expandMore': 'Show More',
+    'common.collapseMore': 'Show Less',
+    
+    // Page Title
+    'page.title': 'UTXO Wallet - Wallet Operations',
+    
+    // Header Menu
+    'header.userInfo': 'User Info',
+    'header.editProfile': 'Click to edit profile',
+    'header.accountId': 'Account ID',
+    'header.addressInfo': 'Addresses',
+    'header.guarantorOrg': 'Guarantor Org',
+    'header.balance': 'Balance',
+    'header.exchangeRate': 'Rate: 1 PGC = 1 USDT, 1 BTC = 100 USDT, 1 ETH = 10 USDT',
+    'header.notLoggedIn': 'Not Logged In',
+    'header.loginHint': 'Please create or import an account',
+    'header.addresses': '{count} addresses',
+    'header.noOrg': 'Not joined any organization',
+    
+    // Welcome Page
+    'welcome.badge': 'Secure · Fast · Decentralized',
+    'welcome.titleLine1': 'Start Your',
+    'welcome.titleLine2': 'Digital Asset Journey',
+    'welcome.subtitle': 'Next-generation blockchain wallet based on UTXO model, providing secure and reliable asset management',
+    'welcome.feature1.title': 'Security',
+    'welcome.feature1.desc': 'Local encrypted storage, private keys never uploaded',
+    'welcome.feature2.title': 'Fast Transfer',
+    'welcome.feature2.desc': 'Optimized UTXO algorithm, instant confirmation',
+    'welcome.feature3.title': 'Cross-Chain',
+    'welcome.feature3.desc': 'Multi-chain asset support, all-in-one management',
+    'welcome.getStarted': 'Get Started',
+    'welcome.hasAccount': 'Have an account? Log in',
+    'welcome.activeUsers': 'Active Users',
+    'welcome.totalVolume': 'Total Volume',
+    'welcome.security': 'Security',
+    'welcome.cardHolder': 'Card Holder',
+    'welcome.expiry': 'Expiry',
+    
+    // Wallet Management Page
+    'entry.title': 'Wallet Management',
+    'entry.description': 'Securely manage your digital assets with multi-address support',
+    'entry.benefit1.title': 'Secure Encryption',
+    'entry.benefit1.desc': 'High-strength encryption to protect your private keys',
+    'entry.benefit2.title': 'Multi-Address',
+    'entry.benefit2.desc': 'Manage multiple wallet addresses with easy switching',
+    'entry.benefit3.title': 'Quick Import',
+    'entry.benefit3.desc': 'Import existing wallets via private key',
+    'entry.walletsAdded': 'Wallets Added',
+    'entry.encryptionAlgo': 'Encryption',
+    'entry.selectAction': 'Select Action',
+    'entry.selectActionDesc': 'Create a new wallet or import an existing one to start your digital asset journey',
+    'entry.createWallet': 'Create Wallet',
+    'entry.createWalletDesc': 'Generate a new key pair',
+    'entry.importWallet': 'Import Wallet',
+    'entry.importWalletDesc': 'Import using existing private key',
+    'entry.addWalletFirst': 'Please add at least one wallet address first',
+    'entry.enterPrivateKeyHex': 'Please enter private key Hex',
+    
+    // Create Account Page
+    'new.title': 'Create Account',
+    'new.description': 'Securely generate P-256 ECDSA key pair to start your blockchain journey',
+    'new.benefit1.title': 'Secure Key Generation',
+    'new.benefit1.desc': 'Using P-256 elliptic curve algorithm',
+    'new.benefit2.title': 'Local Storage',
+    'new.benefit2.desc': 'Private keys stored only in your browser',
+    'new.benefit3.title': 'Quick Add',
+    'new.benefit3.desc': 'Add to wallet list immediately after generation',
+    'new.ellipticCurve': 'Elliptic Curve',
+    'new.signatureAlgo': 'Signature',
+    'new.generateKeys': 'Generate Keys',
+    'new.generateKeysDesc': 'The system will generate secure key pairs. Please keep your private key safe.',
+    'new.generating': 'Generating Keys',
+    'new.accountCreated': 'Account Created',
+    'new.mainAddress': 'Main Address',
+    'new.privateKey': 'Private Key (Hex)',
+    'new.publicKey': 'Public Key (X / Y Hex)',
+    'new.doNotShare': 'Do Not Share',
+    'new.addWalletAddress': 'Add Wallet Address',
+    
+    // Login Page
+    'login.title': 'Log In',
+    'login.description': 'Securely log in with your private key to restore your account',
+    'login.benefit1.title': 'Secure Verification',
+    'login.benefit1.desc': 'Private key is verified locally only',
+    'login.benefit2.title': 'Account Recovery',
+    'login.benefit2.desc': 'Restore full account info via private key',
+    'login.benefit3.title': 'Wallet Management',
+    'login.benefit3.desc': 'Manage all wallet addresses after login',
+    'login.dataStorage': 'Data Storage',
+    'login.local': 'Local',
+    'login.accountLogin': 'Account Login',
+    'login.accountLoginDesc': 'Enter your private key to restore your account and access wallet management',
+    'login.privateKeyHex': 'Private Key (Hex)',
+    'login.enterPrivateKey': 'Enter your private key hex...',
+    'login.secureLogin': 'Secure Login',
+    'login.securityTip': 'Please enter your private key in a secure environment. Never share it with others.',
+    'login.verifying': 'Verifying Identity',
+    'login.success': 'Login Successful',
+    'login.sensitiveInfo': 'Sensitive',
+    'login.reLogin': 'Log In Again',
+    'login.enterWallet': 'Enter Wallet',
+    'login.verifyingAndRedirecting': 'Verification successful, redirecting...',
+    'login.connectingNetwork': 'Connecting to Network',
+    'login.establishingConnection': 'Establishing secure connection, verifying account information',
+    'login.inquiringNetwork': 'Initiating network inquiry to determine account relationship, please wait',
+    'login.stepInitialize': 'Initialize',
+    'login.stepConnecting': 'Connecting',
+    'login.stepVerifying': 'Verifying',
+    
+    // Import Wallet Page
+    'import.title': 'Import Wallet',
+    'import.description': 'Restore your wallet address via private key, securely and quickly',
+    'import.benefit1.title': 'Local Security',
+    'import.benefit1.desc': 'Private key stored locally, never uploaded',
+    'import.benefit2.title': 'Wallet Recovery',
+    'import.benefit2.desc': 'Quickly restore your wallet with private key',
+    'import.benefit3.title': 'Key Compatible',
+    'import.benefit3.desc': 'Supports multiple private key formats',
+    'import.keyLength': 'Key Length',
+    'import.importWallet': 'Import Wallet',
+    'import.importWalletDesc': 'Enter your private key to restore wallet address and manage assets',
+    'import.enterPrivateKey': 'Enter 64-character hex private key',
+    'import.formatHint': 'Supports 0x prefix or plain 64-character hex format',
+    'import.securityTip': 'Please enter your private key in a secure environment. It will only be stored locally.',
+    'import.verifying': 'Verifying and importing',
+    'import.success': 'Wallet Imported Successfully',
+    'import.reImport': 'Re-import',
+    
+    // Footer
+    'footer.text': 'Blockchain resonates with you. Infinity within your reach.',
+    
+    // Main Wallet Page
+    'wallet.myWallet': 'My Wallet',
+    'wallet.secureManagement': 'Secure digital asset management',
+    'wallet.refresh': 'Refresh',
+    'wallet.create': 'Create',
+    'wallet.import': 'Import',
+    'wallet.totalAssets': 'Total Assets',
+    'wallet.addressManagement': 'Address Management',
+    'wallet.addressCount': '{count} addresses',
+    'wallet.transfer': 'Transfer',
+    'wallet.fastTransfer': 'Fast and secure transfer experience',
+    'wallet.download': 'Download',
+    'wallet.upload': 'Upload',
+    'wallet.latency': 'Latency',
+    'wallet.quickTransfer': 'Quick Transfer',
+    'wallet.crossChain': 'Cross-Chain',
+    'wallet.pledge': 'Pledge',
+    'wallet.normalTransfer': 'Normal Transfer',
+    'wallet.from': 'From · FROM',
+    'wallet.to': 'To · TO',
+    'wallet.advancedOptions': 'Advanced Options',
+    'wallet.extraGas': 'Extra Gas',
+    'wallet.txGas': 'TX Gas',
+    'wallet.addRecipient': 'Add Recipient',
+    'wallet.send': 'Send Transaction',
+    'wallet.addressListTip': 'Tip: Login account address is not included in the list',
+    'wallet.noAddress': 'No addresses',
+    'wallet.deleteAddress': 'Delete Address',
+    'wallet.exportPrivateKey': 'Export Private Key',
+    'wallet.deleteSuccess': 'Deleted Successfully',
+    'wallet.deleteSuccessDesc': 'Address and related local data have been deleted',
+    'wallet.exportFailed': 'Export Failed',
+    'wallet.noPrivateKey': 'No private key available for this address',
+    'wallet.copied': 'Copied!',
+    'wallet.syncing': 'Syncing...',
+    
+    // Join Guarantee Organization Page
+    'join.title': 'Join Guarantor Organization',
+    'join.description': 'Get more stable transaction services and comprehensive account protection',
+    'join.benefit1.title': 'Faster Confirmation',
+    'join.benefit1.desc': 'Priority confirmation channel for faster transactions',
+    'join.benefit2.title': 'Cross-Region Protection',
+    'join.benefit2.desc': 'Multi-region protection mechanism for safer assets',
+    'join.benefit3.title': 'Custom Addresses',
+    'join.benefit3.desc': 'Support for custom address labels and management',
+    'join.benefit4.title': 'Revenue Statistics',
+    'join.benefit4.desc': 'Clear interest income and transaction analysis',
+    'join.availability': 'Service Availability',
+    'join.support247': '24/7 Support',
+    'join.systemRecommend': 'Recommended',
+    'join.searchOrg': 'Search',
+    'join.recommended': 'Recommended',
+    'join.bestMatch': 'Best Match for You',
+    'join.bestMatchDesc': 'System has selected the best guarantor organization based on network conditions',
+    'join.guarantorOrg': 'Guarantor Org',
+    'join.joinThisOrg': 'Join This Organization',
+    'join.searchGuarantorOrg': 'Search Guarantor Organization',
+    'join.searchOrgDesc': 'Enter organization number to find specific guarantor',
+    'join.enterOrgNumber': 'Enter organization number...',
+    'join.startSearch': 'Enter organization number to start search',
+    'join.skipJoin': 'Skip for Now',
+    'join.joiningOrg': 'Joining organization...',
+    'join.notJoined': 'Not Joined Organization',
+    'join.notJoinedDesc': 'Join a guarantor organization for safer transaction protection and exclusive benefits',
+    'join.notJoinedLongDesc': 'Join a guarantor organization for safer transaction protection and exclusive benefits, making your digital asset transactions more secure.',
+    'join.confirmSkip': 'Confirm Skip Organization',
+    'join.confirmSkipDesc': 'This is a warning action. Confirming will skip joining an organization and proceed to the next step.',
+    'join.joined': 'Joined',
+    'join.leavingOrg': 'Leaving organization...',
+    
+    // Transfer Form
+    'transfer.recipientAddress': 'Recipient Address',
+    'transfer.enterRecipientAddress': 'Enter recipient address',
+    'transfer.amount': 'Amount',
+    'transfer.currency': 'Currency',
+    'transfer.publicKey': 'Public Key',
+    'transfer.guarantorOrgId': 'Guarantor Org ID',
+    'transfer.optional': 'Optional',
+    'transfer.transferGas': 'Transfer Gas',
+    'transfer.delete': 'Delete',
+    'transfer.addRecipient': 'Add',
+    'transfer.pgcReceiveAddress': 'PGC Change',
+    'transfer.btcReceiveAddress': 'BTC Change',
+    'transfer.ethReceiveAddress': 'ETH Change',
+    'transfer.noAddressAvailable': 'No address available',
+    'transfer.generateTxStruct': 'Generate Transaction Struct',
+    'transfer.collapseInfo': 'Collapse Full Info',
+    'transfer.showFullInfo': 'Show Full Info',
+    'transfer.collapseStruct': 'Collapse Account Struct',
+    'transfer.expandStruct': 'Expand Account Struct',
+    'transfer.cannotDeleteLast': 'Cannot delete the last transfer',
+    'transfer.collapseOptions': 'Collapse Options',
+    
+    // Modals and Alerts
+    'modal.confirmSubAddress': 'Confirm Import Sub-Address',
+    'modal.currentSubAddressCount': 'Current sub-addresses: {count}. Continue to next step?',
+    'modal.cancel': 'Cancel',
+    'modal.confirm': 'Confirm',
+    'modal.addingWalletAddress': 'Adding wallet address...',
+    'modal.walletAddSuccess': 'Wallet Added Successfully',
+    'modal.walletAddSuccessDesc': 'A new wallet address has been added',
+    'modal.ok': 'OK',
+    'modal.inputError': 'Input Error',
+    'modal.pleaseEnterPrivateKey': 'Please enter private key Hex',
+    'modal.formatError': 'Format Error',
+    'modal.privateKeyFormatError': 'Private key format incorrect: must be 64-character hex string',
+    'modal.operationFailed': 'Operation Failed',
+    'modal.pleaseLoginFirst': 'Please log in or register first',
+    'modal.systemError': 'System Error',
+    'modal.importFailed': 'Import failed: {error}',
+    'modal.inputIncomplete': 'Input Incomplete',
+    'modal.pleaseEnterPrivateKeyHex': 'Please enter your private key Hex string',
+    'modal.privateKeyFormat64': 'Private key must be 64-character hex string (0x prefix optional)',
+    'modal.loginFailed': 'Login Failed',
+    'modal.cannotRecognizeKey': 'Cannot recognize this private key, please check your input',
+    'modal.enteringWalletPage': 'Entering wallet creation or import page...',
+    'modal.newAddress': 'New',
+    'modal.leaveOrgTitle': 'Leave Organization',
+    'modal.leaveOrgDesc': 'Leaving will clear local organization info and set account as not joined. Continue?',
+    
+    // Profile Page
+    'profile.title': 'Profile',
+    'profile.description': 'Manage your avatar and nickname to create your unique identity',
+    'profile.settings.title': 'Profile Settings',
+    'profile.settings.description': 'Customize your avatar, nickname, and bio to personalize your account',
+    'profile.avatar.title': 'Avatar',
+    'profile.avatar.hint': 'Supports JPG, PNG, GIF, WebP formats. Recommended size: 200x200 pixels',
+    'profile.avatar.upload': 'Upload Image',
+    'profile.avatar.remove': 'Remove Avatar',
+    'profile.avatar.preview': 'Avatar Preview',
+    'profile.nickname.title': 'Nickname',
+    'profile.nickname.placeholder': 'Enter your nickname',
+    'profile.nickname.hint': 'Your nickname will be displayed throughout the interface. Max 20 characters.',
+    'profile.signature.title': 'Bio',
+    'profile.signature.placeholder': 'Tell us about yourself...',
+    'profile.signature.hint': 'Your bio will be displayed below your profile info. Max 50 characters.',
+    'profile.language.title': 'Language',
+    'profile.language.hint': 'Select your preferred interface language',
+    'profile.action.cancel': 'Cancel',
+    'profile.action.save': 'Save Changes',
+    'profile.action.saved': 'Saved',
+    'profile.tip.localStorage': 'Avatar is stored locally in your browser',
+    'profile.tip.squareImage': 'Square images are recommended',
+    
+    // Toast Messages
+    'toast.profile.saved': 'Profile saved successfully',
+    'toast.profile.saveTitle': 'Saved',
+    'toast.avatar.formatError': 'Please select a JPG, PNG, GIF, or WebP image',
+    'toast.avatar.sizeError': 'Image size cannot exceed 5MB. Current size: {size}MB',
+    'toast.language.changed': 'Language changed',
+    'toast.account.created': 'Account created successfully! Keys generated securely.',
+    'toast.account.createTitle': 'Created',
+    'toast.login.success': 'Login successful',
+    'toast.login.successDesc': 'Account information restored successfully',
+    'toast.login.failed': 'Login failed',
+    'toast.copied': 'Copied to clipboard',
+    'toast.copyFailed': 'Copy failed',
+    'toast.leftOrg': 'Left Organization',
+    'toast.leftOrgDesc': 'Account has left the guarantor organization. You can rejoin later.',
+    'toast.addressOptimized': 'Source Addresses Optimized',
+    'toast.buildingTx': 'Building transaction...',
+    'toast.buildTxSuccess': 'Transaction Built Successfully',
+    'toast.buildTxSuccessDesc': 'Transaction structure created successfully. Click below to view details.',
+    'toast.buildTxFailed': 'Build Failed',
+    'toast.importFailed': 'Import Failed',
+    'toast.cannotParseAddress': 'Cannot parse address',
+    'toast.addressExists': 'Address already exists, cannot import duplicate',
+    
+    // Validation Messages
+    'validation.nickname.empty': 'Nickname cannot be empty',
+    'validation.nickname.tooLong': 'Nickname cannot exceed 20 characters',
+    'validation.signature.tooLong': 'Bio cannot exceed 50 characters',
+    
+    // Address Details
+    'address.fullAddress': 'Full Address',
+    'address.balance': 'Balance',
+    'address.add': 'Add',
+    'address.clear': 'Clear',
+    'address.confirmDelete': 'Confirm delete address',
+    'address.confirmDeleteDesc': 'and its local data?',
+    'address.deleteConfirm': 'Confirm',
+    'address.deleteCancel': 'Cancel',
+    
+    // Loading Stages
+    'loading.initializing': 'Initializing',
+    'loading.initializingDesc': 'Preparing connection components...',
+    'loading.connecting': 'Connecting to Network',
+    'loading.connectingDesc': 'Establishing secure connection, verifying account information',
+    'loading.verifying': 'Verifying Account',
+    'loading.verifyingDesc': 'Validating account information and organization relationship...',
+    'loading.success': 'Connection Successful',
+    'loading.successDesc': 'Account verified, entering system',
+    
+    // Transaction Validation Errors
+    'tx.addressEmpty': 'Address is empty',
+    'tx.insufficientBalance': 'Insufficient balance',
+    'tx.addressNotSelected': 'Address not selected',
+    'tx.addressError': 'Address error',
+    'tx.missingTransferInfo': 'Transfer information missing',
+    'tx.crossChainLimit': 'Cross-chain transaction limit',
+    'tx.changeAddressMissing': 'Change address missing',
+    'tx.changeAddressError': 'Change address error',
+    'tx.incompleteInfo': 'Incomplete transaction info',
+    'tx.addressFormatError': 'Address format error',
+    'tx.addressFormatErrorDesc': 'Target address format error: must be 40-character hex string',
+    'tx.currencyError': 'Currency error',
+    'tx.orgIdFormatError': 'Organization ID format error',
+    'tx.publicKeyFormatError': 'Public key format error',
+    'tx.amountError': 'Amount error',
+    'tx.gasParamError': 'Gas parameter error',
+    'tx.duplicateAddress': 'Duplicate address',
+    'tx.addressNotFound': 'Address information not found',
+    'tx.queryFailed': 'Query failed, please try again later',
+    
+    // Wallet Address Modal
+    'walletModal.createAddress': 'Create Address',
+    'walletModal.importAddress': 'Import Address',
+    'walletModal.createConfirm': 'Confirm to create a new sub-address and add it to the current account.',
+    'walletModal.privateKeyLabel': 'Private Key (Hex)',
+    'walletModal.privateKeyDoNotShare': 'Private Key (Do Not Share)',
+    'walletModal.privateKeyFormatError': 'Private key format incorrect: must be 64-character hex string',
+    'walletModal.pleaseEnterPrivateKey': 'Please enter private key Hex',
+    
+    // Guarantor Organization Detail Page
+    'groupDetail.title': 'Guarantor Organization',
+    'groupDetail.description': 'View detailed information about your current guarantor organization',
+    'groupDetail.orgDetails': 'Organization Details',
+    'groupDetail.orgDetailsDesc': 'Information about your current guarantor organization',
+    'groupDetail.joined': 'Joined',
+    'groupDetail.guarantorOrg': 'Guarantor Org',
+    'groupDetail.leaveOrg': 'Leave Organization',
+    'groupDetail.backToMain': 'Back to Main',
+    'groupDetail.notJoinedTitle': 'You Have Not Joined Any Organization',
+    'groupDetail.notJoinedDesc': 'Join a guarantor organization for safer transaction protection and exclusive benefits, making your digital asset transactions more secure.',
+    'groupDetail.joinNow': 'Join Now',
+  }
+};
+
+// 当前语言
+let currentLanguage = 'zh-CN';
+
+/**
+ * 获取当前语言
+ */
+function getCurrentLanguage() {
+  return currentLanguage;
+}
+
+/**
+ * 加载保存的语言设置
+ */
+function loadLanguageSetting() {
+  try {
+    const saved = localStorage.getItem(I18N_STORAGE_KEY);
+    if (saved && translations[saved]) {
+      currentLanguage = saved;
+    }
+  } catch (e) {
+    console.warn('加载语言设置失败', e);
+  }
+  return currentLanguage;
+}
+
+/**
+ * 保存语言设置
+ */
+function saveLanguageSetting(lang) {
+  try {
+    localStorage.setItem(I18N_STORAGE_KEY, lang);
+  } catch (e) {
+    console.warn('保存语言设置失败', e);
+  }
+}
+
+/**
+ * 设置当前语言
+ */
+function setLanguage(lang) {
+  if (!translations[lang]) {
+    console.warn('不支持的语言:', lang);
+    return false;
+  }
+  currentLanguage = lang;
+  saveLanguageSetting(lang);
+  updatePageTranslations();
+  return true;
+}
+
+/**
+ * 获取翻译文本
+ * @param {string} key - 翻译键
+ * @param {object} params - 替换参数 (可选)
+ */
+function t(key, params = {}) {
+  const dict = translations[currentLanguage] || translations['zh-CN'];
+  let text = dict[key] || translations['zh-CN'][key] || key;
+  
+  // 替换参数 {param}
+  Object.keys(params).forEach(param => {
+    text = text.replace(new RegExp(`\\{${param}\\}`, 'g'), params[param]);
+  });
+  
+  return text;
+}
+
+/**
+ * 更新页面上所有带有 data-i18n 属性的元素
+ */
+function updatePageTranslations() {
+  // 更新所有带 data-i18n 属性的元素
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    if (key) {
+      el.textContent = t(key);
+    }
+  });
+  
+  // 更新所有带 data-i18n-placeholder 属性的输入框
+  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+    const key = el.getAttribute('data-i18n-placeholder');
+    if (key) {
+      el.placeholder = t(key);
+    }
+  });
+  
+  // 更新所有带 data-i18n-title 属性的元素
+  document.querySelectorAll('[data-i18n-title]').forEach(el => {
+    const key = el.getAttribute('data-i18n-title');
+    if (key) {
+      el.title = t(key);
+      // Also update data-tooltip if it exists (for tooltip display)
+      if (el.hasAttribute('data-tooltip')) {
+        el.setAttribute('data-tooltip', t(key));
+      }
+    }
+  });
+  
+  // 更新语言选择器的显示状态
+  updateLanguageSelectorUI();
+}
+
+/**
+ * 更新语言选择器UI
+ */
+function updateLanguageSelectorUI() {
+  const selector = document.getElementById('languageSelector');
+  if (!selector) return;
+  
+  const options = selector.querySelectorAll('.language-option');
+  options.forEach(opt => {
+    const lang = opt.getAttribute('data-lang');
+    if (lang === currentLanguage) {
+      opt.classList.add('active');
+    } else {
+      opt.classList.remove('active');
+    }
+  });
+}
+
+// 初始化语言设置
+loadLanguageSetting();
+
+// ========================================
 // 自定义 Toast 提示组件
 // ========================================
 function showToast(message, type = 'info', title = '', duration = 3500) {
@@ -15,10 +916,10 @@ function showToast(message, type = 'info', title = '', duration = 3500) {
 
   // 根据类型设置默认标题
   const defaultTitles = {
-    error: '错误',
-    success: '成功',
-    warning: '警告',
-    info: '提示'
+    error: t('common.error'),
+    success: t('common.success'),
+    warning: t('common.warning'),
+    info: t('common.info')
   };
 
   // 根据类型设置图标
@@ -34,7 +935,7 @@ function showToast(message, type = 'info', title = '', duration = 3500) {
   toast.innerHTML = `
     <div class="toast-icon">${icons[type] || icons.info}</div>
     <div class="toast-content">
-      <p class="toast-title">${title || defaultTitles[type] || '提示'}</p>
+      <p class="toast-title">${title || defaultTitles[type] || t('common.info')}</p>
       <p class="toast-message">${message}</p>
     </div>
     <button class="toast-close" type="button">
@@ -299,11 +1200,11 @@ function updateHeaderUser(user) {
     const mainAddr = user.address || (user.wallet && Object.keys(user.wallet.addressMsg || {})[0]) || '';
     const subMap = (user.wallet && user.wallet.addressMsg) || {};
     const addrCount = Object.keys(subMap).length;
-    if (menuAddrEl) menuAddrEl.textContent = addrCount + ' 个地址';
+    if (menuAddrEl) menuAddrEl.textContent = t('header.addresses', { count: addrCount });
     if (menuAddrPopup) menuAddrPopup.classList.add('hidden');
     if (menuOrgItem) menuOrgItem.classList.remove('hidden');
     if (menuBalanceItem) menuBalanceItem.classList.remove('hidden');
-    if (menuOrgEl) menuOrgEl.textContent = computeCurrentOrgId() || '暂未加入担保组织';
+    if (menuOrgEl) menuOrgEl.textContent = computeCurrentOrgId() || t('header.noOrg');
     
     // 计算各币种余额
     const vd = (user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
@@ -325,7 +1226,7 @@ function updateHeaderUser(user) {
       logoutEl.classList.remove('hidden');
     }
   } else {
-    labelEl.textContent = '未登录';
+    labelEl.textContent = t('common.notLoggedIn');
     // 未登录时移除头像激活状态，确保显示默认人形图标
     avatarEl.classList.remove('avatar--active');
     if (menuHeaderAvatar) menuHeaderAvatar.classList.remove('avatar--active');
@@ -373,7 +1274,7 @@ function updateHeaderUser(user) {
       const list = document.getElementById('menuAddressList');
       if (!popup || !list) return;
       const map = (u && u.wallet && u.wallet.addressMsg) || {};
-      let html = '<div class="tip" style="margin:2px 0 6px;color:#667085;">提示：登录账号的地址不计入列表</div>';
+      let html = `<div class="tip" style="margin:2px 0 6px;color:#667085;">${t('wallet.addressListTip')}</div>`;
       Object.keys(map).forEach((k) => {
         if (u && u.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
         const m = map[k];
@@ -386,7 +1287,7 @@ function updateHeaderUser(user) {
           <span style="color:#667085;font-weight:600;min-width:64px;text-align:right;white-space:nowrap;">${v} USDT</span>
         </div>`;
       });
-      if (Object.keys(map).length === 0) html += '<div class="tip">暂无地址</div>';
+      if (Object.keys(map).length === 0) html += `<div class="tip">${t('wallet.noAddress')}</div>`;
       list.innerHTML = html;
       popup.classList.toggle('hidden');
     });
@@ -547,23 +1448,27 @@ function updateProfileDisplay() {
     { container: document.getElementById('menuHeaderAvatar'), img: document.querySelector('#menuHeaderAvatar .avatar-img') }
   ];
   
+  // 首先检查用户是否已登录
+  const u = loadUser();
+  const isLoggedIn = u && u.accountId;
+  
   avatarTargets.forEach(({ container, img }) => {
     if (!container || !img) return;
-    if (avatar) {
+    
+    if (!isLoggedIn) {
+      // 未登录状态：隐藏头像图片，移除激活状态
+      img.classList.add('hidden');
+      container.classList.remove('avatar--active');
+    } else if (avatar) {
+      // 已登录且有自定义头像
       img.src = avatar;
       img.classList.remove('hidden');
       container.classList.add('avatar--active');
     } else {
-      img.classList.add('hidden');
-      const u = loadUser();
-      if (u && u.accountId) {
-        // 登录状态但无自定义头像，显示默认头像
-        container.classList.add('avatar--active');
-        img.src = '/assets/avatar.png';
-        img.classList.remove('hidden');
-      } else {
-        container.classList.remove('avatar--active');
-      }
+      // 已登录但无自定义头像，显示默认头像
+      container.classList.add('avatar--active');
+      img.src = '/assets/avatar.png';
+      img.classList.remove('hidden');
     }
   });
 }
@@ -644,6 +1549,9 @@ function initProfilePage() {
   
   // 绑定事件（只绑定一次）
   bindProfileEvents();
+  
+  // 初始化语言选择器状态
+  updateLanguageSelectorUI();
 }
 
 /**
@@ -744,6 +1652,28 @@ function bindProfileEvents() {
     profileSaveBtn.addEventListener('click', handleProfileSave);
     profileSaveBtn.dataset._bind = '1';
   }
+  
+  // 语言选择器
+  const languageSelector = document.getElementById('languageSelector');
+  if (languageSelector && !languageSelector.dataset._bind) {
+    const options = languageSelector.querySelectorAll('.language-option');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        const lang = opt.getAttribute('data-lang');
+        if (lang && lang !== getCurrentLanguage()) {
+          setLanguage(lang);
+          showSuccessToast(t('toast.language.changed'), t('common.success'));
+        }
+      });
+    });
+    languageSelector.dataset._bind = '1';
+  }
+  
+  // 更新语言选择器UI状态
+  updateLanguageSelectorUI();
+  
+  // 更新页面翻译
+  updatePageTranslations();
 }
 
 /**
@@ -756,14 +1686,14 @@ function handleAvatarFileSelect(e) {
   // 验证文件类型
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (!validTypes.includes(file.type)) {
-    showErrorToast('请选择 JPG、PNG、GIF 或 WebP 格式的图片');
+    showErrorToast(t('toast.avatar.formatError'));
     return;
   }
   
   // 验证文件大小（最大 5MB，因为会压缩）
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    showErrorToast(`图片大小不能超过 5MB，当前大小: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+    showErrorToast(t('toast.avatar.sizeError', { size: (file.size / 1024 / 1024).toFixed(2) }));
     return;
   }
   
@@ -889,23 +1819,23 @@ function handleProfileSave() {
   const profileSaveBtn = document.getElementById('profileSaveBtn');
   
   const nickname = nicknameInput?.value?.trim() || 'Amiya';
-  const signature = signatureInput?.value?.trim() || '这个人很懒，还没有修改这里。';
+  const signature = signatureInput?.value?.trim() || t('profile.signature.placeholder');
   const pendingAvatar = avatarFileInput?.dataset.pendingAvatar || null;
   const removeAvatar = avatarFileInput?.dataset.removeAvatar === '1';
   
   // 验证昵称
   if (nickname.length === 0) {
-    showErrorToast('昵称不能为空');
+    showErrorToast(t('validation.nickname.empty'));
     return;
   }
   if (nickname.length > 20) {
-    showErrorToast('昵称不能超过20个字符');
+    showErrorToast(t('validation.nickname.tooLong'));
     return;
   }
   
   // 验证签名
   if (signature.length > 50) {
-    showErrorToast('签名不能超过50个字符');
+    showErrorToast(t('validation.signature.tooLong'));
     return;
   }
   
@@ -942,7 +1872,7 @@ function handleProfileSave() {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="20 6 9 17 4 12" />
       </svg>
-      保存成功
+      ${t('profile.action.saved')}
     `;
     
     setTimeout(() => {
@@ -951,7 +1881,7 @@ function handleProfileSave() {
     }, 1500);
   }
   
-  showSuccessToast('个人信息已保存');
+  showSuccessToast(t('toast.profile.saved'), t('toast.profile.saveTitle'));
 }
 
 // 页面加载后更新显示
@@ -998,7 +1928,7 @@ function showUnifiedSuccess(title, text, onOk, onCancel, isError = false) {
   const successIcon = document.getElementById('unifiedSuccessIcon');
   const errorIcon = document.getElementById('unifiedErrorIcon');
   
-  if (titleEl) titleEl.textContent = title || (isError ? '操作失败' : '操作成功');
+  if (titleEl) titleEl.textContent = title || (isError ? t('modal.operationFailed') : t('common.success'));
   if (textEl) textEl.textContent = text || '';
   
   // 处理错误/成功状态的图标和样式
@@ -1343,7 +2273,7 @@ async function handleCreate(showToast = true) {
     
     // 只在需要时显示顶部成功通知
     if (showToast) {
-      showSuccessToast('账户创建成功！密钥已安全生成', '创建成功');
+      showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
     }
   } catch (err) {
     alert('创建用户失败：' + err);
@@ -1696,10 +2626,10 @@ function startInquiryAnimation(onComplete) {
   
   // 阶段文案
   const stageTexts = [
-    { title: '正在初始化', desc: '准备连接组件...' },
-    { title: '正在连接网络', desc: '正在建立安全连接，验证账户信息' },
-    { title: '正在验证账户', desc: '校验账户信息与组织关系...' },
-    { title: '连接成功', desc: '账户验证通过，即将进入系统' }
+    { title: t('loading.initializing'), desc: t('loading.initializingDesc') },
+    { title: t('loading.connecting'), desc: t('loading.connectingDesc') },
+    { title: t('loading.verifying'), desc: t('loading.verifyingDesc') },
+    { title: t('loading.success'), desc: t('loading.successDesc') }
   ];
   
   // 更新进度和阶段状态
@@ -1787,7 +2717,7 @@ function startInquiryAnimation(onComplete) {
     
     // 提示变绿
     if (tip) tip.classList.add('success');
-    if (tipText) tipText.textContent = '验证通过，正在为您跳转...';
+    if (tipText) tipText.textContent = t('login.verifyingAndRedirecting');
     
     // 页面脉冲效果
     if (page) page.classList.add('success');
@@ -1874,14 +2804,14 @@ function resetInquiryState() {
   
   // 重置文字
   if (title) {
-    title.textContent = '正在连接到网络';
+    title.textContent = t('login.connectingNetwork');
     title.classList.remove('success');
   }
-  if (desc) desc.textContent = '正在建立安全连接，验证账户信息';
+  if (desc) desc.textContent = t('login.establishingConnection');
   
   // 重置提示
   if (tip) tip.classList.remove('success');
-  if (tipText) tipText.textContent = '正在发起网络问询以确定账户所属关系，请稍候';
+  if (tipText) tipText.textContent = t('login.inquiringNetwork');
   
   // 重置页面
   if (page) {
@@ -2103,6 +3033,10 @@ function router() {
       routeTo('#/welcome');
       break;
   }
+  // 更新页面翻译
+  updatePageTranslations();
+  // 更新用户标签显示
+  updateHeaderUser(loadUser());
 }
 window.__lastHash = location.hash || '#/welcome';
 window.__skipExitConfirm = false;
@@ -2165,6 +3099,9 @@ if (!location.hash) {
 // 执行一次路由以同步初始视图
 router();
 
+// 初始化页面翻译
+updatePageTranslations();
+
 // 使用 popstate 拦截浏览器返回，先确认再跳转
 window.addEventListener('popstate', (e) => {
   const state = e.state || {};
@@ -2201,7 +3138,7 @@ async function addNewSubWallet() {
   if (!u || !u.accountId) { alert('请先登录或注册账户'); return; }
   
   // 使用统一加载组件
-  showUnifiedLoading('正在新增钱包地址...');
+  showUnifiedLoading(t('modal.addingWalletAddress'));
   
   try {
     const t0 = Date.now();
@@ -2241,7 +3178,7 @@ async function addNewSubWallet() {
     } catch { }
     
     // 使用统一成功组件（从加载状态平滑过渡）
-    showUnifiedSuccess('新增钱包成功', '已新增一个钱包地址', () => {
+    showUnifiedSuccess(t('modal.walletAddSuccess'), t('modal.walletAddSuccessDesc'), () => {
       try { renderWallet(); updateWalletBrief(); } catch { }
     });
   } catch (e) {
@@ -2278,7 +3215,7 @@ function updateWalletBrief() {
       const originOf = (addr) => {
         const u2 = loadUser();
         const ori = u2 && u2.wallet && u2.wallet.addressMsg && u2.wallet.addressMsg[addr] && u2.wallet.addressMsg[addr].origin ? u2.wallet.addressMsg[addr].origin : '';
-        return ori === 'created' ? { label: '新建', cls: 'origin--created' } : (ori === 'imported' ? { label: '导入', cls: 'origin--imported' } : { label: '未知', cls: 'origin--unknown' });
+        return ori === 'created' ? { label: t('modal.newAddress'), cls: 'origin--created' } : (ori === 'imported' ? { label: t('wallet.import'), cls: 'origin--imported' } : { label: t('common.info'), cls: 'origin--unknown' });
       };
       const items = addrs.map(a => {
         const o = originOf(a);
@@ -2291,7 +3228,7 @@ function updateWalletBrief() {
         brief.classList.add('collapsed');
         if (toggleBtn) { 
           toggleBtn.classList.remove('hidden'); 
-          toggleBtn.querySelector('span').textContent = '展开更多';
+          toggleBtn.querySelector('span').textContent = t('common.expandMore');
           toggleBtn.classList.remove('expanded');
         }
       } else {
@@ -2485,7 +3422,7 @@ function updateWalletStruct() {
     html += '<div class="wb-key-content">';
     if (privHex) {
       html += '<div style="margin-bottom:8px;padding:10px 12px;background:#fef2f2;border-radius:8px;max-width:100%;overflow:hidden;">';
-      html += '<div style="color:#991b1b;font-size:11px;font-weight:600;margin-bottom:6px;">私钥 (请勿泄露)</div>';
+      html += `<div style="color:#991b1b;font-size:11px;font-weight:600;margin-bottom:6px;">${t('walletModal.privateKeyDoNotShare')}</div>`;
       html += `<code style="font-size:10px;word-break:break-all;overflow-wrap:break-word;color:#7f1d1d;display:block;font-family:\'SF Mono\',ui-monospace,monospace;">${privHex}</code>`;
       html += '</div>';
     }
@@ -2679,7 +3616,7 @@ window.toggleRawStruct = () => {
       content.style.borderWidth = '';
     }, 350);
 
-    btn.textContent = '收起完整信息';
+    btn.textContent = t('transfer.collapseInfo');
   } else {
     // Collapse Animation Logic
     content.style.height = content.scrollHeight + 'px';
@@ -2704,7 +3641,7 @@ window.toggleRawStruct = () => {
       content.style.borderWidth = '';
     }, 350);
 
-    btn.textContent = '展示完整信息';
+    btn.textContent = t('transfer.showFullInfo');
   }
 };
 
@@ -2729,7 +3666,7 @@ function renderEntryBriefDetail(addr) {
   const u = loadUser();
   const origin = u && u.wallet && u.wallet.addressMsg && u.wallet.addressMsg[addr] && u.wallet.addressMsg[addr].origin ? u.wallet.addressMsg[addr].origin : '';
   addrEl.textContent = addr || '';
-  originEl.textContent = origin === 'created' ? '新建' : (origin === 'imported' ? '导入' : '未知');
+  originEl.textContent = origin === 'created' ? t('modal.newAddress') : (origin === 'imported' ? t('wallet.import') : t('common.info'));
   pxEl.textContent = (u && u.keys && u.keys.pubXHex) ? u.keys.pubXHex : '';
   pyEl.textContent = (u && u.keys && u.keys.pubYHex) ? u.keys.pubYHex : '';
   box.classList.remove('hidden');
@@ -2749,7 +3686,7 @@ if (briefListEl && !briefListEl.dataset._bind) {
       if (existed) { existed.remove(); }
       const box = document.createElement('span');
       box.className = 'brief-confirm';
-      box.innerHTML = '<button class="btn danger btn--sm brief-confirm-ok">确认</button><button class="btn secondary btn--sm brief-confirm-cancel">取消</button>';
+      box.innerHTML = `<button class="btn danger btn--sm brief-confirm-ok">${t('address.deleteConfirm')}</button><button class="btn secondary btn--sm brief-confirm-cancel">${t('address.deleteCancel')}</button>`;
       del.insertAdjacentElement('afterend', box);
       requestAnimationFrame(() => box.classList.add('show'));
       return;
@@ -2782,11 +3719,11 @@ if (briefToggleBtn && !briefToggleBtn.dataset._bind) {
     const spanEl = briefToggleBtn.querySelector('span');
     if (collapsed) { 
       list.classList.remove('collapsed'); 
-      if (spanEl) spanEl.textContent = '收起';
+      if (spanEl) spanEl.textContent = t('common.collapseMore');
       briefToggleBtn.classList.add('expanded');
     } else { 
       list.classList.add('collapsed'); 
-      if (spanEl) spanEl.textContent = '展开更多';
+      if (spanEl) spanEl.textContent = t('common.expandMore');
       briefToggleBtn.classList.remove('expanded');
     }
   });
@@ -2799,7 +3736,7 @@ if (newNextBtn) {
   newNextBtn.addEventListener('click', () => {
     const ov = document.getElementById('actionOverlay');
     const ovt = document.getElementById('actionOverlayText');
-    if (ovt) ovt.textContent = '正在进入生成或导入钱包页面...';
+    if (ovt) ovt.textContent = t('modal.enteringWalletPage');
     if (ov) ov.classList.remove('hidden');
     window.__skipExitConfirm = true;
     setTimeout(() => {
@@ -2824,7 +3761,7 @@ if (entryNextBtn) {
   entryNextBtn.addEventListener('click', () => {
     const u = loadUser();
     const addrs = u && u.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
-    if (proceedText) proceedText.textContent = `当前子地址数：${addrs.length}，是否确认继续下一步？`;
+    if (proceedText) proceedText.textContent = t('modal.currentSubAddressCount', { count: addrs.length });
     if (proceedModal) proceedModal.classList.remove('hidden');
   });
   if (proceedOk) {
@@ -2958,7 +3895,7 @@ if (joinRecBtn) {
   joinRecBtn.addEventListener('click', async () => {
     const g = DEFAULT_GROUP;
     try {
-      showUnifiedLoading('正在加入担保组织...');
+      showUnifiedLoading(t('join.joiningOrg'));
       joinRecBtn.disabled = true;
       if (joinSearchBtn) joinSearchBtn.disabled = true;
       await wait(2000);
@@ -3001,11 +3938,11 @@ if (joinSearchBtn) {
     if (joinSearchBtn.disabled) return;
     const g = currentSelectedGroup || DEFAULT_GROUP;
     try {
-      showUnifiedLoading('正在加入担保组织...');
+      showUnifiedLoading(t('join.joiningOrg'));
       joinRecBtn.disabled = true;
       joinSearchBtn.disabled = true;
       await wait(2000);
-    } finally {
+    } finally{
       hideUnifiedOverlay();
       joinRecBtn.disabled = false;
       joinSearchBtn.disabled = false;
@@ -3090,14 +4027,14 @@ if (importBtn) {
     const inputEl = document.getElementById('importPrivHex');
     const priv = inputEl.value.trim();
     if (!priv) {
-      showErrorToast('请输入私钥 Hex', '输入错误');
+      showErrorToast(t('modal.pleaseEnterPrivateKey'), t('modal.inputError'));
       inputEl.focus();
       return;
     }
     // 简单校验：允许带 0x 前缀；去前缀后必须是 64 位十六进制
     const normalized = priv.replace(/^0x/i, '');
     if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-      showErrorToast('私钥格式不正确：需为 64 位十六进制字符串', '格式错误');
+      showErrorToast(t('modal.privateKeyFormatError'), t('modal.formatError'));
       inputEl.focus();
       return;
     }
@@ -3115,7 +4052,7 @@ if (importBtn) {
         if (inputSection) inputSection.classList.add('hidden');
         if (loader) loader.classList.remove('hidden');
       } else {
-        showUnifiedLoading('正在导入钱包地址...');
+        showUnifiedLoading(t('modal.addingWalletAddress'));
       }
       
       const t0 = Date.now();
@@ -3143,7 +4080,7 @@ if (importBtn) {
         const u2 = loadUser();
         if (!u2 || !u2.accountId) { 
           hideUnifiedOverlay();
-          showErrorToast('请先登录或注册账户', '操作失败'); 
+          showErrorToast(t('modal.pleaseLoginFirst'), t('modal.operationFailed')); 
           return; 
         }
         const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
@@ -3166,7 +4103,7 @@ if (importBtn) {
       }
     } catch (err) {
       hideUnifiedOverlay();
-      showErrorToast('导入失败：' + err.message, '系统错误');
+      showErrorToast(t('modal.importFailed', { error: err.message }), t('modal.systemError'));
       console.error(err);
     } finally {
       importBtn.disabled = false;
@@ -3192,13 +4129,13 @@ if (loginBtn) {
     
     // 验证：使用 toast 替代 alert
     if (!priv) { 
-      showErrorToast('请输入您的私钥 Hex 字符串', '输入不完整'); 
+      showErrorToast(t('modal.pleaseEnterPrivateKeyHex'), t('modal.inputIncomplete')); 
       inputEl.focus(); 
       return; 
     }
     const normalized = priv.replace(/^0x/i, '');
     if (!/^[0-9a-fA-F]{64}$/.test(normalized)) { 
-      showErrorToast('私钥需为 64 位十六进制字符串（可带 0x 前缀）', '格式错误'); 
+      showErrorToast(t('modal.privateKeyFormat64'), t('modal.formatError')); 
       inputEl.focus(); 
       return; 
     }
@@ -3285,7 +4222,7 @@ if (loginBtn) {
         nextBtn.classList.remove('hidden');
       }
       
-      showSuccessToast('账户信息已成功恢复', '登录成功');
+      showSuccessToast(t('toast.login.successDesc'), t('toast.login.success'));
       
     } catch (e) {
       // 错误处理：恢复表单状态
@@ -3310,7 +4247,7 @@ if (loginBtn) {
         setTimeout(() => tipBlock.classList.remove('expanding'), 400);
       }
       
-      showErrorToast(e.message || '无法识别该私钥，请检查输入是否正确', '登录失败');
+      showErrorToast(e.message || t('modal.cannotRecognizeKey'), t('modal.loginFailed'));
       console.error(e);
     } finally {
       loginBtn.disabled = false;
@@ -3467,7 +4404,7 @@ function renderWallet() {
   const py = document.getElementById('walletPubY');
   if (!u) return;
   if (aid) aid.textContent = u.accountId || '';
-  if (org) org.textContent = u.orgNumber || '暂未加入担保组织';
+  if (org) org.textContent = u.orgNumber || t('header.noOrg');
   if (addr) addr.textContent = u.address || '';
   if (priv) priv.textContent = u.privHex || '';
   if (px) px.textContent = u.pubXHex || '';
@@ -3517,11 +4454,11 @@ function renderWallet() {
         <div class="addr-card-detail">
           <div class="addr-card-detail-inner">
             <div class="addr-detail-row">
-              <span class="addr-detail-label">完整地址</span>
+              <span class="addr-detail-label">${t('address.fullAddress')}</span>
               <span class="addr-detail-value">${a}</span>
             </div>
             <div class="addr-detail-row">
-              <span class="addr-detail-label">余额</span>
+              <span class="addr-detail-label">${t('address.balance')}</span>
               <span class="addr-detail-value">${amtCash0} ${coinType}</span>
             </div>
             <div class="addr-detail-row">
@@ -3529,13 +4466,13 @@ function renderWallet() {
               <span class="addr-detail-value gas">${gas0}</span>
             </div>
             <div class="addr-card-actions">
-              <button class="addr-action-btn addr-action-btn--primary btn-add test-add-any" title="增加余额">
+              <button class="addr-action-btn addr-action-btn--primary btn-add test-add-any" title="${t('address.add')}">
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                增加
+                ${t('address.add')}
               </button>
-              <button class="addr-action-btn addr-action-btn--secondary btn-zero test-zero-any" title="清空余额">
+              <button class="addr-action-btn addr-action-btn--secondary btn-zero test-zero-any" title="${t('address.clear')}">
                 <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                清空
+                ${t('address.clear')}
               </button>
               <div class="addr-ops-container"></div>
             </div>
@@ -3562,10 +4499,10 @@ function renderWallet() {
         menu.className = 'ops-menu hidden';
         const delBtn = document.createElement('button');
         delBtn.className = 'ops-item danger';
-        delBtn.textContent = '删除地址';
+        delBtn.textContent = t('wallet.deleteAddress');
         const expBtn = document.createElement('button');
         expBtn.className = 'ops-item';
-        expBtn.textContent = '导出私钥';
+        expBtn.textContent = t('wallet.exportPrivateKey');
         menu.appendChild(expBtn);
         menu.appendChild(delBtn);
         ops.appendChild(toggle);
@@ -3579,7 +4516,7 @@ function renderWallet() {
           const okBtn = document.getElementById('confirmDelOk');
           const cancelBtn = document.getElementById('confirmDelCancel');
           const textEl = document.getElementById('confirmDelText');
-          if (textEl) textEl.textContent = `是否删除地址 ${a} 及其本地数据？`;
+          if (textEl) textEl.textContent = `${t('address.confirmDelete')} ${a} ${t('address.confirmDeleteDesc')}`;
           if (modal) modal.classList.remove('hidden');
           const doDel = () => {
             if (modal) modal.classList.add('hidden');
@@ -3612,8 +4549,8 @@ function renderWallet() {
             renderWallet();
             updateWalletBrief();
             const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
-            if (at) at.textContent = '删除成功';
-            if (ax) { ax.classList.remove('tip--error'); ax.textContent = '已删除该地址及其相关本地数据'; }
+            if (at) at.textContent = t('wallet.deleteSuccess');
+            if (ax) { ax.classList.remove('tip--error'); ax.textContent = t('wallet.deleteSuccessDesc'); }
             if (am) am.classList.remove('hidden');
             const h2 = () => { am.classList.add('hidden'); ok1 && ok1.removeEventListener('click', h2); };
             ok1 && ok1.addEventListener('click', h2);
@@ -3644,11 +4581,11 @@ function renderWallet() {
           }
           const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
           if (priv) {
-            if (title) title.textContent = '导出私钥';
+            if (title) title.textContent = t('wallet.exportPrivateKey');
             if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${priv}</code>`; }
           } else {
-            if (title) title.textContent = '导出失败';
-            if (text) { text.classList.add('tip--error'); text.textContent = '该地址无可导出私钥'; }
+            if (title) title.textContent = t('wallet.exportFailed');
+            if (text) { text.classList.add('tip--error'); text.textContent = t('wallet.noPrivateKey'); }
           }
           if (modal) modal.classList.remove('hidden');
           const handler = () => { modal.classList.add('hidden'); ok && ok.removeEventListener('click', handler); };
@@ -3767,7 +4704,7 @@ function renderWallet() {
             const label = row.querySelector('.addr-detail-label');
             const value = row.querySelector('.addr-detail-value');
             if (label && value) {
-              if (label.textContent === '余额') {
+              if (label.textContent === t('address.balance') || label.textContent === '余额') {
                 value.textContent = `${Number(found.value.utxoValue || 0)} ${coinType}`;
               } else if (label.textContent === 'GAS') {
                 value.textContent = Number(found.estInterest || 0);
@@ -3897,7 +4834,7 @@ function renderWallet() {
             const label = row.querySelector('.addr-detail-label');
             const value = row.querySelector('.addr-detail-value');
             if (label && value) {
-              if (label.textContent === '余额') {
+              if (label.textContent === t('address.balance') || label.textContent === '余额') {
                 value.textContent = `0 ${coinTypeZ}`;
               } else if (label.textContent === 'GAS') {
                 value.textContent = '0';
@@ -3906,7 +4843,7 @@ function renderWallet() {
           });
           
           // 显示Toast提示
-          showMiniToast('余额已清空', 'info');
+          showMiniToast(t('address.clear'), 'info');
           
           // 更新分类货币余额显示
           const walletPGCElZ = document.getElementById('walletPGC');
@@ -4011,10 +4948,10 @@ function renderWallet() {
   // V2版本 - 更新状态徽章
   if (orgStatusBadge) {
     if (joined) {
-      orgStatusBadge.textContent = '已加入';
+      orgStatusBadge.textContent = t('join.joined');
       orgStatusBadge.className = 'org-status-badge org-status-badge--active';
     } else {
-      orgStatusBadge.textContent = '未加入';
+      orgStatusBadge.textContent = t('join.notJoined');
       orgStatusBadge.className = 'org-status-badge org-status-badge--inactive';
     }
   }
@@ -4026,14 +4963,14 @@ function renderWallet() {
   if (woExit && !woExit.dataset._bind) {
     woExit.addEventListener('click', async () => {
       const u3 = loadUser();
-      if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
+      if (!u3 || !u3.accountId) { showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true); return; }
 
-      const confirmed = await showConfirmModal('退出担保组织', '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？', '确认', '取消');
+      const confirmed = await showConfirmModal(t('modal.leaveOrgTitle'), t('modal.leaveOrgDesc'), t('common.confirm'), t('common.cancel'));
       if (!confirmed) return;
 
       const ov = document.getElementById('actionOverlay');
       const ovt = document.getElementById('actionOverlayText');
-      if (ovt) ovt.textContent = '正在退出担保组织...';
+      if (ovt) ovt.textContent = t('join.leavingOrg');
       if (ov) ov.classList.remove('hidden');
       await wait(2000);
       if (ov) ov.classList.add('hidden');
@@ -4048,7 +4985,7 @@ function renderWallet() {
       updateWalletBrief();
       refreshOrgPanel();
       updateOrgDisplay();
-      showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
+      showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
     });
     woExit.dataset._bind = '1';
   }
@@ -4074,12 +5011,12 @@ function renderWallet() {
   if (groupExitBtn && !groupExitBtn.dataset._bind) {
     groupExitBtn.addEventListener('click', async () => {
       const u3 = loadUser();
-      if (!u3 || !u3.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
-      const confirmed = await showConfirmModal('退出担保组织', '退出后将清空本地担保组织信息，账户将视为未加入状态。确定要继续吗？', '确认', '取消');
+      if (!u3 || !u3.accountId) { showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true); return; }
+      const confirmed = await showConfirmModal(t('modal.leaveOrgTitle'), t('modal.leaveOrgDesc'), t('common.confirm'), t('common.cancel'));
       if (!confirmed) return;
       const ov = document.getElementById('actionOverlay');
       const ovt = document.getElementById('actionOverlayText');
-      if (ovt) ovt.textContent = '正在退出担保组织...';
+      if (ovt) ovt.textContent = t('join.leavingOrg');
       if (ov) ov.classList.remove('hidden');
       await wait(2000);
       if (ov) ov.classList.add('hidden');
@@ -4093,7 +5030,7 @@ function renderWallet() {
       updateWalletBrief();
       refreshOrgPanel();
       updateOrgDisplay();
-      showModalTip('已退出担保组织', '当前账户已退出担保组织，可稍后重新加入。', false);
+      showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
       // 刷新当前页面状态
       routeTo('#/group-detail');
     });
@@ -4127,9 +5064,9 @@ function renderWallet() {
         if (targetEl) {
           const text = targetEl.textContent;
           navigator.clipboard.writeText(text).then(() => {
-            showToast && showToast('已复制到剪贴板', 'success');
+            showToast && showToast(t('toast.copied'), 'success');
           }).catch(() => {
-            showToast && showToast('复制失败', 'error');
+            showToast && showToast(t('toast.copyFailed'), 'error');
           });
         }
       });
@@ -4765,8 +5702,8 @@ function renderWallet() {
         
         // 更新按钮文字
         const textSpan = wsToggle.querySelector('span');
-        if (textSpan) textSpan.textContent = '收起账户结构体';
-        else wsToggle.textContent = '收起账户结构体';
+        if (textSpan) textSpan.textContent = t('transfer.collapseStruct');
+        else wsToggle.textContent = t('transfer.collapseStruct');
       } else {
         // 移除父容器的expanded类
         if (wsSection) {
@@ -4785,8 +5722,8 @@ function renderWallet() {
         }, 300);
 
         const textSpan = wsToggle.querySelector('span');
-        if (textSpan) textSpan.textContent = '展开账户结构体';
-        else wsToggle.textContent = '展开账户结构体';
+        if (textSpan) textSpan.textContent = t('transfer.expandStruct');
+        else wsToggle.textContent = t('transfer.expandStruct');
       }
     });
     wsToggle.dataset._bind = '1';
@@ -4997,7 +5934,7 @@ function renderWallet() {
     const u = loadUser();
     if (addrCount && u && u.wallet && u.wallet.addressMsg) {
       const count = Object.keys(u.wallet.addressMsg).length;
-      addrCount.textContent = `${count} 个地址`;
+      addrCount.textContent = t('wallet.addressCount', { count: count });
     }
   };
   updateAddrCount();
@@ -5254,8 +6191,8 @@ function renderWallet() {
         const valEl = box.querySelector('.addr-val');
 
         if (optsArr.length === 0) {
-          if (menu) menu.innerHTML = '<div class="custom-select__item disabled">无可用地址</div>';
-          if (valEl) valEl.textContent = '无可用地址';
+          if (menu) menu.innerHTML = `<div class="custom-select__item disabled">${t('transfer.noAddressAvailable')}</div>`;
+          if (valEl) valEl.textContent = t('transfer.noAddressAvailable');
           if (hidden) hidden.value = '';
           const ico0 = box.querySelector('.coin-icon');
           if (ico0) ico0.remove();
@@ -5341,7 +6278,7 @@ function renderWallet() {
         if (btn) {
           btn.disabled = onlyOne;
           if (onlyOne) {
-            btn.setAttribute('title', '仅剩一笔转账不允许删除');
+            btn.setAttribute('title', t('transfer.cannotDeleteLast'));
             btn.setAttribute('aria-disabled', 'true');
           } else {
             btn.removeAttribute('title');
@@ -5372,9 +6309,9 @@ function renderWallet() {
           <!-- 主要区域：地址 -->
           <div class="recipient-main">
             <div class="recipient-addr-field">
-              <span class="recipient-field-label">收款地址</span>
+              <span class="recipient-field-label">${t('transfer.recipientAddress')}</span>
               <div class="recipient-addr-input-wrap">
-                <input id="${idBase}_to" class="input" type="text" placeholder="输入收款方地址" aria-label="目标地址" data-name="to">
+                <input id="${idBase}_to" class="input" type="text" placeholder="${t('transfer.enterRecipientAddress')}" aria-label="目标地址" data-name="to">
                 <button type="button" class="recipient-lookup-btn" aria-label="查询地址信息" title="自动补全担保组织与公钥" data-role="addr-lookup">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"/>
@@ -5389,11 +6326,11 @@ function renderWallet() {
           <!-- 金额和币种 -->
           <div class="recipient-amount-row">
             <div class="recipient-field">
-              <span class="recipient-field-label">转账金额</span>
+              <span class="recipient-field-label">${t('transfer.amount')}</span>
               <input id="${idBase}_val" class="input" type="number" placeholder="0.00" aria-label="金额" data-name="val">
             </div>
             <div class="recipient-field">
-              <span class="recipient-field-label">币种</span>
+              <span class="recipient-field-label">${t('transfer.currency')}</span>
               <div id="${idBase}_mt" class="recipient-coin-select" role="button" aria-label="币种" data-name="mt" data-val="0">
                 <div class="recipient-coin-value">
                   <span class="coin-label">PGC</span>
@@ -5413,16 +6350,16 @@ function renderWallet() {
             <div class="recipient-details-inner">
               <div class="recipient-details-content">
                 <div class="recipient-field">
-                  <span class="recipient-field-label">公钥</span>
-                  <input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y 或 X,Y" aria-label="公钥" data-name="pub">
+                  <span class="recipient-field-label">${t('transfer.publicKey')}</span>
+                  <input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y or X,Y" aria-label="公钥" data-name="pub">
                 </div>
                 <div class="recipient-details-row">
                   <div class="recipient-field">
-                    <span class="recipient-field-label">担保组织ID</span>
-                    <input id="${idBase}_gid" class="input" type="text" placeholder="可选" value="" aria-label="担保组织ID" data-name="gid">
+                    <span class="recipient-field-label">${t('transfer.guarantorOrgId')}</span>
+                    <input id="${idBase}_gid" class="input" type="text" placeholder="${t('transfer.optional')}" value="" aria-label="担保组织ID" data-name="gid">
                   </div>
                   <div class="recipient-field">
-                    <span class="recipient-field-label">转移Gas</span>
+                    <span class="recipient-field-label">${t('transfer.transferGas')}</span>
                     <input id="${idBase}_gas" class="input" type="number" placeholder="0" aria-label="转移Gas" data-name="gas">
                   </div>
                 </div>
@@ -5436,21 +6373,21 @@ function renderWallet() {
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"/>
               </svg>
-              <span>高级选项</span>
+              <span>${t('wallet.advancedOptions')}</span>
             </button>
             <button type="button" class="recipient-remove-btn" data-role="remove">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 6h18"/>
                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
               </svg>
-              <span>删除</span>
+              <span>${t('transfer.delete')}</span>
             </button>
             <button type="button" class="recipient-add-btn" data-role="add">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="12" y1="5" x2="12" y2="19"/>
                 <line x1="5" y1="12" x2="19" y2="12"/>
               </svg>
-              <span>添加</span>
+              <span>${t('transfer.addRecipient')}</span>
             </button>
           </div>
         </div>
@@ -5471,11 +6408,11 @@ function renderWallet() {
           const raw = addrInputEl.value || '';
           const normalized = normalizeAddrInput(raw);
           if (!normalized) {
-            showTxValidationError('请先填写要查询的地址', addrInputEl, '地址为空');
+            showTxValidationError(t('modal.pleaseEnterPrivateKeyHex'), addrInputEl, t('tx.addressEmpty'));
             return;
           }
           if (!isValidAddressFormat(normalized)) {
-            showTxValidationError('目标地址格式错误，应为40位十六进制字符串', addrInputEl, '地址格式错误');
+            showTxValidationError(t('tx.addressFormatErrorDesc'), addrInputEl, t('tx.addressFormatError'));
             return;
           }
           lookupBtn.dataset.loading = '1';
@@ -5489,7 +6426,7 @@ function renderWallet() {
               await new Promise((resolve) => setTimeout(resolve, 2000 - elapsed));
             }
             if (!info) {
-              showMiniToast('未找到该地址信息', 'error');
+              showMiniToast(t('tx.addressNotFound'), 'error');
               return;
             }
             if (pubInputEl && info.pubKey) {
@@ -5507,7 +6444,7 @@ function renderWallet() {
               showMiniToast(`已获取${found}信息`, 'success');
             }
           } catch (e) {
-            showMiniToast('查询失败，请稍后重试', 'error');
+            showMiniToast(t('tx.queryFailed'), 'error');
           } finally {
             lookupBtn.disabled = false;
             lookupBtn.classList.remove('is-loading');
@@ -5522,7 +6459,7 @@ function renderWallet() {
           card.classList.toggle('expanded');
           const label = expandBtn.querySelector('span');
           if (label) {
-            label.textContent = card.classList.contains('expanded') ? '收起选项' : '高级选项';
+            label.textContent = card.classList.contains('expanded') ? t('transfer.collapseOptions') : t('wallet.advancedOptions');
           }
         });
       }
@@ -5586,7 +6523,7 @@ function renderWallet() {
     addBill();
     updateRemoveState();
     const updateBtn = () => {
-      tfBtn.textContent = '生成交易结构体';
+      tfBtn.textContent = t('transfer.generateTxStruct');
       tfBtn.classList.remove('secondary');
       tfBtn.classList.add('primary');
     };
@@ -5627,17 +6564,17 @@ function renderWallet() {
       if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
       
       const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]')).filter(x => x.checked).map(x => x.value);
-      if (sel.length === 0) { showTxValidationError('请选择至少一个来源地址', null, '地址未选择'); return; }
+      if (sel.length === 0) { showTxValidationError(t('modal.pleaseLoginFirst'), null, t('tx.addressNotSelected')); return; }
       for (const addr of sel) {
         if (!getAddrMeta(addr)) {
-          showTxValidationError('部分来源地址不存在，请刷新后重试', null, '地址错误');
+          showTxValidationError(t('toast.cannotParseAddress'), null, t('tx.addressError'));
           return;
         }
       }
       const rows = Array.from(billList.querySelectorAll('.recipient-card'));
-      if (rows.length === 0) { showTxValidationError('请至少添加一笔转账', null, '转账信息缺失'); return; }
+      if (rows.length === 0) { showTxValidationError(t('wallet.addRecipient'), null, t('tx.missingTransferInfo')); return; }
       const isCross = tfMode.value === 'cross';
-      if (isCross && rows.length !== 1) { showTxValidationError('跨链交易只能包含一笔转账', null, '跨链交易限制'); return; }
+      if (isCross && rows.length !== 1) { showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit')); return; }
       const changeMap = {};
       if (chPGC.value) changeMap[0] = chPGC.value;
       if (chBTC.value) changeMap[1] = chBTC.value;
@@ -5681,25 +6618,25 @@ function renderWallet() {
         const parsedPub = parsePub(comb);
         const { x: px, y: py, ok: pubOk } = parsedPub;
         const tInt = Number((gasEl && gasEl.value) || 0);
-        if (!to || val <= 0) { showTxValidationError('请填写有效的账单信息', toEl, '账单信息不完整'); return; }
-        if (!isValidAddressFormat(normalizedTo)) { showTxValidationError('目标地址格式错误，应为40位十六进制字符串', toEl, '地址格式错误'); return; }
-        if (![0, 1, 2].includes(mt)) { showTxValidationError('请选择合法的币种', null, '币种错误'); return; }
-        if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError('担保组织ID 必须为 8 位数字', gidEl, '组织ID格式错误'); return; }
-        if (!pubOk) { showTxValidationError('公钥格式不正确，请输入 04+XY 或 X&Y', pubEl, '公钥格式错误'); return; }
-        if (!Number.isFinite(val) || val <= 0) { showTxValidationError('金额必须为正数', valEl, '金额错误'); return; }
-        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas 需为不小于 0 的数字', gasEl, 'Gas参数错误'); return; }
-        if (isCross && mt !== 0) { showTxValidationError('跨链交易只能使用主货币', null, '跨链交易限制'); return; }
-        if (bills[normalizedTo]) { showTxValidationError('同一地址仅允许一笔账单', null, '地址重复'); return; }
+        if (!to || val <= 0) { showTxValidationError(t('modal.inputIncomplete'), toEl, t('tx.incompleteInfo')); return; }
+        if (!isValidAddressFormat(normalizedTo)) { showTxValidationError(t('toast.cannotParseAddress'), toEl, t('tx.addressFormatError')); return; }
+        if (![0, 1, 2].includes(mt)) { showTxValidationError(t('transfer.currency'), null, t('tx.currencyError')); return; }
+        if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError(t('transfer.guarantorOrgId'), gidEl, t('tx.orgIdFormatError')); return; }
+        if (!pubOk) { showTxValidationError(t('transfer.publicKey'), pubEl, t('tx.publicKeyFormatError')); return; }
+        if (!Number.isFinite(val) || val <= 0) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountError')); return; }
+        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas', gasEl, t('tx.gasParamError')); return; }
+        if (isCross && mt !== 0) { showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit')); return; }
+        if (bills[normalizedTo]) { showTxValidationError(t('toast.addressExists'), null, t('tx.duplicateAddress')); return; }
         bills[normalizedTo] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };
         vd[mt] += val;
         outInterest += Math.max(0, tInt || 0);
       }
       const extraPGC = Number(gasInput.value || 0);
-      if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError('额外支付的 PGC 必须是非负数字', gasInput, 'Gas参数错误'); return; }
+      if (!Number.isFinite(extraPGC) || extraPGC < 0) { showTxValidationError(t('wallet.extraGas'), gasInput, t('tx.gasParamError')); return; }
       const interestGas = extraPGC > 0 ? extraPGC : 0;
       vd[0] += extraPGC;
       const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
-      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError('交易Gas 需为不小于 0 的数字', txGasInput, 'Gas参数错误'); return; }
+      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) { showTxValidationError(t('wallet.txGas'), txGasInput, t('tx.gasParamError')); return; }
       const typeBalances = { 0: 0, 1: 0, 2: 0 };
       const availableGas = walletGasTotal;
       sel.forEach((addr) => {
@@ -5714,15 +6651,15 @@ function renderWallet() {
         const need = vd[typeId] || 0;
         if (need <= 0) return true;
         const addr = changeMap[typeId];
-        if (!addr) { showTxValidationError(`请为 ${currencyLabels[typeId]} 选择找零地址`, null, '找零地址缺失'); return false; }
+        if (!addr) { showTxValidationError(`${currencyLabels[typeId]} ${t('transfer.pgcReceiveAddress')}`, null, t('tx.changeAddressMissing')); return false; }
         const meta = getAddrMeta(addr);
-        if (!meta) { showTxValidationError('找零地址不存在，请重新选择', null, '找零地址错误'); return false; }
-        if (Number(meta.type || 0) !== Number(typeId)) { showTxValidationError(`${currencyLabels[typeId]} 找零地址的币种不匹配`, null, '找零地址错误'); return false; }
+        if (!meta) { showTxValidationError(t('transfer.noAddressAvailable'), null, t('tx.changeAddressError')); return false; }
+        if (Number(meta.type || 0) !== Number(typeId)) { showTxValidationError(`${currencyLabels[typeId]} ${t('transfer.currency')}`, null, t('tx.changeAddressError')); return false; }
         return true;
       };
       if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
         const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
-        showTxValidationError(`${currencyLabels[lackType]} 余额不足，无法覆盖转出与兑换需求`, null, '余额不足');
+        showTxValidationError(`${currencyLabels[lackType]} ${t('tx.insufficientBalance')}`, null, t('tx.insufficientBalance'));
         return;
       }
       if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
@@ -5786,7 +6723,7 @@ function renderWallet() {
       }
       if (removedAddrs.length) {
         const tipHtml = `检测到本次转账中有 <strong>${removedAddrs.length}</strong> 个来源地址在本次转账中未被实际使用，已自动为你保留余额更高且能够覆盖本次转账的地址集合。`;
-        showModalTip('已优化来源地址', tipHtml, false);
+        showModalTip(t('toast.addressOptimized'), tipHtml, false);
       }
       if (extraPGC > 0) {
         const confirmed = await showConfirmModal('确认兑换 Gas', `将使用 <strong>${extraPGC}</strong> PGC 兑换 <strong>${extraPGC}</strong> Gas，用于本次交易。确认继续？`, '确认兑换', '取消');
@@ -5832,14 +6769,14 @@ function renderWallet() {
     if (buildTxBtn && !buildTxBtn.dataset._buildBind) {
       buildTxBtn.addEventListener('click', async () => {
         try {
-          showModalTip('构造交易', '正在构造交易...', false);
+          showModalTip(t('transfer.generateTxStruct'), t('toast.buildingTx'), false);
 
           const buildInfoStr = buildTxBtn.dataset.buildInfo || '{}';
           const buildInfo = JSON.parse(buildInfoStr);
           const user = loadUser();
 
           if (!user || !user.accountId) {
-            showModalTip('未登录', '请先登录账户', true);
+            showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true);
             return;
           }
 
@@ -5853,10 +6790,10 @@ function renderWallet() {
             viewTxInfoBtn.classList.remove('hidden');
           }
 
-          showModalTip('交易构造成功', '已成功构造 Transaction 结构体，点击下方按钮查看详情', false);
+          showModalTip(t('toast.buildTxSuccess'), t('toast.buildTxSuccessDesc'), false);
         } catch (err) {
           const errMsg = err.message || String(err);
-          showModalTip('构造失败', errMsg, true);
+          showModalTip(t('toast.buildTxFailed'), errMsg, true);
         }
       });
       buildTxBtn.dataset._buildBind = '1';
@@ -5938,7 +6875,7 @@ function renderWallet() {
           const originalText = copyBtn.querySelector('span');
           if (originalText) {
             const oldText = originalText.textContent;
-            originalText.textContent = '已复制！';
+            originalText.textContent = t('wallet.copied');
             setTimeout(() => {
               originalText.textContent = oldText;
             }, 1500);
@@ -6002,7 +6939,7 @@ function renderWallet() {
   let __addrMode = 'create';
   const showAddrModal = (mode) => {
     __addrMode = mode;
-    if (addrTitle) addrTitle.textContent = mode === 'import' ? '导入地址' : '新建地址';
+    if (addrTitle) addrTitle.textContent = mode === 'import' ? t('walletModal.importAddress') : t('walletModal.createAddress');
     if (addrCreateBox) addrCreateBox.classList.toggle('hidden', mode !== 'create');
     if (addrImportBox) addrImportBox.classList.toggle('hidden', mode !== 'import');
     if (mode === 'import') {
@@ -6027,16 +6964,16 @@ function renderWallet() {
   }
   const importAddressInPlace = async (priv) => {
     const u2 = loadUser();
-    if (!u2 || !u2.accountId) { showModalTip('未登录', '请先登录或注册账户', true); return; }
+    if (!u2 || !u2.accountId) { showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true); return; }
     const ov = document.getElementById('actionOverlay');
     const ovt = document.getElementById('actionOverlayText');
-    if (ovt) ovt.textContent = '正在导入钱包地址...';
+    if (ovt) ovt.textContent = t('modal.addingWalletAddress');
     if (ov) ov.classList.remove('hidden');
     try {
       const data = await importFromPrivHex(priv);
       const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
       const addr = (data.address || '').toLowerCase();
-      if (!addr) { showModalTip('导入失败', '无法解析地址', true); return; }
+      if (!addr) { showModalTip(t('toast.importFailed'), t('toast.cannotParseAddress'), true); return; }
       const map = (acc.wallet && acc.wallet.addressMsg) || {};
       let dup = false;
       const lowerMain = (u2.address || '').toLowerCase();
@@ -6044,7 +6981,7 @@ function renderWallet() {
       if (!dup) {
         for (const k in map) { if (Object.prototype.hasOwnProperty.call(map, k)) { if (String(k).toLowerCase() === addr) { dup = true; break; } } }
       }
-      if (dup) { showModalTip('导入失败', '该地址已存在，不能重复导入', true); return; }
+      if (dup) { showModalTip(t('toast.importFailed'), t('toast.addressExists'), true); return; }
       acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported' };
       const normPriv = (data.privHex || priv).replace(/^0x/i, '');
       acc.wallet.addressMsg[addr].privHex = normPriv;
@@ -6055,8 +6992,8 @@ function renderWallet() {
       renderWallet();
       try { updateWalletBrief(); } catch { }
       const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
-      if (title) title.textContent = '导入钱包成功';
-      if (text) { text.textContent = '已导入一个钱包地址'; text.classList.remove('tip--error'); }
+      if (title) title.textContent = t('modal.walletAddSuccess');
+      if (text) { text.textContent = t('modal.walletAddSuccessDesc'); text.classList.remove('tip--error'); }
       if (modal) modal.classList.remove('hidden');
       if (ok) {
         const handler = () => {
@@ -6066,7 +7003,7 @@ function renderWallet() {
         ok.addEventListener('click', handler);
       }
     } catch (err) {
-      showModalTip('导入失败', '导入失败：' + (err && err.message ? err.message : err), true);
+      showModalTip(t('toast.importFailed'), t('toast.importFailed') + '：' + (err && err.message ? err.message : err), true);
     } finally {
       if (ov) ov.classList.add('hidden');
     }
@@ -6078,13 +7015,13 @@ function renderWallet() {
         const input = document.getElementById('addrPrivHex');
         const v = input ? input.value.trim() : '';
         if (!v) {
-          setAddrError('请输入私钥 Hex');
+          setAddrError(t('walletModal.pleaseEnterPrivateKey'));
           if (input) input.focus();
           return;
         }
         const normalized = v.replace(/^0x/i, '');
         if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-          setAddrError('私钥格式不正确：需为 64 位十六进制字符串');
+          setAddrError(t('walletModal.privateKeyFormatError'));
           if (input) input.focus();
           return;
         }
@@ -6135,10 +7072,10 @@ async function updateOrgDisplay() {
   const el = document.getElementById('menuOrg');
   if (!el) return;
   el.classList.add('code-loading');
-  el.textContent = '同步中...';
+  el.textContent = t('wallet.syncing');
   await wait(150);
   const gid = computeCurrentOrgId();
-  el.textContent = gid || '暂未加入担保组织';
+  el.textContent = gid || t('header.noOrg');
   el.classList.remove('code-loading');
 }
 

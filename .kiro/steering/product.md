@@ -10,13 +10,17 @@ UTXO Wallet (转账区钱包接口) is a blockchain wallet solution based on the
 - **Guarantor Organizations**: Users join guarantor groups for transaction validation
 - **Transaction Building**: UTXO-based transaction construction with signature verification
 - **Transaction Certificates (TXCer)**: Special transaction certificates for cross-chain operations
+- **Internationalization**: Full bilingual support (Chinese/English) with persistent language preference
+- **User Profiles**: Customizable avatars, nicknames, and bio with local storage
 
 ## User Flow
 
-1. Create/Login account (generates ECDSA P-256 keypair)
-2. Join a guarantor organization
-3. Manage wallet addresses and view balances
-4. Build and send transactions
+1. Select preferred language (Chinese/English)
+2. Create/Login account (generates ECDSA P-256 keypair)
+3. Customize profile (avatar, nickname, bio)
+4. Join a guarantor organization
+5. Manage wallet addresses and view balances
+6. Build and send transactions
 
 ## Key Concepts
 

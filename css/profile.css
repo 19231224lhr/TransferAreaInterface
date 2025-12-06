@@ -643,6 +643,97 @@
   color: #8b5cf6 !important;
 }
 
+/* 绿色图标样式 - 语言设置 */
+.profile-setting-icon--green {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05)) !important;
+}
+
+.profile-setting-icon--green svg {
+  color: #22c55e !important;
+}
+
+/* ========================================
+   语言选择器
+   ======================================== */
+
+.language-selector-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.language-selector {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.language-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 160px;
+  position: relative;
+}
+
+.language-option:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+}
+
+.language-option.active {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(34, 197, 94, 0.04));
+  border-color: #22c55e;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.15);
+}
+
+.language-option.active:hover {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.06));
+}
+
+.language-flag {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.language-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  flex: 1;
+}
+
+.language-option.active .language-name {
+  color: #166534;
+}
+
+.language-check {
+  width: 18px;
+  height: 18px;
+  color: #22c55e;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.language-option.active .language-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.language-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+
 /* ========================================
    底部操作按钮
    ======================================== */
@@ -810,6 +901,15 @@
     width: 100%;
     justify-content: center;
   }
+
+  /* 语言选择器响应式 */
+  .language-selector {
+    flex-direction: column;
+  }
+
+  .language-option {
+    min-width: 100%;
+  }
 }
 
 /* ========================================
@@ -850,6 +950,14 @@
 
 .profile-setting-group:nth-child(2) {
   animation-delay: 0.2s;
+}
+
+.profile-setting-group:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.profile-setting-group:nth-child(4) {
+  animation-delay: 0.4s;
 }
 
 @keyframes settingGroupFadeIn {

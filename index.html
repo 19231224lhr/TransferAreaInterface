@@ -93,7 +93,7 @@
 
       <!-- 用户区域 -->
       <div id="userBar" class="user-bar">
-        <button id="userButton" class="user-button" aria-label="用户信息">
+        <button id="userButton" class="user-button" aria-label="用户信息" data-i18n-aria="header.userInfo">
           <div class="user-avatar" id="userAvatar">
             <svg class="avatar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2">
@@ -102,7 +102,7 @@
             </svg>
             <img class="avatar-img hidden" src="" alt="用户头像">
           </div>
-          <span id="userLabel" class="user-label">未登录</span>
+          <span id="userLabel" class="user-label" data-i18n="common.notLoggedIn">未登录</span>
           <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
@@ -110,7 +110,7 @@
         </button>
         <div id="userMenu" class="user-menu hidden">
           <!-- 用户信息头部 - 点击进入个人信息页 -->
-          <div class="menu-header" title="点击编辑个人信息">
+          <div class="menu-header" title="点击编辑个人信息" data-i18n-title="header.editProfile">
             <div class="menu-header-avatar" id="menuHeaderAvatar">
               <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
@@ -135,7 +135,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label">账户 ID</span>
+                <span class="menu-card-label" data-i18n="header.accountId">账户 ID</span>
                 <code id="menuAccountId" class="menu-card-value"></code>
               </div>
             </div>
@@ -148,7 +148,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label">地址信息</span>
+                <span class="menu-card-label" data-i18n="header.addressInfo">地址信息</span>
                 <code id="menuAddress" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -169,7 +169,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label">担保组织</span>
+                <span class="menu-card-label" data-i18n="header.guarantorOrg">担保组织</span>
                 <code id="menuOrg" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -186,7 +186,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label">余额</span>
+                <span class="menu-card-label" data-i18n="header.balance">余额</span>
                 <code id="menuBalance" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -210,7 +210,7 @@
                     <span id="menuBalanceETH" class="balance-amount">0</span>
                   </div>
                 </div>
-                <div class="balance-tip">汇率: 1 PGC = 1 USDT, 1 BTC = 100 USDT, 1 ETH = 10 USDT</div>
+                <div class="balance-tip" data-i18n="header.exchangeRate">汇率: 1 PGC = 1 USDT, 1 BTC = 100 USDT, 1 ETH = 10 USDT</div>
               </div>
             </div>
           </div>
@@ -223,8 +223,8 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
-            <div class="menu-empty-text">尚未登录</div>
-            <div class="menu-empty-hint">请先创建或导入账户</div>
+            <div class="menu-empty-text" data-i18n="header.notLoggedIn">尚未登录</div>
+            <div class="menu-empty-hint" data-i18n="header.loginHint">请先创建或导入账户</div>
           </div>
 
           <!-- 退出按钮 -->
@@ -234,7 +234,7 @@
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            <span>退出登录</span>
+            <span data-i18n="common.logout">退出登录</span>
           </button>
         </div>
       </div>
@@ -290,16 +290,16 @@
         <!-- 徽章 -->
         <div class="welcome-badge">
           <span class="badge-dot"></span>
-          <span>安全 · 快速 · 去中心化</span>
+          <span data-i18n="welcome.badge">安全 · 快速 · 去中心化</span>
         </div>
 
         <!-- 标题区 -->
         <h1 class="welcome-title">
-          <span class="title-line">开启您的</span>
-          <span class="title-highlight">数字资产之旅</span>
+          <span class="title-line" data-i18n="welcome.titleLine1">开启您的</span>
+          <span class="title-highlight" data-i18n="welcome.titleLine2">数字资产之旅</span>
         </h1>
 
-        <p class="welcome-subtitle">
+        <p class="welcome-subtitle" data-i18n="welcome.subtitle">
           基于 UTXO 模型的新一代区块链钱包，为您提供安全可靠的资产管理体验
         </p>
 
@@ -312,8 +312,8 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
             </div>
-            <h3>安全保障</h3>
-            <p>本地加密存储，私钥永不上传</p>
+            <h3 data-i18n="welcome.feature1.title">安全保障</h3>
+            <p data-i18n="welcome.feature1.desc">本地加密存储，私钥永不上传</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
@@ -322,8 +322,8 @@
                 <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
               </svg>
             </div>
-            <h3>极速转账</h3>
-            <p>优化的 UTXO 算法，秒级确认</p>
+            <h3 data-i18n="welcome.feature2.title">极速转账</h3>
+            <p data-i18n="welcome.feature2.desc">优化的 UTXO 算法，秒级确认</p>
           </div>
           <div class="feature-card">
             <div class="feature-icon">
@@ -334,15 +334,15 @@
                 <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
               </svg>
             </div>
-            <h3>跨链互通</h3>
-            <p>支持多链资产，一站式管理</p>
+            <h3 data-i18n="welcome.feature3.title">跨链互通</h3>
+            <p data-i18n="welcome.feature3.desc">支持多链资产，一站式管理</p>
           </div>
         </div>
 
         <!-- 操作按钮 -->
         <div class="welcome-actions">
           <button id="registerAccountBtn" class="welcome-btn welcome-btn-primary">
-            <span>立即开始</span>
+            <span data-i18n="welcome.getStarted">立即开始</span>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
@@ -356,7 +356,7 @@
               <polyline points="10 17 15 12 10 7" />
               <line x1="15" y1="12" x2="3" y2="12" />
             </svg>
-            <span>已有账户？登录</span>
+            <span data-i18n="welcome.hasAccount">已有账户？登录</span>
           </button>
         </div>
 
@@ -364,17 +364,17 @@
         <div class="welcome-footer-info">
           <div class="info-item">
             <span class="info-number">100K+</span>
-            <span class="info-label">活跃用户</span>
+            <span class="info-label" data-i18n="welcome.activeUsers">活跃用户</span>
           </div>
           <div class="info-divider"></div>
           <div class="info-item">
             <span class="info-number">$2.5B</span>
-            <span class="info-label">交易总额</span>
+            <span class="info-label" data-i18n="welcome.totalVolume">交易总额</span>
           </div>
           <div class="info-divider"></div>
           <div class="info-item">
             <span class="info-number">99.9%</span>
-            <span class="info-label">安全保障</span>
+            <span class="info-label" data-i18n="welcome.security">安全保障</span>
           </div>
         </div>
       </div>
@@ -400,11 +400,11 @@
             <div class="card-number">•••• •••• •••• 4242</div>
             <div class="card-info">
               <div class="card-holder">
-                <span class="label">持卡人</span>
+                <span class="label" data-i18n="welcome.cardHolder">持卡人</span>
                 <span class="value">UTXO WALLET</span>
               </div>
               <div class="card-expiry">
-                <span class="label">有效期</span>
+                <span class="label" data-i18n="welcome.expiry">有效期</span>
                 <span class="value">∞</span>
               </div>
             </div>
@@ -516,8 +516,8 @@
                   <path d="M6 12h.01M18 12h.01" />
                 </svg>
               </div>
-              <h1 class="entry-brand-title">钱包管理</h1>
-              <p class="entry-brand-desc">安全管理您的数字资产，支持多地址统一管理</p>
+              <h1 class="entry-brand-title" data-i18n="entry.title">钱包管理</h1>
+              <p class="entry-brand-desc" data-i18n="entry.description">安全管理您的数字资产，支持多地址统一管理</p>
             </div>
 
             <!-- 特性列表 -->
@@ -529,8 +529,8 @@
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
-                  <h4>安全加密存储</h4>
-                  <p>采用高强度加密算法，确保私钥安全</p>
+                  <h4 data-i18n="entry.benefit1.title">安全加密存储</h4>
+                  <p data-i18n="entry.benefit1.desc">采用高强度加密算法，确保私钥安全</p>
                 </div>
               </div>
               <div class="entry-benefit">
@@ -543,8 +543,8 @@
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
-                  <h4>多地址管理</h4>
-                  <p>同时管理多个钱包地址，便捷切换</p>
+                  <h4 data-i18n="entry.benefit2.title">多地址管理</h4>
+                  <p data-i18n="entry.benefit2.desc">同时管理多个钱包地址，便捷切换</p>
                 </div>
               </div>
               <div class="entry-benefit">
@@ -556,8 +556,8 @@
                   </svg>
                 </div>
                 <div class="entry-benefit-text">
-                  <h4>一键导入</h4>
-                  <p>支持通过私钥快速导入现有钱包</p>
+                  <h4 data-i18n="entry.benefit3.title">一键导入</h4>
+                  <p data-i18n="entry.benefit3.desc">支持通过私钥快速导入现有钱包</p>
                 </div>
               </div>
             </div>
@@ -567,11 +567,11 @@
               <div class="entry-stats">
                 <div class="entry-stat">
                   <span class="entry-stat-value" id="sidebarWalletCount">0</span>
-                  <span class="entry-stat-label">已添加钱包</span>
+                  <span class="entry-stat-label" data-i18n="entry.walletsAdded">已添加钱包</span>
                 </div>
                 <div class="entry-stat">
                   <span class="entry-stat-value">P-256</span>
-                  <span class="entry-stat-label">加密算法</span>
+                  <span class="entry-stat-label" data-i18n="entry.encryptionAlgo">加密算法</span>
                 </div>
               </div>
             </div>
@@ -581,7 +581,7 @@
         <!-- 右侧：主操作区 -->
         <main class="entry-main">
           <!-- 返回按钮 -->
-          <button class="entry-back-btn" id="entryBackBtn" title="返回">
+          <button class="entry-back-btn" id="entryBackBtn" title="返回" data-i18n-title="common.back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -590,8 +590,8 @@
           <div class="entry-main-content">
             <!-- 页面标题 -->
             <div class="entry-header">
-              <h2 class="entry-header-title">选择操作方式</h2>
-              <p class="entry-header-desc" id="entryImportSuggest">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
+              <h2 class="entry-header-title" data-i18n="entry.selectAction">选择操作方式</h2>
+              <p class="entry-header-desc" id="entryImportSuggest" data-i18n="entry.selectActionDesc">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
             </div>
 
             <!-- 操作按钮区 -->
@@ -604,8 +604,8 @@
                   </svg>
                 </div>
                 <div class="entry-action-info">
-                  <h4>新建钱包</h4>
-                  <p>生成全新的密钥对</p>
+                  <h4 data-i18n="entry.createWallet">新建钱包</h4>
+                  <p data-i18n="entry.createWalletDesc">生成全新的密钥对</p>
                 </div>
                 <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
@@ -621,8 +621,8 @@
                   </svg>
                 </div>
                 <div class="entry-action-info">
-                  <h4>导入钱包</h4>
-                  <p>使用已有私钥导入</p>
+                  <h4 data-i18n="entry.importWallet">导入钱包</h4>
+                  <p data-i18n="entry.importWalletDesc">使用已有私钥导入</p>
                 </div>
                 <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
@@ -641,13 +641,13 @@
                   </svg>
                 </div>
                 <div class="entry-wallet-info">
-                  <span class="entry-wallet-label">已添加钱包</span>
+                  <span class="entry-wallet-label" data-i18n="entry.walletsAdded">已添加钱包</span>
                   <span class="entry-wallet-count" id="walletCount">0</span>
                 </div>
               </div>
               <ol id="walletBriefList" class="entry-wallet-list hidden"></ol>
               <button id="briefToggleBtn" class="entry-toggle-btn hidden">
-                <span>展开更多</span>
+                <span data-i18n="common.expandMore">展开更多</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
@@ -658,14 +658,14 @@
                   <line x1="12" y1="9" x2="12" y2="13" />
                   <circle cx="12" cy="17" r="0.5" fill="currentColor" />
                 </svg>
-                <span>请先添加至少一个钱包地址</span>
+                <span data-i18n="entry.addWalletFirst">请先添加至少一个钱包地址</span>
               </div>
             </div>
 
             <!-- 底部操作 -->
             <div class="entry-page-actions">
               <button id="entryNextBtn" class="entry-next-btn" disabled>
-                <span>继续下一步</span>
+                <span data-i18n="common.next">继续下一步</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -689,8 +689,8 @@
                   <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                 </svg>
               </div>
-              <h1 class="new-brand-title">创建新账户</h1>
-              <p class="new-brand-desc">安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅</p>
+              <h1 class="new-brand-title" data-i18n="new.title">创建新账户</h1>
+              <p class="new-brand-desc" data-i18n="new.description">安全生成 P-256 ECDSA 密钥对，开启您的区块链之旅</p>
             </div>
 
             <!-- 特性列表 -->
@@ -702,8 +702,8 @@
                   </svg>
                 </div>
                 <div class="new-benefit-text">
-                  <h4>安全密钥生成</h4>
-                  <p>采用 P-256 椭圆曲线算法生成密钥对</p>
+                  <h4 data-i18n="new.benefit1.title">安全密钥生成</h4>
+                  <p data-i18n="new.benefit1.desc">采用 P-256 椭圆曲线算法生成密钥对</p>
                 </div>
               </div>
               <div class="new-benefit">
@@ -714,8 +714,8 @@
                   </svg>
                 </div>
                 <div class="new-benefit-text">
-                  <h4>本地加密存储</h4>
-                  <p>私钥仅存储在本地浏览器中</p>
+                  <h4 data-i18n="new.benefit2.title">本地加密存储</h4>
+                  <p data-i18n="new.benefit2.desc">私钥仅存储在本地浏览器中</p>
                 </div>
               </div>
               <div class="new-benefit">
@@ -725,8 +725,8 @@
                   </svg>
                 </div>
                 <div class="new-benefit-text">
-                  <h4>一键添加钱包</h4>
-                  <p>生成后可直接添加到钱包列表</p>
+                  <h4 data-i18n="new.benefit3.title">一键添加钱包</h4>
+                  <p data-i18n="new.benefit3.desc">生成后可直接添加到钱包列表</p>
                 </div>
               </div>
             </div>
@@ -736,11 +736,11 @@
               <div class="new-stats">
                 <div class="new-stat">
                   <span class="new-stat-value">P-256</span>
-                  <span class="new-stat-label">椭圆曲线</span>
+                  <span class="new-stat-label" data-i18n="new.ellipticCurve">椭圆曲线</span>
                 </div>
                 <div class="new-stat">
                   <span class="new-stat-value">ECDSA</span>
-                  <span class="new-stat-label">签名算法</span>
+                  <span class="new-stat-label" data-i18n="new.signatureAlgo">签名算法</span>
                 </div>
               </div>
             </div>
@@ -750,7 +750,7 @@
         <!-- 右侧：主操作区 -->
         <main class="new-main">
           <!-- 返回按钮 -->
-          <button class="new-back-btn" id="newBackBtn" title="返回">
+          <button class="new-back-btn" id="newBackBtn" title="返回" data-i18n-title="common.back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -759,8 +759,8 @@
           <div class="new-main-content">
             <!-- 页面标题 -->
             <div class="new-header">
-              <h2 class="new-header-title">生成密钥对</h2>
-              <p class="new-header-desc">系统将自动生成安全的密钥对，请妥善保管您的私钥</p>
+              <h2 class="new-header-title" data-i18n="new.generateKeys">生成密钥对</h2>
+              <p class="new-header-desc" data-i18n="new.generateKeysDesc">系统将自动生成安全的密钥对，请妥善保管您的私钥</p>
             </div>
 
             <!-- 加载动画 -->
@@ -770,7 +770,7 @@
                 <div class="loader-logo-glow"></div>
               </div>
               <div class="new-loader-text">
-                <span>正在生成密钥</span>
+                <span data-i18n="new.generating">正在生成密钥</span>
                 <span class="new-loader-dots"><i></i><i></i><i></i></span>
               </div>
             </div>
@@ -784,7 +784,7 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3>账户创建成功</h3>
+                <h3 data-i18n="new.accountCreated">账户创建成功</h3>
               </div>
 
               <!-- 信息网格 -->
@@ -806,7 +806,7 @@
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>主地址</span>
+                    <span data-i18n="new.mainAddress">主地址</span>
                   </div>
                   <code id="address" class="new-info-value"></code>
                 </div>
@@ -821,8 +821,8 @@
                         <path
                           d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                       </svg>
-                      <span>私钥（Hex）</span>
-                      <span class="new-warning-badge">请勿泄露</span>
+                      <span data-i18n="new.privateKey">私钥（Hex）</span>
+                      <span class="new-warning-badge" data-i18n="new.doNotShare">请勿泄露</span>
                     </div>
                     <svg class="new-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="6 9 12 15 18 9" />
@@ -838,7 +838,7 @@
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                         <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                       </svg>
-                      <span>公钥（X / Y Hex）</span>
+                      <span data-i18n="new.publicKey">公钥（X / Y Hex）</span>
                     </div>
                   </div>
                   <code id="pubX" class="new-key-value"></code>
@@ -856,10 +856,10 @@
                   <polyline points="23 4 23 10 17 10" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
-                <span>重新生成</span>
+                <span data-i18n="common.regenerate">重新生成</span>
               </button>
               <button id="newNextBtn" class="new-action-btn new-action-btn--primary">
-                <span>添加钱包地址</span>
+                <span data-i18n="new.addWalletAddress">添加钱包地址</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="5" y1="12" x2="19" y2="12" />
                   <polyline points="12 5 19 12 12 19" />
@@ -886,8 +886,8 @@
                   <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
               </div>
-              <h1 class="login-brand-title">登录账户</h1>
-              <p class="login-brand-desc">使用私钥安全登录，恢复您的账户信息</p>
+              <h1 class="login-brand-title" data-i18n="login.title">登录账户</h1>
+              <p class="login-brand-desc" data-i18n="login.description">使用私钥安全登录，恢复您的账户信息</p>
             </div>
 
             <!-- 特性列表 -->
@@ -899,8 +899,8 @@
                   </svg>
                 </div>
                 <div class="login-benefit-text">
-                  <h4>安全验证</h4>
-                  <p>私钥不会上传，仅在本地验证</p>
+                  <h4 data-i18n="login.benefit1.title">安全验证</h4>
+                  <p data-i18n="login.benefit1.desc">私钥不会上传，仅在本地验证</p>
                 </div>
               </div>
               <div class="login-benefit">
@@ -911,8 +911,8 @@
                   </svg>
                 </div>
                 <div class="login-benefit-text">
-                  <h4>账户恢复</h4>
-                  <p>通过私钥恢复完整账户信息</p>
+                  <h4 data-i18n="login.benefit2.title">账户恢复</h4>
+                  <p data-i18n="login.benefit2.desc">通过私钥恢复完整账户信息</p>
                 </div>
               </div>
               <div class="login-benefit">
@@ -924,8 +924,8 @@
                   </svg>
                 </div>
                 <div class="login-benefit-text">
-                  <h4>钱包管理</h4>
-                  <p>登录后可管理所有钱包地址</p>
+                  <h4 data-i18n="login.benefit3.title">钱包管理</h4>
+                  <p data-i18n="login.benefit3.desc">登录后可管理所有钱包地址</p>
                 </div>
               </div>
             </div>
@@ -935,11 +935,11 @@
               <div class="login-stats">
                 <div class="login-stat">
                   <span class="login-stat-value">P-256</span>
-                  <span class="login-stat-label">加密算法</span>
+                  <span class="login-stat-label" data-i18n="entry.encryptionAlgo">加密算法</span>
                 </div>
                 <div class="login-stat">
-                  <span class="login-stat-value">本地</span>
-                  <span class="login-stat-label">数据存储</span>
+                  <span class="login-stat-value" data-i18n="login.local">本地</span>
+                  <span class="login-stat-label" data-i18n="login.dataStorage">数据存储</span>
                 </div>
               </div>
             </div>
@@ -949,7 +949,7 @@
         <!-- 右侧：主操作区 -->
         <main class="login-main">
           <!-- 返回按钮 -->
-          <button class="login-back-btn" id="loginBackBtn" title="返回">
+          <button class="login-back-btn" id="loginBackBtn" title="返回" data-i18n-title="common.back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -958,8 +958,8 @@
           <div class="login-main-content">
             <!-- 页面标题 -->
             <div class="login-header">
-              <h2 class="login-header-title">账户登录</h2>
-              <p class="login-header-desc">输入您的私钥以恢复账户并访问钱包管理功能</p>
+              <h2 class="login-header-title" data-i18n="login.accountLogin">账户登录</h2>
+              <p class="login-header-desc" data-i18n="login.accountLoginDesc">输入您的私钥以恢复账户并访问钱包管理功能</p>
             </div>
 
             <!-- 登录表单卡片 -->
@@ -970,10 +970,10 @@
                     <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                     <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                   </svg>
-                  <span>私钥（Hex）</span>
+                  <span data-i18n="login.privateKeyHex">私钥（Hex）</span>
                 </label>
                 <div class="login-input-wrapper">
-                  <input id="loginPrivHex" class="login-input" type="password" placeholder="请输入您的私钥 Hex..."
+                  <input id="loginPrivHex" class="login-input" type="password" data-i18n-placeholder="login.enterPrivateKey" placeholder="请输入您的私钥 Hex..."
                     autocomplete="off" />
                   <button type="button" class="login-toggle-visibility" id="loginToggleVisibility">
                     <svg class="eye-open hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -995,7 +995,7 @@
                   <polyline points="10 17 15 12 10 7" />
                   <line x1="15" y1="12" x2="3" y2="12" />
                 </svg>
-                <span>安全登录</span>
+                <span data-i18n="login.secureLogin">安全登录</span>
               </button>
             </div>
 
@@ -1004,7 +1004,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span>请确保在安全的环境中输入私钥，切勿泄露给他人</span>
+              <span data-i18n="login.securityTip">请确保在安全的环境中输入私钥，切勿泄露给他人</span>
             </div>
 
             <!-- 加载动画 -->
@@ -1015,7 +1015,7 @@
                 <span class="ring-dot"></span>
               </div>
               <div class="login-loader-text">
-                <span>正在验证身份</span>
+                <span data-i18n="login.verifying">正在验证身份</span>
                 <span class="loader-dots"><i></i><i></i><i></i></span>
               </div>
             </div>
@@ -1029,7 +1029,7 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3>登录成功</h3>
+                <h3 data-i18n="login.success">登录成功</h3>
               </div>
 
               <!-- 账户信息网格 -->
@@ -1050,7 +1050,7 @@
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>主地址</span>
+                    <span data-i18n="new.mainAddress">主地址</span>
                   </div>
                   <code id="loginAddress" class="login-result-value"></code>
                 </div>
@@ -1064,8 +1064,8 @@
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                     </svg>
-                    <span>私钥（Hex）</span>
-                    <span class="login-warning-badge">敏感信息</span>
+                    <span data-i18n="new.privateKey">私钥（Hex）</span>
+                    <span class="login-warning-badge" data-i18n="login.sensitiveInfo">敏感信息</span>
                     <svg class="login-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       stroke-width="2">
                       <polyline points="6 9 12 15 18 9" />
@@ -1079,7 +1079,7 @@
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 5 5" />
                     </svg>
-                    <span>公钥（X / Y Hex）</span>
+                    <span data-i18n="new.publicKey">公钥（X / Y Hex）</span>
                   </div>
                   <code id="loginPubX" class="login-result-value"></code>
                   <code id="loginPubY" class="login-result-value"></code>
@@ -1092,10 +1092,10 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
-                  <span>重新登录</span>
+                  <span data-i18n="login.reLogin">重新登录</span>
                 </button>
                 <button id="loginNextBtn" class="login-next-btn hidden">
-                  <span>进入钱包管理</span>
+                  <span data-i18n="login.enterWallet">进入钱包管理</span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
@@ -1123,8 +1123,8 @@
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
               </div>
-              <h1 class="import-brand-title">导入钱包</h1>
-              <p class="import-brand-desc">通过私钥恢复您的钱包地址，安全快捷</p>
+              <h1 class="import-brand-title" data-i18n="import.title">导入钱包</h1>
+              <p class="import-brand-desc" data-i18n="import.description">通过私钥恢复您的钱包地址，安全快捷</p>
             </div>
 
             <!-- 特性列表 -->
@@ -1136,8 +1136,8 @@
                   </svg>
                 </div>
                 <div class="import-benefit-text">
-                  <h4>本地安全</h4>
-                  <p>私钥仅在本地存储，不会上传服务器</p>
+                  <h4 data-i18n="import.benefit1.title">本地安全</h4>
+                  <p data-i18n="import.benefit1.desc">私钥仅在本地存储，不会上传服务器</p>
                 </div>
               </div>
               <div class="import-benefit">
@@ -1149,8 +1149,8 @@
                   </svg>
                 </div>
                 <div class="import-benefit-text">
-                  <h4>钱包恢复</h4>
-                  <p>使用私钥快速恢复您的钱包</p>
+                  <h4 data-i18n="import.benefit2.title">钱包恢复</h4>
+                  <p data-i18n="import.benefit2.desc">使用私钥快速恢复您的钱包</p>
                 </div>
               </div>
               <div class="import-benefit">
@@ -1161,8 +1161,8 @@
                   </svg>
                 </div>
                 <div class="import-benefit-text">
-                  <h4>密钥兼容</h4>
-                  <p>支持多种格式的私钥导入</p>
+                  <h4 data-i18n="import.benefit3.title">密钥兼容</h4>
+                  <p data-i18n="import.benefit3.desc">支持多种格式的私钥导入</p>
                 </div>
               </div>
             </div>
@@ -1172,11 +1172,11 @@
               <div class="import-stats">
                 <div class="import-stat">
                   <span class="import-stat-value">P-256</span>
-                  <span class="import-stat-label">加密算法</span>
+                  <span class="import-stat-label" data-i18n="entry.encryptionAlgo">加密算法</span>
                 </div>
                 <div class="import-stat">
-                  <span class="import-stat-value">64位</span>
-                  <span class="import-stat-label">密钥长度</span>
+                  <span class="import-stat-value">64</span>
+                  <span class="import-stat-label" data-i18n="import.keyLength">密钥长度</span>
                 </div>
               </div>
             </div>
@@ -1186,7 +1186,7 @@
         <!-- 右侧：主操作区 -->
         <main class="import-main">
           <!-- 返回按钮 -->
-          <button class="import-back-btn" id="importBackBtn" title="返回">
+          <button class="import-back-btn" id="importBackBtn" title="返回" data-i18n-title="common.back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M19 12H5M12 19l-7-7 7-7" />
             </svg>
@@ -1195,8 +1195,8 @@
           <div class="import-main-content">
             <!-- 页面标题 -->
             <div class="import-header">
-              <h2 class="import-header-title">导入钱包</h2>
-              <p class="import-header-desc">输入您的私钥以恢复钱包地址并管理资产</p>
+              <h2 class="import-header-title" data-i18n="import.importWallet">导入钱包</h2>
+              <p class="import-header-desc" data-i18n="import.importWalletDesc">输入您的私钥以恢复钱包地址并管理资产</p>
             </div>
 
             <!-- 导入表单卡片 -->
@@ -1207,10 +1207,10 @@
                     <path
                       d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                   </svg>
-                  <span>私钥（Hex）</span>
+                  <span data-i18n="login.privateKeyHex">私钥（Hex）</span>
                 </label>
                 <div class="import-input-wrapper">
-                  <input id="importPrivHex" class="import-input" type="password" placeholder="请输入 64 位十六进制私钥"
+                  <input id="importPrivHex" class="import-input" type="password" data-i18n-placeholder="import.enterPrivateKey" placeholder="请输入 64 位十六进制私钥"
                     autocomplete="off" spellcheck="false" />
                   <button type="button" class="import-toggle-visibility" id="importToggleVisibility" title="切换显示/隐藏">
                     <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1231,7 +1231,7 @@
                     <line x1="12" y1="16" x2="12" y2="12" />
                     <line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
-                  <span>支持带 0x 前缀或纯 64 位十六进制格式</span>
+                  <span data-i18n="import.formatHint">支持带 0x 前缀或纯 64 位十六进制格式</span>
                 </p>
               </div>
 
@@ -1241,7 +1241,7 @@
                   <polyline points="7 10 12 15 17 10" />
                   <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
-                <span>导入钱包</span>
+                <span data-i18n="import.importWallet">导入钱包</span>
               </button>
             </div>
 
@@ -1250,7 +1250,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
               </svg>
-              <span>请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中</span>
+              <span data-i18n="import.securityTip">请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中</span>
             </div>
 
             <!-- 加载动画 -->
@@ -1261,7 +1261,7 @@
                 <span class="ring-dot"></span>
               </div>
               <div class="import-loader-text">
-                <span>正在验证并导入</span>
+                <span data-i18n="import.verifying">正在验证并导入</span>
                 <span class="loader-dots"><i></i><i></i><i></i></span>
               </div>
             </div>
@@ -1275,7 +1275,7 @@
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
-                <h3>钱包导入成功</h3>
+                <h3 data-i18n="import.success">钱包导入成功</h3>
               </div>
 
               <!-- 账户信息网格 -->
@@ -1296,7 +1296,7 @@
                       <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
                       <circle cx="12" cy="10" r="3" />
                     </svg>
-                    <span>主地址</span>
+                    <span data-i18n="new.mainAddress">主地址</span>
                   </div>
                   <code id="importAddress" class="import-result-value"></code>
                 </div>
@@ -1310,8 +1310,8 @@
                       <path
                         d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
                     </svg>
-                    <span>私钥（Hex）</span>
-                    <span class="import-warning-badge">请勿泄露</span>
+                    <span data-i18n="new.privateKey">私钥（Hex）</span>
+                    <span class="import-warning-badge" data-i18n="new.doNotShare">请勿泄露</span>
                     <svg class="import-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       stroke-width="2">
                       <polyline points="6 9 12 15 18 9" />
@@ -1325,7 +1325,7 @@
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                       <path d="M7 11V7a5 5 0 0 1 5 5" />
                     </svg>
-                    <span>公钥（X / Y Hex）</span>
+                    <span data-i18n="new.publicKey">公钥（X / Y Hex）</span>
                   </div>
                   <code id="importPubX" class="import-result-value"></code>
                   <code id="importPubY" class="import-result-value"></code>
@@ -1338,10 +1338,10 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M19 12H5M12 19l-7-7 7-7" />
                   </svg>
-                  <span>重新导入</span>
+                  <span data-i18n="import.reImport">重新导入</span>
                 </button>
                 <button id="importNextBtn" class="import-next-btn hidden">
-                  <span>继续下一步</span>
+                  <span data-i18n="common.next">继续下一步</span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
@@ -1370,8 +1370,8 @@
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
               </div>
-              <h1 class="join-brand-title">加入担保组织</h1>
-              <p class="join-brand-desc">获得更稳定的交易服务与全方位账户保障</p>
+              <h1 class="join-brand-title" data-i18n="join.title">加入担保组织</h1>
+              <p class="join-brand-desc" data-i18n="join.description">获得更稳定的交易服务与全方位账户保障</p>
             </div>
 
             <!-- 特性列表 -->
@@ -1383,8 +1383,8 @@
                   </svg>
                 </div>
                 <div class="join-benefit-text">
-                  <h4>加速交易确认</h4>
-                  <p>享受优先确认通道，交易更快完成</p>
+                  <h4 data-i18n="join.benefit1.title">加速交易确认</h4>
+                  <p data-i18n="join.benefit1.desc">享受优先确认通道，交易更快完成</p>
                 </div>
               </div>
               <div class="join-benefit">
@@ -1395,8 +1395,8 @@
                   </svg>
                 </div>
                 <div class="join-benefit-text">
-                  <h4>跨区保障权益</h4>
-                  <p>多区域联保机制，资产更加安全</p>
+                  <h4 data-i18n="join.benefit2.title">跨区保障权益</h4>
+                  <p data-i18n="join.benefit2.desc">多区域联保机制，资产更加安全</p>
                 </div>
               </div>
               <div class="join-benefit">
@@ -1407,8 +1407,8 @@
                   </svg>
                 </div>
                 <div class="join-benefit-text">
-                  <h4>个性化地址</h4>
-                  <p>支持自定义地址标签与管理</p>
+                  <h4 data-i18n="join.benefit3.title">个性化地址</h4>
+                  <p data-i18n="join.benefit3.desc">支持自定义地址标签与管理</p>
                 </div>
               </div>
               <div class="join-benefit">
@@ -1420,8 +1420,8 @@
                   </svg>
                 </div>
                 <div class="join-benefit-text">
-                  <h4>收益统计</h4>
-                  <p>清晰的利息收益与交易分析</p>
+                  <h4 data-i18n="join.benefit4.title">收益统计</h4>
+                  <p data-i18n="join.benefit4.desc">清晰的利息收益与交易分析</p>
                 </div>
               </div>
             </div>
@@ -1431,11 +1431,11 @@
               <div class="join-stats">
                 <div class="join-stat">
                   <span class="join-stat-value">99.9%</span>
-                  <span class="join-stat-label">服务可用性</span>
+                  <span class="join-stat-label" data-i18n="join.availability">服务可用性</span>
                 </div>
                 <div class="join-stat">
                   <span class="join-stat-value">24/7</span>
-                  <span class="join-stat-label">全天候保障</span>
+                  <span class="join-stat-label" data-i18n="join.support247">全天候保障</span>
                 </div>
               </div>
             </div>
@@ -1452,23 +1452,23 @@
                   <path
                     d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                 </svg>
-                <span>系统推荐</span>
+                <span data-i18n="join.systemRecommend">系统推荐</span>
               </button>
               <button class="join-tab" data-tab="search">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                <span>搜索组织</span>
+                <span data-i18n="join.searchOrg">搜索组织</span>
               </button>
             </div>
 
             <!-- 推荐面板 -->
             <div class="join-panel join-panel--recommend" id="recPane">
               <div class="join-panel-header">
-                <span class="join-panel-badge">推荐</span>
-                <h2 class="join-panel-title">为您匹配的最优组织</h2>
-                <p class="join-panel-desc">系统已根据网络状况为您选择最佳担保组织</p>
+                <span class="join-panel-badge" data-i18n="join.recommended">推荐</span>
+                <h2 class="join-panel-title" data-i18n="join.bestMatch">为您匹配的最优组织</h2>
+                <p class="join-panel-desc" data-i18n="join.bestMatchDesc">系统已根据网络状况为您选择最佳担保组织</p>
               </div>
 
               <div class="join-org-card">
@@ -1484,7 +1484,7 @@
                   </div>
                   <div class="join-org-identity">
                     <span class="join-org-id" id="recGroupID">10000000</span>
-                    <span class="join-org-type">担保组织</span>
+                    <span class="join-org-type" data-i18n="join.guarantorOrg">担保组织</span>
                   </div>
                 </div>
                 <!-- 组织详情 -->
@@ -1529,7 +1529,7 @@
               </div>
 
               <button id="joinRecBtn" class="join-submit-btn">
-                <span>加入此组织</span>
+                <span data-i18n="join.joinThisOrg">加入此组织</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -1539,8 +1539,8 @@
             <!-- 搜索面板 -->
             <div class="join-panel join-panel--search hidden" id="searchPane">
               <div class="join-panel-header">
-                <h2 class="join-panel-title">搜索担保组织</h2>
-                <p class="join-panel-desc">输入组织编号查找特定担保组织</p>
+                <h2 class="join-panel-title" data-i18n="join.searchGuarantorOrg">搜索担保组织</h2>
+                <p class="join-panel-desc" data-i18n="join.searchOrgDesc">输入组织编号查找特定担保组织</p>
               </div>
 
               <div class="join-search-area">
@@ -1549,7 +1549,7 @@
                     <circle cx="11" cy="11" r="8" />
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
-                  <input id="groupSearch" type="text" placeholder="输入担保组织编号..." autocomplete="off" />
+                  <input id="groupSearch" type="text" data-i18n-placeholder="join.enterOrgNumber" placeholder="输入担保组织编号..." autocomplete="off" />
                 </div>
                 <div id="groupSuggest" class="join-suggest hidden"></div>
               </div>
@@ -1620,11 +1620,11 @@
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                   </svg>
                 </div>
-                <p>输入组织编号开始搜索</p>
+                <p data-i18n="join.startSearch">输入组织编号开始搜索</p>
               </div>
 
               <button id="joinSearchBtn" class="join-submit-btn" disabled>
-                <span>加入此组织</span>
+                <span data-i18n="join.joinThisOrg">加入此组织</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -1634,7 +1634,7 @@
             <!-- 跳过选项 -->
             <div class="join-skip">
               <button id="skipJoinBtn" class="join-skip-btn">
-                <span>暂不加入担保组织</span>
+                <span data-i18n="join.skipJoin">暂不加入担保组织</span>
               </button>
             </div>
           </div>
@@ -1694,8 +1694,8 @@
 
           <!-- 文字区域 -->
           <div class="inquiry-text">
-            <h2 class="inquiry-title" id="inquiryTitle">正在连接到网络</h2>
-            <p class="inquiry-desc" id="inquiryDesc">正在建立安全连接，验证账户信息</p>
+            <h2 class="inquiry-title" id="inquiryTitle" data-i18n="login.connectingNetwork">正在连接到网络</h2>
+            <p class="inquiry-desc" id="inquiryDesc" data-i18n="login.establishingConnection">正在建立安全连接，验证账户信息</p>
           </div>
 
           <!-- 进度指示器 -->
@@ -1706,17 +1706,17 @@
             <div class="inquiry-steps" id="inquirySteps">
               <div class="inquiry-step active" data-step="1">
                 <span class="inquiry-step-dot"></span>
-                <span>初始化</span>
+                <span data-i18n="login.stepInitialize">初始化</span>
               </div>
               <div class="inquiry-step-divider" data-line="1"></div>
               <div class="inquiry-step waiting" data-step="2">
                 <span class="inquiry-step-dot"></span>
-                <span>连接网络</span>
+                <span data-i18n="login.stepConnecting">连接网络</span>
               </div>
               <div class="inquiry-step-divider" data-line="2"></div>
               <div class="inquiry-step waiting" data-step="3">
                 <span class="inquiry-step-dot"></span>
-                <span>验证账户</span>
+                <span data-i18n="login.stepVerifying">验证账户</span>
               </div>
             </div>
           </div>
@@ -1729,7 +1729,7 @@
               <circle cx="12" cy="12" r="10" />
               <path d="M12 16v-4M12 8h.01" />
             </svg>
-            <span id="inquiryTipText">正在发起网络问询以确定账户所属关系，请稍候</span>
+            <span id="inquiryTipText" data-i18n="login.inquiringNetwork">正在发起网络问询以确定账户所属关系，请稍候</span>
           </p>
         </div>
       </div>
@@ -1786,12 +1786,12 @@
                           </svg>
                         </div>
                         <div class="asset-title-group">
-                          <h2>我的钱包</h2>
-                          <span>安全管理数字资产</span>
+                          <h2 data-i18n="wallet.myWallet">我的钱包</h2>
+                          <span data-i18n="wallet.secureManagement">安全管理数字资产</span>
                         </div>
                       </div>
                       <div class="asset-actions">
-                        <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-tooltip="刷新"
+                        <button id="refreshWalletBtn" class="asset-action-btn tooltip" data-i18n-title="wallet.refresh"
                           aria-label="刷新余额">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <path d="M23 4v6h-6"></path>
@@ -1799,14 +1799,14 @@
                             <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
                           </svg>
                         </button>
-                        <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-tooltip="新建"
+                        <button id="openCreateAddrBtn" class="asset-action-btn tooltip" data-i18n-title="wallet.create"
                           aria-label="新建地址">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                           </svg>
                         </button>
-                        <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-tooltip="导入"
+                        <button id="openImportAddrBtn" class="asset-action-btn tooltip" data-i18n-title="wallet.import"
                           aria-label="导入地址">
                           <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -1818,7 +1818,7 @@
                     </div>
                     <!-- 总资产显示 -->
                     <div class="total-balance">
-                      <div class="total-balance-label">总资产估值</div>
+                      <div class="total-balance-label" data-i18n="wallet.totalAssets">总资产估值</div>
                       <div class="total-balance-value">
                         <span id="walletUSDT" class="total-balance-amount animate-number">0</span>
                         <span class="total-balance-unit">USDT</span>
@@ -1879,7 +1879,7 @@
                       </svg>
                     </div>
                     <div class="address-card-title">
-                      <h3>地址管理</h3>
+                      <h3 data-i18n="wallet.addressManagement">地址管理</h3>
                       <span class="address-card-count" id="addrCount">0 个地址</span>
                     </div>
                   </div>
@@ -1959,25 +1959,25 @@
                       </svg>
                     </div>
                     <div class="transfer-title">
-                      <h2>转账交易</h2>
-                      <span>快速安全的转账体验</span>
+                      <h2 data-i18n="wallet.transfer">转账交易</h2>
+                      <span data-i18n="wallet.fastTransfer">快速安全的转账体验</span>
                     </div>
                   </div>
 
                   <!-- 网络状态指标 -->
                   <div class="network-status-widget">
                     <div class="ns-item">
-                      <span class="ns-label">↓ 下载</span>
+                      <span class="ns-label" data-i18n="wallet.download">↓ 下载</span>
                       <span class="ns-value" id="downloadSpeed">-- KB/s</span>
                     </div>
                     <div class="ns-divider"></div>
                     <div class="ns-item">
-                      <span class="ns-label">↑ 上传</span>
+                      <span class="ns-label" data-i18n="wallet.upload">↑ 上传</span>
                       <span class="ns-value" id="uploadSpeed">-- KB/s</span>
                     </div>
                     <div class="ns-divider"></div>
                     <div class="ns-item">
-                      <span class="ns-label">延迟</span>
+                      <span class="ns-label" data-i18n="wallet.latency">延迟</span>
                       <span class="ns-value" id="latencyValue">-- ms</span>
                     </div>
                   </div>
@@ -2003,14 +2003,14 @@
                 <!-- 交易模式切换 -->
                 <div class="transfer-mode-tabs" id="transferModeTabs">
                   <!-- 正常模式（已加入担保组织） -->
-                  <button class="transfer-mode-tab active" data-mode="quick">快速转账</button>
-                  <button class="transfer-mode-tab" data-mode="cross">跨链转账</button>
-                  <button class="transfer-mode-tab" data-mode="pledge">质押交易</button>
+                  <button class="transfer-mode-tab active" data-mode="quick" data-i18n="wallet.quickTransfer">快速转账</button>
+                  <button class="transfer-mode-tab" data-mode="cross" data-i18n="wallet.crossChain">跨链转账</button>
+                  <button class="transfer-mode-tab" data-mode="pledge" data-i18n="wallet.pledge">质押交易</button>
 
                   <!-- 未加入担保组织的提示模块 -->
                   <div class="no-org-warning hidden" id="noOrgWarning">
                     <button class="no-org-tab active" data-mode="quick">
-                      <span class="no-org-tab-text">普通转账</span>
+                      <span class="no-org-tab-text" data-i18n="wallet.normalTransfer">普通转账</span>
                     </button>
                     <button class="no-org-warn-btn" id="noOrgWarnBtn" type="button" aria-label="未加入担保组织提示">
                       <svg class="no-org-warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -2034,7 +2034,7 @@
                       <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
                       <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z"></path>
                     </svg>
-                    从 · FROM
+                    <span data-i18n="wallet.from">从 · FROM</span>
                   </div>
                   <div id="srcAddrList" class="tx-addr-list" role="list"></div>
                 </div>
@@ -2057,7 +2057,7 @@
                         <path d="M22 2L11 13"></path>
                         <path d="M22 2L15 22L11 13L2 9L22 2Z"></path>
                       </svg>
-                      转至 · TO
+                      <span data-i18n="wallet.to">转至 · TO</span>
                     </div>
                     <!-- 添加按钮已移动至卡片底部操作栏，与删除并排 -->
                   </div>
@@ -2075,7 +2075,7 @@
                         d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
                       </path>
                     </svg>
-                    高级选项
+                    <span data-i18n="wallet.advancedOptions">高级选项</span>
                   </span>
                   <span class="options-toggle-arrow">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2089,14 +2089,14 @@
                     <!-- 第一行：两列并排 -->
                     <div class="options-split-row">
                       <div class="options-split-group">
-                        <label class="option-field-label" for="extraGasPGC">额外Gas兑换</label>
+                        <label class="option-field-label" for="extraGasPGC" data-i18n="wallet.extraGas">额外Gas兑换</label>
                         <div class="option-input-wrapper">
                           <input id="extraGasPGC" class="option-input" type="number" placeholder="0" value="0" />
                           <span class="option-suffix option-suffix--pgc">PGC</span>
                         </div>
                       </div>
                       <div class="options-split-group">
-                        <label class="option-field-label" for="txGasInput">交易Gas</label>
+                        <label class="option-field-label" for="txGasInput" data-i18n="wallet.txGas">交易Gas</label>
                         <div class="option-input-wrapper">
                           <input id="txGasInput" class="option-input" type="number" placeholder="1" value="1" />
                           <span class="option-suffix option-suffix--gas">GAS</span>
@@ -2105,7 +2105,7 @@
                     </div>
                     <!-- PGC 找零地址 -->
                     <div class="option-field">
-                      <label class="option-field-label">PGC 找零地址</label>
+                      <label class="option-field-label" data-i18n="transfer.pgcReceiveAddress">PGC 接受地址</label>
                       <select id="chAddrPGC" class="input" style="display:none"></select>
                       <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="PGC">
@@ -2122,7 +2122,7 @@
                     </div>
                     <!-- BTC 找零地址 -->
                     <div class="option-field">
-                      <label class="option-field-label">BTC 找零地址</label>
+                      <label class="option-field-label" data-i18n="transfer.btcReceiveAddress">BTC 接受地址</label>
                       <select id="chAddrBTC" class="input" style="display:none"></select>
                       <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="BTC">
@@ -2139,7 +2139,7 @@
                     </div>
                     <!-- ETH 找零地址 -->
                     <div class="option-field">
-                      <label class="option-field-label">ETH 找零地址</label>
+                      <label class="option-field-label" data-i18n="transfer.ethReceiveAddress">ETH 接受地址</label>
                       <select id="chAddrETH" class="input" style="display:none"></select>
                       <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="ETH">
@@ -2289,7 +2289,7 @@
             <!-- 账户结构体区域 -->
             <div class="struct-section" id="walletStructPane">
               <button id="walletStructToggle" class="struct-toggle-btn">
-                <span>展开账户结构体</span>
+                <span data-i18n="transfer.expandStruct">展开账户结构体</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
@@ -2330,8 +2330,8 @@
                   <path d="M9 12l2 2 4-4" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </div>
-              <h1 class="group-brand-title">担保组织</h1>
-              <p class="group-brand-desc">查看您当前加入的担保组织详细信息</p>
+              <h1 class="group-brand-title" data-i18n="groupDetail.title">担保组织</h1>
+              <p class="group-brand-desc" data-i18n="groupDetail.description">查看您当前加入的担保组织详细信息</p>
             </div>
 
             <!-- 权益列表 -->
@@ -2408,12 +2408,12 @@
               <!-- 页面头部 -->
               <div class="group-pane-header">
                 <div class="group-pane-title">
-                  <h2>组织详情</h2>
-                  <p>您当前加入的担保组织信息</p>
+                  <h2 data-i18n="groupDetail.orgDetails">组织详情</h2>
+                  <p data-i18n="groupDetail.orgDetailsDesc">您当前加入的担保组织信息</p>
                 </div>
                 <div class="group-status-badge group-status-badge--active">
                   <span class="status-dot"></span>
-                  已加入
+                  <span data-i18n="groupDetail.joined">已加入</span>
                 </div>
               </div>
 
@@ -2430,7 +2430,7 @@
                   </div>
                   <div class="group-info-identity">
                     <span class="group-info-id" id="groupDetailID">-</span>
-                    <span class="group-info-type">担保组织</span>
+                    <span class="group-info-type" data-i18n="groupDetail.guarantorOrg">担保组织</span>
                   </div>
                   <div class="group-info-status">
                     <span class="status-dot"></span>
@@ -2505,14 +2505,14 @@
                     <polyline points="16 17 21 12 16 7" />
                     <line x1="21" y1="12" x2="9" y2="12" />
                   </svg>
-                  退出担保组织
+                  <span data-i18n="groupDetail.leaveOrg">退出担保组织</span>
                 </button>
                 <button id="groupBackBtn" class="group-action-btn group-action-btn--back">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="19" y1="12" x2="5" y2="12" />
                     <polyline points="12 19 5 12 12 5" />
                   </svg>
-                  返回主页
+                  <span data-i18n="groupDetail.backToMain">返回主页</span>
                 </button>
               </div>
             </div>
@@ -2528,10 +2528,9 @@
                     <div class="empty-icon-pulse"></div>
                   </div>
                 </div>
-                <h2 class="group-empty-title">您尚未加入担保组织</h2>
-                <p class="group-empty-desc">
-                  加入担保组织可享受更安全的交易保障和专属福利服务，<br>
-                  让您的数字资产交易更加安心无忧。
+                <h2 class="group-empty-title" data-i18n="groupDetail.notJoinedTitle">您尚未加入担保组织</h2>
+                <p class="group-empty-desc" data-i18n="groupDetail.notJoinedDesc">
+                  加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。
                 </p>
                 <div class="group-empty-actions">
                   <button id="groupJoinBtn" class="group-action-btn group-action-btn--join">
@@ -2541,10 +2540,10 @@
                       <line x1="20" y1="8" x2="20" y2="14" />
                       <line x1="23" y1="11" x2="17" y2="11" />
                     </svg>
-                    立即加入组织
+                    <span data-i18n="groupDetail.joinNow">立即加入组织</span>
                   </button>
                   <button id="groupEmptyBackBtn" class="group-action-btn group-action-btn--secondary">
-                    返回主页
+                    <span data-i18n="groupDetail.backToMain">返回主页</span>
                   </button>
                 </div>
               </div>
@@ -2568,8 +2567,8 @@
                   <circle cx="12" cy="7" r="4" />
                 </svg>
               </div>
-              <h1 class="profile-brand-title">个人信息</h1>
-              <p class="profile-brand-desc">管理您的账户头像与昵称，打造专属个人形象</p>
+              <h1 class="profile-brand-title" data-i18n="profile.title">个人信息</h1>
+              <p class="profile-brand-desc" data-i18n="profile.description">管理您的账户头像与昵称，打造专属个人形象</p>
             </div>
 
             <!-- 头像预览区 -->
@@ -2595,7 +2594,7 @@
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
                   </svg>
-                  <span>头像仅存储在本地浏览器</span>
+                  <span data-i18n="profile.tip.localStorage">头像仅存储在本地浏览器</span>
                 </div>
                 <div class="profile-tip">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2603,7 +2602,7 @@
                     <line x1="12" y1="16" x2="12" y2="12" />
                     <line x1="12" y1="8" x2="12.01" y2="8" />
                   </svg>
-                  <span>建议使用正方形图片</span>
+                  <span data-i18n="profile.tip.squareImage">建议使用正方形图片</span>
                 </div>
               </div>
             </div>
@@ -2613,7 +2612,7 @@
         <!-- 右侧：设置区域 -->
         <main class="profile-main">
           <!-- 返回按钮 -->
-          <button id="profileBackBtn" class="profile-back-btn" title="返回">
+          <button id="profileBackBtn" class="profile-back-btn" title="返回" data-i18n-title="common.back">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
@@ -2622,8 +2621,8 @@
 
           <!-- 页面头部 -->
           <div class="profile-header">
-            <h2 class="profile-header-title">个人信息设置</h2>
-            <p class="profile-header-desc">自定义您的头像、昵称和个性签名，让您的账户更具个性</p>
+            <h2 class="profile-header-title" data-i18n="profile.settings.title">个人信息设置</h2>
+            <p class="profile-header-desc" data-i18n="profile.settings.description">自定义您的头像、昵称和个性签名，让您的账户更具个性</p>
           </div>
 
           <!-- 设置区域 -->
@@ -2638,7 +2637,7 @@
                     <polyline points="21 15 16 10 5 21" />
                   </svg>
                 </div>
-                <h3>头像设置</h3>
+                <h3 data-i18n="profile.avatar.title">头像设置</h3>
               </div>
               <div class="avatar-upload-area">
                 <div class="avatar-upload-preview" id="avatarUploadPreview">
@@ -2649,7 +2648,7 @@
                   <img class="preview-image hidden" id="avatarPreviewImg" src="" alt="头像预览">
                 </div>
                 <div class="avatar-upload-actions">
-                  <p class="avatar-upload-hint">支持 JPG、PNG、GIF、WebP 格式，建议尺寸 200x200 像素</p>
+                  <p class="avatar-upload-hint" data-i18n="profile.avatar.hint">支持 JPG、PNG、GIF、WebP 格式，建议尺寸 200x200 像素</p>
                   <div class="avatar-upload-buttons">
                     <button id="avatarUploadBtn" class="avatar-upload-btn avatar-upload-btn--primary">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -2657,14 +2656,14 @@
                         <polyline points="17 8 12 3 7 8" />
                         <line x1="12" y1="3" x2="12" y2="15" />
                       </svg>
-                      选择图片
+                      <span data-i18n="profile.avatar.upload">选择图片</span>
                     </button>
                     <button id="avatarRemoveBtn" class="avatar-upload-btn avatar-upload-btn--secondary">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="3 6 5 6 21 6" />
                         <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
                       </svg>
-                      移除头像
+                      <span data-i18n="profile.avatar.remove">移除头像</span>
                     </button>
                   </div>
                 </div>
@@ -2681,14 +2680,14 @@
                     <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
                 </div>
-                <h3>昵称设置</h3>
+                <h3 data-i18n="profile.nickname.title">昵称设置</h3>
               </div>
               <div class="nickname-edit-area">
                 <div class="nickname-input-wrap">
-                  <input type="text" id="nicknameInput" class="nickname-input" placeholder="请输入昵称" maxlength="20" />
+                  <input type="text" id="nicknameInput" class="nickname-input" data-i18n-placeholder="profile.nickname.placeholder" placeholder="请输入昵称" maxlength="20" />
                   <span class="nickname-char-count" id="nicknameCharCount">0/20</span>
                 </div>
-                <p class="nickname-hint">昵称将显示在界面各处，支持中英文字符，最多20个字符</p>
+                <p class="nickname-hint" data-i18n="profile.nickname.hint">昵称将显示在界面各处，支持中英文字符，最多20个字符</p>
               </div>
             </div>
 
@@ -2700,14 +2699,47 @@
                     <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
                   </svg>
                 </div>
-                <h3>个性签名</h3>
+                <h3 data-i18n="profile.signature.title">个性签名</h3>
               </div>
               <div class="signature-edit-area">
                 <div class="signature-input-wrap">
-                  <textarea id="signatureInput" class="signature-input" placeholder="这个人很懒，还没有修改这里。" maxlength="50"></textarea>
+                  <textarea id="signatureInput" class="signature-input" data-i18n-placeholder="profile.signature.placeholder" placeholder="这个人很懒，还没有修改这里。" maxlength="50"></textarea>
                   <span class="signature-char-count" id="signatureCharCount">0/50</span>
                 </div>
-                <p class="signature-hint">个性签名将显示在个人信息栏下方，最多50个字符</p>
+                <p class="signature-hint" data-i18n="profile.signature.hint">个性签名将显示在个人信息栏下方，最多50个字符</p>
+              </div>
+            </div>
+
+            <!-- 语言设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon profile-setting-icon--green">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="2" y1="12" x2="22" y2="12" />
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
+                <h3 data-i18n="profile.language.title">语言设置</h3>
+              </div>
+              <div class="language-selector-area">
+                <div class="language-selector" id="languageSelector">
+                  <button class="language-option active" data-lang="zh-CN">
+                    <span class="language-flag">🇨🇳</span>
+                    <span class="language-name">简体中文</span>
+                    <svg class="language-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  <button class="language-option" data-lang="en">
+                    <span class="language-flag">🇺🇸</span>
+                    <span class="language-name">English</span>
+                    <svg class="language-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="language-hint" data-i18n="profile.language.hint">选择您偏好的界面语言</p>
               </div>
             </div>
           </div>
@@ -2719,13 +2751,13 @@
                 <line x1="18" y1="6" x2="6" y2="18" />
                 <line x1="6" y1="6" x2="18" y2="18" />
               </svg>
-              取消
+              <span data-i18n="profile.action.cancel">取消</span>
             </button>
             <button id="profileSaveBtn" class="profile-action-btn profile-action-btn--primary">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
-              保存设置
+              <span data-i18n="profile.action.save">保存设置</span>
             </button>
           </div>
         </main>
@@ -2762,8 +2794,8 @@
           <h3 class="success-title" id="unifiedTitle">操作成功</h3>
           <p class="success-text" id="unifiedText">已完成本次操作</p>
           <div class="success-actions">
-            <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden">取消</button>
-            <button id="unifiedOkBtn" class="unified-btn unified-btn--primary">好的</button>
+            <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden" data-i18n="modal.cancel">取消</button>
+            <button id="unifiedOkBtn" class="unified-btn unified-btn--primary" data-i18n="modal.ok">好的</button>
           </div>
         </div>
       </div>
@@ -2832,11 +2864,11 @@
     </div>
     <div id="confirmProceedModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>确认导入子地址</h3>
+        <h3 data-i18n="modal.confirmSubAddress">确认导入子地址</h3>
         <p id="confirmProceedText" class="tip">当前子地址数：0，是否确认继续下一步？</p>
         <div class="actions">
-          <button id="confirmProceedCancel" class="btn secondary">取消</button>
-          <button id="confirmProceedOk" class="btn primary">确认</button>
+          <button id="confirmProceedCancel" class="btn secondary" data-i18n="modal.cancel">取消</button>
+          <button id="confirmProceedOk" class="btn primary" data-i18n="modal.confirm">确认</button>
         </div>
       </div>
     </div>
@@ -2845,8 +2877,8 @@
         <h3 id="actionTitle">操作成功</h3>
         <p id="actionText" class="tip">已完成本次操作</p>
         <div class="actions">
-          <button id="actionCancelBtn" class="btn secondary hidden">取消</button>
-          <button id="actionOkBtn" class="btn primary">好的</button>
+          <button id="actionCancelBtn" class="btn secondary hidden" data-i18n="modal.cancel">取消</button>
+          <button id="actionOkBtn" class="btn primary" data-i18n="modal.ok">好的</button>
         </div>
       </div>
     </div>
@@ -2899,20 +2931,20 @@
     </div>
     <div id="addrModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 id="addrModalTitle">新建地址</h3>
+        <h3 id="addrModalTitle" data-i18n="walletModal.createAddress">新建地址</h3>
         <div id="addrCreateBox" class="result">
-          <p class="tip">确认新建一个子地址并加入当前账户。</p>
+          <p class="tip" data-i18n="walletModal.createConfirm">确认新建一个子地址并加入当前账户。</p>
         </div>
         <div id="addrImportBox" class="result hidden">
           <div class="form">
-            <div class="form-row"><label>私钥（Hex）</label><input id="addrPrivHex" class="input" type="text"
-                placeholder="请输入私钥 Hex" /></div>
+            <div class="form-row"><label data-i18n="walletModal.privateKeyLabel">私钥（Hex）</label><input id="addrPrivHex" class="input" type="text"
+                data-i18n-placeholder="entry.enterPrivateKeyHex" placeholder="请输入私钥 Hex" /></div>
           </div>
           <p id="addrError" class="tip tip--error hidden"></p>
         </div>
         <div class="actions actions--split">
-          <button id="addrCancelBtn" class="btn secondary">取消</button>
-          <button id="addrOkBtn" class="btn primary">确认</button>
+          <button id="addrCancelBtn" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="addrOkBtn" class="btn primary" data-i18n="common.confirm">确认</button>
         </div>
       </div>
     </div>
@@ -2929,8 +2961,7 @@
 
   <footer class="footer">
     <div class="container">
-      <small style="font-weight: bold;">区块链与你同频，信息予你无限。 Blockchain resonates with you. Infinity within your
-        reach.</small>
+      <small style="font-weight: bold;" data-i18n="footer.text">区块链与你同频，信息予你无限。 Blockchain resonates with you. Infinity within your reach.</small>
     </div>
   </footer>
 

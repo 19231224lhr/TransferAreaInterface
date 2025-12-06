@@ -241,7 +241,7 @@ body:has(.welcome-hero:not(.hidden)) {
   margin: 0;
   font-size: 48px;
   font-weight: 800;
-  line-height: 1.1;
+  line-height: 1.3;
   letter-spacing: -0.03em;
 }
 
