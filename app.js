@@ -954,12 +954,9 @@ function handleProfileSave() {
   showSuccessToast('个人信息已保存');
 }
 
-// 页面加载后更新显示（仅在已登录时更新）
+// 页面加载后更新显示
 window.addEventListener('load', () => {
-  const u = loadUser();
-  if (u && u.accountId) {
-    updateProfileDisplay();
-  }
+  updateProfileDisplay();
 });
 
 // ============================================
@@ -1292,9 +1289,15 @@ async function newUser() {
   return { accountId, address, privHex, pubXHex, pubYHex };
 }
 
-async function handleCreate() {
+let isCreatingAccount = false;
+
+async function handleCreate(showToast = true) {
+  // 防止重复调用
+  if (isCreatingAccount) return;
+  isCreatingAccount = true;
+  
   const btn = document.getElementById('createBtn');
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   try {
     const loader = document.getElementById('newLoader');
     const resultEl = document.getElementById('result');
@@ -1319,7 +1322,7 @@ async function handleCreate() {
     if (elapsed < 1000) await wait(1000 - elapsed);
     if (loader) loader.classList.add('hidden');
     
-    // 隐藏成功提示框，改用顶部Toast通知
+    // 隐藏成功横幅，改用顶部Toast通知
     const successBanner = resultEl.querySelector('.new-result-success');
     if (successBanner) {
       successBanner.style.display = 'none';
@@ -1338,8 +1341,10 @@ async function handleCreate() {
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
     
-    // 显示顶部成功通知
-    showSuccessToast('账户创建成功！密钥已安全生成', '创建成功');
+    // 只在需要时显示顶部成功通知
+    if (showToast) {
+      showSuccessToast('账户创建成功！密钥已安全生成', '创建成功');
+    }
   } catch (err) {
     alert('创建用户失败：' + err);
     console.error(err);
@@ -1347,28 +1352,32 @@ async function handleCreate() {
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
   } finally {
-    btn.disabled = false;
+    if (btn) btn.disabled = false;
+    isCreatingAccount = false;
     const loader = document.getElementById('newLoader');
     if (loader) loader.classList.add('hidden');
   }
 }
 
 const createBtn = document.getElementById('createBtn');
-createBtn.addEventListener('click', (evt) => {
-  const btn = evt.currentTarget;
-  const rect = btn.getBoundingClientRect();
-  const size = Math.max(rect.width, rect.height);
-  const ripple = document.createElement('span');
-  ripple.className = 'ripple';
-  ripple.style.width = ripple.style.height = `${size}px`;
-  const x = evt.clientX - rect.left - size / 2;
-  const y = evt.clientY - rect.top - size / 2;
-  ripple.style.left = `${x}px`;
-  ripple.style.top = `${y}px`;
-  btn.appendChild(ripple);
-  setTimeout(() => ripple.remove(), 600);
-});
-createBtn.addEventListener('click', handleCreate);
+if (createBtn && !createBtn.dataset._bound) {
+  createBtn.addEventListener('click', (evt) => {
+    const btn = evt.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    const ripple = document.createElement('span');
+    ripple.className = 'ripple';
+    ripple.style.width = ripple.style.height = `${size}px`;
+    const x = evt.clientX - rect.left - size / 2;
+    const y = evt.clientY - rect.top - size / 2;
+    ripple.style.left = `${x}px`;
+    ripple.style.top = `${y}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+  createBtn.addEventListener('click', handleCreate);
+  createBtn.dataset._bound = '1';
+}
 
 // 私钥折叠/展开交互
 const privateKeyToggle = document.getElementById('privateKeyToggle');
@@ -1938,11 +1947,30 @@ function router() {
     case '/new':
       resetOrgSelectionForNewUser();
       showCard(newUserCard);
-      // 滚动到页面顶部 (showCard 已包含 scrollTo，此处为兜底)
-      // 如果尚未生成，则自动生成一次
+      // 重置创建标志，允许重新创建
+      isCreatingAccount = false;
+      
       const resultEl = document.getElementById('result');
-      if (resultEl && resultEl.classList.contains('hidden')) {
-        handleCreate().catch(() => { });
+      const createBtnReset = document.getElementById('createBtn');
+      const newNextBtnReset = document.getElementById('newNextBtn');
+      const newLoader = document.getElementById('newLoader');
+      
+      // 隐藏加载器
+      if (newLoader) newLoader.classList.add('hidden');
+      
+      // 检查是否已有数据
+      const accountIdEl = document.getElementById('accountId');
+      const hasData = accountIdEl && accountIdEl.textContent.trim() !== '';
+      
+      if (hasData) {
+        // 如果已有数据，保持显示
+        if (resultEl) resultEl.classList.remove('hidden');
+        if (createBtnReset) createBtnReset.classList.remove('hidden');
+        if (newNextBtnReset) newNextBtnReset.classList.remove('hidden');
+      } else {
+        // 如果没有数据，自动创建一次（不显示Toast）
+        if (resultEl) resultEl.classList.add('hidden');
+        handleCreate(false).catch(() => { });
       }
       break;
     case '/wallet-import':
@@ -2136,8 +2164,6 @@ if (!location.hash) {
 }
 // 执行一次路由以同步初始视图
 router();
-// 初始化用户菜单状态，确保头像正确显示
-updateHeaderUser(initialUser);
 
 // 使用 popstate 拦截浏览器返回，先确认再跳转
 window.addEventListener('popstate', (e) => {
