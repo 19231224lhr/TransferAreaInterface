@@ -439,7 +439,7 @@ body:has(.welcome-hero:not(.hidden)) {
 .welcome-actions {
   display: flex;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 120px;
 }
 
 .welcome-btn {
