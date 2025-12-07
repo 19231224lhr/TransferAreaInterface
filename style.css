@@ -4195,7 +4195,7 @@ code:hover {
   max-width: 44px !important;
   max-height: 44px !important;
   object-fit: contain;
-  animation: unifiedLogoRotate 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: unifiedLogoRotate 0.5s linear infinite;
   filter: drop-shadow(0 2px 8px rgba(139, 92, 246, 0.3));
   will-change: transform;
 }
@@ -4205,38 +4205,32 @@ code:hover {
   inset: -6px;
   background: radial-gradient(
     circle at center,
-    rgba(139, 92, 246, 0.15) 0%,
-    rgba(6, 182, 212, 0.08) 50%,
+    rgba(139, 92, 246, 0.2) 0%,
+    rgba(6, 182, 212, 0.1) 50%,
     transparent 70%
   );
   border-radius: 50%;
-  animation: unifiedGlowPulse 2.5s ease-in-out infinite;
+  animation: unifiedGlowFlash 1.5s ease-in-out infinite;
   pointer-events: none;
 }
 
 @keyframes unifiedLogoRotate {
   0% {
-    transform: rotate(0deg) scale(1);
-  }
-  40% {
-    transform: rotate(360deg) scale(1.05);
-  }
-  50% {
-    transform: rotate(360deg) scale(1);
+    transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg) scale(1);
+    transform: rotate(360deg);
   }
 }
 
-@keyframes unifiedGlowPulse {
-  0%, 50%, 100% {
-    opacity: 0.6;
+@keyframes unifiedGlowFlash {
+  0%, 100% {
+    opacity: 0.3;
     transform: scale(1);
   }
-  25% {
+  50% {
     opacity: 1;
-    transform: scale(1.2);
+    transform: scale(1.15);
   }
 }
 

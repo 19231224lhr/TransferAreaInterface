@@ -323,58 +323,52 @@
   flex-shrink: 0;
 }
 
-/* Logo 图片 - 丝滑旋转动画 */
+/* Logo 图片 - 匀速旋转动画 */
 .loader-logo-img {
   width: 56px !important;
   height: 56px !important;
   max-width: 56px !important;
   max-height: 56px !important;
   object-fit: contain;
-  animation: logoRotatePulse 2s ease-in-out infinite;
+  animation: logoRotate 1.2s linear infinite;
   filter: drop-shadow(0 2px 12px rgba(139, 92, 246, 0.25));
   will-change: transform;
 }
 
-/* Logo 发光效果 */
+/* Logo 发光效果 - 间歇性闪光 */
 .loader-logo-glow {
   position: absolute;
   inset: -8px;
   background: radial-gradient(
     circle at center,
-    rgba(139, 92, 246, 0.12) 0%,
-    rgba(6, 182, 212, 0.06) 50%,
+    rgba(139, 92, 246, 0.2) 0%,
+    rgba(6, 182, 212, 0.1) 50%,
     transparent 70%
   );
   border-radius: 50%;
-  animation: logoGlowPulse 2s ease-in-out infinite;
+  animation: logoGlowFlash 1.5s ease-in-out infinite;
   pointer-events: none;
 }
 
-/* Logo 旋转动画 - 丝滑旋转后短暂停顿 */
-@keyframes logoRotatePulse {
+/* Logo 旋转动画 - 匀速旋转 */
+@keyframes logoRotate {
   0% {
-    transform: rotate(0deg) scale(1);
-  }
-  60% {
-    transform: rotate(360deg) scale(1.02);
-  }
-  75% {
-    transform: rotate(360deg) scale(1);
+    transform: rotate(0deg);
   }
   100% {
-    transform: rotate(360deg) scale(1);
+    transform: rotate(360deg);
   }
 }
 
-/* 发光脉冲动画 */
-@keyframes logoGlowPulse {
-  0%, 75%, 100% {
-    opacity: 0.5;
+/* 发光闪烁动画 - 间歇性闪光 */
+@keyframes logoGlowFlash {
+  0%, 100% {
+    opacity: 0.3;
     transform: scale(1);
   }
-  35% {
-    opacity: 0.85;
-    transform: scale(1.12);
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
   }
 }
 
