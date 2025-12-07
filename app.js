@@ -62,6 +62,9 @@ const translations = {
     'welcome.feature3.desc': '支持多链资产，一站式管理',
     'welcome.getStarted': '立即开始',
     'welcome.hasAccount': '已有账户？登录',
+    'welcome.goToMain': '进入主页',
+    'welcome.createNew': '创建新账户',
+    'welcome.login': '登录',
     'welcome.activeUsers': '活跃用户',
     'welcome.totalVolume': '交易总额',
     'welcome.security': '安全保障',
@@ -447,6 +450,9 @@ const translations = {
     'welcome.feature3.desc': 'Multi-chain asset support, all-in-one management',
     'welcome.getStarted': 'Get Started',
     'welcome.hasAccount': 'Have an account? Log in',
+    'welcome.goToMain': 'Go to Main',
+    'welcome.createNew': 'Create New Account',
+    'welcome.login': 'Login',
     'welcome.activeUsers': 'Active Users',
     'welcome.totalVolume': 'Total Volume',
     'welcome.security': 'Security',
@@ -832,6 +838,13 @@ function setLanguage(lang) {
   currentLanguage = lang;
   saveLanguageSetting(lang);
   updatePageTranslations();
+  
+  // 更新欢迎页按钮（如果在欢迎页）
+  const currentHash = (location.hash || '#/welcome').replace(/^#/, '');
+  if (currentHash === '/welcome') {
+    updateWelcomeButtons();
+  }
+  
   return true;
 }
 
@@ -2944,6 +2957,28 @@ function resetInquiryState() {
   }
 }
 
+/**
+ * 更新欢迎页按钮显示状态
+ * 根据用户登录状态显示/隐藏相应按钮
+ */
+function updateWelcomeButtons() {
+  const splitContainer = document.getElementById('splitLoginContainer');
+  const loginBtn = document.getElementById('loginAccountBtn');
+  
+  const user = loadUser();
+  const isLoggedIn = !!(user && user.accountId);
+  
+  if (isLoggedIn) {
+    // 显示分割按钮，隐藏单个登录按钮
+    if (splitContainer) splitContainer.classList.remove('hidden');
+    if (loginBtn) loginBtn.classList.add('hidden');
+  } else {
+    // 隐藏分割按钮，显示单个登录按钮
+    if (splitContainer) splitContainer.classList.add('hidden');
+    if (loginBtn) loginBtn.classList.remove('hidden');
+  }
+}
+
 function router() {
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
@@ -2955,6 +2990,8 @@ function router() {
   switch (h) {
     case '/welcome':
       showCard(welcomeCard);
+      // 检测登录状态，控制按钮显示
+      updateWelcomeButtons();
       break;
     case '/main':
       showCard(document.getElementById('walletCard'));
@@ -4235,6 +4272,19 @@ if (importBtn) {
 if (loginAccountBtn) {
   loginAccountBtn.addEventListener('click', () => routeTo('#/login'));
 }
+
+// 分割按钮事件处理
+const splitLoginBtn = document.getElementById('splitLoginBtn');
+const splitHomeBtn = document.getElementById('splitHomeBtn');
+
+if (splitLoginBtn) {
+  splitLoginBtn.addEventListener('click', () => routeTo('#/login'));
+}
+
+if (splitHomeBtn) {
+  splitHomeBtn.addEventListener('click', () => routeTo('#/main'));
+}
+
 if (registerAccountBtn) {
   registerAccountBtn.addEventListener('click', () => {
     resetOrgSelectionForNewUser();

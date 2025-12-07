@@ -440,6 +440,12 @@ body:has(.welcome-hero:not(.hidden)) {
   display: flex;
   gap: 16px;
   margin-top: 120px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.welcome-actions .hidden {
+  display: none !important;
 }
 
 .welcome-btn {
@@ -508,6 +514,128 @@ body:has(.welcome-hero:not(.hidden)) {
 
 .welcome-btn-secondary:active {
   transform: translateY(0);
+}
+
+/* 分割登录按钮容器 */
+.split-login-container {
+  display: inline-flex;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
+  backdrop-filter: blur(10px);
+  animation: splitBtnSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  position: relative;
+}
+
+/* 分割按钮 - 登录部分 */
+.split-btn-login {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0ea5e9;
+  border: none;
+  border-right: 1px solid rgba(14, 165, 233, 0.15);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.split-btn-login::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(14, 165, 233, 0.1), 
+    transparent);
+  transition: left 0.4s ease;
+}
+
+.split-btn-login:hover::before {
+  left: 100%;
+}
+
+.split-btn-login:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #0284c7;
+  transform: translateX(-2px);
+  box-shadow: -2px 0 8px rgba(14, 165, 233, 0.1);
+}
+
+.split-btn-login:active {
+  transform: translateX(0) scale(0.97);
+}
+
+/* 分割按钮 - 进入主页部分 */
+.split-btn-home {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 16px 28px;
+  font-size: 15px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.split-btn-home::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent);
+  transition: left 0.4s ease;
+}
+
+.split-btn-home:hover::before {
+  left: 100%;
+}
+
+.split-btn-home:hover {
+  background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  transform: translateX(2px);
+  box-shadow: 2px 0 8px rgba(14, 165, 233, 0.2);
+}
+
+.split-btn-home:active {
+  transform: translateX(0) scale(0.97);
+}
+
+/* 整体容器悬停效果 */
+.split-login-container:hover {
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.2);
+  transform: translateY(-2px);
+}
+
+@keyframes splitBtnSlideIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* 底部信息 */
@@ -826,8 +954,8 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 .coin-inner {
-  width: 72px;
-  height: 72px;
+  width: 60px;
+  height: 60px;
   background: linear-gradient(145deg, #f7931a, #e88a17);
   border-radius: 50%;
   display: flex;
@@ -835,20 +963,20 @@ body:has(.welcome-hero:not(.hidden)) {
   justify-content: center;
   position: relative;
   box-shadow: 
-    0 0 0 4px rgba(247, 147, 26, 0.2),
-    0 0 0 8px rgba(247, 147, 26, 0.1),
-    0 15px 50px rgba(247, 147, 26, 0.4),
-    0 5px 20px rgba(247, 147, 26, 0.3),
-    inset 0 3px 0 rgba(255,255,255,0.35),
-    inset 0 -3px 0 rgba(0,0,0,0.15);
+    0 0 0 3px rgba(247, 147, 26, 0.18),
+    0 0 0 6px rgba(247, 147, 26, 0.08),
+    0 12px 40px rgba(247, 147, 26, 0.35),
+    0 4px 16px rgba(247, 147, 26, 0.25),
+    inset 0 2px 0 rgba(255,255,255,0.35),
+    inset 0 -2px 0 rgba(0,0,0,0.15);
   overflow: hidden;
 }
 
 .coin-inner::before {
   content: '';
   position: absolute;
-  width: 54px;
-  height: 54px;
+  width: 46px;
+  height: 46px;
   border: 2px solid rgba(255,255,255,0.25);
   border-radius: 50%;
 }
@@ -858,7 +986,7 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 .coin-symbol {
-  font-size: 36px;
+  font-size: 30px;
   font-weight: 700;
   color: white;
   text-shadow: 
@@ -1128,6 +1256,17 @@ body:has(.welcome-hero:not(.hidden)) {
   
   .welcome-btn {
     width: 100%;
+    justify-content: center;
+  }
+  
+  .split-login-container {
+    width: 100%;
+    flex-direction: row;
+  }
+  
+  .split-btn-login,
+  .split-btn-home {
+    flex: 1;
     justify-content: center;
   }
   
