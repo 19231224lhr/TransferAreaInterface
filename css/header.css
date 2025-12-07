@@ -493,12 +493,17 @@
   flex-direction: column;
   gap: 2px;
   flex: 1;
+  min-width: 0; /* 允许 flex 子元素缩小 */
+  overflow: hidden; /* 防止内容溢出 */
 }
 
 .menu-header-title {
   font-size: 15px;
   font-weight: 600;
   color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .menu-header-sub {
@@ -508,7 +513,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: 180px;
 }
 
 .menu-header-sub strong {

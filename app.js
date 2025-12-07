@@ -305,6 +305,7 @@ const translations = {
     'profile.action.saved': '已保存',
     'profile.tip.localStorage': '头像仅存储在本地浏览器',
     'profile.tip.squareImage': '建议使用正方形图片',
+    'profile.loginRequired': '请先登录',
     
     // Toast 消息
     'toast.profile.saved': '个人信息保存成功',
@@ -688,6 +689,7 @@ const translations = {
     'profile.action.saved': 'Saved',
     'profile.tip.localStorage': 'Avatar is stored locally in your browser',
     'profile.tip.squareImage': 'Square images are recommended',
+    'profile.loginRequired': 'Please log in first',
     
     // Toast Messages
     'toast.profile.saved': 'Profile saved successfully',
@@ -1278,8 +1280,14 @@ function updateHeaderUser(user) {
     if (avatarImg) avatarImg.classList.add('hidden');
     if (menuAvatarImg) menuAvatarImg.classList.add('hidden');
     
-    // 隐藏头部和卡片区
-    if (menuHeader) menuHeader.classList.add('hidden');
+    // 未登录时也显示头部，但显示未登录信息
+    if (menuHeader) menuHeader.classList.remove('hidden');
+    const menuHeaderTitleEl = document.getElementById('menuHeaderTitle');
+    const menuHeaderSubEl = document.getElementById('menuHeaderSub');
+    if (menuHeaderTitleEl) menuHeaderTitleEl.textContent = t('common.notLoggedIn');
+    if (menuHeaderSubEl) menuHeaderSubEl.textContent = t('header.loginHint');
+    
+    // 隐藏卡片区
     if (menuCards) menuCards.classList.add('hidden');
     if (menuAccountItem) menuAccountItem.classList.add('hidden');
     if (menuAccountIdEl) menuAccountIdEl.textContent = '';
@@ -1520,6 +1528,7 @@ function updateProfileDisplay() {
 function initProfilePage() {
   const profile = loadUserProfile();
   const user = loadUser();
+  const isLoggedIn = !!(user && user.accountId);
   
   // 填充当前数据
   const nicknameInput = document.getElementById('nicknameInput');
@@ -1531,38 +1540,34 @@ function initProfilePage() {
   const profileAvatarPreview = document.getElementById('profileAvatarPreview');
   const profileAvatarLarge = document.getElementById('profileAvatarLarge');
   
-  // 设置昵称
+  // 设置昵称 - 未登录时显示"未登录"
   if (nicknameInput) {
-    nicknameInput.value = profile.nickname || 'Amiya';
+    nicknameInput.value = isLoggedIn ? (profile.nickname || 'Amiya') : t('common.notLoggedIn');
     updateCharCount();
   }
   
-  // 设置签名
+  // 设置签名 - 未登录时显示登录提示
   const signatureInput = document.getElementById('signatureInput');
   const signatureCharCount = document.getElementById('signatureCharCount');
   if (signatureInput) {
-    signatureInput.value = profile.signature || '这个人很懒，还没有修改这里。';
+    signatureInput.value = isLoggedIn ? (profile.signature || '这个人很懒，还没有修改这里。') : t('header.loginHint');
     updateSignatureCharCount();
   }
   
-  // 设置显示名称
+  // 设置显示名称 - 未登录时显示"未登录"
   if (profileDisplayName) {
-    profileDisplayName.textContent = profile.nickname || 'Amiya';
+    profileDisplayName.textContent = isLoggedIn ? (profile.nickname || 'Amiya') : t('common.notLoggedIn');
   }
   
-  // 设置Account ID
-  if (profileAccountId && user) {
-    profileAccountId.textContent = user.accountId || 'Account ID';
+  // 设置Account ID - 未登录时显示"未登录"
+  if (profileAccountId) {
+    profileAccountId.textContent = isLoggedIn ? (user.accountId || 'Account ID') : t('common.notLoggedIn');
   }
   
-  // 设置头像预览 - 优先使用自定义头像，其次使用默认头像
-  const avatarSrc = profile.avatar || '/assets/avatar.png';
-  const hasCustomAvatar = !!profile.avatar;
-  
-  // 检查默认头像是否存在（通过检测用户是否已登录）
-  const hasDefaultAvatar = user && user.accountId;
-  
-  if (hasCustomAvatar || hasDefaultAvatar) {
+  // 设置头像预览 - 未登录时显示人形图标
+  if (isLoggedIn) {
+    // 已登录：显示自定义头像或默认头像
+    const avatarSrc = profile.avatar || '/assets/avatar.png';
     if (avatarPreviewImg) {
       avatarPreviewImg.src = avatarSrc;
       avatarPreviewImg.classList.remove('hidden');
@@ -1576,12 +1581,15 @@ function initProfilePage() {
       if (placeholder) placeholder.classList.add('hidden');
     }
   } else {
+    // 未登录：显示人形图标，隐藏图片
     if (avatarPreviewImg) {
+      avatarPreviewImg.src = '';
       avatarPreviewImg.classList.add('hidden');
       const placeholder = avatarUploadPreview?.querySelector('.preview-placeholder');
       if (placeholder) placeholder.classList.remove('hidden');
     }
     if (profileAvatarPreview) {
+      profileAvatarPreview.src = '';
       profileAvatarPreview.classList.add('hidden');
       const placeholder = profileAvatarLarge?.querySelector('.avatar-placeholder');
       if (placeholder) placeholder.classList.remove('hidden');
@@ -1593,6 +1601,64 @@ function initProfilePage() {
   
   // 初始化语言选择器状态
   updateLanguageSelectorUI();
+  
+  // 根据登录状态控制功能可用性
+  updateProfilePageAccess();
+}
+
+/**
+ * 根据登录状态控制个人信息页面的访问权限
+ */
+function updateProfilePageAccess() {
+  const user = loadUser();
+  const isLoggedIn = !!(user && user.accountId);
+  
+  // 获取需要控制的元素
+  const avatarUploadBtn = document.getElementById('avatarUploadBtn');
+  const avatarRemoveBtn = document.getElementById('avatarRemoveBtn');
+  const nicknameInput = document.getElementById('nicknameInput');
+  const signatureInput = document.getElementById('signatureInput');
+  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  const profileAccountId = document.getElementById('profileAccountId');
+  
+  // 头像相关区域
+  const avatarSettingGroup = document.querySelector('.profile-setting-group');
+  const nicknameSettingGroup = document.querySelectorAll('.profile-setting-group')[1];
+  const signatureSettingGroup = document.querySelectorAll('.profile-setting-group')[2];
+  
+  if (!isLoggedIn) {
+    // 未登录：禁用头像、昵称、签名编辑功能
+    if (avatarUploadBtn) avatarUploadBtn.disabled = true;
+    if (avatarRemoveBtn) avatarRemoveBtn.disabled = true;
+    if (nicknameInput) {
+      nicknameInput.disabled = true;
+      nicknameInput.value = t('common.notLoggedIn');
+    }
+    if (signatureInput) {
+      signatureInput.disabled = true;
+      signatureInput.value = t('header.loginHint');
+    }
+    if (profileSaveBtn) profileSaveBtn.disabled = true;
+    if (profileAccountId) profileAccountId.textContent = t('common.notLoggedIn');
+    
+    // 添加禁用样式
+    if (avatarSettingGroup) avatarSettingGroup.style.opacity = '0.5';
+    if (nicknameSettingGroup) nicknameSettingGroup.style.opacity = '0.5';
+    if (signatureSettingGroup) signatureSettingGroup.style.opacity = '0.5';
+  } else {
+    // 已登录：启用所有功能
+    if (avatarUploadBtn) avatarUploadBtn.disabled = false;
+    if (avatarRemoveBtn) avatarRemoveBtn.disabled = false;
+    if (nicknameInput) nicknameInput.disabled = false;
+    if (signatureInput) signatureInput.disabled = false;
+    if (profileSaveBtn) profileSaveBtn.disabled = false;
+    
+    // 移除禁用样式
+    if (avatarSettingGroup) avatarSettingGroup.style.opacity = '1';
+    if (nicknameSettingGroup) nicknameSettingGroup.style.opacity = '1';
+    if (signatureSettingGroup) signatureSettingGroup.style.opacity = '1';
+  }
 }
 
 /**
@@ -1669,6 +1735,11 @@ function bindProfileEvents() {
   const avatarFileInput = document.getElementById('avatarFileInput');
   if (avatarUploadBtn && avatarFileInput && !avatarUploadBtn.dataset._bind) {
     avatarUploadBtn.addEventListener('click', () => {
+      const user = loadUser();
+      if (!user || !user.accountId) {
+        showWarningToast(t('profile.loginRequired'), t('common.warning'));
+        return;
+      }
       avatarFileInput.click();
     });
     avatarUploadBtn.dataset._bind = '1';
@@ -1683,7 +1754,14 @@ function bindProfileEvents() {
   // 移除头像按钮
   const avatarRemoveBtn = document.getElementById('avatarRemoveBtn');
   if (avatarRemoveBtn && !avatarRemoveBtn.dataset._bind) {
-    avatarRemoveBtn.addEventListener('click', handleAvatarRemove);
+    avatarRemoveBtn.addEventListener('click', () => {
+      const user = loadUser();
+      if (!user || !user.accountId) {
+        showWarningToast(t('profile.loginRequired'), t('common.warning'));
+        return;
+      }
+      handleAvatarRemove();
+    });
     avatarRemoveBtn.dataset._bind = '1';
   }
   
@@ -2869,7 +2947,7 @@ function resetInquiryState() {
 function router() {
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
-  const allowNoUser = ['/welcome', '/login', '/new'];
+  const allowNoUser = ['/welcome', '/login', '/new', '/profile'];
   if (!u && allowNoUser.indexOf(h) === -1) {
     routeTo('#/welcome');
     return;
