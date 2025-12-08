@@ -3,8 +3,37 @@
 // - 使用私钥 d 作为输入生成 8 位用户 ID（CRC32 结果映射）
 // - 使用未压缩公钥(0x04 || X || Y)的 SHA-256 前 20 字节生成地址
 
-try { window.addEventListener('error', function (e) { var m = String((e && e.message) || ''); var f = String((e && e.filename) || ''); if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) { if (e.preventDefault) e.preventDefault(); return true; } }, true); } catch (_) { }
-try { window.addEventListener('unhandledrejection', function () { }, true); } catch (_) { }
+// 抑制浏览器扩展错误 - 防止控制台污染
+try {
+  window.addEventListener('error', function (e) {
+    var m = String((e && e.message) || '');
+    var f = String((e && e.filename) || '');
+    // 抑制以太坊钱包扩展错误
+    if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+    // 抑制 Solana 扩展错误
+    if (f.indexOf('solanaActionsContentScript.js') !== -1 || m.indexOf('Could not establish connection') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+  }, true);
+} catch (_) { }
+
+// 抑制未处理的 Promise 拒绝（来自扩展）
+try {
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = String((e && e.reason) || '');
+    // 抑制扩展相关的 Promise 错误
+    if (reason.indexOf('Could not establish connection') !== -1 || 
+        reason.indexOf('Receiving end does not exist') !== -1 ||
+        reason.indexOf('Something went wrong') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+  }, true);
+} catch (_) { }
 
 // ========================================
 // 国际化 (i18n) 系统
