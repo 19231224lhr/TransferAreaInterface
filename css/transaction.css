@@ -647,10 +647,10 @@
 }
 
 .tx-section {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   padding: .6rem .75rem;
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  background: var(--color-card-bg);
   box-shadow: 0 6px 16px rgba(15, 23, 42, .06);
   transition: padding .16s ease;
   position: relative;
@@ -820,26 +820,19 @@
 .item-backdrop {
   position: absolute;
   inset: 0;
-  background: #f1f5f9;
-  /* neutral-100 - Darker than before */
+  background: var(--neutral-100);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-radius: 12px;
-  box-shadow:
-    0 2px 6px rgba(15, 23, 42, 0.02),
-    inset 0 1px 0 rgba(255, 255, 255, 0.6),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.02);
   transition: all 0.2s ease;
   z-index: 0;
 }
 
 .src-addr-item:hover .item-backdrop {
-  background: #e2e8f0;
-  /* neutral-200 */
+  background: var(--neutral-200);
   transform: translateY(-1px);
-  box-shadow:
-    0 4px 12px rgba(15, 23, 42, 0.05),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
 }
 
 /* 选中状态边框 */
@@ -859,7 +852,7 @@
 }
 
 .src-addr-item.selected .item-backdrop {
-  background: #f1f5f9;
+  background: var(--neutral-100);
 }
 
 .src-addr-item input[type="checkbox"] {
@@ -981,7 +974,7 @@
 .addr-text {
   font-family: 'SF Mono', 'Menlo', monospace;
   font-size: 12px;
-  color: #334155;
+  color: var(--text-primary);
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -1011,7 +1004,7 @@
 .amount-num {
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--text-primary);
   letter-spacing: -0.3px;
 }
 
@@ -1333,8 +1326,8 @@
   position: relative;
   display: flex;
   align-items: center;
-  background: #fff;
-  border: 1px solid #e2e8f0;
+  background: var(--color-card-bg-solid);
+  border: 1px solid var(--color-border);
   border-radius: 10px;
   transition: all 0.2s ease;
 }
@@ -1439,7 +1432,7 @@
   width: 100%;
   min-height: 2rem;
   padding: .4rem .6rem;
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  background: var(--color-card-bg);
   border: 1px solid rgba(226, 232, 240, .4);
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(15, 23, 42, .06) inset, 0 2px 8px rgba(15, 23, 42, .05);
@@ -1670,6 +1663,92 @@
 /* ========================================
    深色模式适配
    ======================================== */
+
+/* 交易表单容器 */
+[data-theme="dark"] .tx-form {
+  background: linear-gradient(135deg,
+      var(--color-card-bg) 0%,
+      var(--color-card-bg-secondary) 100%);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .tx-form-header {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="dark"] .tx-form-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-form-title svg {
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .tx-form-badge {
+  color: var(--color-primary);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+/* 表单区块 */
+[data-theme="dark"] .tx-section-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tx-section-label svg {
+  color: var(--color-primary);
+}
+
+/* 输入框样式 */
+[data-theme="dark"] .tx-input {
+  color: var(--color-text-primary);
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .tx-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .tx-input:focus {
+  border-color: var(--color-input-focus);
+  box-shadow:
+    0 0 0 4px rgba(56, 189, 248, 0.15),
+    0 4px 16px rgba(56, 189, 248, 0.2);
+}
+
+[data-theme="dark"] .tx-input:hover:not(:focus) {
+  border-color: var(--color-card-border);
+}
+
+/* 金额单位 */
+[data-theme="dark"] .tx-amount-unit {
+  color: var(--color-text-secondary);
+}
+
+/* 提交按钮 */
+[data-theme="dark"] .tx-submit-btn {
+  background: linear-gradient(135deg, #38bdf8 0%, #a78bfa 100%);
+  box-shadow:
+    0 10px 30px rgba(56, 189, 248, 0.35),
+    0 5px 15px rgba(167, 139, 250, 0.25);
+}
+
+[data-theme="dark"] .tx-submit-btn::before {
+  background: linear-gradient(135deg, #7dd3fc, #c4b5fd);
+}
+
+[data-theme="dark"] .tx-submit-btn:hover {
+  box-shadow:
+    0 15px 40px rgba(56, 189, 248, 0.4),
+    0 8px 20px rgba(167, 139, 250, 0.3);
+}
+
+[data-theme="dark"] .tx-submit-btn:disabled:hover {
+  box-shadow:
+    0 10px 30px rgba(56, 189, 248, 0.35),
+    0 5px 15px rgba(167, 139, 250, 0.25);
+}
 
 [data-theme="dark"] .tx-module {
   background: var(--color-card-bg-solid);

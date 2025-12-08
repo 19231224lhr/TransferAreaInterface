@@ -80,6 +80,52 @@
 }
 
 /* ========================================
+   深色主题覆盖
+   ======================================== */
+[data-theme="dark"] {
+  /* 中性色 - 深色模式反转 */
+  --neutral-50: #1e293b;
+  --neutral-100: #334155;
+  --neutral-200: #475569;
+  --neutral-300: #64748b;
+  --neutral-400: #94a3b8;
+  --neutral-500: #cbd5e1;
+  --neutral-600: #e2e8f0;
+  --neutral-700: #f1f5f9;
+  --neutral-800: #f8fafc;
+  --neutral-900: #ffffff;
+
+  /* 背景 */
+  --bg-page: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  --bg-card: rgba(30, 41, 59, 0.95);
+  --bg-card-solid: #1e293b;
+
+  /* 文字 */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* 主题色 - 深色模式下调暗 */
+  --wallet-primary: #059669;
+  --wallet-primary-light: #10b981;
+  --wallet-primary-dark: #047857;
+  --wallet-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+
+  --transfer-primary: #2563eb;
+  --transfer-primary-light: #3b82f6;
+  --transfer-primary-dark: #1d4ed8;
+  --transfer-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+
+  /* 阴影 - 深色模式使用更深的阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-green: 0 8px 30px rgba(5, 150, 105, 0.3);
+  --shadow-blue: 0 8px 30px rgba(37, 99, 235, 0.3);
+  --shadow-purple: 0 8px 30px rgba(139, 92, 246, 0.3);
+}
+
+/* ========================================
    基础动画
    ======================================== */
 @keyframes fadeUp {
@@ -510,16 +556,14 @@
 
 .coin-card {
   padding: 16px 12px;
-  background: #f1f5f9;
-  /* neutral-100 */
+  background: var(--neutral-100);
   border-radius: var(--radius-lg);
   text-align: center;
   transition: all var(--duration-fast) ease;
 }
 
 .coin-card:hover {
-  background: #e2e8f0;
-  /* neutral-200 */
+  background: var(--neutral-200);
   transform: translateY(-2px);
 }
 
@@ -528,8 +572,7 @@
    使用GPU加速和流畅的过渡效果
    ======================================== */
 .main-v2 .addr-card {
-  background: #f1f5f9 !important;
-  /* neutral-100 */
+  background: var(--neutral-100) !important;
   border-radius: var(--radius-md) !important;
   overflow: hidden !important;
   /* 收起时裁剪内容 */
@@ -564,8 +607,7 @@
 
 /* 悬停效果 - 柔和的上浮动画 */
 .main-v2 .addr-card:hover {
-  background: #e2e8f0 !important;
-  /* neutral-200 */
+  background: var(--neutral-200) !important;
   z-index: 10 !important;
   /* 悬浮时提升层级，防止菜单被下方卡片遮挡 */
   transform: translateY(-3px) translateZ(0) !important;
@@ -1025,14 +1067,14 @@ Already defined above with darker background
   top: auto !important;
   margin-bottom: 8px !important;
   margin-top: 0 !important;
-  background: #ffffff !important;
+  background: var(--bg-card-solid) !important;
   border-radius: 10px !important;
   box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15), 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
   min-width: 140px !important;
   z-index: 9999 !important;
   overflow: visible !important;
   padding: 8px !important;
-  border: 1px solid #e2e8f0 !important;
+  border: 1px solid var(--neutral-200) !important;
 }
 
 .main-v2 .ops-menu.hidden {
@@ -1467,7 +1509,7 @@ Already defined above with darker background
 /* 收款方卡片 - 简洁灰色背景 */
 .recipient-card {
   position: relative;
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 10px;
   overflow: visible;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1653,7 +1695,7 @@ Already defined above with darker background
 .recipient-card .input:focus {
   border-color: var(--transfer-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-  background: white;
+  background: var(--bg-card-solid);
 }
 
 .recipient-card .input::placeholder {
@@ -1720,7 +1762,7 @@ Already defined above with darker background
   top: calc(100% + 4px);
   left: 0;
   right: 0;
-  background: white;
+  background: var(--bg-card-solid);
   border: 1px solid var(--neutral-200);
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
@@ -1931,7 +1973,7 @@ Already defined above with darker background
 }
 
 .options-toggle:hover {
-  background: rgba(248, 250, 252, 0.8);
+  background: var(--neutral-50);
 }
 
 .options-toggle-left {
@@ -2029,7 +2071,7 @@ Already defined above with darker background
 /* 内层白色卡片 - 与recipient-card一致 */
 .options-card {
   position: relative;
-  background: white;
+  background: var(--bg-card-solid);
   border-radius: 10px;
   overflow: visible;
   padding: 12px 14px;
@@ -2164,7 +2206,7 @@ Already defined above with darker background
 }
 
 .option-input-wrapper:focus-within {
-  background: white;
+  background: var(--bg-card-solid);
   border-color: var(--transfer-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
@@ -2181,7 +2223,7 @@ Already defined above with darker background
 }
 
 .option-input-wrapper.custom-select.open {
-  background: white;
+  background: var(--bg-card-solid);
   border-color: var(--transfer-primary);
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
   border-radius: 8px;
@@ -2393,7 +2435,7 @@ Already defined above with darker background
   top: calc(100% + 6px);
   left: 0;
   right: 0;
-  background: #ffffff;
+  background: var(--bg-card-solid);
   border: 1px solid rgba(59, 130, 246, 0.2);
   border-radius: 12px;
   z-index: 200;
@@ -3999,9 +4041,7 @@ Already defined above with darker background
 }
 
 [data-theme="dark"] .addr-detail-value {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
+  color: var(--text-primary);
 }
 
 [data-theme="dark"] .addr-detail-actions .btn {
@@ -4045,4 +4085,60 @@ Already defined above with darker background
 
 [data-theme="dark"] .wallet-modal-input::placeholder {
   color: var(--color-text-tertiary);
+}
+
+
+/* ========================================
+   深色模式 - 子地址卡片修复
+   ======================================== */
+
+/* 修复虚线边框在深色模式下的可见性 */
+[data-theme="dark"] .main-v2 .addr-detail-row {
+  border-top-color: #64748b;
+}
+
+/* 修复地址卡片悬停时的边框可见性 */
+[data-theme="dark"] .main-v2 .addr-card-actions {
+  border-top-color: #64748b !important;
+}
+
+/* 确保三个点按钮在深色模式下可见 */
+[data-theme="dark"] .main-v2 .ops-toggle {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .main-v2 .ops-toggle:hover {
+  background: var(--neutral-100);
+  color: var(--text-secondary);
+}
+
+/* ========================================
+   深色模式 - 转账区域修复
+   ======================================== */
+
+/* 修复三个交易选择按钮的白色背景 - 使用半透明柔和样式 */
+[data-theme="dark"] .transfer-mode-tab.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--text-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+}
+
+/* 隐藏所有 number 输入框的上下调整按钮（包括转账金额和Gas输入框） */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  display: none;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* 修复高级选项上方的白色边框线 */
+[data-theme="dark"] .transfer-options {
+  border-top-color: rgba(100, 116, 139, 0.3);
 }

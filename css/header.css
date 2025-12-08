@@ -650,7 +650,7 @@
   display: block !important;
   font-size: 13px !important;
   font-weight: 600 !important;
-  color: #1e293b !important;
+  color: var(--text-primary) !important;
   font-family: 'SF Mono', 'Fira Code', monospace !important;
   word-break: break-all;
   line-height: 1.4 !important;
@@ -1005,9 +1005,8 @@
 }
 
 [data-theme="dark"] .menu-card-value {
-  color: var(--color-text-primary);
-  background: rgba(15, 23, 42, 0.5);
-  border-color: rgba(71, 85, 105, 0.5);
+  color: var(--text-primary) !important;
+  background: none !important;
 }
 
 [data-theme="dark"] .menu-empty-text {

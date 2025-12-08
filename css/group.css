@@ -496,7 +496,7 @@
   display: block;
   font-size: 14px;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  color: #334155;
+  color: var(--text-primary);
   word-break: break-all;
   line-height: 1.5;
 }
@@ -856,4 +856,84 @@
 
 [data-theme="dark"] .group-empty-desc {
   color: var(--color-text-secondary);
+}
+
+
+/* ========================================
+   深色模式 - 担保组织页面优化
+   ======================================== */
+
+/* 调暗左侧边栏的主体色调 */
+[data-theme="dark"] .group-sidebar {
+  background: linear-gradient(165deg, #064e3b 0%, #065f46 40%, #047857 80%, #059669 100%);
+}
+
+/* 修复右侧组织信息卡片的白色背景 */
+[data-theme="dark"] .group-info-card {
+  background: var(--bg-card-solid);
+  border-color: var(--neutral-200);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .group-info-header {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(16, 185, 129, 0.08));
+  border-bottom-color: var(--neutral-200);
+}
+
+[data-theme="dark"] .group-info-id {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .group-info-type {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .group-info-status {
+  background: rgba(5, 150, 105, 0.2);
+  color: #10b981;
+}
+
+[data-theme="dark"] .group-info-status .status-dot {
+  background: #10b981;
+}
+
+[data-theme="dark"] .group-info-grid {
+  background: var(--neutral-200);
+}
+
+[data-theme="dark"] .group-info-item {
+  background: var(--bg-card-solid);
+}
+
+[data-theme="dark"] .group-info-item:hover {
+  background: var(--neutral-100);
+}
+
+/* 确保信息内容在深色模式下清晰可见 */
+[data-theme="dark"] .info-content label {
+  color: var(--text-muted);
+}
+
+[data-theme="dark"] .info-content span {
+  color: var(--text-primary);
+}
+
+/* 优化悬停时的复制按钮 */
+[data-theme="dark"] .info-copy-btn {
+  background: var(--neutral-100);
+  border-color: var(--neutral-200);
+}
+
+[data-theme="dark"] .info-copy-btn svg {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .info-copy-btn:hover {
+  background: var(--neutral-200);
+  border-color: var(--neutral-300);
+}
+
+/* 优化图标颜色 */
+[data-theme="dark"] .info-icon svg {
+  color: #10b981;
 }
