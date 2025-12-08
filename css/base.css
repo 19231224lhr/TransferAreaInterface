@@ -1,9 +1,171 @@
 /**
  * ========================================
  * 基础样式模块 - base.css
- * 包含：重置样式、全局变量、基础布局
+ * 包含：重置样式、全局变量、基础布局、主题系统
  * ========================================
  */
+
+/* ========================================
+   主题系统 - CSS 变量定义
+   ======================================== */
+
+:root {
+  /* 背景色 */
+  --color-bg-primary: #f0f9ff;
+  --color-bg-secondary: #e0f2fe;
+  --color-bg-tertiary: #f0f4ff;
+  --color-bg-page: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%);
+  
+  /* 卡片背景 */
+  --color-card-bg: rgba(255, 255, 255, 0.95);
+  --color-card-bg-solid: #ffffff;
+  --color-card-bg-secondary: rgba(248, 250, 252, 0.9);
+  --color-card-border: rgba(14, 165, 233, 0.1);
+  --color-card-shadow: rgba(14, 165, 233, 0.08);
+  
+  /* 文本颜色 */
+  --color-text-primary: #1f2937;
+  --color-text-secondary: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverse: #ffffff;
+  
+  /* 主题色 */
+  --color-primary: #0ea5e9;
+  --color-primary-light: #38bdf8;
+  --color-primary-dark: #0284c7;
+  --color-secondary: #8b5cf6;
+  --color-secondary-light: #a78bfa;
+  
+  /* 功能色 */
+  --color-success: #10b981;
+  --color-success-light: #34d399;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fbbf24;
+  --color-danger: #ef4444;
+  --color-danger-light: #f87171;
+  
+  /* 边框和分隔线 */
+  --color-border: #e2e8f0;
+  --color-border-light: rgba(14, 165, 233, 0.08);
+  --color-divider: rgba(14, 165, 233, 0.1);
+  
+  /* 输入框 */
+  --color-input-bg: rgba(255, 255, 255, 0.95);
+  --color-input-border: rgba(14, 165, 233, 0.12);
+  --color-input-focus: rgba(14, 165, 233, 0.4);
+  
+  /* 装饰光球 */
+  --orb-opacity: 0.4;
+  --orb-opacity-secondary: 0.35;
+  --orb-blur: 80px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 4px 16px rgba(14, 165, 233, 0.06);
+  --shadow-md: 0 8px 24px rgba(14, 165, 233, 0.12);
+  --shadow-lg: 0 16px 48px rgba(14, 165, 233, 0.15);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
+  
+  /* 模态框 */
+  --color-modal-overlay: rgba(15, 23, 42, 0.6);
+  --color-modal-bg: rgba(255, 255, 255, 0.98);
+  
+  /* 代码块 */
+  --color-code-bg: #f3f4f6;
+  --color-code-text: #111827;
+  
+  /* 滚动条 */
+  --color-scrollbar-track: rgba(14, 165, 233, 0.05);
+  --color-scrollbar-thumb: rgba(14, 165, 233, 0.3);
+}
+
+/* 深色主题 */
+[data-theme="dark"] {
+  /* 背景色 */
+  --color-bg-primary: #0f172a;
+  --color-bg-secondary: #1e293b;
+  --color-bg-tertiary: #334155;
+  --color-bg-page: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  
+  /* 卡片背景 */
+  --color-card-bg: rgba(30, 41, 59, 0.95);
+  --color-card-bg-solid: #1e293b;
+  --color-card-bg-secondary: rgba(51, 65, 85, 0.9);
+  --color-card-border: rgba(14, 165, 233, 0.2);
+  --color-card-shadow: rgba(0, 0, 0, 0.3);
+  
+  /* 文本颜色 */
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #cbd5e1;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverse: #0f172a;
+  
+  /* 主题色 - 增亮 */
+  --color-primary: #38bdf8;
+  --color-primary-light: #7dd3fc;
+  --color-primary-dark: #0ea5e9;
+  --color-secondary: #a78bfa;
+  --color-secondary-light: #c4b5fd;
+  
+  /* 功能色 - 增亮 */
+  --color-success: #34d399;
+  --color-success-light: #6ee7b7;
+  --color-warning: #fbbf24;
+  --color-warning-light: #fcd34d;
+  --color-danger: #f87171;
+  --color-danger-light: #fca5a5;
+  
+  /* 边框和分隔线 */
+  --color-border: #334155;
+  --color-border-light: rgba(14, 165, 233, 0.15);
+  --color-divider: rgba(14, 165, 233, 0.15);
+  
+  /* 输入框 */
+  --color-input-bg: rgba(51, 65, 85, 0.8);
+  --color-input-border: rgba(14, 165, 233, 0.25);
+  --color-input-focus: rgba(56, 189, 248, 0.5);
+  
+  /* 装饰光球 */
+  --orb-opacity: 0.2;
+  --orb-opacity-secondary: 0.15;
+  --orb-blur: 100px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  
+  /* 模态框 */
+  --color-modal-overlay: rgba(0, 0, 0, 0.7);
+  --color-modal-bg: rgba(30, 41, 59, 0.98);
+  
+  /* 代码块 */
+  --color-code-bg: #1e293b;
+  --color-code-text: #e2e8f0;
+  
+  /* 滚动条 */
+  --color-scrollbar-track: rgba(51, 65, 85, 0.5);
+  --color-scrollbar-thumb: rgba(56, 189, 248, 0.4);
+}
+
+/* 主题切换过渡动画 */
+*,
+*::before,
+*::after {
+  transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* 排除某些元素的过渡（避免动画冲突） */
+.welcome-gradient-orb,
+.particle,
+.bolt .seg,
+.spinner,
+.loader-dot,
+button:active,
+input:focus,
+textarea:focus {
+  transition: none;
+}
 
 * {
   box-sizing: border-box;
@@ -18,8 +180,8 @@ body {
 body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, 'Microsoft Yahei', sans-serif;
-  color: #1f2937;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%);
+  color: var(--color-text-primary);
+  background: var(--color-bg-page);
   background-attachment: fixed;
   min-width: 100vw;
   position: relative;
@@ -34,10 +196,10 @@ body::before {
   right: -100px;
   width: 600px;
   height: 600px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.4;
+  filter: blur(var(--orb-blur));
+  opacity: var(--orb-opacity);
   pointer-events: none;
   z-index: -1;
   animation: orbFloat1 8s ease-in-out infinite;
@@ -50,10 +212,10 @@ body::after {
   left: -100px;
   width: 500px;
   height: 500px;
-  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.35;
+  filter: blur(var(--orb-blur));
+  opacity: var(--orb-opacity-secondary);
   pointer-events: none;
   z-index: -1;
   animation: orbFloat2 8s ease-in-out infinite;
@@ -181,5 +343,5 @@ body:has(#memberInfoCard:not(.hidden))::after {
 .footer {
   margin: 28px 0;
   text-align: center;
-  color: #6b7280;
+  color: var(--color-text-secondary);
 }

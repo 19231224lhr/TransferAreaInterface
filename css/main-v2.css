@@ -3812,3 +3812,237 @@ Already defined above with darker background
     padding: 14px 20px;
   }
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .main-v2 {
+  background: transparent;
+}
+
+[data-theme="dark"] .main-v2-header {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .main-v2-desc {
+  color: var(--color-text-secondary);
+}
+
+/* 模块卡片 */
+[data-theme="dark"] .module-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .module-header {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="dark"] .module-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .module-desc {
+  color: var(--color-text-secondary);
+}
+
+/* 地址选择器 */
+[data-theme="dark"] .addr-selector {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .addr-selector:hover {
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .addr-selector.active {
+  border-color: var(--color-input-focus);
+}
+
+[data-theme="dark"] .addr-selector-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .addr-selector-value {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-selector-dropdown {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .addr-selector-item {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-selector-item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .addr-selector-item.selected {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--color-primary);
+}
+
+/* 选项卡 */
+[data-theme="dark"] .options-tabs {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .options-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .options-tab:hover {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .options-tab.active {
+  color: var(--color-text-primary);
+  background: var(--color-card-bg-solid);
+}
+
+/* 选项网格 */
+[data-theme="dark"] .options-grid {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .options-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .options-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .options-input:focus {
+  border-color: var(--color-input-focus);
+}
+
+[data-theme="dark"] .options-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* 无担保组织警告 */
+[data-theme="dark"] .no-org-warning {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.05));
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+[data-theme="dark"] .no-org-warning-text {
+  color: var(--color-warning);
+}
+
+[data-theme="dark"] .no-org-warning-desc {
+  color: var(--color-text-secondary);
+}
+
+/* 交易结果 */
+[data-theme="dark"] .tx-result-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .tx-result-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-result-value {
+  background: var(--color-code-bg);
+  border-color: var(--color-border);
+  color: var(--color-code-text);
+}
+
+[data-theme="dark"] .tx-result-label {
+  color: var(--color-text-secondary);
+}
+
+/* 统一操作卡片 */
+[data-theme="dark"] .unified-success .success-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .unified-success .success-text {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .unified-btn--secondary {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .unified-btn--secondary:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* 地址详情卡片 */
+[data-theme="dark"] .addr-detail-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .addr-detail-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .addr-detail-value {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-detail-actions .btn {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .addr-detail-actions .btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+/* 钱包模态框 */
+[data-theme="dark"] .wallet-modal-content {
+  background: var(--color-modal-bg);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+[data-theme="dark"] .wallet-modal-header {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="dark"] .wallet-modal-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .wallet-modal-body {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .wallet-modal-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .wallet-modal-input:focus {
+  border-color: var(--color-input-focus);
+}
+
+[data-theme="dark"] .wallet-modal-input::placeholder {
+  color: var(--color-text-tertiary);
+}

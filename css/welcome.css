@@ -1285,3 +1285,166 @@ body:has(.welcome-hero:not(.hidden)) {
     flex-direction: column;
   }
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .welcome-hero {
+  background: transparent;
+}
+
+[data-theme="dark"] body:has(.welcome-hero:not(.hidden)) {
+  background: var(--color-bg-page);
+}
+
+/* 特性卡片 */
+[data-theme="dark"] .feature-card {
+  background: linear-gradient(
+    145deg,
+    rgba(30, 41, 59, 0.85) 0%,
+    rgba(30, 41, 59, 0.6) 50%,
+    rgba(51, 65, 85, 0.7) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.15);
+  box-shadow: 
+    0 4px 24px rgba(0, 0, 0, 0.2),
+    0 1px 3px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .feature-card::before {
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05) 0%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+[data-theme="dark"] .feature-card:hover {
+  background: linear-gradient(
+    145deg,
+    rgba(30, 41, 59, 0.95) 0%,
+    rgba(51, 65, 85, 0.8) 50%,
+    rgba(71, 85, 105, 0.7) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: 
+    0 20px 40px rgba(0, 0, 0, 0.3),
+    0 8px 16px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .feature-icon {
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.2) 0%,
+    rgba(56, 189, 248, 0.1) 50%,
+    rgba(167, 139, 250, 0.15) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(56, 189, 248, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .feature-card h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .feature-card p {
+  color: var(--color-text-secondary);
+}
+
+/* 标题 */
+[data-theme="dark"] .title-line {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .welcome-subtitle {
+  color: var(--color-text-secondary);
+}
+
+/* 徽章 */
+[data-theme="dark"] .welcome-badge {
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(167, 139, 250, 0.15));
+  border-color: rgba(56, 189, 248, 0.25);
+  color: var(--color-primary);
+}
+
+/* 按钮 */
+[data-theme="dark"] .welcome-btn-secondary {
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--color-text-secondary);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+[data-theme="dark"] .welcome-btn-secondary:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: var(--color-primary);
+}
+
+/* 分割登录按钮 */
+[data-theme="dark"] .split-login-container {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .split-btn-login {
+  background: rgba(30, 41, 59, 0.9);
+  color: var(--color-primary);
+  border-right-color: rgba(56, 189, 248, 0.2);
+}
+
+[data-theme="dark"] .split-btn-login:hover {
+  background: rgba(30, 41, 59, 1);
+  color: var(--color-primary-light);
+}
+
+/* 底部信息 */
+[data-theme="dark"] .welcome-footer-info {
+  border-top-color: rgba(148, 163, 184, 0.15);
+}
+
+[data-theme="dark"] .info-number {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .info-label {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .info-divider {
+  background: linear-gradient(180deg, transparent, rgba(148, 163, 184, 0.2), transparent);
+}
+
+/* 3D 卡片 */
+[data-theme="dark"] .visual-card {
+  background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  border-color: rgba(56, 189, 248, 0.15);
+  box-shadow: 
+    0 30px 60px -15px rgba(0, 0, 0, 0.5),
+    0 15px 30px -10px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+}
+
+/* 装饰元素 */
+[data-theme="dark"] .wallet-inner {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.9));
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 
+    0 10px 40px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .chart-inner {
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
+  border-color: rgba(56, 189, 248, 0.15);
+  box-shadow: 
+    0 15px 50px rgba(0, 0, 0, 0.4),
+    0 5px 15px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}

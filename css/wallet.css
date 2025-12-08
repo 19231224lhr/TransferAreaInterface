@@ -2144,3 +2144,347 @@
   transform: translateY(-1px);
   box-shadow: 0 8px 18px rgba(245, 158, 11, .32);
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .wallet-left {
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-tertiary));
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .addr-list-header h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-count {
+  color: var(--color-text-secondary);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+/* 地址卡片 */
+[data-theme="dark"] .addr-card {
+  background: linear-gradient(135deg,
+      var(--color-card-bg) 0%,
+      var(--color-card-bg-secondary) 100%);
+  border-color: var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .addr-card:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .addr-card.active {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.08) 0%,
+      rgba(167, 139, 250, 0.08) 100%);
+}
+
+[data-theme="dark"] .addr-name {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-hash {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .addr-balance {
+  border-top-color: var(--color-divider);
+}
+
+[data-theme="dark"] .balance-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .balance-unit {
+  color: var(--color-text-secondary);
+}
+
+/* 地址卡片 V2 */
+[data-theme="dark"] .addr-card-v2 {
+  background: linear-gradient(135deg,
+      var(--color-card-bg) 0%,
+      var(--color-card-bg-secondary) 100%);
+  border-color: var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .addr-card-v2:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .addr-card-v2.active {
+  border-color: rgba(56, 189, 248, 0.4);
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.06) 0%,
+      rgba(167, 139, 250, 0.06) 100%);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-label {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-label .addr-tag {
+  color: var(--color-primary);
+  background: rgba(56, 189, 248, 0.15);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-value {
+  color: var(--color-text-secondary);
+  background: rgba(15, 23, 42, 0.5);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .addr-card-v2 .balance-label {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .addr-card-v2 .balance-unit {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-balance-section {
+  border-top-color: var(--color-divider);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-action-btn {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .addr-card-v2 .addr-action-btn svg {
+  color: var(--color-text-secondary);
+}
+
+/* 钱包概览卡片 */
+[data-theme="dark"] .wallet-overview-card {
+  background: linear-gradient(135deg, var(--color-card-bg-solid) 0%, var(--color-bg-secondary) 100%);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .overview-title {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .icon-btn {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .icon-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .balance-value .amt {
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-text-secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+[data-theme="dark"] .balance-value .unit {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .currency-item {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .currency-item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .c-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .c-val {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .gas-info {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(56, 189, 248, 0.05) 100%);
+  border-color: rgba(56, 189, 248, 0.2);
+}
+
+[data-theme="dark"] .gas-info .gas-label {
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .gas-value {
+  color: var(--color-primary);
+}
+
+/* 图表 */
+[data-theme="dark"] .addr-chart-modern {
+  background: linear-gradient(135deg,
+      var(--color-card-bg) 0%,
+      var(--color-card-bg-secondary) 100%);
+  border-color: var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .addr-chart-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .chart-filter-btn {
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .chart-filter-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .addr-chart-legend {
+  border-top-color: var(--color-divider);
+}
+
+[data-theme="dark"] .legend-item {
+  color: var(--color-text-secondary);
+}
+
+/* UTXO 模态框 */
+[data-theme="dark"] .utxo-modal-content {
+  background: linear-gradient(135deg,
+      var(--color-modal-bg) 0%,
+      rgba(51, 65, 85, 0.95) 100%);
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: var(--shadow-lg);
+}
+
+[data-theme="dark"] .utxo-modal-header {
+  border-bottom-color: var(--color-divider);
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.08) 0%,
+      rgba(167, 139, 250, 0.05) 100%);
+}
+
+[data-theme="dark"] .utxo-modal-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .utxo-modal-close {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .utxo-modal-close svg {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .utxo-item {
+  background: linear-gradient(135deg, var(--color-card-bg), var(--color-card-bg-secondary));
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .utxo-item:hover {
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .utxo-txid {
+  color: var(--color-text-secondary);
+  background: rgba(15, 23, 42, 0.5);
+}
+
+[data-theme="dark"] .utxo-detail {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .utxo-detail-value {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .utxo-stats {
+  border-top-color: var(--color-divider);
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.05) 0%,
+      rgba(167, 139, 250, 0.03) 100%);
+}
+
+[data-theme="dark"] .utxo-stat-label {
+  color: var(--color-text-secondary);
+}
+
+/* 标签 */
+[data-theme="dark"] .tag {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--color-secondary);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+
+[data-theme="dark"] .tag--utxo {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+[data-theme="dark"] .tag--txcer {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--color-warning);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+[data-theme="dark"] .tag--interest {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--color-secondary);
+  border-color: rgba(167, 139, 250, 0.25);
+}
+
+[data-theme="dark"] .tag.tag--pgc {
+  background: rgba(52, 211, 153, 0.15);
+  color: var(--color-success);
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+[data-theme="dark"] .tag.tag--btc {
+  background: rgba(251, 191, 36, 0.15);
+  color: var(--color-warning);
+  border-color: rgba(251, 191, 36, 0.25);
+}
+
+[data-theme="dark"] .tag.tag--eth {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--color-secondary);
+  border-color: rgba(167, 139, 250, 0.25);
+}
+
+/* 总计区域 */
+[data-theme="dark"] .total-box--emphasis {
+  border-color: var(--color-border);
+  background: radial-gradient(closest-side, rgba(56, 189, 248, 0.08), rgba(56, 189, 248, 0)) 0 0/200% 200%, linear-gradient(180deg, var(--color-card-bg-solid), var(--color-bg-secondary));
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .usdt-badge {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .usdt-badge .unit {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .gas-label {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .gas-badge {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .gas-badge .unit {
+  color: var(--color-text-secondary);
+}

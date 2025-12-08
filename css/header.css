@@ -891,3 +891,177 @@
   background: #ffffff;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, .95), 0 0 12px rgba(255, 255, 255, .55), 0 8px 18px rgba(14, 165, 233, .35);
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .header-inner {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.85) 0%,
+    rgba(30, 41, 59, 0.75) 50%,
+    rgba(51, 65, 85, 0.8) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.15);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .header-inner:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.9) 0%,
+    rgba(30, 41, 59, 0.8) 50%,
+    rgba(51, 65, 85, 0.85) 100%
+  );
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.35),
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .logo-icon {
+  background: linear-gradient(
+    145deg,
+    rgba(51, 65, 85, 0.95) 0%,
+    rgba(30, 41, 59, 0.9) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    0 2px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .user-button {
+  background: linear-gradient(
+    135deg,
+    rgba(51, 65, 85, 0.8) 0%,
+    rgba(30, 41, 59, 0.7) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.15);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .user-button:hover {
+  background: linear-gradient(
+    135deg,
+    rgba(51, 65, 85, 0.9) 0%,
+    rgba(30, 41, 59, 0.8) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .user-label {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .user-menu {
+  background: linear-gradient(
+    135deg,
+    rgba(30, 41, 59, 0.98) 0%,
+    rgba(51, 65, 85, 0.95) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.2);
+  box-shadow: 
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .menu-header {
+  background: linear-gradient(
+    135deg,
+    rgba(14, 165, 233, 0.15) 0%,
+    rgba(139, 92, 246, 0.1) 100%
+  );
+  border-bottom-color: rgba(56, 189, 248, 0.15);
+}
+
+[data-theme="dark"] .menu-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .menu-header-sub {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .menu-card {
+  background: rgba(51, 65, 85, 0.6);
+  border-color: rgba(71, 85, 105, 0.6);
+}
+
+[data-theme="dark"] .menu-card:hover {
+  background: rgba(51, 65, 85, 0.9);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .menu-card-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .menu-card-value {
+  color: var(--color-text-primary);
+  background: rgba(15, 23, 42, 0.5);
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme="dark"] .menu-empty-text {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .menu-empty-hint {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .menu-logout-btn {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .menu-logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .menu-popup {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .menu-popup .addr-row {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .menu-popup .addr-row code {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .balance-item {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.6));
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme="dark"] .balance-item:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .balance-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .balance-amount {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .balance-tip {
+  border-top-color: rgba(71, 85, 105, 0.5);
+  color: var(--color-text-tertiary);
+}

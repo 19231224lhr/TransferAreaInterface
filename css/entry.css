@@ -730,3 +730,87 @@
 .hidden {
   display: none !important;
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .entry-page {
+  background: var(--color-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .entry-main {
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+}
+
+[data-theme="dark"] .entry-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .entry-header-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .entry-action-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .entry-action-card:hover {
+  border-color: var(--color-card-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .entry-action-info h4 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .entry-action-info p {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .entry-wallet-block {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .entry-wallet-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .entry-wallet-list li {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .entry-wallet-list li:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .entry-toggle-btn {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .entry-toggle-btn:hover {
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .entry-empty-tip {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .entry-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .entry-back-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}

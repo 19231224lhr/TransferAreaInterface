@@ -846,3 +846,70 @@
 .hidden {
   display: none !important;
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .new-user-page {
+  background: var(--color-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .new-user-main {
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+}
+
+[data-theme="dark"] .new-user-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-user-header-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-user-form-group {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .new-user-form-group:hover {
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .new-setting-title h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-info-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-info-value {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-key-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-key-value {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-user-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-user-back-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}

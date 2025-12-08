@@ -874,3 +874,104 @@
     padding: 16px 20px;
   }
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .join-page {
+  background: var(--color-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .join-main {
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+}
+
+[data-theme="dark"] .join-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-header-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-tabs {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .join-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-tab:hover {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-tab.active {
+  color: var(--color-text-primary);
+  background: var(--color-card-bg-solid);
+}
+
+[data-theme="dark"] .join-org-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .join-org-card:hover {
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .join-org-name {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-org-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-org-id {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-search-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-search-input:focus {
+  border-color: var(--color-input-focus);
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .join-search-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-search-hint {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-back-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .join-skip-btn {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-skip-btn:hover {
+  color: var(--color-text-secondary);
+}

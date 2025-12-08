@@ -303,6 +303,10 @@ const translations = {
     'profile.signature.hint': '个性签名将显示在个人信息栏下方，最多50个字符',
     'profile.language.title': '语言设置',
     'profile.language.hint': '选择您偏好的界面语言',
+    'profile.theme.title': '主题模式',
+    'profile.theme.light': '浅色',
+    'profile.theme.dark': '深色',
+    'profile.theme.hint': '选择您偏好的界面主题',
     'profile.action.cancel': '取消',
     'profile.action.save': '保存设置',
     'profile.action.saved': '已保存',
@@ -316,6 +320,8 @@ const translations = {
     'toast.avatar.formatError': '请选择 JPG、PNG、GIF 或 WebP 格式的图片',
     'toast.avatar.sizeError': '图片大小不能超过 5MB，当前大小: {size}MB',
     'toast.language.changed': '语言已切换',
+    'toast.theme.lightEnabled': '已切换到浅色模式',
+    'toast.theme.darkEnabled': '已切换到深色模式',
     'toast.account.created': '账户创建成功！密钥已安全生成',
     'toast.account.createTitle': '创建成功',
     'toast.login.success': '登录成功',
@@ -694,6 +700,10 @@ const translations = {
     'profile.signature.hint': 'Your bio will be displayed below your profile info. Max 50 characters.',
     'profile.language.title': 'Language',
     'profile.language.hint': 'Select your preferred interface language',
+    'profile.theme.title': 'Theme',
+    'profile.theme.light': 'Light',
+    'profile.theme.dark': 'Dark',
+    'profile.theme.hint': 'Select your preferred interface theme',
     'profile.action.cancel': 'Cancel',
     'profile.action.save': 'Save Changes',
     'profile.action.saved': 'Saved',
@@ -707,6 +717,8 @@ const translations = {
     'toast.avatar.formatError': 'Please select a JPG, PNG, GIF, or WebP image',
     'toast.avatar.sizeError': 'Image size cannot exceed 5MB. Current size: {size}MB',
     'toast.language.changed': 'Language changed',
+    'toast.theme.lightEnabled': 'Switched to light mode',
+    'toast.theme.darkEnabled': 'Switched to dark mode',
     'toast.account.created': 'Account created successfully! Keys generated securely.',
     'toast.account.createTitle': 'Created',
     'toast.login.success': 'Login successful',
@@ -970,6 +982,125 @@ function updateLanguageSelectorUI() {
 
 // 初始化语言设置
 loadLanguageSetting();
+
+// ========================================
+// 主题系统 (Theme System)
+// ========================================
+
+const THEME_STORAGE_KEY = 'appTheme';
+let currentTheme = 'light';
+
+/**
+ * 获取当前主题
+ */
+function getCurrentTheme() {
+  return currentTheme;
+}
+
+/**
+ * 设置主题
+ */
+function setTheme(theme, showNotification = true) {
+  // 验证主题值
+  if (theme !== 'light' && theme !== 'dark') {
+    console.warn('Invalid theme:', theme);
+    return;
+  }
+  
+  // 更新当前主题
+  currentTheme = theme;
+  
+  // 更新 DOM
+  document.documentElement.setAttribute('data-theme', theme);
+  
+  // 保存到 localStorage
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch (e) {
+    console.warn('Failed to save theme setting:', e);
+  }
+  
+  // 更新主题选择器 UI
+  updateThemeSelectorUI();
+  
+  // 显示 Toast 提示
+  if (showNotification) {
+    const message = theme === 'dark' 
+      ? t('toast.theme.darkEnabled') 
+      : t('toast.theme.lightEnabled');
+    showSuccessToast(message, t('common.success'));
+  }
+}
+
+/**
+ * 切换主题
+ */
+function toggleTheme() {
+  const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+  setTheme(newTheme);
+}
+
+/**
+ * 加载保存的主题设置
+ */
+function loadThemeSetting() {
+  try {
+    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    if (saved && (saved === 'light' || saved === 'dark')) {
+      currentTheme = saved;
+    } else {
+      // 检测系统主题偏好
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        currentTheme = 'dark';
+      } else {
+        currentTheme = 'light';
+      }
+    }
+    document.documentElement.setAttribute('data-theme', currentTheme);
+  } catch (e) {
+    console.warn('Failed to load theme setting:', e);
+    currentTheme = 'light';
+  }
+}
+
+/**
+ * 更新主题选择器 UI
+ */
+function updateThemeSelectorUI() {
+  const selector = document.getElementById('themeSelector');
+  if (!selector) return;
+  
+  const options = selector.querySelectorAll('.theme-option');
+  options.forEach(opt => {
+    const theme = opt.getAttribute('data-theme');
+    if (theme === currentTheme) {
+      opt.classList.add('active');
+    } else {
+      opt.classList.remove('active');
+    }
+  });
+}
+
+/**
+ * 初始化主题选择器事件
+ */
+function initThemeSelector() {
+  const selector = document.getElementById('themeSelector');
+  if (!selector) return;
+  
+  selector.addEventListener('click', (e) => {
+    const option = e.target.closest('.theme-option');
+    if (!option) return;
+    
+    const theme = option.getAttribute('data-theme');
+    if (theme && theme !== getCurrentTheme()) {
+      setTheme(theme);
+    }
+  });
+}
+
+// 初始化主题设置
+loadThemeSetting();
 
 // ========================================
 // 自定义 Toast 提示组件
@@ -1809,8 +1940,26 @@ function bindProfileEvents() {
     languageSelector.dataset._bind = '1';
   }
   
+  // 主题选择器
+  const themeSelector = document.getElementById('themeSelector');
+  if (themeSelector && !themeSelector.dataset._bind) {
+    const options = themeSelector.querySelectorAll('.theme-option');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        const theme = opt.getAttribute('data-theme');
+        if (theme && theme !== getCurrentTheme()) {
+          setTheme(theme);
+        }
+      });
+    });
+    themeSelector.dataset._bind = '1';
+  }
+  
   // 更新语言选择器UI状态
   updateLanguageSelectorUI();
+  
+  // 更新主题选择器UI状态
+  updateThemeSelectorUI();
   
   // 更新页面翻译
   updatePageTranslations();

@@ -970,3 +970,270 @@
     transform: translateY(0);
   }
 }
+
+
+/* ========================================
+   主题切换器样式
+   ======================================== */
+
+/* 靛蓝色图标样式 - 主题设置 */
+.profile-setting-icon--indigo {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05)) !important;
+}
+
+.profile-setting-icon--indigo svg {
+  color: #6366f1 !important;
+}
+
+.theme-selector-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.theme-selector {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.theme-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--color-input-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  min-width: 140px;
+  position: relative;
+}
+
+.theme-option:hover {
+  background: var(--color-card-bg-secondary);
+  border-color: var(--color-border);
+  transform: translateY(-1px);
+}
+
+.theme-option.active {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(99, 102, 241, 0.04));
+  border-color: #6366f1;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.15);
+}
+
+.theme-option.active:hover {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(99, 102, 241, 0.06));
+}
+
+.theme-option-icon {
+  width: 36px;
+  height: 36px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(99, 102, 241, 0.05));
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+}
+
+.theme-option-icon svg {
+  width: 20px;
+  height: 20px;
+  color: #6366f1;
+  transition: all 0.25s ease;
+}
+
+.theme-option.active .theme-option-icon {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.theme-option.active .theme-option-icon svg {
+  color: white;
+}
+
+.theme-option-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  flex: 1;
+}
+
+.theme-option.active .theme-option-label {
+  color: #4338ca;
+}
+
+/* 深色模式下激活状态的文字颜色 */
+[data-theme="dark"] .theme-option.active .theme-option-label {
+  color: #a5b4fc;
+}
+
+.theme-check {
+  width: 18px;
+  height: 18px;
+  color: #6366f1;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.theme-option.active .theme-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.theme-hint {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .theme-selector {
+    flex-direction: column;
+  }
+
+  .theme-option {
+    min-width: 100%;
+  }
+}
+
+/* ========================================
+   Profile 页面深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .profile-page {
+  background: var(--color-card-bg);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .profile-main {
+  background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
+}
+
+[data-theme="dark"] .profile-setting-group {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .profile-setting-group:hover {
+  border-color: var(--color-card-border);
+  box-shadow: var(--shadow-sm);
+}
+
+[data-theme="dark"] .profile-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .profile-header-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .profile-setting-title h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .nickname-input,
+[data-theme="dark"] .signature-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .nickname-input:focus,
+[data-theme="dark"] .signature-input:focus {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-input-focus);
+}
+
+[data-theme="dark"] .nickname-input::placeholder,
+[data-theme="dark"] .signature-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .nickname-char-count,
+[data-theme="dark"] .signature-char-count,
+[data-theme="dark"] .nickname-hint,
+[data-theme="dark"] .signature-hint {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .avatar-upload-preview {
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-tertiary));
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .avatar-upload-hint {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .avatar-upload-btn--secondary {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .avatar-upload-btn--secondary:hover {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .profile-actions {
+  border-top-color: var(--color-border);
+}
+
+[data-theme="dark"] .profile-action-btn--secondary {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .profile-action-btn--secondary:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .profile-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .profile-back-btn:hover {
+  background: rgba(56, 189, 248, 0.1);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* 语言选择器深色模式 */
+[data-theme="dark"] .language-option {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .language-option:hover {
+  background: var(--color-card-bg-secondary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .language-option.active {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
+  border-color: var(--color-success);
+}
+
+[data-theme="dark"] .language-name {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .language-option.active .language-name {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .language-hint {
+  color: var(--color-text-tertiary);
+}

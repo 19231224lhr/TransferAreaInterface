@@ -5,25 +5,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>简洁钱包前端 - 钱包操作</title>
+  <!-- 主题初始化 - 避免闪烁 -->
+  <script>
+    (function() {
+      var theme = localStorage.getItem('appTheme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
 
   <!-- 模块化CSS - 按功能分离 -->
-  <link rel="stylesheet" href="/css/base.css?v=20251203b" />
+  <link rel="stylesheet" href="/css/base.css?v=20251208a" />
   <link rel="stylesheet" href="/css/animations.css?v=20251201" />
   <link rel="stylesheet" href="/css/utilities.css?v=20251201" />
-  <link rel="stylesheet" href="/css/components.css?v=20251204a" />
-  <link rel="stylesheet" href="/css/header.css?v=20251201g" />
-  <link rel="stylesheet" href="/css/welcome.css?v=20251203a" />
-  <link rel="stylesheet" href="/css/toast.css?v=20251202" />
-  <link rel="stylesheet" href="/css/entry.css?v=20251202c" />
-  <link rel="stylesheet" href="/css/new-user.css?v=20251202a" />
-  <link rel="stylesheet" href="/css/login.css?v=20251202a" />
+  <link rel="stylesheet" href="/css/components.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/header.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/welcome.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/toast.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/entry.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/new-user.css?v=20251208a" />
+  <link rel="stylesheet" href="/css/login.css?v=20251208a" />
   <link rel="stylesheet" href="/css/wallet.css?v=20251202" />
   <link rel="stylesheet" href="/css/transaction.css?v=20251202" />
-  <link rel="stylesheet" href="/css/import-wallet.css?v=20251202a" />
+  <link rel="stylesheet" href="/css/import-wallet.css?v=20251208a" />
   <link rel="stylesheet" href="/css/join-group.css?v=20251204b" />
   <link rel="stylesheet" href="/css/group.css?v=20251203a" />
   <link rel="stylesheet" href="/css/inquiry.css?v=20251202d" />
-  <link rel="stylesheet" href="/css/profile.css?v=20251205a" />
+  <link rel="stylesheet" href="/css/profile.css?v=20251208a" />
   <link rel="stylesheet" href="/css/main-v2.css?v=20251204u" />
 
   <!-- 其他样式 -->
@@ -2733,6 +2740,53 @@
                   </button>
                 </div>
                 <p class="language-hint" data-i18n="profile.language.hint">选择您偏好的界面语言</p>
+              </div>
+            </div>
+
+            <!-- 主题设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon profile-setting-icon--indigo">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                </div>
+                <h3 data-i18n="profile.theme.title">主题模式</h3>
+              </div>
+              <div class="theme-selector-area">
+                <div class="theme-selector" id="themeSelector">
+                  <button class="theme-option active" data-theme="light">
+                    <div class="theme-option-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5" />
+                        <line x1="12" y1="1" x2="12" y2="3" />
+                        <line x1="12" y1="21" x2="12" y2="23" />
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                        <line x1="1" y1="12" x2="3" y2="12" />
+                        <line x1="21" y1="12" x2="23" y2="12" />
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                      </svg>
+                    </div>
+                    <span class="theme-option-label" data-i18n="profile.theme.light">浅色</span>
+                    <svg class="theme-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  <button class="theme-option" data-theme="dark">
+                    <div class="theme-option-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                      </svg>
+                    </div>
+                    <span class="theme-option-label" data-i18n="profile.theme.dark">深色</span>
+                    <svg class="theme-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="theme-hint" data-i18n="profile.theme.hint">选择您偏好的界面主题</p>
               </div>
             </div>
           </div>

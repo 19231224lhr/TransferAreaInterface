@@ -1665,3 +1665,201 @@
 .tx-form select.input:hover {
   box-shadow: 0 8px 20px rgba(15, 23, 42, .1);
 }
+
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+
+[data-theme="dark"] .tx-module {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .tx-module-header {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="dark"] .tx-module-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-module-desc {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tx-tabs {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .tx-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .tx-tab:hover {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-tab.active {
+  color: var(--color-text-primary);
+  background: var(--color-card-bg-solid);
+}
+
+[data-theme="dark"] .tx-section-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-section-title::after {
+  background: var(--color-divider);
+}
+
+/* 收款人卡片 */
+[data-theme="dark"] .recipient-card {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .recipient-card:hover {
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .recipient-field-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .recipient-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .recipient-input:focus {
+  border-color: var(--color-input-focus);
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .recipient-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+/* 自定义下拉框 */
+[data-theme="dark"] .custom-select__trigger {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .custom-select__trigger:hover {
+  border-color: var(--color-card-border);
+}
+
+[data-theme="dark"] .custom-select--open .custom-select__trigger {
+  border-color: var(--color-input-focus);
+}
+
+[data-theme="dark"] .custom-select__dropdown {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+[data-theme="dark"] .custom-select__item {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .custom-select__item:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .custom-select__item.selected {
+  background: rgba(56, 189, 248, 0.1);
+  color: var(--color-primary);
+}
+
+[data-theme="dark"] .custom-select__item.disabled {
+  color: var(--color-text-tertiary);
+}
+
+/* 操作按钮 */
+[data-theme="dark"] .recipient-action-btn {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .recipient-action-btn:hover {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-card-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .recipient-action-btn--danger:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+/* 高级选项 */
+[data-theme="dark"] .recipient-details {
+  background: var(--color-bg-secondary);
+  border-top-color: var(--color-divider);
+}
+
+/* 找零地址 */
+[data-theme="dark"] .change-address-section {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .change-address-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .change-address-label {
+  color: var(--color-text-secondary);
+}
+
+/* Gas 设置 */
+[data-theme="dark"] .gas-settings {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .gas-settings-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .gas-input-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .gas-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .gas-input:focus {
+  border-color: var(--color-input-focus);
+}
+
+/* 交易结构体展示 */
+[data-theme="dark"] .tx-struct-display {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .tx-struct-header {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="dark"] .tx-struct-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .tx-struct-content {
+  background: var(--color-code-bg);
+  color: var(--color-code-text);
+}
