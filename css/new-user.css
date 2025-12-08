@@ -852,34 +852,63 @@
    深色模式适配
    ======================================== */
 
-[data-theme="dark"] .new-user-page {
+/* 页面容器 */
+[data-theme="dark"] .new-page {
   background: var(--color-card-bg);
   box-shadow: var(--shadow-card);
 }
 
-[data-theme="dark"] .new-user-main {
+/* 右侧主区域 */
+[data-theme="dark"] .new-main {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
 }
 
-[data-theme="dark"] .new-user-header-title {
-  color: var(--color-text-primary);
-}
-
-[data-theme="dark"] .new-user-header-desc {
+/* 返回按钮 */
+[data-theme="dark"] .new-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .new-user-form-group {
+[data-theme="dark"] .new-back-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  border-color: #8b5cf6;
+  color: #a78bfa;
+}
+
+/* 页面标题 */
+[data-theme="dark"] .new-header-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-header-desc {
+  color: var(--color-text-secondary);
+}
+
+/* 加载动画容器 */
+[data-theme="dark"] .new-loader {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
 }
 
-[data-theme="dark"] .new-user-form-group:hover {
-  border-color: var(--color-card-border);
+[data-theme="dark"] .new-loader-text {
+  color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .new-setting-title h3 {
-  color: var(--color-text-primary);
+/* 成功提示 */
+[data-theme="dark"] .new-result-success {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .new-result-success h3 {
+  color: var(--color-success);
+}
+
+/* 信息卡片 */
+[data-theme="dark"] .new-info-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
 }
 
 [data-theme="dark"] .new-info-label {
@@ -888,12 +917,35 @@
 
 [data-theme="dark"] .new-info-value {
   background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
   color: var(--color-text-primary);
 }
 
+/* 密钥卡片 */
+[data-theme="dark"] .new-key-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .new-key-card--private {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
 [data-theme="dark"] .new-key-label {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-key-label svg {
   color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-warning-badge {
+  color: var(--color-danger);
+  background: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .new-chevron {
+  color: var(--color-text-tertiary);
 }
 
 [data-theme="dark"] .new-key-value {
@@ -902,14 +954,38 @@
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .new-user-back-btn {
-  background: var(--color-card-bg);
+[data-theme="dark"] .new-key-card--private .new-key-header:hover {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] .new-key-card--private .new-key-value {
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* 警告提示 */
+[data-theme="dark"] .new-result-tip {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.08));
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .new-result-tip svg {
+  color: var(--color-warning);
+}
+
+[data-theme="dark"] .new-result-tip span {
+  color: var(--color-warning-light);
+}
+
+/* 底部按钮 */
+[data-theme="dark"] .new-action-btn--secondary {
+  background: var(--color-card-bg-solid);
   border-color: var(--color-border);
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .new-user-back-btn:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+[data-theme="dark"] .new-action-btn--secondary:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
 }

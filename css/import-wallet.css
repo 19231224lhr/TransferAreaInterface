@@ -931,15 +931,44 @@
    深色模式适配
    ======================================== */
 
+/* 页面容器 */
 [data-theme="dark"] .import-page {
   background: var(--color-card-bg);
   box-shadow: var(--shadow-card);
 }
 
+/* 左侧边栏 - 深色模式下降低亮度 */
+[data-theme="dark"] .import-sidebar {
+  background: linear-gradient(180deg, #92400e 0%, #b45309 50%, #d97706 100%);
+}
+
+[data-theme="dark"] .import-sidebar::before {
+  background: radial-gradient(circle at 30% 70%, rgba(255,255,255,0.05) 0%, transparent 50%);
+}
+
+[data-theme="dark"] .import-sidebar::after {
+  background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+}
+
+/* 右侧主区域 */
 [data-theme="dark"] .import-main {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
 }
 
+/* 返回按钮 */
+[data-theme="dark"] .import-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .import-back-btn:hover {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: #f59e0b;
+  color: #fbbf24;
+}
+
+/* 页面标题 */
 [data-theme="dark"] .import-header-title {
   color: var(--color-text-primary);
 }
@@ -948,19 +977,28 @@
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .import-form-group {
+[data-theme="dark"] .import-header-badge {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(253, 230, 138, 0.15));
+  color: var(--color-warning-light);
+}
+
+/* 表单卡片 */
+[data-theme="dark"] .import-form-card {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
 }
 
-[data-theme="dark"] .import-form-group:hover {
-  border-color: var(--color-card-border);
-}
-
-[data-theme="dark"] .import-setting-title h3 {
+/* 标签 */
+[data-theme="dark"] .import-label {
   color: var(--color-text-primary);
 }
 
+[data-theme="dark"] .import-label svg {
+  stroke: var(--color-text-secondary);
+}
+
+/* 输入框 */
 [data-theme="dark"] .import-input {
   background: var(--color-input-bg);
   border-color: var(--color-border);
@@ -970,44 +1008,140 @@
 [data-theme="dark"] .import-input:focus {
   background: var(--color-bg-tertiary);
   border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.15);
 }
 
 [data-theme="dark"] .import-input::placeholder {
   color: var(--color-text-tertiary);
 }
 
-[data-theme="dark"] .import-hint {
-  color: var(--color-text-tertiary);
-}
-
-[data-theme="dark"] .import-back-btn {
-  background: var(--color-card-bg);
-  border-color: var(--color-border);
+/* 可见性切换按钮 */
+[data-theme="dark"] .import-toggle-visibility {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .import-back-btn:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: var(--color-primary);
+[data-theme="dark"] .import-toggle-visibility:hover {
+  background: rgba(56, 189, 248, 0.15);
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .import-info-label {
+/* 输入提示 */
+[data-theme="dark"] .import-input-hint {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .import-info-value {
+[data-theme="dark"] .import-input-hint svg {
+  stroke: var(--color-text-tertiary);
+}
+
+/* 安全提示块 */
+[data-theme="dark"] .import-tip-block {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(253, 230, 138, 0.08));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .import-tip-block svg {
+  stroke: var(--color-warning);
+}
+
+[data-theme="dark"] .import-tip-block span {
+  color: var(--color-warning-light);
+}
+
+/* 加载动画 */
+[data-theme="dark"] .import-loader-text {
+  color: var(--color-text-secondary);
+}
+
+/* 结果展示 */
+[data-theme="dark"] .import-result {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  box-shadow: var(--shadow-card);
+}
+
+[data-theme="dark"] .import-success-header {
+  border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .import-success-header h3 {
+  color: var(--color-success);
+}
+
+/* 结果项 */
+[data-theme="dark"] .import-result-item {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .import-result-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .import-result-value {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* 私钥项 - 特殊样式 */
+[data-theme="dark"] .import-result-item--private {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .import-warning-badge {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(252, 165, 165, 0.2));
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .import-result-value--secret {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), var(--color-bg-secondary));
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+/* 结果提示 */
+[data-theme="dark"] .import-result-tip {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(253, 230, 138, 0.08));
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .import-result-tip svg {
+  stroke: var(--color-warning);
+}
+
+[data-theme="dark"] .import-result-tip span {
+  color: var(--color-warning-light);
+}
+
+/* 提交按钮 - 深色模式下使用更深的橙色 */
+[data-theme="dark"] .import-submit-btn {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  box-shadow: 0 4px 15px rgba(180, 83, 9, 0.4);
+}
+
+[data-theme="dark"] .import-submit-btn:hover {
+  box-shadow: 0 8px 25px rgba(180, 83, 9, 0.5);
+}
+
+/* 底部按钮 */
+[data-theme="dark"] .import-cancel-btn {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .import-cancel-btn:hover {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border);
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .import-key-label {
-  color: var(--color-text-secondary);
+[data-theme="dark"] .import-next-btn {
+  background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+  box-shadow: 0 4px 15px rgba(180, 83, 9, 0.4);
 }
 
-[data-theme="dark"] .import-key-value {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
-  color: var(--color-text-primary);
+[data-theme="dark"] .import-next-btn:hover {
+  box-shadow: 0 8px 25px rgba(180, 83, 9, 0.5);
 }
