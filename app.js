@@ -337,6 +337,8 @@ const translations = {
     'toast.buildTxSuccessDesc': '已成功构造 Transaction 结构体，点击下方按钮查看详情',
     'toast.buildTxFailed': '构造失败',
     'toast.importFailed': '导入失败',
+    'toast.importSuccess': '导入成功',
+    'toast.importSuccessDesc': '地址已成功导入到当前钱包',
     'toast.cannotParseAddress': '无法解析地址',
     'toast.addressExists': '该地址已存在，不能重复导入',
     
@@ -734,6 +736,8 @@ const translations = {
     'toast.buildTxSuccessDesc': 'Transaction structure created successfully. Click below to view details.',
     'toast.buildTxFailed': 'Build Failed',
     'toast.importFailed': 'Import Failed',
+    'toast.importSuccess': 'Import Successful',
+    'toast.importSuccessDesc': 'Address has been successfully imported to current wallet',
     'toast.cannotParseAddress': 'Cannot parse address',
     'toast.addressExists': 'Address already exists, cannot import duplicate',
     
@@ -7355,7 +7359,10 @@ function renderWallet() {
   }
   const importAddressInPlace = async (priv) => {
     const u2 = loadUser();
-    if (!u2 || !u2.accountId) { showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true); return; }
+    if (!u2 || !u2.accountId) { 
+      showErrorToast(t('modal.pleaseLoginFirst'), t('common.notLoggedIn')); 
+      return; 
+    }
     const ov = document.getElementById('actionOverlay');
     const ovt = document.getElementById('actionOverlayText');
     if (ovt) ovt.textContent = t('modal.addingWalletAddress');
@@ -7364,7 +7371,10 @@ function renderWallet() {
       const data = await importFromPrivHex(priv);
       const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
       const addr = (data.address || '').toLowerCase();
-      if (!addr) { showModalTip(t('toast.importFailed'), t('toast.cannotParseAddress'), true); return; }
+      if (!addr) { 
+        showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed')); 
+        return; 
+      }
       const map = (acc.wallet && acc.wallet.addressMsg) || {};
       let dup = false;
       const lowerMain = (u2.address || '').toLowerCase();
@@ -7372,7 +7382,10 @@ function renderWallet() {
       if (!dup) {
         for (const k in map) { if (Object.prototype.hasOwnProperty.call(map, k)) { if (String(k).toLowerCase() === addr) { dup = true; break; } } }
       }
-      if (dup) { showModalTip(t('toast.importFailed'), t('toast.addressExists'), true); return; }
+      if (dup) { 
+        showErrorToast(t('toast.addressExists'), t('toast.importFailed')); 
+        return; 
+      }
       acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { type: 0, utxos: {}, txCers: {}, value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, estInterest: 0, origin: 'imported' };
       const normPriv = (data.privHex || priv).replace(/^0x/i, '');
       acc.wallet.addressMsg[addr].privHex = normPriv;
@@ -7382,19 +7395,11 @@ function renderWallet() {
       if (window.__refreshSrcAddrList) { try { window.__refreshSrcAddrList(); } catch (_) { } }
       renderWallet();
       try { updateWalletBrief(); } catch { }
-      const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
-      if (title) title.textContent = t('modal.walletAddSuccess');
-      if (text) { text.textContent = t('modal.walletAddSuccessDesc'); text.classList.remove('tip--error'); }
-      if (modal) modal.classList.remove('hidden');
-      if (ok) {
-        const handler = () => {
-          modal && modal.classList.add('hidden');
-          ok.removeEventListener('click', handler);
-        };
-        ok.addEventListener('click', handler);
-      }
+      
+      // 显示成功 Toast 提示
+      showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
     } catch (err) {
-      showModalTip(t('toast.importFailed'), t('toast.importFailed') + '：' + (err && err.message ? err.message : err), true);
+      showErrorToast((err && err.message ? err.message : String(err)), t('toast.importFailed'));
     } finally {
       if (ov) ov.classList.add('hidden');
     }
@@ -7406,13 +7411,13 @@ function renderWallet() {
         const input = document.getElementById('addrPrivHex');
         const v = input ? input.value.trim() : '';
         if (!v) {
-          setAddrError(t('walletModal.pleaseEnterPrivateKey'));
+          showErrorToast(t('walletModal.pleaseEnterPrivateKey'), t('toast.importFailed'));
           if (input) input.focus();
           return;
         }
         const normalized = v.replace(/^0x/i, '');
         if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-          setAddrError(t('walletModal.privateKeyFormatError'));
+          showErrorToast(t('walletModal.privateKeyFormatError'), t('toast.importFailed'));
           if (input) input.focus();
           return;
         }

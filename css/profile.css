@@ -1110,6 +1110,21 @@
   box-shadow: var(--shadow-card);
 }
 
+/* 左侧边栏 - 深色模式下使用更暗的蓝色 */
+[data-theme="dark"] .profile-sidebar {
+  background: linear-gradient(180deg, #0369a1 0%, #0284c7 40%, #4f46e5 100%);
+}
+
+[data-theme="dark"] .profile-sidebar::before {
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .profile-sidebar::after {
+  background: radial-gradient(circle, rgba(79, 70, 229, 0.2) 0%, rgba(109, 40, 217, 0.1) 30%, transparent 60%);
+  opacity: 0.5;
+}
+
 [data-theme="dark"] .profile-main {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
 }
