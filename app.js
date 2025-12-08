@@ -1845,7 +1845,7 @@ function bindProfileEvents() {
   const profileBackBtn = document.getElementById('profileBackBtn');
   if (profileBackBtn && !profileBackBtn.dataset._bind) {
     profileBackBtn.addEventListener('click', () => {
-      routeTo('#/main');
+      window.history.back();
     });
     profileBackBtn.dataset._bind = '1';
   }
@@ -1854,7 +1854,7 @@ function bindProfileEvents() {
   const profileCancelBtn = document.getElementById('profileCancelBtn');
   if (profileCancelBtn && !profileCancelBtn.dataset._bind) {
     profileCancelBtn.addEventListener('click', () => {
-      routeTo('#/main');
+      window.history.back();
     });
     profileCancelBtn.dataset._bind = '1';
   }

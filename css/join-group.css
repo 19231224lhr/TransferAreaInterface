@@ -414,6 +414,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 1px;
   background: #e2e8f0;
+  border-top: none;
 }
 
 .join-org-detail {
@@ -450,6 +451,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 0;
+  background: transparent;
 }
 
 .join-org-detail .detail-content label {
@@ -464,6 +466,11 @@
   font-size: 15px;
   font-weight: 600;
   color: #1e293b;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: inline-block;
+  border: 1px solid #e2e8f0;
 }
 
 .join-org-detail .detail-content span.mono {
@@ -471,6 +478,11 @@
   font-size: 13px;
   word-break: break-all;
   line-height: 1.5;
+  background: white;
+  padding: 12px 16px;
+  border-radius: 12px;
+  display: inline-block;
+  border: 1px solid #e2e8f0;
 }
 
 /* 旧样式保留兼容 */
@@ -880,26 +892,48 @@
    深色模式适配
    ======================================== */
 
+/* 页面容器 */
 [data-theme="dark"] .join-page {
   background: var(--color-card-bg);
   box-shadow: var(--shadow-card);
 }
 
+/* 左侧边栏 - 深色模式下使用更暗的蓝色 */
+[data-theme="dark"] .join-sidebar {
+  background: linear-gradient(165deg, #1e40af 0%, #1d4ed8 50%, #2563eb 100%);
+}
+
+[data-theme="dark"] .join-sidebar::before {
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+}
+
+[data-theme="dark"] .join-sidebar::after {
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+
+/* 右侧主区域 */
 [data-theme="dark"] .join-main {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
 }
 
-[data-theme="dark"] .join-header-title {
+/* 页面标题 */
+[data-theme="dark"] .join-panel-title {
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .join-header-desc {
+[data-theme="dark"] .join-panel-desc {
   color: var(--color-text-secondary);
 }
 
+[data-theme="dark"] .join-panel-badge {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.3), rgba(37, 99, 235, 0.2));
+  color: #60a5fa;
+}
+
+/* 标签页切换 */
 [data-theme="dark"] .join-tabs {
   background: var(--color-bg-tertiary);
-  border-color: var(--color-border);
+  border: 1px solid var(--color-border);
 }
 
 [data-theme="dark"] .join-tab {
@@ -908,70 +942,193 @@
 
 [data-theme="dark"] .join-tab:hover {
   color: var(--color-text-primary);
+  background: rgba(59, 130, 246, 0.1);
 }
 
-[data-theme="dark"] .join-tab.active {
-  color: var(--color-text-primary);
+[data-theme="dark"] .join-tab--active {
+  color: #60a5fa;
   background: var(--color-card-bg-solid);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
+/* 组织信息卡片 */
 [data-theme="dark"] .join-org-card {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
 }
 
-[data-theme="dark"] .join-org-card:hover {
-  border-color: var(--color-card-border);
+/* 组织头部 */
+[data-theme="dark"] .join-org-header {
+  background: linear-gradient(135deg, rgba(30, 64, 175, 0.15), rgba(37, 99, 235, 0.08));
+  border-bottom: 1px solid var(--color-border);
 }
 
-[data-theme="dark"] .join-org-name {
-  color: var(--color-text-primary);
-}
-
-[data-theme="dark"] .join-org-desc {
-  color: var(--color-text-secondary);
+[data-theme="dark"] .join-org-avatar {
+  background: linear-gradient(135deg, #1e40af, #2563eb);
+  box-shadow: 0 4px 12px rgba(30, 64, 175, 0.4);
 }
 
 [data-theme="dark"] .join-org-id {
-  background: var(--color-bg-tertiary);
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .join-search-input {
+[data-theme="dark"] .join-org-type {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-org-status {
+  background: rgba(34, 197, 94, 0.15);
+  color: #4ade80;
+}
+
+/* 组织详情网格 */
+[data-theme="dark"] .join-org-details {
+  background: var(--color-border);
+  border-top: none;
+}
+
+[data-theme="dark"] .join-org-detail {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .join-org-detail:hover {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .join-org-detail .detail-icon {
+  background: var(--color-bg-tertiary);
+}
+
+[data-theme="dark"] .join-org-detail .detail-icon svg {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .join-org-detail .detail-content {
+  background: transparent;
+}
+
+[data-theme="dark"] .join-org-detail .detail-content label {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-org-detail .detail-content span {
+  color: var(--color-text-primary);
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+/* 旧样式兼容 */
+[data-theme="dark"] .join-org-field label {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-org-val {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+/* 提交按钮 - 深色模式下使用更暗的蓝色 */
+[data-theme="dark"] .join-submit-btn {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  box-shadow: 0 4px 16px rgba(30, 64, 175, 0.4);
+}
+
+[data-theme="dark"] .join-submit-btn:hover:not(:disabled) {
+  box-shadow: 0 8px 24px rgba(30, 64, 175, 0.5);
+}
+
+[data-theme="dark"] .join-submit-btn:disabled {
+  background: var(--color-bg-tertiary);
+}
+
+/* 搜索区域 */
+[data-theme="dark"] .join-search-field input {
   background: var(--color-input-bg);
   border-color: var(--color-border);
   color: var(--color-text-primary);
 }
 
-[data-theme="dark"] .join-search-input:focus {
-  border-color: var(--color-input-focus);
-  background: var(--color-bg-tertiary);
+[data-theme="dark"] .join-search-field input:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15);
 }
 
-[data-theme="dark"] .join-search-input::placeholder {
+[data-theme="dark"] .join-search-field input::placeholder {
   color: var(--color-text-tertiary);
 }
 
-[data-theme="dark"] .join-search-hint {
+[data-theme="dark"] .join-search-icon {
   color: var(--color-text-tertiary);
 }
 
-[data-theme="dark"] .join-back-btn {
-  background: var(--color-card-bg);
+/* 搜索建议下拉 */
+[data-theme="dark"] .join-suggest {
+  background: var(--color-card-bg-solid);
   border-color: var(--color-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .join-suggest .item {
+  border-bottom-color: var(--color-border);
+}
+
+[data-theme="dark"] .join-suggest .item:hover {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .join-suggest .item .suggest-id svg {
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .join-suggest .item .suggest-id-text {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .join-suggest .item .node-badge.aggre {
+  background: rgba(37, 99, 235, 0.15);
+  color: #60a5fa;
+}
+
+[data-theme="dark"] .join-suggest .item .node-badge.assign {
+  background: rgba(139, 92, 246, 0.15);
+  color: #a78bfa;
+}
+
+[data-theme="dark"] .join-suggest .item .suggest-arrow {
+  color: var(--color-text-tertiary);
+}
+
+/* 空状态 */
+[data-theme="dark"] .join-empty-state {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .join-empty-icon {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .join-empty-icon svg {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .join-empty-state p {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .join-back-btn:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+/* 跳过选项 */
+[data-theme="dark"] .join-skip {
+  border-top-color: var(--color-border);
 }
 
 [data-theme="dark"] .join-skip-btn {
   color: var(--color-text-tertiary);
+  border-color: var(--color-border);
 }
 
 [data-theme="dark"] .join-skip-btn:hover {
-  color: var(--color-text-secondary);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.3);
+  background: rgba(239, 68, 68, 0.1);
 }

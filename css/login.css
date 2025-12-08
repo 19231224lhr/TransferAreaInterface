@@ -793,15 +793,44 @@
    深色模式适配
    ======================================== */
 
+/* 页面容器 */
 [data-theme="dark"] .login-page {
   background: var(--color-card-bg);
   box-shadow: var(--shadow-card);
 }
 
+/* 左侧边栏 - 深色模式下使用更暗的绿色 */
+[data-theme="dark"] .login-sidebar {
+  background: linear-gradient(180deg, #065f46 0%, #047857 50%, #059669 100%);
+}
+
+[data-theme="dark"] .login-sidebar::before {
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+}
+
+[data-theme="dark"] .login-sidebar::after {
+  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 50%);
+}
+
+/* 右侧主区域 */
 [data-theme="dark"] .login-main {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-tertiary) 100%);
 }
 
+/* 返回按钮 */
+[data-theme="dark"] .login-back-btn {
+  background: var(--color-card-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .login-back-btn:hover {
+  background: rgba(5, 150, 105, 0.1);
+  border-color: #059669;
+  color: #10b981;
+}
+
+/* 页面标题 */
 [data-theme="dark"] .login-header-title {
   color: var(--color-text-primary);
 }
@@ -810,19 +839,27 @@
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .login-form-group {
+[data-theme="dark"] .login-header-badge {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.3), rgba(16, 185, 129, 0.2));
+  color: #10b981;
+}
+
+/* 表单卡片 */
+[data-theme="dark"] .login-form-card {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
 }
 
-[data-theme="dark"] .login-form-group:hover {
-  border-color: var(--color-card-border);
-}
-
-[data-theme="dark"] .login-setting-title h3 {
+/* 标签 */
+[data-theme="dark"] .login-label {
   color: var(--color-text-primary);
 }
 
+[data-theme="dark"] .login-label svg {
+  color: var(--color-primary);
+}
+
+/* 输入框 */
 [data-theme="dark"] .login-input {
   background: var(--color-input-bg);
   border-color: var(--color-border);
@@ -832,29 +869,68 @@
 [data-theme="dark"] .login-input:focus {
   background: var(--color-bg-tertiary);
   border-color: var(--color-input-focus);
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
 }
 
 [data-theme="dark"] .login-input::placeholder {
   color: var(--color-text-tertiary);
 }
 
-[data-theme="dark"] .login-hint {
+/* 可见性切换按钮 */
+[data-theme="dark"] .login-toggle-visibility {
   color: var(--color-text-tertiary);
 }
 
-[data-theme="dark"] .login-back-btn {
-  background: var(--color-card-bg);
-  border-color: var(--color-border);
-  color: var(--color-text-secondary);
+[data-theme="dark"] .login-toggle-visibility:hover {
+  color: var(--color-primary);
+  background: rgba(56, 189, 248, 0.1);
 }
 
-[data-theme="dark"] .login-back-btn:hover {
-  background: rgba(56, 189, 248, 0.1);
-  border-color: var(--color-primary);
+/* 提交按钮 - 深色模式下使用更暗的绿色 */
+[data-theme="dark"] .login-submit-btn {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.4);
+}
+
+[data-theme="dark"] .login-submit-btn:hover {
+  box-shadow: 0 8px 24px rgba(4, 120, 87, 0.5);
+}
+
+/* 安全提示块 */
+[data-theme="dark"] .login-tip-block {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(59, 130, 246, 0.08));
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .login-tip-block svg {
   color: var(--color-primary);
 }
 
-[data-theme="dark"] .login-result-card {
+[data-theme="dark"] .login-tip-block span {
+  color: var(--color-primary-light);
+}
+
+/* 加载动画 */
+[data-theme="dark"] .login-loader {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .login-loader-text {
+  color: var(--color-text-secondary);
+}
+
+/* 结果展示 */
+[data-theme="dark"] .login-success-header {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .login-success-header h3 {
+  color: var(--color-success);
+}
+
+[data-theme="dark"] .login-result-item {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
 }
@@ -867,4 +943,41 @@
   background: var(--color-bg-tertiary);
   border-color: var(--color-border);
   color: var(--color-text-primary);
+}
+
+/* 私钥项 */
+[data-theme="dark"] .login-result-item--private {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08));
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .login-warning-badge {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-danger);
+}
+
+[data-theme="dark"] .login-result-value--secret {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+/* 底部按钮 */
+[data-theme="dark"] .login-cancel-btn {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .login-cancel-btn:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .login-next-btn {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  box-shadow: 0 4px 16px rgba(4, 120, 87, 0.4);
+}
+
+[data-theme="dark"] .login-next-btn:hover {
+  box-shadow: 0 8px 24px rgba(4, 120, 87, 0.5);
 }
