@@ -375,6 +375,10 @@ const translations = {
     'tx.orgIdFormatError': '组织ID格式错误',
     'tx.publicKeyFormatError': '公钥格式错误',
     'tx.amountError': '金额错误',
+    'tx.amountInvalid': '转账金额必须大于0',
+    'tx.amountCannotBeZero': '转账金额不能为0',
+    'tx.amountCannotBeNegative': '转账金额不能为负数',
+    'tx.gasCannotBeNegative': 'Gas不能为负数',
     'tx.gasParamError': 'Gas参数错误',
     'tx.duplicateAddress': '地址重复',
     'tx.addressNotFound': '未找到该地址信息',
@@ -762,6 +766,10 @@ const translations = {
     'tx.orgIdFormatError': 'Organization ID format error',
     'tx.publicKeyFormatError': 'Public key format error',
     'tx.amountError': 'Amount error',
+    'tx.amountInvalid': 'Transfer amount must be greater than 0',
+    'tx.amountCannotBeZero': 'Transfer amount cannot be 0',
+    'tx.amountCannotBeNegative': 'Transfer amount cannot be negative',
+    'tx.gasCannotBeNegative': 'Gas cannot be negative',
     'tx.gasParamError': 'Gas parameter error',
     'tx.duplicateAddress': 'Duplicate address',
     'tx.addressNotFound': 'Address information not found',
@@ -6496,7 +6504,7 @@ function renderWallet() {
           <div class="recipient-amount-row">
             <div class="recipient-field">
               <span class="recipient-field-label">${t('transfer.amount')}</span>
-              <input id="${idBase}_val" class="input" type="number" placeholder="0.00" aria-label="金额" data-name="val">
+              <input id="${idBase}_val" class="input" type="number" min="0" step="any" placeholder="0.00" aria-label="金额" data-name="val">
             </div>
             <div class="recipient-field">
               <span class="recipient-field-label">${t('transfer.currency')}</span>
@@ -6529,7 +6537,7 @@ function renderWallet() {
                   </div>
                   <div class="recipient-field">
                     <span class="recipient-field-label">${t('transfer.transferGas')}</span>
-                    <input id="${idBase}_gas" class="input" type="number" placeholder="0" aria-label="转移Gas" data-name="gas">
+                    <input id="${idBase}_gas" class="input" type="number" min="0" step="any" placeholder="0" aria-label="转移Gas" data-name="gas">
                   </div>
                 </div>
               </div>
@@ -6680,13 +6688,40 @@ function renderWallet() {
         document.addEventListener('click', () => { cs.classList.remove('open'); });
       }
       
-      // 回车添加新收款方
+      // 防止负数输入
+      const valInputEl = card.querySelector('[data-name="val"]');
       const gasInputEl = card.querySelector('[data-name="gas"]');
-      if (gasInputEl) { 
-        gasInputEl.addEventListener('keydown', (e) => { 
-          if (e.key === 'Enter') { e.preventDefault(); addBill(); } 
-        }); 
-      }
+      
+      const preventNegative = (input) => {
+        if (!input) return;
+        
+        // 防止输入负号和e
+        input.addEventListener('keydown', (e) => {
+          if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+            e.preventDefault();
+          }
+          if (e.key === 'Enter') { e.preventDefault(); addBill(); }
+        });
+        
+        // 输入时验证
+        input.addEventListener('input', (e) => {
+          const val = parseFloat(input.value);
+          if (input.value && (isNaN(val) || val < 0)) {
+            input.value = '';
+          }
+        });
+        
+        // 失焦时验证
+        input.addEventListener('blur', (e) => {
+          const val = parseFloat(input.value);
+          if (input.value && (isNaN(val) || val < 0)) {
+            input.value = '';
+          }
+        });
+      };
+      
+      preventNegative(valInputEl);
+      preventNegative(gasInputEl);
     };
     if (addBillBtn) { addBillBtn.addEventListener('click', () => { addBill(); }); }
     addBill();
@@ -6722,6 +6757,40 @@ function renderWallet() {
       useTXCerChk.addEventListener('change', () => { useTXCer.value = useTXCerChk.checked ? 'true' : 'false'; });
     }
     if (gasInput) { if (!gasInput.value) gasInput.value = '0'; }
+    
+    // 防止额外Gas和交易Gas输入负数
+    const preventNegativeForInput = (input) => {
+      if (!input) return;
+      
+      // 防止输入负号和e
+      input.addEventListener('keydown', (e) => {
+        if (e.key === '-' || e.key === 'e' || e.key === 'E' || e.key === '+') {
+          e.preventDefault();
+        }
+      });
+      
+      // 输入时验证
+      input.addEventListener('input', () => {
+        const val = parseFloat(input.value);
+        if (input.value && (isNaN(val) || val < 0)) {
+          input.value = input.value.replace(/[^0-9.]/g, '');
+          const newVal = parseFloat(input.value);
+          if (newVal < 0) input.value = '';
+        }
+      });
+      
+      // 失焦时验证
+      input.addEventListener('blur', () => {
+        const val = parseFloat(input.value);
+        if (input.value && (isNaN(val) || val < 0)) {
+          input.value = '';
+        }
+      });
+    };
+    
+    preventNegativeForInput(gasInput);
+    preventNegativeForInput(txGasInput);
+    
     const rates = { 0: 1, 1: 1000000, 2: 1000 };
     tfBtn.addEventListener('click', async () => {
       refreshWalletSnapshot();
@@ -6787,13 +6856,17 @@ function renderWallet() {
         const parsedPub = parsePub(comb);
         const { x: px, y: py, ok: pubOk } = parsedPub;
         const tInt = Number((gasEl && gasEl.value) || 0);
-        if (!to || val <= 0) { showTxValidationError(t('modal.inputIncomplete'), toEl, t('tx.incompleteInfo')); return; }
+        if (!to) { showTxValidationError(t('modal.inputIncomplete'), toEl, t('tx.addressEmpty')); return; }
         if (!isValidAddressFormat(normalizedTo)) { showTxValidationError(t('toast.cannotParseAddress'), toEl, t('tx.addressFormatError')); return; }
         if (![0, 1, 2].includes(mt)) { showTxValidationError(t('transfer.currency'), null, t('tx.currencyError')); return; }
+        if (!Number.isFinite(val)) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountError')); return; }
+        if (val === 0) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountCannotBeZero')); return; }
+        if (val < 0) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountCannotBeNegative')); return; }
+        if (val <= 0) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountInvalid')); return; }
         if (gid && !/^\d{8}$/.test(gid)) { showTxValidationError(t('transfer.guarantorOrgId'), gidEl, t('tx.orgIdFormatError')); return; }
         if (!pubOk) { showTxValidationError(t('transfer.publicKey'), pubEl, t('tx.publicKeyFormatError')); return; }
-        if (!Number.isFinite(val) || val <= 0) { showTxValidationError(t('transfer.amount'), valEl, t('tx.amountError')); return; }
-        if (!Number.isFinite(tInt) || tInt < 0) { showTxValidationError('Gas', gasEl, t('tx.gasParamError')); return; }
+        if (!Number.isFinite(tInt)) { showTxValidationError('Gas', gasEl, t('tx.gasParamError')); return; }
+        if (tInt < 0) { showTxValidationError('Gas', gasEl, t('tx.gasCannotBeNegative')); return; }
         if (isCross && mt !== 0) { showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit')); return; }
         if (bills[normalizedTo]) { showTxValidationError(t('toast.addressExists'), null, t('tx.duplicateAddress')); return; }
         bills[normalizedTo] = { MoneyType: mt, Value: val, GuarGroupID: gid, PublicKey: { Curve: 'P256', XHex: px, YHex: py }, ToInterest: tInt };

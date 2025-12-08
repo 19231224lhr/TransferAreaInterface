@@ -2013,22 +2013,30 @@ Already defined above with darker background
   overflow: visible;
 }
 
-/* 玻璃拟态表单容器 */
+/* 外层灰色容器 - 与recipients-list一致 */
 .options-grid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 16px;
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  border-radius: 16px;
-  box-shadow:
-    0 8px 32px rgba(31, 38, 135, 0.07),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-  overflow: visible;
+  gap: 8px;
+  min-height: 50px;
+  padding: 10px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-md);
+  border: none;
   animation: optionsReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 内层白色卡片 - 与recipient-card一致 */
+.options-card {
+  position: relative;
+  background: white;
+  border-radius: 10px;
+  overflow: visible;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 @keyframes optionsReveal {
@@ -2043,20 +2051,20 @@ Already defined above with darker background
   }
 }
 
-/* 第一行：两列并排布局 */
+/* 第一行:两列并排布局 */
 .options-split-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  gap: 10px;
   animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: 0.05s;
 }
 
 .options-split-group {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 96px 1fr;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
 }
 
 .options-split-group .option-field-label {
@@ -2077,9 +2085,9 @@ Already defined above with darker background
 /* 表单行布局 */
 .option-field {
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 96px 1fr;
   align-items: center;
-  gap: 16px;
+  gap: 6px;
   animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
@@ -2127,39 +2135,38 @@ Already defined above with darker background
   padding: 0 !important;
 }
 
-/* 标签样式 */
+/* 标签样式 - 黑色字体 */
 .option-field-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
   white-space: nowrap;
-  letter-spacing: 0.1px;
+  letter-spacing: 0px;
 }
 
-/* 输入框容器 - 玻璃质感 */
+/* 输入框容器 - 简洁灰色背景 */
 .option-input-wrapper {
   position: relative;
   display: flex;
   align-items: center;
   width: 100%;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
   overflow: hidden;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 38px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease;
+  min-height: 36px;
+  box-shadow: none;
 }
 
 .option-input-wrapper:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: #cbd5e1;
+  border-color: var(--neutral-300);
 }
 
 .option-input-wrapper:focus-within {
-  background: #ffffff;
+  background: white;
   border-color: var(--transfer-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 自定义选择器需要允许下拉菜单溢出显示 */
@@ -2170,15 +2177,14 @@ Already defined above with darker background
 }
 
 .option-input-wrapper.custom-select:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: #cbd5e1;
+  border-color: var(--neutral-300);
 }
 
 .option-input-wrapper.custom-select.open {
-  background: #ffffff;
+  background: white;
   border-color: var(--transfer-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-  border-radius: 12px;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
   z-index: 101;
 }
 
@@ -2186,14 +2192,14 @@ Already defined above with darker background
 .option-input {
   flex: 1;
   min-width: 0;
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 0 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-primary);
   background: transparent;
   border: none;
   outline: none;
-  height: 44px;
+  height: 36px;
   transition: color 0.2s ease;
 }
 
@@ -2209,32 +2215,32 @@ Already defined above with darker background
 }
 
 .option-input::placeholder {
-  color: #94a3b8;
+  color: var(--text-muted);
   font-weight: 400;
 }
 
 .option-input[readonly] {
   color: var(--text-secondary);
   cursor: default;
-  background: rgba(243, 244, 246, 0.4);
+  background: var(--neutral-50);
 }
 
 /* 后缀标签 - 精致胶囊设计 */
 .option-suffix {
-  padding: 6px 12px;
+  padding: 4px 10px;
   font-size: 11px;
   font-weight: 700;
   color: #475569;
   background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-  height: 32px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 6px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  margin: 6px 8px 6px 0;
-  min-width: 44px;
+  margin: 4px 6px 4px 0;
+  min-width: 40px;
   flex-shrink: 0;
 }
 

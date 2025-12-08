@@ -2077,19 +2077,20 @@
 
                 <div class="options-content" id="optionsContent">
                   <div class="options-grid">
+                    <div class="options-card">
                     <!-- 第一行：两列并排 -->
                     <div class="options-split-row">
                       <div class="options-split-group">
                         <label class="option-field-label" for="extraGasPGC" data-i18n="wallet.extraGas">额外Gas兑换</label>
                         <div class="option-input-wrapper">
-                          <input id="extraGasPGC" class="option-input" type="number" placeholder="0" value="0" />
+                          <input id="extraGasPGC" class="option-input" type="number" min="0" step="any" placeholder="0" value="0" />
                           <span class="option-suffix option-suffix--pgc">PGC</span>
                         </div>
                       </div>
                       <div class="options-split-group">
                         <label class="option-field-label" for="txGasInput" data-i18n="wallet.txGas">交易Gas</label>
                         <div class="option-input-wrapper">
-                          <input id="txGasInput" class="option-input" type="number" placeholder="1" value="1" />
+                          <input id="txGasInput" class="option-input" type="number" min="0" step="any" placeholder="1" value="1" />
                           <span class="option-suffix option-suffix--gas">GAS</span>
                         </div>
                       </div>
@@ -2154,6 +2155,7 @@
                           <span class="toggle-slider"></span>
                         </label>
                       </div>
+                    </div>
                     </div>
                   </div>
 
