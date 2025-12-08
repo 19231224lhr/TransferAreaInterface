@@ -6114,7 +6114,15 @@ function renderWallet() {
     const applyMode = (mode) => {
       modeTabsContainer.querySelectorAll('.transfer-mode-tab, .mode-tab').forEach(t => t.classList.remove('active'));
       const btn = modeTabsContainer.querySelector(`.transfer-mode-tab[data-mode="${mode}"]`);
-      if (btn) btn.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+        // 更新滑动指示器位置
+        const allTabs = Array.from(modeTabsContainer.querySelectorAll('.transfer-mode-tab'));
+        const activeIndex = allTabs.indexOf(btn);
+        if (activeIndex !== -1) {
+          modeTabsContainer.setAttribute('data-active', activeIndex);
+        }
+      }
       const tfModeSelect = document.getElementById('tfMode');
       const isPledgeSelect = document.getElementById('isPledge');
       if (tfModeSelect) tfModeSelect.value = mode;
@@ -6155,6 +6163,20 @@ function renderWallet() {
     window.addEventListener('resize', onResize);
     window.addEventListener('orientationchange', onResize);
     updateModeTabsLayout();
+    
+    // 初始化滑动指示器位置
+    const activeTab = modeTabsContainer.querySelector('.transfer-mode-tab.active');
+    if (activeTab) {
+      const allTabs = Array.from(modeTabsContainer.querySelectorAll('.transfer-mode-tab'));
+      const activeIndex = allTabs.indexOf(activeTab);
+      if (activeIndex !== -1) {
+        modeTabsContainer.setAttribute('data-active', activeIndex);
+      }
+    } else {
+      // 默认选中第一个
+      modeTabsContainer.setAttribute('data-active', '0');
+    }
+    
     modeTabsContainer.dataset._bind = '1';
   }
   

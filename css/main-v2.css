@@ -1206,44 +1206,67 @@ Already defined above with darker background
   margin-top: 3px;
 }
 
-/* 模式切换标签 - 分段控制器风格 */
+/* 模式切换标签 - 简洁扁平风格 */
 .transfer-mode-tabs {
   display: flex;
-  background: rgba(0, 0, 0, 0.2);
-  padding: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 3px;
   border-radius: var(--radius-lg);
   position: relative;
   z-index: 1;
   margin-top: auto;
-  /* Push to bottom */
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  gap: 3px;
+}
+
+/* 滑动指示器 - 简洁扁平 */
+.transfer-mode-tabs::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: calc(33.333% - 3px);
+  height: calc(100% - 6px);
+  background: white;
+  border-radius: calc(var(--radius-lg) - 2px);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* 根据激活的按钮位置移动指示器 */
+.transfer-mode-tabs[data-active="0"]::before {
+  transform: translateX(0);
+}
+
+.transfer-mode-tabs[data-active="1"]::before {
+  transform: translateX(calc(100% + 3px));
+}
+
+.transfer-mode-tabs[data-active="2"]::before {
+  transform: translateX(calc(200% + 6px));
 }
 
 .transfer-mode-tab {
   flex: 1;
-  padding: 10px;
+  padding: 9px 12px;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(255, 255, 255, 0.65);
   background: transparent;
   border: none;
-  border-radius: var(--radius-md);
+  border-radius: calc(var(--radius-lg) - 2px);
   cursor: pointer;
-  transition: all var(--duration-fast) ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  z-index: 1;
 }
 
 .transfer-mode-tab:hover {
-  color: white;
-  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .transfer-mode-tab.active {
-  background: white;
   color: var(--transfer-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* 网络状态曲线图 - 简洁风格 */
@@ -4116,12 +4139,27 @@ Already defined above with darker background
    深色模式 - 转账区域修复
    ======================================== */
 
-/* 修复三个交易选择按钮的白色背景 - 使用半透明柔和样式 */
+/* 修复三个交易选择按钮 - 深色模式简洁风格 */
+[data-theme="dark"] .transfer-mode-tabs {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* 深色模式下的滑动指示器 - 深灰色扁平风格 */
+[data-theme="dark"] .transfer-mode-tabs::before {
+  background: rgba(30, 41, 59, 0.9);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme="dark"] .transfer-mode-tab {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+[data-theme="dark"] .transfer-mode-tab:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
 [data-theme="dark"] .transfer-mode-tab.active {
-  background: rgba(255, 255, 255, 0.12);
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
+  color: rgba(255, 255, 255, 0.95);
 }
 
 /* 隐藏所有 number 输入框的上下调整按钮（包括转账金额和Gas输入框） */
