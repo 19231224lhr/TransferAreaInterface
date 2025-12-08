@@ -483,7 +483,7 @@
   position: relative;
   z-index: 1;
   width: 100%;
-  max-width: 560px;
+  max-width: 900px;
   background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.98) 0%,
       rgba(248, 250, 252, 0.95) 100%);

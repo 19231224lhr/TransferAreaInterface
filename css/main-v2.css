@@ -3692,8 +3692,8 @@ Already defined above with darker background
    交易详情弹窗
    ======================================== */
 .tx-detail-dialog {
-  width: 95vw;
-  max-width: 1100px;
+  width: 95vw !important;
+  max-width: 1100px !important;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -3706,18 +3706,25 @@ Already defined above with darker background
     inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
+/* 确保覆盖通用 .modal .dialog 的宽度限制 */
+.modal .tx-detail-dialog {
+  width: 95vw !important;
+  max-width: 1100px !important;
+}
+
 .tx-detail-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 24px;
+  padding: 16px 24px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .tx-detail-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #1e293b;
   display: flex;
@@ -3751,32 +3758,31 @@ Already defined above with darker background
 
 #txDetailModal .tx-detail-content {
   flex: 1;
-  overflow: auto;
-  padding: 24px 32px;
-  max-width: none !important;
-  width: 100% !important;
-  border-radius: 0 !important;
-  border: none !important;
-  box-shadow: none !important;
-  transform: none !important;
-  backdrop-filter: none !important;
-  position: relative !important;
+  overflow: hidden;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
   background: #ffffff;
 }
 
 #txDetailModal .tx-detail-code {
   margin: 0;
-  padding: 24px 28px;
+  padding: 20px 24px;
   background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
   border-radius: 12px;
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.7;
+  font-size: 13px;
+  line-height: 1.6;
   color: #e2e8f0;
   white-space: pre-wrap;
   word-break: break-word;
-  overflow-x: auto;
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+  max-height: calc(90vh - 140px);
+  width: calc(100% - 40px);
+  max-width: 1000px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
 
 /* 代码高亮 - JSON keys */
@@ -3801,9 +3807,10 @@ Already defined above with darker background
   align-items: center;
   justify-content: flex-end;
   gap: 12px;
-  padding: 16px 24px;
+  padding: 14px 24px;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
 }
 
 .tx-detail-btn {
@@ -3856,7 +3863,8 @@ Already defined above with darker background
   }
 
   .tx-detail-dialog {
-    width: 95vw;
+    width: 95vw !important;
+    max-width: 1100px !important;
     max-height: 90vh;
   }
 
@@ -4179,4 +4187,100 @@ input[type="number"] {
 /* 修复高级选项上方的白色边框线 */
 [data-theme="dark"] .transfer-options {
   border-top-color: rgba(100, 116, 139, 0.3);
+}
+
+/* ========================================
+   深色模式 - 交易详情弹窗
+   ======================================== */
+
+[data-theme="dark"] .tx-detail-dialog {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .tx-detail-header {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+[data-theme="dark"] .tx-detail-header h3 {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .tx-detail-close {
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .tx-detail-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+[data-theme="dark"] #txDetailModal .tx-detail-content {
+  background: #0f172a;
+}
+
+[data-theme="dark"] #txDetailModal .tx-detail-code {
+  background: linear-gradient(135deg, #0f172a 0%, #020617 100%);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .tx-detail-footer {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  border-top: 1px solid rgba(100, 116, 139, 0.2);
+}
+
+[data-theme="dark"] .tx-detail-btn--copy {
+  background: rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+[data-theme="dark"] .tx-detail-btn--copy:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .tx-detail-btn--ok {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+/* ========================================
+   深色模式 - 查看交易按钮（暗色调）
+   ======================================== */
+
+[data-theme="dark"] .tx-view-btn--struct {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .tx-view-btn--struct:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+  border-color: rgba(59, 130, 246, 0.4);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.25);
+  color: #ffffff;
+}
+
+[data-theme="dark"] .tx-view-btn--tx {
+  background: linear-gradient(135deg, #1e3d32 0%, #1e293b 100%);
+  color: #6ee7b7;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .tx-view-btn--tx:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+}
+
+/* 按钮容器边框 - 暗色模式 */
+[data-theme="dark"] .tx-result-actions {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
+  border-color: rgba(71, 85, 105, 0.3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
 }
