@@ -4029,6 +4029,33 @@ Already defined above with darker background
   color: var(--color-text-secondary);
 }
 
+/* 黑夜模式下的普通转账标签按钮 */
+[data-theme="dark"] .no-org-tab {
+  background: rgba(30, 41, 59, 0.9);
+  color: rgba(14, 165, 233, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(14, 165, 233, 0.2);
+  flex: 1;
+  width: 100%;
+  margin-right: 10px;
+}
+
+/* 黑夜模式下的警告按钮 */
+[data-theme="dark"] .no-org-warn-btn {
+  background: rgba(251, 191, 36, 0.15);
+  border-color: rgba(251, 191, 36, 0.3);
+  flex-shrink: 0;
+}
+
+[data-theme="dark"] .no-org-warn-btn::before {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(245, 158, 11, 0.2));
+}
+
+[data-theme="dark"] .no-org-warn-btn:hover {
+  background: rgba(251, 191, 36, 0.25);
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
 /* 交易结果 */
 [data-theme="dark"] .tx-result-card {
   background: var(--color-card-bg-solid);

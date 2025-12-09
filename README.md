@@ -375,6 +375,10 @@ err = account.SendTX(tx)
 - ToGroup: `None`
 - ToPubKey: `11970dd5a7c3f6a131e24e8f066416941d79a177579c63d889ef9ce90ffd9ca8&037d81e8fb19883cc9e5ed8ebcc2b75e1696880c75a864099bec10a5821f69e0`
 
+- 测试私钥：
+`963f75db05b159d60bb1b554bed2c204dd66e0033dc95fe19d77c4745980ff03`
+- 对应地址：
+`b0b43b638f4bcc0fb941fca7e7b26d15612eb64d`
 ---
 
 ## 🔐 API 接口

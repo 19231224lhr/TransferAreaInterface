@@ -1,0 +1,317 @@
+/**
+ * UTXO Wallet - Main Entry Point
+ * 
+ * This is the main entry file that initializes all modules and sets up the application.
+ * All functionality is imported from modular files in the js/ directory.
+ */
+
+// ========================================
+// Error Suppression (Browser Extensions)
+// ========================================
+try {
+  window.addEventListener('error', function (e) {
+    var m = String((e && e.message) || '');
+    var f = String((e && e.filename) || '');
+    if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+    if (f.indexOf('solanaActionsContentScript.js') !== -1 || m.indexOf('Could not establish connection') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+  }, true);
+} catch (_) { }
+
+try {
+  window.addEventListener('unhandledrejection', function (e) {
+    var reason = String((e && e.reason) || '');
+    if (reason.indexOf('Could not establish connection') !== -1 || 
+        reason.indexOf('Receiving end does not exist') !== -1 ||
+        reason.indexOf('Something went wrong') !== -1) {
+      if (e.preventDefault) e.preventDefault();
+      return true;
+    }
+  }, true);
+} catch (_) { }
+
+// ========================================
+// Module Imports
+// ========================================
+
+// Config
+import { STORAGE_KEY, I18N_STORAGE_KEY, THEME_STORAGE_KEY, DEFAULT_GROUP, GROUP_LIST } from './config/constants.js';
+
+// i18n
+import { t, setLanguage, getCurrentLanguage, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
+
+// Utils
+import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignData, sha256, sha256Hex } from './utils/crypto.js';
+import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.js';
+import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
+import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
+
+// UI
+import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
+import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip, showConfirmModal, getActionModalElements } from './ui/modal.js';
+import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
+import { initProfilePage, updateProfileDisplay } from './ui/profile.js';
+import { updateWalletChart, initWalletChart } from './ui/charts.js';
+import { initNetworkChart } from './ui/networkChart.js';
+import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js';
+
+// Services
+import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.js';
+import { renderWallet, updateWalletBrief as walletUpdateBrief, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet.js';
+import { buildNewTX, getTXOutputHash, getTXHash, getTXID, getTXUserSignature, exchangeRate } from './services/transaction.js';
+import { initTransferSubmit, initBuildTransaction } from './services/transfer.js';
+import { updateWalletStruct } from './services/walletStruct.js';
+
+// Pages
+import { initWelcomePage, updateWelcomeButtons } from './pages/welcome.js';
+import { initEntryPage, updateWalletBrief } from './pages/entry.js';
+import { initLoginPage, resetLoginPageState } from './pages/login.js';
+import { initNewUserPage, handleCreate, resetCreatingFlag } from './pages/newUser.js';
+import { initImportPage, resetImportState } from './pages/import.js';
+import { initMainPage, handleMainRoute } from './pages/main.js';
+import { initJoinGroupPage, startInquiryAnimation, resetInquiryState } from './pages/joinGroup.js';
+import { initGroupDetailPage, updateGroupDetailDisplay } from './pages/groupDetail.js';
+
+// Router
+import { router, routeTo, showCard, initRouter } from './router.js';
+
+// ========================================
+// Global Function Exports (for HTML onclick compatibility)
+// ========================================
+
+// Router functions
+window.routeTo = routeTo;
+window.showCard = showCard;
+window.router = router;
+
+// i18n functions
+window.t = t;
+window.setLanguage = setLanguage;
+window.getCurrentLanguage = getCurrentLanguage;
+window.updatePageTranslations = updatePageTranslations;
+
+// Theme functions
+window.setTheme = setTheme;
+window.toggleTheme = toggleTheme;
+window.getCurrentTheme = getCurrentTheme;
+
+// Account functions
+window.handleCreate = handleCreate;
+window.newUser = newUser;
+window.importFromPrivHex = importFromPrivHex;
+window.addNewSubWallet = addNewSubWallet;
+
+// Storage functions
+window.loadUser = loadUser;
+window.saveUser = saveUser;
+window.toAccount = toAccount;
+window.loadUserProfile = loadUserProfile;
+window.saveUserProfile = saveUserProfile;
+window.getJoinedGroup = getJoinedGroup;
+window.resetOrgSelectionForNewUser = resetOrgSelectionForNewUser;
+
+// Wallet functions
+window.renderWallet = renderWallet;
+window.updateWalletBrief = updateWalletBrief;
+
+// UTXO/TXCer detail modal functions
+window.showUtxoDetail = (addrKey, utxoKey) => {
+  const u = loadUser();
+  if (!u || !u.wallet || !u.wallet.addressMsg) return;
+  const addrMsg = u.wallet.addressMsg[addrKey];
+  if (!addrMsg || !addrMsg.utxos) return;
+  const utxo = addrMsg.utxos[utxoKey];
+  if (!utxo) return;
+
+  let html = '';
+  html += `<div class="detail-row"><div class="detail-label">UTXO Key</div><div class="detail-val">${utxoKey}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${utxo.Value || 0}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${utxo.Time || 0}</div></div>`;
+
+  if (utxo.Position) {
+    html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">`;
+    html += `Block: ${utxo.Position.Blocknum}, IdxX: ${utxo.Position.IndexX}, IdxY: ${utxo.Position.IndexY}, IdxZ: ${utxo.Position.IndexZ}`;
+    html += `</div></div>`;
+  }
+
+  html += `<div class="detail-row"><div class="detail-label">Is TXCer</div><div class="detail-val">${utxo.IsTXCerUTXO ? 'Yes' : 'No'}</div></div>`;
+
+  if (utxo.UTXO) {
+    html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">`;
+    html += `<div class="detail-sub">`;
+    html += `<div style="margin-bottom:4px">TXID: ${utxo.UTXO.TXID || 'N/A'}</div>`;
+    html += `<div>VOut: ${utxo.UTXO.VOut}</div>`;
+    html += `</div></div></div>`;
+  }
+
+  showModalTip('UTXO 详情', html, false);
+};
+
+window.showTxCerDetail = (addrKey, cerKey) => {
+  const u = loadUser();
+  if (!u || !u.wallet || !u.wallet.addressMsg) return;
+  const addrMsg = u.wallet.addressMsg[addrKey];
+  if (!addrMsg || !addrMsg.txCers) return;
+  const cer = addrMsg.txCers[cerKey];
+  if (!cer) return;
+
+  let html = '';
+  html += `<div class="detail-row"><div class="detail-label">TXCer Key</div><div class="detail-val">${cerKey}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${cer.Value || 0}</div></div>`;
+  html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${cer.Time || 0}</div></div>`;
+
+  if (cer.Position) {
+    html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">`;
+    html += `Block: ${cer.Position.Blocknum}, IdxX: ${cer.Position.IndexX}, IdxY: ${cer.Position.IndexY}, IdxZ: ${cer.Position.IndexZ}`;
+    html += `</div></div>`;
+  }
+
+  if (cer.UTXO) {
+    html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">`;
+    html += `<div class="detail-sub">`;
+    html += `<div style="margin-bottom:4px">TXID: ${cer.UTXO.TXID || 'N/A'}</div>`;
+    html += `<div>VOut: ${cer.UTXO.VOut}</div>`;
+    html += `</div></div></div>`;
+  }
+
+  showModalTip('TXCer 详情', html, false);
+};
+window.refreshOrgPanel = refreshOrgPanel;
+window.handleAddToAddress = handleAddToAddress;
+window.handleZeroAddress = handleZeroAddress;
+window.initAddressModal = initAddressModal;
+window.showAddrModal = showAddrModal;
+window.hideAddrModal = hideAddrModal;
+window.initTransferModeTabs = initTransferModeTabs;
+window.rebuildAddrList = rebuildAddrList;
+window.initRefreshSrcAddrList = initRefreshSrcAddrList;
+window.initChangeAddressSelects = initChangeAddressSelects;
+window.initRecipientCards = initRecipientCards;
+window.initAdvancedOptions = initAdvancedOptions;
+
+// UI functions
+window.showToast = showToast;
+window.showSuccessToast = showSuccessToast;
+window.showErrorToast = showErrorToast;
+window.showWarningToast = showWarningToast;
+window.showInfoToast = showInfoToast;
+window.showMiniToast = showMiniToast;
+window.showUnifiedLoading = showUnifiedLoading;
+window.showUnifiedSuccess = showUnifiedSuccess;
+window.hideUnifiedOverlay = hideUnifiedOverlay;
+window.showModalTip = showModalTip;
+window.copyToClipboard = copyToClipboard;
+window.updateHeaderUser = updateHeaderUser;
+
+// Page init functions
+window.initProfilePage = initProfilePage;
+window.initWelcomePage = initWelcomePage;
+window.initEntryPage = initEntryPage;
+window.initLoginPage = initLoginPage;
+window.initNewUserPage = initNewUserPage;
+window.initImportPage = initImportPage;
+window.initMainPage = initMainPage;
+window.initJoinGroupPage = initJoinGroupPage;
+window.initGroupDetailPage = initGroupDetailPage;
+window.updateWelcomeButtons = updateWelcomeButtons;
+window.resetLoginPageState = resetLoginPageState;
+window.startInquiryAnimation = startInquiryAnimation;
+window.resetInquiryState = resetInquiryState;
+window.resetCreatingFlag = resetCreatingFlag;
+window.resetImportState = resetImportState;
+window.handleMainRoute = handleMainRoute;
+window.updateGroupDetailDisplay = updateGroupDetailDisplay;
+
+// Chart functions
+window.updateWalletChart = updateWalletChart;
+window.initWalletChart = initWalletChart;
+window.initWalletStructToggle = initWalletStructToggle;
+window.initTxDetailModal = initTxDetailModal;
+window.updateWalletStruct = updateWalletStruct;
+
+// Transaction functions
+window.buildNewTX = buildNewTX;
+window.exchangeRate = exchangeRate;
+window.initTransferSubmit = initTransferSubmit;
+window.initBuildTransaction = initBuildTransaction;
+
+// Crypto functions
+window.bytesToHex = bytesToHex;
+window.hexToBytes = hexToBytes;
+window.sha256 = sha256;
+window.sha256Hex = sha256Hex;
+
+// Helper functions
+window.wait = wait;
+
+// ========================================
+// Global Initialization
+// ========================================
+
+function init() {
+  console.log('UTXO Wallet - Modular Version Initializing...');
+  
+  // Initialize language
+  loadLanguageSetting();
+  
+  // Initialize theme
+  loadThemeSetting();
+  initThemeSelector();
+  
+  // Initialize user menu
+  initUserMenu();
+  
+  // Initialize header scroll behavior
+  initHeaderScroll();
+  
+  // Update header with current user
+  const user = loadUser();
+  updateHeaderUser(user);
+  
+  // Initialize router
+  initRouter();
+  
+  // Update page translations
+  updatePageTranslations();
+  
+  // Initialize network chart
+  try {
+    initNetworkChart();
+  } catch (_) { }
+  
+  // Initialize confirmSkipModal event listeners
+  const confirmSkipModal = document.getElementById('confirmSkipModal');
+  const confirmSkipOk = document.getElementById('confirmSkipOk');
+  const confirmSkipCancel = document.getElementById('confirmSkipCancel');
+  if (confirmSkipOk && !confirmSkipOk.dataset._bind) {
+    confirmSkipOk.addEventListener('click', () => {
+      try { localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' })); } catch { }
+      if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
+      routeTo('#/main');
+    });
+    confirmSkipOk.dataset._bind = '1';
+  }
+  if (confirmSkipCancel && !confirmSkipCancel.dataset._bind) {
+    confirmSkipCancel.addEventListener('click', () => {
+      if (confirmSkipModal) confirmSkipModal.classList.add('hidden');
+    });
+    confirmSkipCancel.dataset._bind = '1';
+  }
+  
+  console.log('UTXO Wallet initialized (modular)');
+}
+
+// ========================================
+// DOM Ready Handler
+// ========================================
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

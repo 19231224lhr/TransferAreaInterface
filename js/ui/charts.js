@@ -1,0 +1,324 @@
+/**
+ * Charts UI Module
+ * 
+ * Provides chart rendering functionality for wallet balance.
+ */
+
+import { loadUser } from '../utils/storage.js';
+
+// Chart history storage key
+const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
+
+/**
+ * Load chart history from localStorage
+ * @returns {Array} Chart history data
+ */
+const loadChartHistory = () => {
+  try {
+    const data = localStorage.getItem(CHART_HISTORY_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    return [];
+  }
+};
+
+/**
+ * Save chart history to localStorage
+ * @param {Array} history - Chart history data
+ */
+const saveChartHistory = (history) => {
+  try {
+    const trimmed = history.slice(-10);
+    localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
+  } catch (e) {}
+};
+
+/**
+ * Update wallet balance chart
+ * @param {object} user - User data with wallet info
+ */
+export function updateWalletChart(user) {
+  const chartEl = document.getElementById('balanceChart');
+  if (!chartEl) return;
+
+  const chartInner = chartEl.querySelector('.balance-chart-inner');
+  const svg = chartEl.querySelector('.balance-chart-svg');
+  const lineEl = document.getElementById('chartLine');
+  const fillEl = document.getElementById('chartFill');
+  const dotsEl = document.getElementById('chartDots');
+  const tooltip = document.getElementById('chartTooltip');
+  const timeLabelsEl = document.getElementById('chartTimeLabels');
+
+  if (!svg || !lineEl || !fillEl || !dotsEl) return;
+
+  // Get current balance
+  const vd = (user && user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+  const currentVal = Math.round(Number(vd[0] || 0) * 1 + Number(vd[1] || 0) * 100 + Number(vd[2] || 0) * 10);
+  const now = Date.now();
+  const minuteMs = 60 * 1000;
+  
+  // Load persistent history data
+  let history = loadChartHistory();
+  
+  // Initialize or update history data
+  if (history.length === 0) {
+    // Create initial history: past 10 minutes
+    for (let i = 9; i >= 0; i--) {
+      const t = now - i * minuteMs;
+      history.push({ t, v: currentVal });
+    }
+    saveChartHistory(history);
+  } else {
+    const lastPoint = history[history.length - 1];
+    if (now - lastPoint.t >= minuteMs) {
+      history.push({ t: now, v: currentVal });
+      saveChartHistory(history);
+    } else {
+      history[history.length - 1].v = currentVal;
+    }
+  }
+
+  // Take last 10 points for display
+  const displayHistory = history.slice(-10);
+  
+  // Calculate value range - key fix: when all values are same (including all 0), show horizontal line
+  const values = displayHistory.map(h => h.v);
+  const minVal = Math.min(...values);
+  const maxVal = Math.max(...values);
+  const range = maxVal - minVal;
+  
+  // SVG dimensions (adaptive to container ratio, full width)
+  const innerRect = chartInner?.getBoundingClientRect();
+  const containerW = innerRect?.width || chartEl.clientWidth || 320;
+  const containerH = innerRect?.height || chartEl.clientHeight || 56;
+  const viewBoxHeight = Math.round(containerH || 70);
+  const width = Math.max(320, Math.round(viewBoxHeight * (containerW / Math.max(1, containerH))));
+  const height = viewBoxHeight;
+  svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+  svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+  const padX = 2;  // Reduce left/right padding for full width
+  const padY = 6;
+  const chartHeight = height - padY * 2;
+
+  const bottomGapPx = 10;
+  const topGapPx = 8;
+  const chartTop = padY + topGapPx;
+  const chartBottom = height - padY - bottomGapPx;
+  const chartRange = chartBottom - chartTop;
+  
+  const toY = (v) => {
+    if (range === 0) {
+      // All values same (including all 0), show horizontal line in middle
+      return chartTop + chartRange * 0.5;
+    }
+    // When there's variation, map to chart area
+    const normalized = (v - minVal) / range; // 0 to 1
+    return chartBottom - normalized * chartRange;
+  };
+
+  // X coordinate calculation
+  const toX = (i) => {
+    if (displayHistory.length <= 1) return width / 2;
+    return padX + (i / (displayHistory.length - 1)) * (width - padX * 2);
+  };
+
+  // Generate point coordinates
+  const points = displayHistory.map((h, i) => ({ 
+    x: toX(i), 
+    y: toY(h.v), 
+    v: h.v, 
+    t: h.t 
+  }));
+  
+  if (points.length < 2) return;
+  
+  // Generate smooth curve path (Catmull-Rom spline)
+  let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
+  
+  // Use Monotone Cubic Spline algorithm to eliminate "hooks" and ensure monotonicity
+  // Calculate slopes
+  const slopes = [];
+  const dxs = [];
+  const dys = [];
+  for (let i = 0; i < points.length - 1; i++) {
+    const dx = points[i + 1].x - points[i].x;
+    const dy = points[i + 1].y - points[i].y;
+    dxs.push(dx);
+    dys.push(dy);
+    slopes.push(dy / dx);
+  }
+  // Pad last slope to prevent array overflow
+  if (slopes.length > 0) {
+    slopes.push(slopes[slopes.length - 1]);
+    dxs.push(dxs[dxs.length - 1]);
+    dys.push(dys[dys.length - 1]);
+  } else {
+    // Single point case
+    slopes.push(0); dxs.push(0); dys.push(0);
+  }
+
+  // Calculate tangent slopes m
+  const ms = [];
+  ms.push(slopes[0]); // Start tangent
+  for (let i = 0; i < slopes.length - 1; i++) {
+    // If slopes have opposite signs, it's an extremum, set tangent to 0 to prevent overshoot
+    if (slopes[i] * slopes[i+1] <= 0) {
+      ms.push(0);
+    } else {
+      ms.push((slopes[i] + slopes[i + 1]) / 2);
+    }
+  }
+  ms.push(slopes[slopes.length - 1]); // End tangent
+
+  // Generate Bezier control points and draw
+  for (let i = 0; i < points.length - 1; i++) {
+    const p1 = points[i];
+    const p2 = points[i + 1];
+    const dx = points[i + 1].x - points[i].x;
+    
+    // Control points X at 1/3 and 2/3 of segment
+    // Y calculated from tangent slopes
+    const cp1x = p1.x + dx / 3;
+    const cp1y = p1.y + ms[i] * dx / 3;
+    const cp2x = p2.x - dx / 3;
+    const cp2y = p2.y - ms[i + 1] * dx / 3;
+
+    pathD += ` C ${cp1x.toFixed(1)},${cp1y.toFixed(1)} ${cp2x.toFixed(1)},${cp2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`;
+  }
+
+  // Fill area path
+  const fillD = `${pathD} L ${points[points.length - 1].x.toFixed(1)},${height} L ${points[0].x.toFixed(1)},${height} Z`;
+
+  // Update paths
+  lineEl.setAttribute('d', pathD);
+  fillEl.setAttribute('d', fillD);
+
+  // Generate data points - use fixed size circles (won't deform with SVG stretch)
+  dotsEl.innerHTML = points.map((p, i) => {
+    const isLast = i === points.length - 1;
+    const baseR = isLast ? 4 : 3;
+    return `<circle 
+      cx="${p.x.toFixed(1)}" 
+      cy="${p.y.toFixed(1)}" 
+      r="${baseR}" 
+      class="${isLast ? 'chart-dot-current' : 'chart-dot'}"
+      data-value="${p.v}"
+      data-time="${p.t}"
+    />`;
+  }).join('');
+
+  // Update time labels
+  if (timeLabelsEl && displayHistory.length > 0) {
+    const firstTime = new Date(displayHistory[0].t);
+    const lastTime = new Date(displayHistory[displayHistory.length - 1].t);
+    const midIdx = Math.floor(displayHistory.length / 2);
+    const midTime = new Date(displayHistory[midIdx].t);
+    
+    const formatTime = (d) => `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    
+    timeLabelsEl.innerHTML = `
+      <span class="chart-time-label">${formatTime(firstTime)}</span>
+      <span class="chart-time-label">${formatTime(midTime)}</span>
+      <span class="chart-time-label">${formatTime(lastTime)}</span>
+    `;
+  }
+
+  // Save points globally for tooltip
+  svg._chartPoints = points;
+  svg._chartWidth = width;
+  svg._chartViewBoxWidth = width;
+  
+  // Bind hover tooltip events (only once)
+  if (!svg.dataset._bindChart) {
+    let lastMoveTime = 0;
+    let rafId = null;
+    
+    const handleMouseMove = (e) => {
+      const now = Date.now();
+      if (now - lastMoveTime < 16) return; // Limit to ~60fps
+      lastMoveTime = now;
+      
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        const pts = svg._chartPoints || [];
+        const svgWidth = svg._chartWidth || 320;
+        if (pts.length === 0) return;
+        
+        const rect = svg.getBoundingClientRect();
+        // Fix: use viewBox width instead of svgWidth to calculate mouse position
+        const viewBoxWidth = svg._chartViewBoxWidth || 320;
+        const x = (e.clientX - rect.left) * (viewBoxWidth / rect.width);
+        
+        let closest = pts[0];
+        let minDist = Infinity;
+        pts.forEach(p => {
+          const dist = Math.abs(p.x - x);
+          if (dist < minDist) {
+            minDist = dist;
+            closest = p;
+          }
+        });
+
+        if (tooltip && minDist < 40) {
+          const date = new Date(closest.t);
+          const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+          tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
+          tooltip.classList.add('visible');
+          
+          // Calculate tooltip position (relative to container)
+          const chartInner = chartEl.querySelector('.balance-chart-inner');
+          if (chartInner) {
+            const innerRect = chartInner.getBoundingClientRect();
+            // Fix: use viewBox width instead of svgWidth to calculate ratio
+            const viewBoxWidth = svg._chartViewBoxWidth || 320;
+            const tooltipX = (closest.x / viewBoxWidth) * innerRect.width;
+            const tooltipY = (closest.y / 70) * innerRect.height;
+            tooltip.style.left = `${tooltipX}px`;
+            tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
+          }
+        }
+      });
+    };
+
+    const handleMouseLeave = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (tooltip) tooltip.classList.remove('visible');
+    };
+
+    svg.addEventListener('mousemove', handleMouseMove, { passive: true });
+    svg.addEventListener('mouseleave', handleMouseLeave);
+
+    svg.dataset._bindChart = 'true';
+  }
+}
+
+/**
+ * Initialize wallet chart
+ */
+export function initWalletChart() {
+  // Check if chart element exists
+  const chartEl = document.getElementById('balanceChart');
+  if (!chartEl) {
+    console.warn('Balance chart element not found, skipping initialization');
+    return;
+  }
+  
+  const u = loadUser();
+  if (u) {
+    updateWalletChart(u);
+  }
+  
+  // Auto-update chart every minute (only set interval once)
+  if (!window._chartIntervalSet) {
+    window._chartIntervalSet = true;
+    setInterval(() => {
+      const user = loadUser();
+      if (user) {
+        updateWalletChart(user);
+      }
+    }, 60 * 1000);
+  }
+}
