@@ -3148,6 +3148,14 @@ Already defined above with darker background
   gap: 0;
 }
 
+/* 紧凑模式下的背景指示器需要覆盖整个按钮 */
+.transfer-mode-tabs.compact::before {
+  width: calc(100% - 6px);
+  height: auto;
+  bottom: 3px;
+  transform: translateX(0) !important;
+}
+
 .transfer-mode-tabs.compact .transfer-mode-tab {
   display: none;
 }
@@ -3155,6 +3163,7 @@ Already defined above with darker background
 .transfer-mode-tabs.compact .transfer-mode-tab.active {
   display: block;
   width: 100%;
+  flex: none;
 }
 
 .mode-dropdown {
@@ -4168,6 +4177,11 @@ Already defined above with darker background
 
 [data-theme="dark"] .transfer-mode-tab.active {
   color: rgba(255, 255, 255, 0.95);
+}
+
+/* 深色模式紧凑布局的背景指示器 */
+[data-theme="dark"] .transfer-mode-tabs.compact::before {
+  background: rgba(30, 41, 59, 0.9);
 }
 
 /* 隐藏所有 number 输入框的上下调整按钮（包括转账金额和Gas输入框） */

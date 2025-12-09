@@ -61,6 +61,7 @@ const translations = {
     'common.regenerate': '重新生成',
     'common.expandMore': '展开更多',
     'common.collapseMore': '收起',
+    'common.separator': '、',
     
     // 页面标题
     'page.title': 'UTXO 钱包 - 钱包操作',
@@ -280,6 +281,9 @@ const translations = {
     'transfer.ethReceiveAddress': 'ETH 找零',
     'transfer.noAddressAvailable': '无可用地址',
     'transfer.generateTxStruct': '生成交易结构体',
+    'transfer.buildTx': '构造交易',
+    'transfer.viewTxStruct': '查看交易结构体',
+    'transfer.viewTxInfo': '查看交易信息',
     'transfer.collapseInfo': '收起完整信息',
     'transfer.showFullInfo': '展示完整信息',
     'transfer.collapseStruct': '收起账户结构体',
@@ -420,6 +424,9 @@ const translations = {
     'tx.duplicateAddress': '地址重复',
     'tx.addressNotFound': '未找到该地址信息',
     'tx.queryFailed': '查询失败，请稍后重试',
+    'tx.infoRetrieved': '已获取{info}信息',
+    'tx.publicKey': '公钥',
+    'tx.guarantorOrg': '担保组织',
     
     // 钱包地址模态框
     'walletModal.createAddress': '新建地址',
@@ -461,6 +468,7 @@ const translations = {
     'common.regenerate': 'Regenerate',
     'common.expandMore': 'Show More',
     'common.collapseMore': 'Show Less',
+    'common.separator': ', ',
     
     // Page Title
     'page.title': 'UTXO Wallet - Wallet Operations',
@@ -679,6 +687,9 @@ const translations = {
     'transfer.ethReceiveAddress': 'ETH Change',
     'transfer.noAddressAvailable': 'No address available',
     'transfer.generateTxStruct': 'Generate Transaction Struct',
+    'transfer.buildTx': 'Build Transaction',
+    'transfer.viewTxStruct': 'View Transaction Struct',
+    'transfer.viewTxInfo': 'View Transaction Info',
     'transfer.collapseInfo': 'Collapse Full Info',
     'transfer.showFullInfo': 'Show Full Info',
     'transfer.collapseStruct': 'Collapse Account Struct',
@@ -819,6 +830,9 @@ const translations = {
     'tx.duplicateAddress': 'Duplicate address',
     'tx.addressNotFound': 'Address information not found',
     'tx.queryFailed': 'Query failed, please try again later',
+    'tx.infoRetrieved': 'Retrieved {info} information',
+    'tx.publicKey': 'Public Key',
+    'tx.guarantorOrg': 'Guarantor Organization',
     
     // Wallet Address Modal
     'walletModal.createAddress': 'Create Address',
@@ -6819,10 +6833,11 @@ function renderWallet() {
             // 查询成功后自动展开详情区显示结果
             if (info.pubKey || info.groupId) {
               card.classList.add('expanded');
-              const hasKey = info.pubKey ? '公钥' : '';
-              const hasOrg = info.groupId ? '担保组织' : '';
-              const found = [hasKey, hasOrg].filter(Boolean).join('、');
-              showMiniToast(`已获取${found}信息`, 'success');
+              const items = [];
+              if (info.pubKey) items.push(t('tx.publicKey'));
+              if (info.groupId) items.push(t('tx.guarantorOrg'));
+              const found = items.join(t('common.separator') || '、');
+              showMiniToast(t('tx.infoRetrieved', { info: found }), 'success');
             }
           } catch (e) {
             showMiniToast(t('tx.queryFailed'), 'error');
