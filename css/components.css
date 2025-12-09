@@ -3101,3 +3101,22 @@ pre code {
       var(--color-divider) 50%,
       transparent 100%);
 }
+
+/* Detail Modal (UTXO/TXCer 详情弹窗) */
+[data-theme="dark"] .detail-row {
+  border-bottom-color: rgba(100, 116, 139, 0.2);
+}
+
+[data-theme="dark"] .detail-label {
+  color: var(--text-muted, #94a3b8);
+}
+
+[data-theme="dark"] .detail-val {
+  color: var(--text-primary, #f1f5f9);
+}
+
+[data-theme="dark"] .detail-sub {
+  background: var(--neutral-100, #334155);
+  border-color: rgba(100, 116, 139, 0.3);
+  color: var(--text-primary, #f1f5f9);
+}

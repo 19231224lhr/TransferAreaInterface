@@ -520,11 +520,13 @@ body:has(.welcome-hero:not(.hidden)) {
 .split-login-container {
   display: inline-flex;
   border-radius: 14px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 14px rgba(14, 165, 233, 0.15);
   backdrop-filter: blur(10px);
   animation: splitBtnSlideIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   position: relative;
+  /* 添加内部圆角裁剪 */
+  isolation: isolate;
 }
 
 /* 分割按钮 - 登录部分 */
@@ -539,11 +541,23 @@ body:has(.welcome-hero:not(.hidden)) {
   background: rgba(255, 255, 255, 0.9);
   color: #0ea5e9;
   border: none;
-  border-right: 1px solid rgba(14, 165, 233, 0.15);
+  border-radius: 14px 0 0 14px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+}
+
+/* 使用伪元素创建分隔线，避免缩放时产生缝隙 */
+.split-btn-login::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 20%;
+  bottom: 20%;
+  width: 1px;
+  background: rgba(14, 165, 233, 0.15);
+  transition: opacity 0.3s ease;
 }
 
 .split-btn-login::before {
@@ -567,12 +581,20 @@ body:has(.welcome-hero:not(.hidden)) {
 .split-btn-login:hover {
   background: rgba(255, 255, 255, 1);
   color: #0284c7;
-  transform: translateX(-2px);
-  box-shadow: -2px 0 8px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.15) inset;
+}
+
+.split-btn-login:hover::after {
+  opacity: 0.3;
 }
 
 .split-btn-login:active {
-  transform: translateX(0) scale(0.97);
+  transform: translateX(0) scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.split-btn-login:active::after {
+  opacity: 1;
 }
 
 /* 分割按钮 - 进入主页部分 */
@@ -587,6 +609,7 @@ body:has(.welcome-hero:not(.hidden)) {
   background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
   color: white;
   border: none;
+  border-radius: 0 14px 14px 0;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -613,12 +636,18 @@ body:has(.welcome-hero:not(.hidden)) {
 
 .split-btn-home:hover {
   background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
-  transform: translateX(2px);
-  box-shadow: 2px 0 8px rgba(14, 165, 233, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2) inset;
 }
 
 .split-btn-home:active {
-  transform: translateX(0) scale(0.97);
+  transform: translateX(0) scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+/* 当右侧按钮被点击时，隐藏左侧按钮的分隔线 */
+.split-btn-home:active ~ .split-btn-login::after,
+.split-login-container:has(.split-btn-home:active) .split-btn-login::after {
+  opacity: 0;
 }
 
 /* 整体容器悬停效果 */

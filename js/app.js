@@ -110,6 +110,7 @@ window.addNewSubWallet = addNewSubWallet;
 window.loadUser = loadUser;
 window.saveUser = saveUser;
 window.toAccount = toAccount;
+window.clearAccountStorage = clearAccountStorage;
 window.loadUserProfile = loadUserProfile;
 window.saveUserProfile = saveUserProfile;
 window.getJoinedGroup = getJoinedGroup;
@@ -269,15 +270,17 @@ function init() {
   // Initialize header scroll behavior
   initHeaderScroll();
   
-  // Update header with current user
-  const user = loadUser();
-  updateHeaderUser(user);
-  
   // Initialize router
   initRouter();
   
   // Update page translations
   updatePageTranslations();
+  
+  // Update header with current user (after router init to ensure DOM is ready)
+  requestAnimationFrame(() => {
+    const user = loadUser();
+    updateHeaderUser(user);
+  });
   
   // Initialize network chart
   try {

@@ -79,6 +79,15 @@ export async function handleCreate(showToast = true) {
     if (pubXEl) pubXEl.textContent = data.pubXHex;
     if (pubYEl) pubYEl.textContent = data.pubYHex;
     
+    // Clear old account data before saving new account
+    const oldUser = loadUser();
+    if (!oldUser || oldUser.accountId !== data.accountId) {
+      // Different account, clear old data
+      if (typeof window.clearAccountStorage === 'function') {
+        window.clearAccountStorage();
+      }
+    }
+    
     saveUser({ 
       accountId: data.accountId, 
       address: data.address, 

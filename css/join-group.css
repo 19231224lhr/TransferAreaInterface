@@ -229,17 +229,41 @@
   width: 100%;
 }
 
-/* 标签页切换 */
+/* 标签页切换 - 带滑块特效 */
 .join-tabs {
+  position: relative;
   display: flex;
-  gap: 8px;
+  gap: 0;
   padding: 6px;
   background: #f1f5f9;
   border-radius: 14px;
   margin-bottom: 32px;
+  isolation: isolate;
+}
+
+/* 滑块背景 */
+.join-tabs::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: calc(50% - 6px);
+  height: calc(100% - 12px);
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  will-change: transform;
+}
+
+/* 当第二个标签激活时，滑块移动到右侧 */
+.join-tabs[data-active="search"]::before {
+  transform: translateX(calc(100% + 6px));
 }
 
 .join-tab {
+  position: relative;
   flex: 1;
   display: flex;
   align-items: center;
@@ -253,23 +277,26 @@
   border: none;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
 }
 
 .join-tab svg {
   width: 18px;
   height: 18px;
+  transition: transform 0.2s ease;
 }
 
-.join-tab:hover {
+.join-tab:hover:not(.join-tab--active) {
   color: #334155;
-  background: rgba(255, 255, 255, 0.5);
+}
+
+.join-tab:hover svg {
+  transform: scale(1.1);
 }
 
 .join-tab--active {
   color: #2563eb;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 /* ========================================
@@ -930,25 +957,31 @@
   color: #60a5fa;
 }
 
-/* 标签页切换 */
+/* 标签页切换 - 深色模式 */
 [data-theme="dark"] .join-tabs {
-  background: var(--color-bg-tertiary);
+  background: rgba(30, 41, 59, 0.6);
   border: 1px solid var(--color-border);
+}
+
+/* 滑块背景 - 深色模式 */
+[data-theme="dark"] .join-tabs::before {
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(59, 130, 246, 0.2));
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(59, 130, 246, 0.3);
+  backdrop-filter: blur(8px);
 }
 
 [data-theme="dark"] .join-tab {
   color: var(--color-text-secondary);
 }
 
-[data-theme="dark"] .join-tab:hover {
+[data-theme="dark"] .join-tab:hover:not(.join-tab--active) {
   color: var(--color-text-primary);
-  background: rgba(59, 130, 246, 0.1);
 }
 
 [data-theme="dark"] .join-tab--active {
   color: #60a5fa;
-  background: var(--color-card-bg-solid);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 /* 组织信息卡片 */

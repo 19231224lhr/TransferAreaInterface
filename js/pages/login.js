@@ -106,23 +106,53 @@ export function initLoginPage() {
     loginBtn.addEventListener('click', handleLoginClick);
   }
   
-  // Bind next button
+  // Bind next button - 进入钱包管理
   const loginNextBtn = document.getElementById('loginNextBtn');
   if (loginNextBtn && !loginNextBtn.dataset._loginBind) {
     loginNextBtn.dataset._loginBind = 'true';
     loginNextBtn.addEventListener('click', () => {
       window.__skipExitConfirm = true;
       if (typeof window.routeTo === 'function') {
-        window.routeTo('#/join-group');
+        window.routeTo('#/entry');
+      }
+      // Update wallet brief when entering entry page
+      if (typeof window.updateWalletBrief === 'function') {
+        window.updateWalletBrief();
       }
     });
   }
   
-  // Bind cancel button
+  // Bind cancel button - 重新登录功能
   const loginCancelBtn = document.getElementById('loginCancelBtn');
   if (loginCancelBtn && !loginCancelBtn.dataset._loginBind) {
     loginCancelBtn.dataset._loginBind = 'true';
-    loginCancelBtn.addEventListener('click', () => {
+    loginCancelBtn.addEventListener('click', async () => {
+      const resultEl = document.getElementById('loginResult');
+      const formCard = document.querySelector('.login-form-card');
+      const tipBlock = document.querySelector('.login-tip-block');
+      
+      // Hide result with animation - 更快的衔接
+      if (resultEl) {
+        resultEl.classList.add('collapsing');
+        await new Promise(resolve => setTimeout(resolve, 250));
+        resultEl.classList.add('hidden');
+        resultEl.classList.remove('collapsing');
+        resultEl.classList.remove('reveal');
+      }
+      
+      // Show form card with animation - 立即展开
+      if (formCard) {
+        formCard.classList.remove('collapsed');
+        formCard.classList.add('expanding');
+        setTimeout(() => formCard.classList.remove('expanding'), 350);
+      }
+      if (tipBlock) {
+        tipBlock.classList.remove('collapsed');
+        tipBlock.classList.add('expanding');
+        setTimeout(() => tipBlock.classList.remove('expanding'), 350);
+      }
+      
+      // Reset form
       resetLoginPageState();
     });
   }
@@ -181,16 +211,12 @@ async function handleLoginClick() {
     if (nextBtn) nextBtn.classList.add('hidden');
     if (cancelBtn) cancelBtn.classList.add('hidden');
     
-    // Form and tip collapse animation
+    // Form and tip collapse animation - 更快的衔接
     if (formCard) formCard.classList.add('collapsing');
     if (tipBlock) tipBlock.classList.add('collapsing');
     
-    // Wait for collapse animation
-    if (typeof window.wait === 'function') {
-      await window.wait(400);
-    } else {
-      await new Promise(resolve => setTimeout(resolve, 400));
-    }
+    // 等待折叠动画完成（250ms）
+    await new Promise(resolve => setTimeout(resolve, 250));
     
     if (formCard) {
       formCard.classList.remove('collapsing');
@@ -201,7 +227,7 @@ async function handleLoginClick() {
       tipBlock.classList.add('collapsed');
     }
     
-    // Show loader
+    // 立即显示加载器
     if (loader) loader.classList.remove('hidden');
     
     const t0 = Date.now();
@@ -213,28 +239,27 @@ async function handleLoginClick() {
     }
     
     const elapsed = Date.now() - t0;
-    if (elapsed < 800) {
-      if (typeof window.wait === 'function') {
-        await window.wait(800 - elapsed);
-      } else {
-        await new Promise(resolve => setTimeout(resolve, 800 - elapsed));
-      }
+    if (elapsed < 1000) {
+      await new Promise(resolve => setTimeout(resolve, 1000 - elapsed));
     }
     
-    // Loader collapse
+    // Loader collapse - 更快的衔接
     if (loader) {
       loader.classList.add('collapsing');
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise(resolve => setTimeout(resolve, 250));
       loader.classList.remove('collapsing');
       loader.classList.add('hidden', 'collapsed');
     }
     
-    // Show result with expand animation
+    // Show result with expand animation - 立即展开
     const resultEl2 = document.getElementById('loginResult');
     if (resultEl2) {
       resultEl2.classList.remove('hidden', 'collapsed');
       resultEl2.classList.add('expanding');
-      setTimeout(() => resultEl2.classList.remove('expanding'), 600);
+      requestAnimationFrame(() => {
+        resultEl2.classList.remove('expanding');
+        resultEl2.classList.add('reveal');
+      });
     }
     
     const loginAccountId = document.getElementById('loginAccountId');
@@ -253,6 +278,15 @@ async function handleLoginClick() {
     const privContainer = document.getElementById('loginPrivContainer');
     if (privContainer) privContainer.classList.add('collapsed');
     
+    // Clear old account data before saving new account
+    const oldUser = typeof window.loadUser === 'function' ? window.loadUser() : null;
+    if (!oldUser || oldUser.accountId !== data.accountId) {
+      // Different account, clear old data
+      if (typeof window.clearAccountStorage === 'function') {
+        window.clearAccountStorage();
+      }
+    }
+    
     if (typeof window.saveUser === 'function') {
       window.saveUser({
         accountId: data.accountId,
@@ -265,7 +299,7 @@ async function handleLoginClick() {
     }
     
     // Update header to show logged in user
-    const user = loadUser();
+    const user = typeof window.loadUser === 'function' ? window.loadUser() : null;
     updateHeaderUser(user);
     
     // Show action buttons
@@ -291,12 +325,12 @@ async function handleLoginClick() {
     if (formCard) {
       formCard.classList.remove('collapsing', 'collapsed');
       formCard.classList.add('expanding');
-      setTimeout(() => formCard.classList.remove('expanding'), 500);
+      setTimeout(() => formCard.classList.remove('expanding'), 350);
     }
     if (tipBlock) {
       tipBlock.classList.remove('collapsing', 'collapsed');
       tipBlock.classList.add('expanding');
-      setTimeout(() => tipBlock.classList.remove('expanding'), 400);
+      setTimeout(() => tipBlock.classList.remove('expanding'), 350);
     }
     
     if (typeof window.showErrorToast === 'function' && typeof window.t === 'function') {

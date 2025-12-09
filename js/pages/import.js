@@ -19,7 +19,9 @@ import { updateHeaderUser } from '../ui/header.js';
  */
 export function resetImportState(mode = 'account') {
   const importNextBtn = document.getElementById('importNextBtn');
+  const importCancelBtn = document.getElementById('importCancelBtn');
   if (importNextBtn) importNextBtn.classList.add('hidden');
+  if (importCancelBtn) importCancelBtn.classList.add('hidden');
   
   const importBtn = document.getElementById('importBtn');
   if (importBtn) importBtn.dataset.mode = mode;
@@ -50,6 +52,25 @@ export function resetImportState(mode = 'account') {
   if (eyeOpen) eyeOpen.classList.remove('hidden');
   if (eyeClosed) eyeClosed.classList.add('hidden');
   if (inputEl) inputEl.type = 'password';
+  
+  // Show form card and hide result
+  const formCard = document.querySelector('.import-form-card');
+  const resultEl = document.getElementById('importResult');
+  const tipBlock = document.querySelector('.import-tip-block');
+  
+  if (formCard) {
+    formCard.classList.remove('import-form-card--hidden');
+    formCard.classList.remove('collapsing');
+  }
+  if (tipBlock) {
+    tipBlock.classList.remove('import-tip-block--hidden');
+    tipBlock.classList.remove('collapsing');
+  }
+  if (resultEl) {
+    resultEl.classList.add('hidden');
+    resultEl.classList.remove('reveal');
+    resultEl.classList.remove('expanding');
+  }
 }
 
 /**
@@ -81,14 +102,31 @@ async function handleImport() {
     const loader = document.getElementById('importLoader');
     const resultEl = document.getElementById('importResult');
     const importNextBtn = document.getElementById('importNextBtn');
-    const inputSection = document.querySelector('.import-input-section');
+    const importCancelBtn = document.getElementById('importCancelBtn');
+    const formCard = document.querySelector('.import-form-card');
+    const tipBlock = document.querySelector('.import-tip-block');
     
     if (importNextBtn) importNextBtn.classList.add('hidden');
+    if (importCancelBtn) importCancelBtn.classList.add('hidden');
     if (resultEl) resultEl.classList.add('hidden');
     
     // Show loading state
     if (mode === 'account') {
-      if (inputSection) inputSection.classList.add('hidden');
+      // Hide form card with animation - 更快的衔接
+      if (formCard) {
+        formCard.classList.add('collapsing');
+      }
+      if (tipBlock) {
+        tipBlock.classList.add('collapsing');
+      }
+      
+      // 等待折叠动画完成（250ms）
+      await new Promise(resolve => setTimeout(resolve, 250));
+      
+      if (formCard) formCard.classList.add('import-form-card--hidden');
+      if (tipBlock) tipBlock.classList.add('import-tip-block--hidden');
+      
+      // 立即显示加载器
       if (loader) loader.classList.remove('hidden');
     } else {
       showUnifiedLoading(t('modal.addingWalletAddress'));
@@ -101,11 +139,16 @@ async function handleImport() {
     if (loader) loader.classList.add('hidden');
     
     if (mode === 'account') {
+      // Show result with smooth animation
       if (resultEl) {
         resultEl.classList.remove('hidden');
         resultEl.classList.remove('fade-in');
         resultEl.classList.remove('reveal');
-        requestAnimationFrame(() => resultEl.classList.add('reveal'));
+        resultEl.classList.add('expanding');
+        requestAnimationFrame(() => {
+          resultEl.classList.remove('expanding');
+          resultEl.classList.add('reveal');
+        });
       }
       
       const importAccountId = document.getElementById('importAccountId');
@@ -120,19 +163,68 @@ async function handleImport() {
       if (importPubX) importPubX.textContent = data.pubXHex || '';
       if (importPubY) importPubY.textContent = data.pubYHex || '';
       
-      saveUser({ 
-        accountId: data.accountId, 
-        address: data.address, 
-        privHex: data.privHex, 
-        pubXHex: data.pubXHex, 
-        pubYHex: data.pubYHex 
-      });
+      // Check if user already exists
+      const existingUser = loadUser();
+      const addr = (data.address || '').toLowerCase();
+      
+      let acc;
+      if (existingUser && existingUser.accountId) {
+        // User exists - add address to existing account
+        acc = toAccount({ accountId: existingUser.accountId, address: existingUser.address }, existingUser);
+        
+        // Check if address already exists
+        const addressExists = (acc.wallet && acc.wallet.addressMsg && acc.wallet.addressMsg[addr]) || 
+                             (existingUser.address && String(existingUser.address).toLowerCase() === addr);
+        
+        if (addressExists) {
+          hideUnifiedOverlay();
+          showErrorToast(t('toast.addressExists'), t('modal.operationFailed'));
+          if (importBtn) importBtn.disabled = false;
+          const loader = document.getElementById('importLoader');
+          if (loader) loader.classList.add('hidden');
+          // Reset the page
+          resetImportState('account');
+          return;
+        }
+      } else {
+        // No existing user - create new account
+        // Clear any old data first
+        if (typeof window.clearAccountStorage === 'function') {
+          window.clearAccountStorage();
+        }
+        
+        const accountData = { 
+          accountId: data.accountId, 
+          address: data.address, 
+          privHex: data.privHex, 
+          pubXHex: data.pubXHex, 
+          pubYHex: data.pubYHex 
+        };
+        acc = toAccount(accountData, accountData);
+      }
+      
+      // Add the imported address to wallet.addressMsg
+      if (addr && acc.wallet && acc.wallet.addressMsg) {
+        acc.wallet.addressMsg[addr] = {
+          type: 0,
+          utxos: {},
+          txCers: {},
+          value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+          estInterest: 0,
+          origin: 'imported',
+          privHex: data.privHex || normalized
+        };
+      }
+      
+      saveUser(acc);
       
       // Update header to show logged in user
       const user = loadUser();
       updateHeaderUser(user);
       
+      // Show action buttons
       if (importNextBtn) importNextBtn.classList.remove('hidden');
+      if (importCancelBtn) importCancelBtn.classList.remove('hidden');
       
       // Ensure private key is collapsed by default
       const importPrivateKeyItem = document.getElementById('importPrivateKeyItem');
@@ -249,6 +341,53 @@ export function initImportPage() {
     importPrivateKeyToggle.dataset._importBind = 'true';
     importPrivateKeyToggle.addEventListener('click', () => {
       importPrivateKeyItem.classList.toggle('import-result-item--collapsed');
+    });
+  }
+  
+  // Bind cancel button to reset the page
+  const importCancelBtn = document.getElementById('importCancelBtn');
+  if (importCancelBtn && !importCancelBtn.dataset._importBind) {
+    importCancelBtn.dataset._importBind = 'true';
+    importCancelBtn.addEventListener('click', async () => {
+      const resultEl = document.getElementById('importResult');
+      const formCard = document.querySelector('.import-form-card');
+      const tipBlock = document.querySelector('.import-tip-block');
+      
+      // Hide result with animation - 更快的衔接
+      if (resultEl) {
+        resultEl.classList.add('collapsing');
+        await new Promise(resolve => setTimeout(resolve, 250));
+        resultEl.classList.add('hidden');
+        resultEl.classList.remove('collapsing');
+        resultEl.classList.remove('reveal');
+      }
+      
+      // Show form card with animation - 立即展开
+      if (formCard) {
+        formCard.classList.remove('import-form-card--hidden');
+        formCard.classList.add('expanding');
+        setTimeout(() => formCard.classList.remove('expanding'), 350);
+      }
+      if (tipBlock) {
+        tipBlock.classList.remove('import-tip-block--hidden');
+        tipBlock.classList.add('expanding');
+        setTimeout(() => tipBlock.classList.remove('expanding'), 350);
+      }
+      
+      // Reset form
+      resetImportState('account');
+    });
+  }
+  
+  // Bind next button to go to entry page
+  const importNextBtn = document.getElementById('importNextBtn');
+  if (importNextBtn && !importNextBtn.dataset._importBind) {
+    importNextBtn.dataset._importBind = 'true';
+    importNextBtn.addEventListener('click', () => {
+      // Navigate to entry page - router will call initEntryPage which updates the wallet brief
+      if (typeof window.routeTo === 'function') {
+        window.routeTo('#/entry');
+      }
     });
   }
 }

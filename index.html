@@ -1005,12 +1005,10 @@
               <span data-i18n="login.securityTip">请确保在安全的环境中输入私钥，切勿泄露给他人</span>
             </div>
 
-            <!-- 加载动画 -->
+            <!-- 加载动画 - 使用系统logo -->
             <div id="loginLoader" class="login-loader hidden">
-              <div class="login-loader-ring">
-                <span class="ring-dot"></span>
-                <span class="ring-dot"></span>
-                <span class="ring-dot"></span>
+              <div class="login-loader-logo">
+                <img src="assets/logo.png" alt="Loading">
               </div>
               <div class="login-loader-text">
                 <span data-i18n="login.verifying">正在验证身份</span>
@@ -1020,16 +1018,6 @@
 
             <!-- 登录结果展示 -->
             <div id="loginResult" class="login-result hidden">
-              <!-- 成功标识 -->
-              <div class="login-success-header">
-                <div class="login-success-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                </div>
-                <h3 data-i18n="login.success">登录成功</h3>
-              </div>
-
               <!-- 账户信息网格 -->
               <div class="login-result-grid">
                 <div class="login-result-item">
@@ -1251,12 +1239,11 @@
               <span data-i18n="import.securityTip">请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中</span>
             </div>
 
-            <!-- 加载动画 -->
+            <!-- 加载动画 - 使用系统 Logo -->
             <div id="importLoader" class="import-loader hidden">
-              <div class="import-loader-ring">
-                <span class="ring-dot"></span>
-                <span class="ring-dot"></span>
-                <span class="ring-dot"></span>
+              <div class="import-loader-logo">
+                <img src="/assets/logo.png" alt="Loading" class="import-loader-logo-img" />
+                <div class="import-loader-glow"></div>
               </div>
               <div class="import-loader-text">
                 <span data-i18n="import.verifying">正在验证并导入</span>
@@ -1334,16 +1321,17 @@
               <div class="import-actions">
                 <button id="importCancelBtn" class="import-cancel-btn hidden">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                    <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                   </svg>
                   <span data-i18n="import.reImport">重新导入</span>
                 </button>
                 <button id="importNextBtn" class="import-next-btn hidden">
-                  <span data-i18n="common.next">继续下一步</span>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
                   </svg>
+                  <span data-i18n="import.confirmImport">导入该地址</span>
                 </button>
               </div>
             </div>

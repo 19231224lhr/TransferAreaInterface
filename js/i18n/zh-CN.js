@@ -70,7 +70,7 @@ export default {
   'entry.benefit2.desc': '同时管理多个钱包地址，便捷切换',
   'entry.benefit3.title': '一键导入',
   'entry.benefit3.desc': '支持通过私钥快速导入现有钱包',
-  'entry.walletsAdded': '已添加钱包',
+  'entry.walletsAdded': '已添加地址',
   'entry.encryptionAlgo': '加密算法',
   'entry.selectAction': '选择操作方式',
   'entry.selectActionDesc': '生成新钱包或导入已有钱包，开启您的数字资产之旅',
@@ -150,6 +150,7 @@ export default {
   'import.verifying': '正在验证并导入',
   'import.success': '钱包导入成功',
   'import.reImport': '重新导入',
+  'import.confirmImport': '导入该地址',
 
   // 页脚
   'footer.text': '区块链与你同频，信息予你无限。 Blockchain resonates with you. Infinity within your reach.',
@@ -380,6 +381,9 @@ export default {
   'tx.amountCannotBeNegative': '转账金额不能为负数',
   'tx.gasCannotBeNegative': 'Gas不能为负数',
   'tx.gasParamError': 'Gas参数错误',
+  'tx.insufficientGas': 'Gas不足',
+  'tx.insufficientGasWithMint': 'Gas不足：即使兑换额外Gas，交易Gas与转移Gas仍超出钱包可用Gas',
+  'tx.insufficientGasNoMint': 'Gas不足：交易Gas与转移Gas超出钱包可用Gas',
   'tx.duplicateAddress': '地址重复',
   'tx.addressNotFound': '未找到该地址信息',
   'tx.queryFailed': '查询失败，请稍后重试',

@@ -296,7 +296,7 @@
 }
 
 /* ========================================
-   登录表单
+   登录表单 - 添加折叠动画
    ======================================== */
 
 .login-form-card {
@@ -305,6 +305,34 @@
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+}
+
+/* 折叠动画 */
+.login-form-card.collapsing {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+}
+
+.login-form-card.collapsed {
+  display: none;
+}
+
+/* 展开动画 */
+.login-form-card.expanding {
+  animation: loginFormExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginFormExpand {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .login-input-group {
@@ -416,7 +444,7 @@
 }
 
 /* ========================================
-   安全提示
+   安全提示 - 添加折叠动画
    ======================================== */
 
 .login-tip-block {
@@ -428,6 +456,34 @@
   border: 1px solid #bfdbfe;
   border-radius: 12px;
   margin-bottom: 24px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-origin: top;
+}
+
+/* 折叠动画 */
+.login-tip-block.collapsing {
+  opacity: 0;
+  transform: translateY(-10px) scale(0.98);
+}
+
+.login-tip-block.collapsed {
+  display: none;
+}
+
+/* 展开动画 */
+.login-tip-block.expanding {
+  animation: loginTipExpand 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes loginTipExpand {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .login-tip-block svg {
@@ -444,7 +500,7 @@
 }
 
 /* ========================================
-   加载动画
+   加载动画 - 使用系统logo
    ======================================== */
 
 .login-loader {
@@ -458,6 +514,48 @@
   border: 1px solid #e2e8f0;
   border-radius: 16px;
   margin-bottom: 24px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 折叠动画 */
+.login-loader.collapsing {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.login-loader.collapsed {
+  display: none;
+}
+
+/* Logo加载动画容器 */
+.login-loader-logo {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: loginLogoRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.login-loader-logo img {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.4));
+  animation: loginLogoPulse 2s ease-in-out infinite;
+}
+
+@keyframes loginLogoRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes loginLogoPulse {
+  0%, 100% { 
+    filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.4));
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px rgba(16, 185, 129, 0.6));
+  }
 }
 
 .login-loader-ring {
@@ -510,46 +608,42 @@
 }
 
 /* ========================================
-   结果展示区
+   结果展示区 - 添加展开动画
    ======================================== */
 
 .login-result {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: top;
 }
 
-.login-success-header {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 24px;
-  background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
-  border: 1px solid #86efac;
-  border-radius: 14px;
+/* 折叠动画 */
+.login-result.collapsing {
+  opacity: 0;
+  transform: translateY(10px) scale(0.98);
 }
 
-.login-success-icon {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* 展开动画 */
+.login-result.expanding {
+  animation: loginResultExpand 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.login-success-icon svg {
-  width: 24px;
-  height: 24px;
-  color: white;
+@keyframes loginResultExpand {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-.login-success-header h3 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #166534;
-  margin: 0;
+.login-result.reveal {
+  opacity: 1;
+  transform: translateY(0) scale(1);
 }
 
 .login-result-grid {
@@ -916,20 +1010,29 @@
   border-color: var(--color-border);
 }
 
+[data-theme="dark"] .login-loader-logo img {
+  filter: drop-shadow(0 0 12px rgba(5, 150, 105, 0.5));
+}
+
+@keyframes loginLogoPulseDark {
+  0%, 100% { 
+    filter: drop-shadow(0 0 12px rgba(5, 150, 105, 0.5));
+  }
+  50% { 
+    filter: drop-shadow(0 0 20px rgba(5, 150, 105, 0.7));
+  }
+}
+
+[data-theme="dark"] .login-loader-logo img {
+  animation: loginLogoRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+             loginLogoPulseDark 2s ease-in-out infinite;
+}
+
 [data-theme="dark"] .login-loader-text {
   color: var(--color-text-secondary);
 }
 
 /* 结果展示 */
-[data-theme="dark"] .login-success-header {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
-[data-theme="dark"] .login-success-header h3 {
-  color: var(--color-success);
-}
-
 [data-theme="dark"] .login-result-item {
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);

@@ -293,9 +293,9 @@ export function initTransferSubmit() {
     
     if (totalGasNeed > totalGasBudget + 1e-8) {
       const msg = mintedGas > 0
-        ? 'Gas 不足：即使兑换额外 Gas，交易Gas 与转移Gas 仍超出钱包可用 Gas'
-        : 'Gas 不足：交易Gas 与转移Gas 超出钱包可用 Gas';
-      showTxValidationError(msg);
+        ? t('tx.insufficientGasWithMint')
+        : t('tx.insufficientGasNoMint');
+      showTxValidationError(t('tx.insufficientGas'), null, msg);
       return;
     }
     

@@ -70,7 +70,7 @@ export default {
   'entry.benefit2.desc': 'Manage multiple wallet addresses with easy switching',
   'entry.benefit3.title': 'Quick Import',
   'entry.benefit3.desc': 'Import existing wallets via private key',
-  'entry.walletsAdded': 'Wallets Added',
+  'entry.walletsAdded': 'Addresses Added',
   'entry.encryptionAlgo': 'Encryption',
   'entry.selectAction': 'Select Action',
   'entry.selectActionDesc': 'Create a new wallet or import an existing one to start your digital asset journey',
@@ -150,6 +150,7 @@ export default {
   'import.verifying': 'Verifying and importing',
   'import.success': 'Wallet Imported Successfully',
   'import.reImport': 'Re-import',
+  'import.confirmImport': 'Import Address',
 
   // Footer
   'footer.text': 'Blockchain resonates with you. Infinity within your reach.',
@@ -380,6 +381,9 @@ export default {
   'tx.amountCannotBeNegative': 'Transfer amount cannot be negative',
   'tx.gasCannotBeNegative': 'Gas cannot be negative',
   'tx.gasParamError': 'Gas parameter error',
+  'tx.insufficientGas': 'Insufficient Gas',
+  'tx.insufficientGasWithMint': 'Insufficient Gas: Even with extra Gas conversion, transaction Gas and transfer Gas exceed available wallet Gas',
+  'tx.insufficientGasNoMint': 'Insufficient Gas: Transaction Gas and transfer Gas exceed available wallet Gas',
   'tx.duplicateAddress': 'Duplicate address',
   'tx.addressNotFound': 'Address information not found',
   'tx.queryFailed': 'Query failed, please try again later',

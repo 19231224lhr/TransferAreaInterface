@@ -321,4 +321,22 @@ export function initWalletChart() {
       }
     }, 60 * 1000);
   }
+  
+  // Add resize listener for responsive chart (only set once)
+  // This ensures the chart adapts to window/zoom changes by recalculating
+  // SVG viewBox dimensions and redrawing the chart
+  if (!window._chartResizeListenerSet) {
+    window._chartResizeListenerSet = true;
+    let resizeTimeout;
+    window.addEventListener('resize', () => {
+      // Debounce resize events to avoid excessive redraws (100ms delay)
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        const user = loadUser();
+        if (user) {
+          updateWalletChart(user);
+        }
+      }, 100);
+    });
+  }
 }

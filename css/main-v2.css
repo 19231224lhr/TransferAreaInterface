@@ -4211,6 +4211,30 @@ Already defined above with darker background
   background: rgba(30, 41, 59, 0.9);
 }
 
+/* 深色模式下未加入组织时的普通转账按钮 */
+[data-theme="dark"] .no-org-tab {
+  background: rgba(30, 41, 59, 0.8);
+  color: #60a5fa;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+/* 深色模式下未加入组织时的警告按钮 */
+[data-theme="dark"] .no-org-warning-btn {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .no-org-warning-btn:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+/* 深色模式下未加入组织时隐藏白色背景指示器 */
+[data-theme="dark"] .transfer-mode-tabs.no-org-mode::before {
+  display: none;
+}
+
 /* 隐藏所有 number 输入框的上下调整按钮（包括转账金额和Gas输入框） */
 input[type="number"]::-webkit-inner-spin-button,
 input[type="number"]::-webkit-outer-spin-button {

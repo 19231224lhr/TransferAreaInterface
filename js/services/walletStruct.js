@@ -116,21 +116,6 @@ export function updateWalletStruct() {
 
   html += '</div>'; // End of wb-account-card
 
-  // Coin Type Distribution
-  html += '<div class="wb-section">';
-  html += '<h4 class="wb-section-title">币种分布</h4>';
-  html += '<div class="wb-coin-grid">';
-  ['PGC', 'BTC', 'ETH'].forEach((coin, i) => {
-    const amount = sums[i] || 0;
-    const colors = { 0: '#10b981', 1: '#f59e0b', 2: '#3b82f6' };
-    html += `<div class="wb-coin-card" style="border-left:3px solid ${colors[i]}">`;
-    html += `<div class="wb-coin-name">${coin}</div>`;
-    html += `<div class="wb-coin-amount">${amount.toLocaleString()}</div>`;
-    html += '</div>';
-  });
-  html += '</div>';
-  html += '</div>';
-
   // Address Details
   const addrKeys = Object.keys(addr);
   if (addrKeys.length > 0) {

@@ -351,19 +351,32 @@ export function initJoinGroupPage() {
 }
 
 /**
- * Initialize join group tabs (copied from backup)
+ * Initialize join group tabs with slider effect
  */
 function initJoinTabs() {
   const recPane = document.getElementById('recPane');
   const searchPane = document.getElementById('searchPane');
   const joinTabs = document.querySelectorAll('.join-tab');
+  const tabsContainer = document.querySelector('.join-tabs');
+  
+  // Set initial slider position
+  if (tabsContainer) {
+    tabsContainer.setAttribute('data-active', 'recommend');
+  }
   
   joinTabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const target = tab.getAttribute('data-tab');
+      
       // Update tab state
       joinTabs.forEach(t => t.classList.remove('join-tab--active'));
       tab.classList.add('join-tab--active');
+      
+      // Update slider position
+      if (tabsContainer) {
+        tabsContainer.setAttribute('data-active', target);
+      }
+      
       // Switch panel
       if (target === 'recommend') {
         if (recPane) recPane.classList.remove('hidden');

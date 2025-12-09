@@ -485,48 +485,63 @@
   display: none;
 }
 
-.import-loader-ring {
-  width: 48px;
-  height: 48px;
+/* Logo 容器 */
+.import-loader-logo {
   position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.import-loader-ring .ring-dot {
+/* Logo 图片 - 旋转动画 */
+.import-loader-logo-img {
+  width: 64px;
+  height: 64px;
+  max-width: 64px !important;
+  max-height: 64px !important;
+  object-fit: contain;
+  animation: importLogoRotate 1.2s linear infinite;
+  filter: drop-shadow(0 4px 16px rgba(139, 92, 246, 0.3));
+  will-change: transform;
+  position: relative;
+  z-index: 2;
+}
+
+/* Logo 发光效果 */
+.import-loader-glow {
   position: absolute;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, #3b82f6, #60a5fa);
-  border-radius: 50%;
-  animation: importRingDot 1.2s ease-in-out infinite;
-}
-
-.import-loader-ring .ring-dot:nth-child(1) {
-  top: 0;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
-  animation-delay: 0s;
+  transform: translate(-50%, -50%);
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: importLogoGlowPulse 2s ease-in-out infinite;
+  z-index: 1;
 }
 
-.import-loader-ring .ring-dot:nth-child(2) {
-  bottom: 0;
-  left: 0;
-  animation-delay: 0.4s;
+/* Logo 旋转动画 - 匀速旋转 */
+@keyframes importLogoRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-.import-loader-ring .ring-dot:nth-child(3) {
-  bottom: 0;
-  right: 0;
-  animation-delay: 0.8s;
-}
-
-@keyframes importRingDot {
+/* Logo 发光脉冲动画 */
+@keyframes importLogoGlowPulse {
   0%, 100% {
-    transform: scale(1);
-    opacity: 1;
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
   }
   50% {
-    transform: scale(0.6);
-    opacity: 0.5;
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1.1);
   }
 }
 
@@ -546,7 +561,7 @@
 .import-loader-text .loader-dots i {
   width: 4px;
   height: 4px;
-  background: #3b82f6;
+  background: #8b5cf6;
   border-radius: 50%;
   animation: importLoaderDot 1s ease-in-out infinite;
 }
@@ -560,8 +575,14 @@
 }
 
 @keyframes importLoaderDot {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%, 100% { 
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  50% { 
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 
 /* ========================================
@@ -1053,6 +1074,18 @@
   color: var(--color-text-secondary);
 }
 
+[data-theme="dark"] .import-loader-logo-img {
+  filter: drop-shadow(0 4px 16px rgba(139, 92, 246, 0.5));
+}
+
+[data-theme="dark"] .import-loader-glow {
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+}
+
+[data-theme="dark"] .import-loader-text .loader-dots i {
+  background: #a78bfa;
+}
+
 /* 结果展示 */
 [data-theme="dark"] .import-result {
   background: var(--color-card-bg-solid);
@@ -1144,4 +1177,172 @@
 
 [data-theme="dark"] .import-next-btn:hover {
   box-shadow: 0 8px 25px rgba(180, 83, 9, 0.5);
+}
+
+
+/* ========================================
+   优化的动画效果 - 流畅丝滑
+   ======================================== */
+
+/* 表单卡片隐藏状态 */
+.import-form-card--hidden {
+  display: none;
+}
+
+/* 提示块隐藏状态 */
+.import-tip-block--hidden {
+  display: none;
+}
+
+/* 折叠动画 - 向上收起（更快更紧密） */
+.import-form-card.collapsing,
+.import-tip-block.collapsing,
+.import-result.collapsing {
+  animation: collapseUp 0.25s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+@keyframes collapseUp {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+    max-height: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+}
+
+/* 展开动画 - 从上方滑入（更快更紧密） */
+.import-form-card.expanding,
+.import-tip-block.expanding {
+  animation: expandDown 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes expandDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 结果展示 - 优雅展开（更快更紧密） */
+.import-result.reveal {
+  animation: resultReveal 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes resultReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  60% {
+    transform: translateY(-3px) scale(1.008);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 结果展开初始状态 */
+.import-result.expanding {
+  opacity: 0;
+  transform: translateY(24px) scale(0.96);
+}
+
+/* 取消按钮样式优化 */
+.import-cancel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.import-cancel-btn:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-color: #94a3b8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.import-cancel-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.import-cancel-btn svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.5;
+}
+
+/* 深色模式 - 取消按钮 */
+[data-theme="dark"] .import-cancel-btn {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.9), rgba(30, 41, 59, 0.9));
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .import-cancel-btn:hover {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 1), rgba(30, 41, 59, 1));
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+/* 操作按钮容器优化 */
+.import-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  justify-content: flex-end;
+}
+
+/* 加载器优化 - 更流畅的动画 */
+.import-loader {
+  animation: loaderFadeIn 0.3s ease-out;
+}
+
+@keyframes loaderFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 性能优化 - 使用 GPU 加速 */
+.import-form-card,
+.import-tip-block,
+.import-result,
+.import-cancel-btn,
+.import-next-btn {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 减少重绘 - 使用 transform 而不是 margin/padding */
+.import-form-card.collapsing,
+.import-tip-block.collapsing,
+.import-result.collapsing {
+  overflow: hidden;
 }
