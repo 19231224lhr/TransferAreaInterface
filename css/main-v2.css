@@ -722,7 +722,43 @@
 .address-card-header-right {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+}
+
+/* 地址管理操作按钮 */
+.address-action-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.15);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+  position: relative;
+}
+
+.address-action-btn svg {
+  width: 16px;
+  height: 16px;
+  color: var(--wallet-primary);
+  transition: all var(--duration-fast) ease;
+}
+
+.address-action-btn:hover {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
+}
+
+.address-action-btn:hover svg {
+  color: var(--wallet-primary-dark);
+}
+
+.address-action-btn:active {
+  transform: translateY(0);
 }
 
 .address-add-btn {
@@ -4120,6 +4156,25 @@ Already defined above with darker background
 [data-theme="dark"] .addr-detail-actions .btn:hover {
   background: var(--color-bg-secondary);
   color: var(--color-text-primary);
+}
+
+/* 地址管理操作按钮 - 深色模式 */
+[data-theme="dark"] .address-action-btn {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+[data-theme="dark"] .address-action-btn:hover {
+  background: rgba(16, 185, 129, 0.18);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] .address-action-btn svg {
+  color: rgba(16, 185, 129, 0.9);
+}
+
+[data-theme="dark"] .address-action-btn:hover svg {
+  color: rgb(16, 185, 129);
 }
 
 /* 钱包模态框 */
