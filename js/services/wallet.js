@@ -860,6 +860,7 @@ export async function handleAddrModalOk() {
 export function initAddressModal() {
   const openCreateAddrBtn = document.getElementById('openCreateAddrBtn');
   const openImportAddrBtn = document.getElementById('openImportAddrBtn');
+  const openHistoryBtn = document.getElementById('openHistoryBtn');
   const addrCancelBtn = document.getElementById('addrCancelBtn');
   const addrOkBtn = document.getElementById('addrOkBtn');
   
@@ -871,6 +872,15 @@ export function initAddressModal() {
   if (openImportAddrBtn && !openImportAddrBtn.dataset._walletBind) {
     openImportAddrBtn.onclick = () => showAddrModal('import');
     openImportAddrBtn.dataset._walletBind = '1';
+  }
+  
+  if (openHistoryBtn && !openHistoryBtn.dataset._walletBind) {
+    openHistoryBtn.onclick = () => {
+      if (typeof window.routeTo === 'function') {
+        window.routeTo('#/history');
+      }
+    };
+    openHistoryBtn.dataset._walletBind = '1';
   }
   
   if (addrCancelBtn && !addrCancelBtn.dataset._walletBind) {

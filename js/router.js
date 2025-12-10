@@ -20,6 +20,7 @@ import { startInquiryAnimation } from './pages/joinGroup.js';
 import { updateGroupDetailDisplay } from './pages/groupDetail.js';
 import { renderWallet, refreshOrgPanel } from './services/wallet.js';
 import { initProfilePage } from './ui/profile.js';
+import { resetHistoryPageState } from './pages/history.js';
 
 // ========================================
 // Card References (will be populated on init)
@@ -48,7 +49,7 @@ export function showCard(card) {
   const allCardIds = [
     'welcomeCard', 'entryCard', 'newUserCard', 'loginCard', 'importCard',
     'nextCard', 'finalCard', 'walletCard', 'importNextCard', 'inquiryCard',
-    'memberInfoCard', 'profileCard', 'groupDetailCard'
+    'memberInfoCard', 'profileCard', 'groupDetailCard', 'historyCard'
   ];
   
   allCardIds.forEach(id => {
@@ -234,6 +235,15 @@ export function router() {
     case '/profile':
       showCard(document.getElementById('profileCard'));
       initProfilePage();
+      break;
+      
+    case '/history':
+      showCard(document.getElementById('historyCard'));
+      if (typeof window.initHistoryPage === 'function') {
+        window.initHistoryPage();
+      } else {
+        resetHistoryPageState();
+      }
       break;
       
     default:

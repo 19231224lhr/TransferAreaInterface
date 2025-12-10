@@ -76,6 +76,7 @@ import { initImportPage, resetImportState } from './pages/import.js';
 import { initMainPage, handleMainRoute } from './pages/main.js';
 import { initJoinGroupPage, startInquiryAnimation, resetInquiryState } from './pages/joinGroup.js';
 import { initGroupDetailPage, updateGroupDetailDisplay } from './pages/groupDetail.js';
+import { initHistoryPage, resetHistoryPageState } from './pages/history.js';
 
 // Router
 import { router, routeTo, showCard, initRouter } from './router.js';
@@ -219,6 +220,7 @@ window.initImportPage = initImportPage;
 window.initMainPage = initMainPage;
 window.initJoinGroupPage = initJoinGroupPage;
 window.initGroupDetailPage = initGroupDetailPage;
+window.initHistoryPage = initHistoryPage;
 window.updateWelcomeButtons = updateWelcomeButtons;
 window.resetLoginPageState = resetLoginPageState;
 window.startInquiryAnimation = startInquiryAnimation;
