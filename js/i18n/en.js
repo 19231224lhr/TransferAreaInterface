@@ -459,5 +459,13 @@ export default {
   'history.failureReason': 'Failure Reason',
 
   // Wallet Action Buttons
-  'wallet.history': 'History'
+  'wallet.history': 'History',
+
+  // Footer
+  'footer.tagline': 'Blockchain resonates with you. Infinity within your reach.',
+  'footer.docs': 'Docs',
+  'footer.allRights': 'All rights reserved',
+  'footer.privacy': 'Privacy',
+  'footer.terms': 'Terms',
+  'footer.cookies': 'Cookies'
 };

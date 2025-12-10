@@ -1,0 +1,369 @@
+/**
+ * PanguPay Footer Styles
+ * 
+ * Animated footer with floating letter effect inspired by modern design
+ * Features smooth scroll-based animations and glassmorphism design
+ */
+
+/* ========================================
+   Footer Container
+   ======================================== */
+
+.page-footer {
+  position: relative;
+  width: 100%;
+  min-height: 500px;
+  background: linear-gradient(135deg, 
+    rgba(14, 165, 233, 0.03) 0%, 
+    rgba(139, 92, 246, 0.03) 100%);
+  border-top: 1px solid rgba(14, 165, 233, 0.1);
+  padding: 60px 40px 140px;
+  margin-top: 120px;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .page-footer {
+  background: linear-gradient(135deg, 
+    rgba(14, 165, 233, 0.05) 0%, 
+    rgba(139, 92, 246, 0.05) 100%);
+  border-top: 1px solid rgba(14, 165, 233, 0.15);
+}
+
+/* ========================================
+   Footer Content Layout
+   ======================================== */
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 60px;
+  position: relative;
+  z-index: 2;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================
+   Footer Tagline
+   ======================================== */
+
+.footer-tagline {
+  font-size: 20px;
+  font-weight: 300;
+  color: #1e293b;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+  max-width: 400px;
+  opacity: 1;
+}
+
+[data-theme="dark"] .footer-tagline {
+  color: #94a3b8;
+}
+
+/* ========================================
+   Footer Links
+   ======================================== */
+
+.footer-links {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.footer-link {
+  font-size: 15px;
+  color: #1e293b;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+  position: relative;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(14, 165, 233, 0.05);
+}
+
+.footer-link::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #0ea5e9, #8b5cf6);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 2px;
+}
+
+.footer-link:hover {
+  color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.1);
+  transform: translateY(-2px);
+}
+
+.footer-link:hover::before {
+  width: 100%;
+}
+
+[data-theme="dark"] .footer-link {
+  color: #94a3b8;
+  background: rgba(14, 165, 233, 0.08);
+}
+
+[data-theme="dark"] .footer-link:hover {
+  color: #60a5fa;
+  background: rgba(14, 165, 233, 0.15);
+}
+
+/* ========================================
+   Animated Brand Text
+   ======================================== */
+
+.footer-brand {
+  position: absolute;
+  bottom: 120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 95%;
+  max-width: 1400px;
+  pointer-events: none;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footer-brand-text {
+  font-size: clamp(100px, 18vw, 220px);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.05em;
+  line-height: 0.9;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  user-select: none;
+  text-align: center;
+  width: 100%;
+}
+
+[data-theme="dark"] .footer-brand-text {
+  color: #1e293b;
+}
+
+/* Individual letter styling */
+.footer-brand-letter {
+  display: inline-block;
+  will-change: transform;
+  transform: translateY(0) translateZ(0);
+}
+
+/* Floating letters (last 3 letters: Pay) */
+.footer-brand-letter.float {
+  /* Transition is set via JS for better control */
+}
+
+/* Gradient overlay on hover */
+.footer-brand-text:hover .footer-brand-letter {
+  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ========================================
+   Footer Bottom
+   ======================================== */
+
+.footer-bottom {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 40px 0;
+  border-top: 1px solid rgba(14, 165, 233, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #475569;
+  z-index: 3;
+  opacity: 1;
+}
+
+[data-theme="dark"] .footer-bottom {
+  border-top: 1px solid rgba(14, 165, 233, 0.15);
+  color: #64748b;
+}
+
+.footer-copyright {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-meta-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-meta-link {
+  color: #475569;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-meta-link:hover {
+  color: #0ea5e9;
+}
+
+[data-theme="dark"] .footer-meta-link {
+  color: #64748b;
+}
+
+[data-theme="dark"] .footer-meta-link:hover {
+  color: #60a5fa;
+}
+
+/* ========================================
+   Background Decoration
+   ======================================== */
+
+.footer-decoration {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.4;
+}
+
+.footer-decoration::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float-decoration 20s ease-in-out infinite;
+}
+
+.footer-decoration::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: float-decoration 25s ease-in-out infinite reverse;
+}
+
+@keyframes float-decoration {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(30px, -30px) scale(1.1);
+  }
+}
+
+/* ========================================
+   Responsive Design
+   ======================================== */
+
+@media (max-width: 968px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .footer-tagline {
+    max-width: 100%;
+    font-size: 18px;
+  }
+
+  .footer-brand-text {
+    font-size: clamp(100px, 20vw, 180px);
+  }
+
+  .page-footer {
+    padding: 60px 24px 140px;
+    margin-top: 80px;
+    min-height: 450px;
+  }
+
+  .footer-brand {
+    bottom: 50px;
+  }
+}
+
+@media (max-width: 640px) {
+  .footer-links {
+    flex-direction: column;
+    gap: 16px;
+    align-items: flex-start;
+  }
+
+  .footer-tagline {
+    font-size: 16px;
+  }
+
+  .footer-bottom {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+    padding: 24px 24px 0;
+  }
+
+  .footer-meta-links {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .footer-brand-text {
+    font-size: clamp(70px, 18vw, 110px);
+  }
+
+  .footer-brand {
+    bottom: 40px;
+    width: 100%;
+  }
+
+  .page-footer {
+    padding: 40px 20px 120px;
+    min-height: 400px;
+  }
+}
+
+/* ========================================
+   Performance Optimizations
+   ======================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  .footer-brand-letter,
+  .footer-link,
+  .footer-decoration::before,
+  .footer-decoration::after {
+    animation: none;
+    transition: none;
+  }
+}
+
+/* GPU acceleration for smooth animations */
+.footer-brand-letter {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}

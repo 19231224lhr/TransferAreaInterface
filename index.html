@@ -33,6 +33,7 @@
   <link rel="stylesheet" href="/css/profile.css?v=20251208a" />
   <link rel="stylesheet" href="/css/main-v2.css?v=20251204u" />
   <link rel="stylesheet" href="/css/history.css?v=20251210a" />
+  <link rel="stylesheet" href="/css/footer.css?v=20251210a" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=3" />
@@ -3130,9 +3131,50 @@
 
   </main>
 
-  <footer class="footer">
-    <div class="container">
-      <small style="font-weight: bold;" data-i18n="footer.text">区块链与你同频，信息予你无限。 Blockchain resonates with you. Infinity within your reach.</small>
+  <!-- Animated Footer (hidden on welcome page) -->
+  <footer class="page-footer hidden" id="pageFooter">
+    <!-- Background Decoration -->
+    <div class="footer-decoration"></div>
+
+    <!-- Footer Content -->
+    <div class="footer-content">
+      <!-- Tagline -->
+      <div class="footer-tagline">
+        <span data-i18n="footer.tagline">区块链与你同频，信息予你无限。</span>
+      </div>
+
+      <!-- Links -->
+      <div class="footer-links">
+        <a href="#" class="footer-link" data-i18n="footer.docs">Docs</a>
+      </div>
+    </div>
+
+    <!-- Animated Brand Text -->
+    <div class="footer-brand">
+      <div class="footer-brand-text" aria-label="PanguPay">
+        <span class="footer-brand-letter">P</span>
+        <span class="footer-brand-letter">a</span>
+        <span class="footer-brand-letter">n</span>
+        <span class="footer-brand-letter">g</span>
+        <span class="footer-brand-letter">u</span>
+        <span class="footer-brand-letter float">P</span>
+        <span class="footer-brand-letter float">a</span>
+        <span class="footer-brand-letter float">y</span>
+      </div>
+    </div>
+
+    <!-- Footer Bottom -->
+    <div class="footer-bottom">
+      <div class="footer-copyright">
+        <span>© 2024 PanguPay</span>
+        <span>•</span>
+        <span data-i18n="footer.allRights">All rights reserved</span>
+      </div>
+      <div class="footer-meta-links">
+        <a href="#" class="footer-meta-link" data-i18n="footer.privacy">Privacy</a>
+        <a href="#" class="footer-meta-link" data-i18n="footer.terms">Terms</a>
+        <a href="#" class="footer-meta-link" data-i18n="footer.cookies">Cookies</a>
+      </div>
     </div>
   </footer>
 

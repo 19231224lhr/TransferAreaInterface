@@ -59,6 +59,7 @@ import { initProfilePage, updateProfileDisplay } from './ui/profile.js';
 import { updateWalletChart, initWalletChart } from './ui/charts.js';
 import { initNetworkChart } from './ui/networkChart.js';
 import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js';
+import { initFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.js';
@@ -287,6 +288,11 @@ function init() {
   // Initialize network chart
   try {
     initNetworkChart();
+  } catch (_) { }
+  
+  // Initialize footer animations
+  try {
+    initFooter();
   } catch (_) { }
   
   // Initialize confirmSkipModal event listeners

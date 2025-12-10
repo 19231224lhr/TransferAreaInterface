@@ -85,6 +85,16 @@ export function showCard(card) {
   const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page, .profile-page');
   if (innerPage) innerPage.classList.remove('hidden');
   
+  // Control footer visibility (hide on welcome page, show on others)
+  const pageFooter = document.getElementById('pageFooter');
+  if (pageFooter) {
+    if (card.id === 'welcomeCard') {
+      pageFooter.classList.add('hidden');
+    } else {
+      pageFooter.classList.remove('hidden');
+    }
+  }
+  
   // Scroll to top
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });

@@ -459,5 +459,13 @@ export default {
   'history.failureReason': '失败原因',
 
   // 钱包操作按钮
-  'wallet.history': '历史记录'
+  'wallet.history': '历史记录',
+
+  // 页脚
+  'footer.tagline': '区块链与你同频，信息予你无限。',
+  'footer.docs': '文档',
+  'footer.allRights': '版权所有',
+  'footer.privacy': '隐私政策',
+  'footer.terms': '服务条款',
+  'footer.cookies': 'Cookie 政策'
 };
