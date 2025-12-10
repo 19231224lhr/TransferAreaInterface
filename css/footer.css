@@ -12,21 +12,17 @@
 .page-footer {
   position: relative;
   width: 100%;
-  min-height: 500px;
-  background: linear-gradient(135deg, 
-    rgba(14, 165, 233, 0.03) 0%, 
-    rgba(139, 92, 246, 0.03) 100%);
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
-  padding: 60px 40px 140px;
-  margin-top: 120px;
-  overflow: hidden;
+  min-height: 480px;
+  background: transparent;
+  padding: 40px 40px 80px;
+  margin-top: 80px;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
 }
 
 [data-theme="dark"] .page-footer {
-  background: linear-gradient(135deg, 
-    rgba(14, 165, 233, 0.05) 0%, 
-    rgba(139, 92, 246, 0.05) 100%);
-  border-top: 1px solid rgba(14, 165, 233, 0.15);
+  background: transparent;
 }
 
 /* ========================================
@@ -37,8 +33,8 @@
   max-width: 1200px;
   margin: 0 auto;
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+  justify-content: flex-start;
+  align-items: center;
   gap: 60px;
   position: relative;
   z-index: 2;
@@ -51,13 +47,15 @@
    ======================================== */
 
 .footer-tagline {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 300;
   color: #1e293b;
-  line-height: 1.6;
+  line-height: 1.4;
   letter-spacing: -0.01em;
-  max-width: 400px;
+  max-width: 100%;
+  white-space: nowrap;
   opacity: 1;
+  flex: 1;
 }
 
 [data-theme="dark"] .footer-tagline {
@@ -72,6 +70,7 @@
   display: flex;
   gap: 16px;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .footer-link {
@@ -124,14 +123,15 @@
    ======================================== */
 
 .footer-brand {
-  position: absolute;
-  bottom: 120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 95%;
+  position: relative;
+  margin-top: 20px;
+  margin-bottom: 100px;
+  width: 100%;
   max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
   pointer-events: none;
-  z-index: 1;
+  z-index: 4;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -140,40 +140,59 @@
 .footer-brand-text {
   font-size: clamp(100px, 18vw, 220px);
   font-weight: 800;
-  color: #0f172a;
   letter-spacing: -0.05em;
-  line-height: 0.9;
+  line-height: 1.1;
   display: flex;
   align-items: baseline;
   justify-content: center;
   user-select: none;
   text-align: center;
   width: 100%;
+  padding-bottom: 20px;
 }
 
-[data-theme="dark"] .footer-brand-text {
-  color: #1e293b;
-}
-
-/* Individual letter styling */
+/* Individual letter styling with gradient */
 .footer-brand-letter {
   display: inline-block;
   will-change: transform;
   transform: translateY(0) translateZ(0);
-}
-
-/* Floating letters (last 3 letters: Pay) */
-.footer-brand-letter.float {
-  /* Transition is set via JS for better control */
-}
-
-/* Gradient overlay on hover */
-.footer-brand-text:hover .footer-brand-letter {
-  background: linear-gradient(135deg, #0ea5e9, #8b5cf6);
+  /* Apply gradient to each letter with proper sizing */
+  background: linear-gradient(180deg, 
+    var(--color-primary, #0ea5e9) 0%, 
+    var(--color-secondary, #8b5cf6) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  /* Ensure background covers full letter including all edges */
+  background-size: 100% 300%;
+  background-position: center;
+  padding: 0.15em 0.02em;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
 }
+
+.footer-brand-text:hover .footer-brand-letter {
+  opacity: 0.9;
+}
+
+[data-theme="dark"] .footer-brand-letter {
+  /* Brighter gradient for dark mode */
+  background: linear-gradient(180deg, 
+    var(--color-primary-light, #38bdf8) 0%, 
+    var(--color-secondary-light, #a78bfa) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  background-size: 120% 300%;
+  background-position: center;
+  opacity: 0.6;
+}
+
+[data-theme="dark"] .footer-brand-text:hover .footer-brand-letter {
+  opacity: 0.8;
+}
+
+/* Floating letters (last 3 letters: Pay) - transition is set via JS for better control */
 
 /* ========================================
    Footer Bottom
@@ -181,13 +200,13 @@
 
 .footer-bottom {
   position: absolute;
-  bottom: 24px;
+  bottom: 0;
   left: 0;
   right: 0;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 24px 40px 0;
-  border-top: 1px solid rgba(14, 165, 233, 0.1);
+  width: 100%;
+  padding: 20px 40px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -198,7 +217,6 @@
 }
 
 [data-theme="dark"] .footer-bottom {
-  border-top: 1px solid rgba(14, 165, 233, 0.15);
   color: #64748b;
 }
 
@@ -233,63 +251,14 @@
 }
 
 /* ========================================
-   Background Decoration
+   Background Decoration - Removed for seamless integration
    ======================================== */
-
-.footer-decoration {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-  overflow: hidden;
-  opacity: 0.4;
-}
-
-.footer-decoration::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  right: -20%;
-  width: 600px;
-  height: 600px;
-  background: radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: float-decoration 20s ease-in-out infinite;
-}
-
-.footer-decoration::after {
-  content: '';
-  position: absolute;
-  bottom: -30%;
-  left: -10%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 70%);
-  border-radius: 50%;
-  animation: float-decoration 25s ease-in-out infinite reverse;
-}
-
-@keyframes float-decoration {
-  0%, 100% {
-    transform: translate(0, 0) scale(1);
-  }
-  50% {
-    transform: translate(30px, -30px) scale(1.1);
-  }
-}
 
 /* ========================================
    Responsive Design
    ======================================== */
 
 @media (max-width: 968px) {
-  .footer-content {
-    flex-direction: column;
-    gap: 32px;
-  }
-
   .footer-tagline {
     max-width: 100%;
     font-size: 18px;
@@ -300,17 +269,24 @@
   }
 
   .page-footer {
-    padding: 60px 24px 140px;
-    margin-top: 80px;
-    min-height: 450px;
+    padding: 40px 24px 70px;
+    margin-top: 60px;
+    min-height: 440px;
   }
 
   .footer-brand {
-    bottom: 50px;
+    margin-top: 30px;
+    margin-bottom: 70px;
   }
 }
 
 @media (max-width: 640px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 24px;
+    align-items: flex-start;
+  }
+  
   .footer-links {
     flex-direction: column;
     gap: 16px;
@@ -325,7 +301,7 @@
     flex-direction: column;
     gap: 16px;
     text-align: center;
-    padding: 24px 24px 0;
+    padding: 16px 20px;
   }
 
   .footer-meta-links {
@@ -338,12 +314,13 @@
   }
 
   .footer-brand {
-    bottom: 40px;
+    margin-top: 20px;
+    margin-bottom: 60px;
     width: 100%;
   }
 
   .page-footer {
-    padding: 40px 20px 120px;
+    padding: 30px 20px 50px;
     min-height: 400px;
   }
 }
