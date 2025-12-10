@@ -1,7 +1,7 @@
 /**
  * Application Constants
  * 
- * Centralized configuration constants for the UTXO Wallet application.
+ * Centralized configuration constants for the PanguPay application.
  * All storage keys, default values, and configuration objects are defined here.
  */
 

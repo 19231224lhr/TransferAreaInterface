@@ -1,6 +1,6 @@
 # Product Overview
 
-UTXO Wallet (转账区钱包接口) is a blockchain wallet solution based on the UTXO (Unspent Transaction Output) model.
+PanguPay (盘古支付 - 转账区钱包接口) is a blockchain wallet solution based on the UTXO (Unspent Transaction Output) model, serving as the payment and transfer zone of the Pangu System.
 
 ## Core Features
 

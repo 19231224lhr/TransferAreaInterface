@@ -471,7 +471,7 @@ const translations = {
     'common.separator': ', ',
     
     // Page Title
-    'page.title': 'UTXO Wallet - Wallet Operations',
+    'page.title': 'PanguPay - Pangu Payment',
     
     // Header Menu
     'header.userInfo': 'User Info',

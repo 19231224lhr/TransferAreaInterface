@@ -1,6 +1,6 @@
-# UTXO Wallet
+# PanguPay
 
-基于 UTXO 模型的新一代区块链钱包前端界面与后端核心代码实现。
+盘古系统转账区 - 基于 UTXO 模型的区块链支付钱包前端界面与后端核心代码实现。
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat-square&logo=go" alt="Go Version" />

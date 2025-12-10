@@ -1,5 +1,5 @@
 /**
- * UTXO Wallet - Main Entry Point
+ * PanguPay - Main Entry Point
  * 
  * This is the main entry file that initializes all modules and sets up the application.
  * All functionality is imported from modular files in the js/ directory.
@@ -257,7 +257,7 @@ window.wait = wait;
 // ========================================
 
 function init() {
-  console.log('UTXO Wallet - Modular Version Initializing...');
+  console.log('PanguPay - Modular Version Initializing...');
   
   // Initialize language
   loadLanguageSetting();
@@ -308,7 +308,7 @@ function init() {
     confirmSkipCancel.dataset._bind = '1';
   }
   
-  console.log('UTXO Wallet initialized (modular)');
+  console.log('PanguPay initialized (modular)');
 }
 
 // ========================================
