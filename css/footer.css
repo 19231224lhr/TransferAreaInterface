@@ -84,6 +84,7 @@
   padding: 8px 16px;
   border-radius: 8px;
   background: rgba(14, 165, 233, 0.05);
+  cursor: pointer;
 }
 
 .footer-link::before {
@@ -216,6 +217,7 @@
   color: #475569;
   text-decoration: none;
   transition: color 0.3s ease;
+  cursor: pointer;
 }
 
 .footer-meta-link:hover {

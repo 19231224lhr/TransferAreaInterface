@@ -2,12 +2,13 @@
  * PanguPay Footer Animation
  * 
  * Handles scroll-based floating animation for footer brand text
- * Optimized for performance using RAF and throttling
+ * Uses IntersectionObserver for reliable detection across all scroll contexts
  */
 
-let footerAnimationFrame = null;
-let lastScrollY = 0;
-let ticking = false;
+let footerObserver = null;
+let brandObserver = null;
+let currentProgress = 0;
+let animationFrame = null;
 
 /**
  * Initialize footer animations
@@ -27,122 +28,136 @@ export function initFooter() {
     console.log(`  Letter ${i}: "${letter.textContent}" - has .float class: ${letter.classList.contains('float')}`);
   });
 
-  // Set up scroll listener with throttling
-  window.addEventListener('scroll', handleFooterScroll, { passive: true });
+  // Setup IntersectionObserver for brand element
+  setupBrandObserver();
+  
+  // Also listen for wheel events as a backup trigger
+  setupWheelListener();
   
   // Initial animation state
-  updateFooterAnimation();
+  updateFloatingLetters(0);
 }
 
 /**
- * Handle scroll event with throttling
+ * Setup IntersectionObserver to detect brand element visibility
+ * Uses multiple thresholds for granular progress tracking
  */
-function handleFooterScroll() {
-  lastScrollY = window.scrollY;
-  
-  if (!ticking) {
-    footerAnimationFrame = requestAnimationFrame(updateFooterAnimation);
-    ticking = true;
-  }
-}
-
-/**
- * Update footer animation based on scroll position
- */
-function updateFooterAnimation() {
-  ticking = false;
-  
-  const footer = document.querySelector('.page-footer');
-  if (!footer) {
+function setupBrandObserver() {
+  const brandElement = document.querySelector('.footer-brand');
+  if (!brandElement) {
+    console.log('❌ Brand element not found');
     return;
   }
 
-  // Check if footer is hidden
-  if (footer.classList.contains('hidden')) {
-    return;
+  // Create thresholds from 0 to 1 in 0.01 increments for smooth animation
+  const thresholds = [];
+  for (let i = 0; i <= 100; i++) {
+    thresholds.push(i / 100);
   }
 
-  // Get footer position relative to viewport
-  const footerRect = footer.getBoundingClientRect();
-  const windowHeight = window.innerHeight;
-  
-  // Calculate progress based on footer visibility
-  // 0 = footer just entering viewport (top at bottom of screen)
-  // 1 = footer fully scrolled into view (top at top of screen)
-  const footerTop = footerRect.top;
-  
-  let progress = 0;
-  if (footerTop < windowHeight) {
-    // Progress from 0 to 1 as footer scrolls from bottom to top of viewport
-    progress = Math.min(1, Math.max(0, (windowHeight - footerTop) / windowHeight));
-  }
-  
-  console.log(`📊 Scroll Progress: ${(progress * 100).toFixed(1)}% | FooterTop: ${footerTop.toFixed(0)}px`);
+  const options = {
+    root: null, // viewport
+    rootMargin: '0px',
+    threshold: thresholds
+  };
 
-  // Animate floating letters
-  animateFloatingLetters(progress);
-  
-  // Animate footer content fade-in
-  animateFooterContent(progress);
-}
-
-/**
- * Animate the floating letters (Pay)
- * @param {number} progress - Scroll progress from 0 to 1
- * 0 = footer just visible, 1 = scrolled to bottom
- */
-function animateFloatingLetters(progress) {
-  const floatingLetters = document.querySelectorAll('.footer-brand-letter.float');
-  
-  if (floatingLetters.length === 0) {
-    return;
-  }
-  
-  // Start floating immediately when footer becomes visible (progress > 0)
-  // Reach maximum float when progress = 1 (scrolled to bottom)
-  
-  if (progress <= 0) {
-    // Footer not visible yet - reset
-    floatingLetters.forEach(letter => {
-      letter.style.transform = 'translateY(0px) translateZ(0)';
-      letter.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
+  brandObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // intersectionRatio: 0 = not visible, 1 = fully visible
+      // We want: 0% progress when brand first appears at bottom
+      //          100% progress when brand is at top of viewport
+      
+      const rect = entry.boundingClientRect;
+      const windowHeight = window.innerHeight;
+      
+      // Calculate how far the element has traveled from bottom to top
+      // When rect.bottom == windowHeight: element just entering from bottom (progress = 0)
+      // When rect.top == 0: element at top of viewport (progress = 1)
+      
+      let progress = 0;
+      
+      if (entry.isIntersecting || rect.top < windowHeight) {
+        // Distance from bottom of viewport to top of element
+        const distanceFromBottom = windowHeight - rect.top;
+        // Total travel distance = viewport height + element height
+        const totalDistance = windowHeight + rect.height;
+        
+        progress = Math.min(1, Math.max(0, distanceFromBottom / totalDistance));
+      }
+      
+      console.log(`🔍 IntersectionObserver - Ratio: ${(entry.intersectionRatio * 100).toFixed(1)}%, Progress: ${(progress * 100).toFixed(1)}%, Top: ${rect.top.toFixed(0)}px`);
+      
+      updateFloatingLetters(progress);
     });
-    return;
-  }
-  
-  console.log(`🎯 Floating active! Progress: ${(progress * 100).toFixed(1)}%`);
-  
-  floatingLetters.forEach((letter, index) => {
-    // Each letter has a stagger delay
-    const delay = index * 0.08;
-    const letterProgress = Math.max(0, Math.min(1, (progress - delay) / (1 - delay)));
-    
-    // Easing
-    const eased = easeOutCubic(letterProgress);
-    
-    // Calculate float distance
-    // P: -100px, a: -150px, y: -200px
-    const floatDistances = [-100, -150, -200];
-    const translateY = floatDistances[index] * eased;
-    
-    // Apply transform
-    letter.style.transform = `translateY(${translateY}px) translateZ(0)`;
-    letter.style.transition = 'transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)';
-    
-    // Debug
-    if (eased > 0.01) {
-      console.log(`  ${letter.textContent}: ${translateY.toFixed(0)}px (${(eased * 100).toFixed(0)}%)`);
-    }
-  });
+  }, options);
+
+  brandObserver.observe(brandElement);
+  console.log('✅ Brand IntersectionObserver setup complete');
 }
 
 /**
- * Animate footer content fade-in
- * @param {number} progress - Footer visibility progress from 0 to 1
+ * Setup wheel event listener as backup animation trigger
+ * This catches scroll-like interactions even when page doesn't actually scroll
  */
-function animateFooterContent(progress) {
-  // DO NOTHING - Keep content always visible
-  // The CSS already sets opacity: 1
+function setupWheelListener() {
+  // Track cumulative wheel delta for pages that don't scroll
+  let wheelAccumulator = 0;
+  const maxWheelDelta = 1000; // Arbitrary max for full progress
+  
+  document.addEventListener('wheel', (e) => {
+    const footer = document.querySelector('.page-footer');
+    if (!footer || footer.classList.contains('hidden')) return;
+    
+    // Only process if footer is visible in viewport
+    const footerRect = footer.getBoundingClientRect();
+    if (footerRect.top > window.innerHeight) return;
+    
+    // Accumulate wheel delta
+    wheelAccumulator += e.deltaY;
+    wheelAccumulator = Math.max(0, Math.min(maxWheelDelta, wheelAccumulator));
+    
+    const wheelProgress = wheelAccumulator / maxWheelDelta;
+    
+    console.log(`🖱️ Wheel event - DeltaY: ${e.deltaY}, Accumulated: ${wheelAccumulator}, Progress: ${(wheelProgress * 100).toFixed(1)}%`);
+    
+    // Only use wheel progress if it's higher than observer progress
+    // This ensures animation happens even without real scrolling
+    if (wheelProgress > currentProgress) {
+      updateFloatingLetters(wheelProgress);
+    }
+  }, { passive: true });
+  
+  console.log('✅ Wheel listener setup complete');
+}
+
+/**
+ * Update the floating letters animation
+ * @param {number} progress - Animation progress from 0 to 1
+ */
+function updateFloatingLetters(progress) {
+  currentProgress = progress;
+  
+  const floatingLetters = document.querySelectorAll('.footer-brand-letter.float');
+  if (floatingLetters.length === 0) return;
+  
+  // Get the font size to calculate half of 'u' height
+  const brandText = document.querySelector('.footer-brand-text');
+  if (!brandText) return;
+  
+  const fontSize = parseFloat(window.getComputedStyle(brandText).fontSize);
+  const halfLetterHeight = fontSize * 0.5; // Half of 'u' height - max float distance
+  
+  // Apply easing for smoother animation
+  const eased = easeOutCubic(progress);
+  const translateY = -halfLetterHeight * eased; // Negative = upward
+  
+  console.log(`🎯 Floating letters - Progress: ${(progress * 100).toFixed(1)}%, Eased: ${(eased * 100).toFixed(1)}%, Offset: ${translateY.toFixed(1)}px`);
+  
+  // Apply transform to all floating letters
+  floatingLetters.forEach((letter) => {
+    letter.style.transform = `translateY(${translateY}px) translateZ(0)`;
+    letter.style.transition = 'transform 0.15s ease-out'; // Smooth but responsive
+  });
 }
 
 /**
@@ -158,11 +173,14 @@ function easeOutCubic(t) {
  * Cleanup footer animations
  */
 export function cleanupFooter() {
-  window.removeEventListener('scroll', handleFooterScroll);
+  if (brandObserver) {
+    brandObserver.disconnect();
+    brandObserver = null;
+  }
   
-  if (footerAnimationFrame) {
-    cancelAnimationFrame(footerAnimationFrame);
-    footerAnimationFrame = null;
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame);
+    animationFrame = null;
   }
 }
 
