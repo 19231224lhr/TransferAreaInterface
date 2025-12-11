@@ -273,6 +273,35 @@
   }
 }
 
+/* 深色模式下的 Logo 文字 */
+[data-theme="dark"] .logo-text {
+  background: linear-gradient(
+    135deg,
+    #38bdf8 0%,
+    #60a5fa 25%,
+    #818cf8 50%,
+    #a78bfa 75%,
+    #c4b5fd 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 深色模式下的 Logo 图标悬浮效果 */
+[data-theme="dark"] .header-logo:hover .logo-icon {
+  background: linear-gradient(
+    145deg,
+    rgba(30, 41, 59, 0.95) 0%,
+    rgba(51, 65, 85, 0.9) 100%
+  );
+  border-color: rgba(56, 189, 248, 0.4);
+  box-shadow: 
+    0 8px 24px rgba(56, 189, 248, 0.25),
+    0 4px 12px rgba(167, 139, 250, 0.2),
+    inset 0 1px 0 rgba(148, 163, 184, 0.3);
+}
+
 /* Logo 文字悬浮效果 */
 .header-logo:hover .logo-text {
   letter-spacing: 0.01em;
