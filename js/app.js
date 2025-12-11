@@ -51,16 +51,17 @@ import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, sa
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
 import performanceModeManager from './utils/performanceMode.js';
+import performanceMonitor from './utils/performanceMonitor.js';
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip, showConfirmModal, getActionModalElements } from './ui/modal.js';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
 import { initProfilePage, updateProfileDisplay } from './ui/profile.js';
-import { updateWalletChart, initWalletChart } from './ui/charts.js';
-import { initNetworkChart } from './ui/networkChart.js';
+import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
+import { initNetworkChart, cleanupNetworkChart } from './ui/networkChart.js';
 import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js';
-import { initFooter } from './ui/footer.js';
+import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.js';
@@ -274,6 +275,12 @@ function init() {
   // Export to window for global access
   window.performanceModeManager = performanceModeManager;
   
+  // Start performance monitoring in development
+  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+    performanceMonitor.start(10000); // Monitor every 10 seconds
+    console.log('🔍 Performance monitoring enabled for development');
+  }
+  
   // Initialize user menu
   initUserMenu();
   
@@ -325,6 +332,36 @@ function init() {
 }
 
 // ========================================
+// Global Cleanup Function
+// ========================================
+
+/**
+ * Clean up all resources to prevent memory leaks
+ */
+function globalCleanup() {
+  // Cleanup chart resources
+  try { cleanupWalletChart(); } catch (_) { }
+  
+  // Cleanup network chart resources
+  try { cleanupNetworkChart(); } catch (_) { }
+  
+  // Cleanup footer resources
+  try { cleanupFooter(); } catch (_) { }
+  
+  // Clear global flags
+  window._headerScrollBind = false;
+  window._headerHashChangeBind = false;
+  window._footerScrollBind = false;
+  window._routerHashChangeBind = false;
+  window._userMenuClickBind = false;
+  
+  console.log('Global cleanup completed');
+}
+
+// Export cleanup functions globally
+window.globalCleanup = globalCleanup;
+
+// ========================================
 // DOM Ready Handler
 // ========================================
 
@@ -333,3 +370,23 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+// ========================================
+// Page Unload Handler
+// ========================================
+
+// Clean up resources when page is about to unload
+window.addEventListener('beforeunload', () => {
+  performanceMonitor.stop();
+  globalCleanup();
+});
+
+// Also clean up on visibility change (when tab becomes hidden)
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // Page is hidden, pause resource-intensive operations
+    if (typeof window.cleanupNetworkChart === 'function') {
+      try { window.cleanupNetworkChart(); } catch (_) { }
+    }
+  }
+});

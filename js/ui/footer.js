@@ -51,17 +51,20 @@ function setupBrandObserver() {
 
   brandObserver.observe(brandElement);
   
-  // Also add scroll listener for more precise updates
-  let scrollTicking = false;
-  window.addEventListener('scroll', () => {
-    if (!scrollTicking) {
-      window.requestAnimationFrame(() => {
-        calculateAndUpdateProgress();
-        scrollTicking = false;
-      });
-      scrollTicking = true;
-    }
-  }, { passive: true });
+  // Also add scroll listener for more precise updates - only bind once
+  if (!window._footerScrollBind) {
+    let scrollTicking = false;
+    window.addEventListener('scroll', () => {
+      if (!scrollTicking) {
+        window.requestAnimationFrame(() => {
+          calculateAndUpdateProgress();
+          scrollTicking = false;
+        });
+        scrollTicking = true;
+      }
+    }, { passive: true });
+    window._footerScrollBind = true;
+  }
 }
 
 /**

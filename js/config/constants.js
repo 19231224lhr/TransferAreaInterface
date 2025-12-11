@@ -106,8 +106,7 @@ export const ROUTES = {
   PROFILE: '/profile',
   INQUIRY: '/inquiry',
   INQUIRY_MAIN: '/inquiry-main',
-  MEMBER_INFO: '/member-info',
-  IMPORT_NEXT: '/import-next',
+  HISTORY: '/history',
   NEXT: '/next'
 };
 
@@ -132,6 +131,5 @@ export const ROUTE_CARD_MAP = {
   '/profile': 'profileCard',
   '/inquiry': 'inquiryCard',
   '/inquiry-main': 'inquiryCard',
-  '/member-info': 'memberInfoCard',
-  '/import-next': 'importNextCard'
+  '/history': 'historyCard'
 };

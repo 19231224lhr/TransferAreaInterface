@@ -356,12 +356,15 @@ export function initUserMenu() {
       userMenu.classList.toggle('hidden');
     });
     
-    // Close menu when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!userMenu.contains(e.target) && !userButton.contains(e.target)) {
-        userMenu.classList.add('hidden');
-      }
-    });
+    // Close menu when clicking outside - only bind once globally
+    if (!window._userMenuClickBind) {
+      document.addEventListener('click', (e) => {
+        if (!userMenu.contains(e.target) && !userButton.contains(e.target)) {
+          userMenu.classList.add('hidden');
+        }
+      });
+      window._userMenuClickBind = true;
+    }
     
     userButton.dataset._bind = '1';
   }
@@ -449,22 +452,29 @@ export function initHeaderScroll() {
     ticking = false;
   }
   
-  window.addEventListener('scroll', function() {
-    if (!ticking) {
-      requestAnimationFrame(updateHeader);
-      ticking = true;
-    }
-  }, { passive: true });
-  
-  // Listen for page changes (hash changes)
-  window.addEventListener('hashchange', function() {
-    setTimeout(function() {
-      lastScrollY = window.scrollY;
-      if (isHomePage() || window.scrollY <= 10) {
-        header.classList.add('header--visible');
+  // Only bind scroll listener once
+  if (!window._headerScrollBind) {
+    window.addEventListener('scroll', function() {
+      if (!ticking) {
+        requestAnimationFrame(updateHeader);
+        ticking = true;
       }
-    }, 100);
-  });
+    }, { passive: true });
+    window._headerScrollBind = true;
+  }
+  
+  // Listen for page changes (hash changes) - only bind once
+  if (!window._headerHashChangeBind) {
+    window.addEventListener('hashchange', function() {
+      setTimeout(function() {
+        lastScrollY = window.scrollY;
+        if (isHomePage() || window.scrollY <= 10) {
+          header.classList.add('header--visible');
+        }
+      }, 100);
+    });
+    window._headerHashChangeBind = true;
+  }
   
   // Initial state: show on home page and at top
   setTimeout(function() {

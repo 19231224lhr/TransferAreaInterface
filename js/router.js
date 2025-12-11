@@ -48,8 +48,8 @@ export function showCard(card) {
   // Hide all cards
   const allCardIds = [
     'welcomeCard', 'entryCard', 'newUserCard', 'loginCard', 'importCard',
-    'nextCard', 'finalCard', 'walletCard', 'importNextCard', 'inquiryCard',
-    'memberInfoCard', 'profileCard', 'groupDetailCard', 'historyCard'
+    'nextCard', 'walletCard', 'inquiryCard',
+    'profileCard', 'groupDetailCard', 'historyCard'
   ];
   
   allCardIds.forEach(id => {
@@ -237,11 +237,6 @@ export function router() {
       });
       break;
       
-    case '/member-info':
-      showCard(document.getElementById('memberInfoCard'));
-      handleMemberInfoRoute();
-      break;
-      
     case '/profile':
       showCard(document.getElementById('profileCard'));
       initProfilePage();
@@ -333,34 +328,16 @@ function handleJoinGroupRoute() {
 }
 
 /**
- * Handle /member-info route
- */
-function handleMemberInfoRoute() {
-  const u4 = loadUser();
-  const aEl = document.getElementById('miAccountId');
-  const addrEl = document.getElementById('miAddress');
-  const orgEl = document.getElementById('miOrg');
-  
-  if (aEl) aEl.textContent = u4?.accountId || '-';
-  if (addrEl) addrEl.textContent = u4?.address || '-';
-  if (orgEl) orgEl.textContent = u4?.orgNumber || '-';
-  
-  // Bind confirm button to go to main page
-  const miConfirmBtn = document.getElementById('miConfirmBtn');
-  if (miConfirmBtn && !miConfirmBtn.dataset._bind) {
-    miConfirmBtn.dataset._bind = '1';
-    miConfirmBtn.addEventListener('click', () => routeTo('#/main'));
-  }
-}
-
-/**
  * Initialize router
  */
 export function initRouter() {
   initCardRefs();
   
-  // Listen for hash changes
-  window.addEventListener('hashchange', router);
+  // Listen for hash changes - only bind once
+  if (!window._routerHashChangeBind) {
+    window.addEventListener('hashchange', router);
+    window._routerHashChangeBind = true;
+  }
   
   // Initial route
   router();
