@@ -288,14 +288,58 @@ export function bindProfileEvents() {
     themeSelector.dataset._bind = '1';
   }
   
+  // Performance mode selector
+  const performanceSelector = document.getElementById('performanceSelector');
+  if (performanceSelector && !performanceSelector.dataset._bind) {
+    const options = performanceSelector.querySelectorAll('.performance-option');
+    options.forEach(opt => {
+      opt.addEventListener('click', () => {
+        const mode = opt.getAttribute('data-mode');
+        if (mode && window.performanceModeManager) {
+          const currentMode = window.performanceModeManager.getMode();
+          if (mode !== currentMode) {
+            window.performanceModeManager.setMode(mode);
+            updatePerformanceSelectorUI();
+            // Show toast notification
+            const modeText = mode === 'premium' ? t('profile.performance.premium') : t('profile.performance.energySaving');
+            showSuccessToast(t('toast.performance.changed', { mode: modeText }), t('common.success'));
+          }
+        }
+      });
+    });
+    performanceSelector.dataset._bind = '1';
+  }
+  
   // Update language selector UI state
   updateLanguageSelectorUI();
   
   // Update theme selector UI state
   updateThemeSelectorUI();
   
+  // Update performance selector UI state
+  updatePerformanceSelectorUI();
+  
   // Update page translations
   updatePageTranslations();
+}
+
+/**
+ * Update performance mode selector UI state
+ */
+export function updatePerformanceSelectorUI() {
+  if (!window.performanceModeManager) return;
+  
+  const currentMode = window.performanceModeManager.getMode();
+  const options = document.querySelectorAll('.performance-option');
+  
+  options.forEach(opt => {
+    const mode = opt.getAttribute('data-mode');
+    if (mode === currentMode) {
+      opt.classList.add('active');
+    } else {
+      opt.classList.remove('active');
+    }
+  });
 }
 
 /**

@@ -4,6 +4,8 @@
  * Provides network speed chart rendering for the transfer panel.
  */
 
+import { debounce } from '../utils/eventUtils.js';
+
 const DATA_POINTS = 30; // 数据点数量
 const UPDATE_INTERVAL = 2000; // 2秒更新一次
 
@@ -135,6 +137,7 @@ function renderChart() {
   
   // Generate smooth curve
   const linePath = catmullRomSpline(points, 0.5);
+  
   line.setAttribute('d', linePath);
   
   // Generate fill area
@@ -177,23 +180,34 @@ function stopMonitoring() {
 
 /**
  * Initialize network chart
+ * Performance optimization: Use IntersectionObserver for visibility detection (Requirements: 4.5)
+ * Property 14: 不可见图表暂停更新
  */
 export function initNetworkChart() {
-  // Observe transfer panel visibility
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      isVisible = entry.isIntersecting;
-      if (isVisible) {
-        startMonitoring();
-      } else {
-        stopMonitoring();
-      }
-    });
-  }, { threshold: 0.1 });
-  
-  const transferPanel = document.querySelector('.transfer-panel');
-  if (transferPanel) {
-    observer.observe(transferPanel);
+  // Use IntersectionObserver to detect visibility
+  if ('IntersectionObserver' in window) {
+    // Observe transfer panel visibility
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        isVisible = entry.isIntersecting;
+        if (isVisible) {
+          startMonitoring();
+        } else {
+          stopMonitoring();
+        }
+      });
+    }, { threshold: 0.1 });
+    
+    const transferPanel = document.querySelector('.transfer-panel');
+    if (transferPanel) {
+      observer.observe(transferPanel);
+    }
+    
+    // Store observer for cleanup (Requirements: 6.1)
+    window._networkChartObserver = observer;
+  } else {
+    // Fallback: always monitor if IntersectionObserver not supported
+    startMonitoring();
   }
   
   // Initial render
@@ -201,9 +215,31 @@ export function initNetworkChart() {
   renderChart();
   
   // Listen for window resize
-  let resizeTimeout;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(renderChart, 100);
-  });
+  // Performance optimization: Use debounce utility (Requirements: 2.2)
+  const debouncedRender = debounce(renderChart, 100); // 100ms debounce for network chart
+  window.addEventListener('resize', debouncedRender);
+  
+  // Store resize handler for cleanup (Requirements: 6.2)
+  window._networkChartResizeHandler = debouncedRender;
+}
+
+/**
+ * Cleanup network chart resources
+ * Performance optimization: Memory management (Requirements: 6.1)
+ */
+export function cleanupNetworkChart() {
+  // Stop monitoring interval
+  stopMonitoring();
+  
+  // Cleanup observer
+  if (window._networkChartObserver) {
+    window._networkChartObserver.disconnect();
+    window._networkChartObserver = null;
+  }
+  
+  // Cleanup resize listener
+  if (window._networkChartResizeHandler) {
+    window.removeEventListener('resize', window._networkChartResizeHandler);
+    window._networkChartResizeHandler = null;
+  }
 }

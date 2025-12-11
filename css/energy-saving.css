@@ -1,0 +1,435 @@
+/**
+ * ========================================
+ * 节能模式样式 - energy-saving.css
+ * 当 body 具有 .energy-saving-mode 类时应用
+ * 
+ * Feature: performance-optimization
+ * Requirements: 0.3, 0.6, 0.7, 0.8, 0.9
+ * ========================================
+ */
+
+/* ========================================
+   节能模式：禁用毛玻璃效果
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .card,
+.energy-saving-mode .modal .dialog,
+.energy-saving-mode .modal-content,
+.energy-saving-mode .overlay-loader,
+.energy-saving-mode .pane--org .org-card,
+.energy-saving-mode .header-inner,
+.energy-saving-mode .user-menu {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* ========================================
+   节能模式：使用纯色背景替代渐变
+   Requirements: 0.7
+   ======================================== */
+
+.energy-saving-mode {
+  /* 页面背景改为纯色 */
+  background: #f0f9ff !important;
+  background-attachment: scroll !important;
+}
+
+.energy-saving-mode .card {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .btn--primary {
+  background: #0ea5e9 !important;
+}
+
+.energy-saving-mode .btn--secondary {
+  background: #f8fafc !important;
+}
+
+.energy-saving-mode .btn--success {
+  background: #10b981 !important;
+}
+
+.energy-saving-mode .btn--danger {
+  background: #ef4444 !important;
+}
+
+.energy-saving-mode .modal .dialog,
+.energy-saving-mode .modal-content {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .overlay-loader {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .pane {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .pane--org .org-card {
+  background: #f8fafc !important;
+}
+
+.energy-saving-mode .org-value {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .input {
+  background: #ffffff !important;
+}
+
+.energy-saving-mode .header-inner {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.energy-saving-mode .user-menu {
+  background: #ffffff !important;
+}
+
+/* ========================================
+   节能模式 + 深色模式适配
+   Requirements: 0.7
+   注意：data-theme 在 html 标签上，energy-saving-mode 在 body 标签上
+   ======================================== */
+
+html[data-theme="dark"] body.energy-saving-mode {
+  /* 深色模式下的页面背景 */
+  background: #0f172a !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .card {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .btn--secondary {
+  background: #334155 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .modal .dialog,
+html[data-theme="dark"] body.energy-saving-mode .modal-content {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .overlay-loader {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .pane {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .pane--org .org-card {
+  background: #334155 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .org-value {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .input {
+  background: #334155 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .header-inner {
+  background: #1e293b !important;
+  border: 1px solid #334155 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .user-menu {
+  background: #1e293b !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .user-button {
+  background: rgba(51, 65, 85, 0.6) !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .user-button:hover {
+  background: rgba(51, 65, 85, 0.8) !important;
+}
+
+/* 深色模式下的边框颜色 */
+html[data-theme="dark"] body.energy-saving-mode .card,
+html[data-theme="dark"] body.energy-saving-mode .pane,
+html[data-theme="dark"] body.energy-saving-mode .input {
+  border: 1px solid #334155 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode .btn--secondary {
+  border: 1px solid #475569 !important;
+}
+
+/* 深色模式下的滚动条 */
+html[data-theme="dark"] body.energy-saving-mode ::-webkit-scrollbar-thumb {
+  background: #475569 !important;
+}
+
+html[data-theme="dark"] body.energy-saving-mode ::-webkit-scrollbar-track {
+  background: #1e293b !important;
+}
+
+/* ========================================
+   节能模式：移除背景装饰光球
+   Requirements: 0.9
+   ======================================== */
+
+.energy-saving-mode::before,
+.energy-saving-mode::after {
+  display: none !important;
+}
+
+/* 移除其他装饰性光球 */
+.energy-saving-mode .welcome-gradient-orb,
+.energy-saving-mode .org-bg-deco {
+  display: none !important;
+}
+
+/* ========================================
+   节能模式：简化阴影效果
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .card,
+.energy-saving-mode .btn,
+.energy-saving-mode .pane,
+.energy-saving-mode .modal .dialog,
+.energy-saving-mode .modal-content {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+.energy-saving-mode .btn:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* ========================================
+   节能模式：保持动画速率，但简化效果
+   Requirements: 0.8
+   注意：不改变动画时长，只简化视觉效果
+   ======================================== */
+
+/* 保持原有的过渡时长，不做修改 */
+/* .energy-saving-mode 下的元素保持原有动画速率 */
+
+/* ========================================
+   节能模式：禁用装饰性动画
+   Requirements: 0.8
+   ======================================== */
+
+/* 禁用背景光球动画 */
+.energy-saving-mode body::before,
+.energy-saving-mode body::after {
+  animation: none !important;
+}
+
+/* 禁用粒子效果 */
+.energy-saving-mode .particle {
+  display: none !important;
+}
+
+/* 禁用装饰性浮动动画 */
+.energy-saving-mode .welcome-gradient-orb,
+.energy-saving-mode .org-bg-deco {
+  animation: none !important;
+}
+
+/* 禁用脉冲动画 */
+.energy-saving-mode [class*="animate-pulse"],
+.energy-saving-mode [class*="animate-float"],
+.energy-saving-mode [class*="animate-bounce"] {
+  animation: none !important;
+}
+
+/* 禁用加载器的装饰性动画（保留旋转） */
+.energy-saving-mode .loader-dot {
+  animation: none !important;
+  opacity: 0.6 !important;
+}
+
+.energy-saving-mode .bolt {
+  animation: none !important;
+  filter: none !important;
+}
+
+.energy-saving-mode .bolt .seg {
+  animation: none !important;
+  opacity: 0.5 !important;
+}
+
+/* ========================================
+   节能模式：简化复杂渐变
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .modal {
+  background: rgba(15, 23, 42, 0.5) !important;
+}
+
+.energy-saving-mode .overlay--modern {
+  background: rgba(0, 0, 0, 0.4) !important;
+}
+
+/* ========================================
+   节能模式：保留功能性动画
+   Requirements: 0.8
+   ======================================== */
+
+/* 保留 spinner 旋转动画（功能性） */
+.energy-saving-mode .spinner {
+  animation: spin 1s linear infinite !important;
+}
+
+/* 保留 toast 进入动画（用户反馈） */
+.energy-saving-mode .toast {
+  animation-duration: 0.2s !important;
+}
+
+/* 保留模态框进入动画（用户反馈） */
+.energy-saving-mode .modal .dialog {
+  animation: dialogEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+}
+
+/* ========================================
+   节能模式：移除复杂的 filter 效果
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .bolt,
+.energy-saving-mode .welcome-gradient-orb {
+  filter: none !important;
+}
+
+/* ========================================
+   节能模式：简化边框效果
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .card,
+.energy-saving-mode .pane,
+.energy-saving-mode .input {
+  border: 1px solid #e2e8f0 !important;
+}
+
+.energy-saving-mode .btn--secondary {
+  border: 1px solid #cbd5e1 !important;
+}
+
+/* ========================================
+   节能模式：优化 will-change 使用
+   (保留关键动画元素的GPU加速，避免滚动时元素乱串)
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode * {
+  will-change: auto !important;
+}
+
+/* 保留关键元素的 will-change 以避免滚动时的渲染问题 */
+.energy-saving-mode .header,
+.energy-saving-mode .header-inner,
+.energy-saving-mode .card,
+.energy-saving-mode .addr-card,
+.energy-saving-mode .modal .dialog {
+  will-change: transform !important;
+}
+
+/* ========================================
+   节能模式：简化 hover 效果
+   Requirements: 0.8
+   ======================================== */
+
+.energy-saving-mode .card--hover:hover {
+  transform: none !important;
+}
+
+.energy-saving-mode .btn:hover {
+  transform: translateY(-1px) !important;
+}
+
+.energy-saving-mode .org-value:hover {
+  transform: none !important;
+}
+
+/* ========================================
+   节能模式：移除 inset 阴影
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .card,
+.energy-saving-mode .modal .dialog,
+.energy-saving-mode .modal-content {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ========================================
+   节能模式：禁用渐变文字效果
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode .pane.pane--legend h3,
+.energy-saving-mode .pane--org > h3 {
+  background: none !important;
+  -webkit-background-clip: unset !important;
+  background-clip: unset !important;
+  color: #0ea5e9 !important;
+  text-shadow: none !important;
+}
+
+/* ========================================
+   节能模式：简化按钮 ::before 伪元素效果
+   Requirements: 0.8
+   ======================================== */
+
+.energy-saving-mode .btn--primary::before,
+.energy-saving-mode .modal .dialog .actions .btn.primary::before {
+  display: none !important;
+}
+
+/* ========================================
+   节能模式：移除页面主题色切换动画
+   Requirements: 0.8, 0.9
+   ======================================== */
+
+.energy-saving-mode:has(#welcomeCard:not(.hidden))::after,
+.energy-saving-mode:has(#loginCard:not(.hidden))::after,
+.energy-saving-mode:has(#newUserCard:not(.hidden))::after,
+.energy-saving-mode:has(#importCard:not(.hidden))::after,
+.energy-saving-mode:has(#entryCard:not(.hidden))::after,
+.energy-saving-mode:has(#nextCard:not(.hidden))::after,
+.energy-saving-mode:has(#groupDetailCard:not(.hidden))::after,
+.energy-saving-mode:has(#inquiryCard:not(.hidden))::after,
+.energy-saving-mode:has(#walletCard:not(.hidden))::after,
+.energy-saving-mode:has(#memberInfoCard:not(.hidden))::after {
+  display: none !important;
+}
+
+/* ========================================
+   节能模式：保持过渡效果，不禁用
+   Requirements: 0.8
+   注意：保持原有过渡时长，确保交互流畅
+   ======================================== */
+
+/* 不禁用过渡效果，保持原有的流畅交互体验 */
+
+/* ========================================
+   节能模式：移除动画延迟
+   Requirements: 0.8
+   ======================================== */
+
+.energy-saving-mode [class*="animate-delay"] {
+  animation-delay: 0s !important;
+}
+
+/* ========================================
+   节能模式：简化滚动条样式
+   Requirements: 0.6
+   ======================================== */
+
+.energy-saving-mode ::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+}
+
+.energy-saving-mode ::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}

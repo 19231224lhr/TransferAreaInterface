@@ -5,6 +5,7 @@
  */
 
 import { loadUser } from '../utils/storage.js';
+import { debounce, rafThrottle } from '../utils/eventUtils.js';
 
 // Chart history storage key
 const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
@@ -229,62 +230,52 @@ export function updateWalletChart(user) {
   svg._chartViewBoxWidth = width;
   
   // Bind hover tooltip events (only once)
+  // Performance optimization: Use rafThrottle utility (Requirements: 2.3)
   if (!svg.dataset._bindChart) {
-    let lastMoveTime = 0;
-    let rafId = null;
-    
-    const handleMouseMove = (e) => {
-      const now = Date.now();
-      if (now - lastMoveTime < 16) return; // Limit to ~60fps
-      lastMoveTime = now;
+    const handleMouseMoveCore = (e) => {
+      const pts = svg._chartPoints || [];
+      const svgWidth = svg._chartWidth || 320;
+      if (pts.length === 0) return;
       
-      if (rafId) cancelAnimationFrame(rafId);
-      rafId = requestAnimationFrame(() => {
-        const pts = svg._chartPoints || [];
-        const svgWidth = svg._chartWidth || 320;
-        if (pts.length === 0) return;
-        
-        const rect = svg.getBoundingClientRect();
-        // Fix: use viewBox width instead of svgWidth to calculate mouse position
-        const viewBoxWidth = svg._chartViewBoxWidth || 320;
-        const x = (e.clientX - rect.left) * (viewBoxWidth / rect.width);
-        
-        let closest = pts[0];
-        let minDist = Infinity;
-        pts.forEach(p => {
-          const dist = Math.abs(p.x - x);
-          if (dist < minDist) {
-            minDist = dist;
-            closest = p;
-          }
-        });
-
-        if (tooltip && minDist < 40) {
-          const date = new Date(closest.t);
-          const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-          tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
-          tooltip.classList.add('visible');
-          
-          // Calculate tooltip position (relative to container)
-          const chartInner = chartEl.querySelector('.balance-chart-inner');
-          if (chartInner) {
-            const innerRect = chartInner.getBoundingClientRect();
-            // Fix: use viewBox width instead of svgWidth to calculate ratio
-            const viewBoxWidth = svg._chartViewBoxWidth || 320;
-            const tooltipX = (closest.x / viewBoxWidth) * innerRect.width;
-            const tooltipY = (closest.y / 70) * innerRect.height;
-            tooltip.style.left = `${tooltipX}px`;
-            tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
-          }
+      const rect = svg.getBoundingClientRect();
+      // Fix: use viewBox width instead of svgWidth to calculate mouse position
+      const viewBoxWidth = svg._chartViewBoxWidth || 320;
+      const x = (e.clientX - rect.left) * (viewBoxWidth / rect.width);
+      
+      let closest = pts[0];
+      let minDist = Infinity;
+      pts.forEach(p => {
+        const dist = Math.abs(p.x - x);
+        if (dist < minDist) {
+          minDist = dist;
+          closest = p;
         }
       });
+
+      if (tooltip && minDist < 40) {
+        const date = new Date(closest.t);
+        const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
+        tooltip.classList.add('visible');
+        
+        // Calculate tooltip position (relative to container)
+        const chartInner = chartEl.querySelector('.balance-chart-inner');
+        if (chartInner) {
+          const innerRect = chartInner.getBoundingClientRect();
+          // Fix: use viewBox width instead of svgWidth to calculate ratio
+          const viewBoxWidth = svg._chartViewBoxWidth || 320;
+          const tooltipX = (closest.x / viewBoxWidth) * innerRect.width;
+          const tooltipY = (closest.y / 70) * innerRect.height;
+          tooltip.style.left = `${tooltipX}px`;
+          tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
+        }
+      }
     };
+    
+    // Use rafThrottle to limit updates to ~60fps (every 16ms)
+    const handleMouseMove = rafThrottle(handleMouseMoveCore);
 
     const handleMouseLeave = () => {
-      if (rafId) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
       if (tooltip) tooltip.classList.remove('visible');
     };
 
@@ -312,31 +303,111 @@ export function initWalletChart() {
   }
   
   // Auto-update chart every minute (only set interval once)
+  // Performance optimization: Pause updates when chart is not visible (Requirements: 4.5)
+  // Property 14: 不可见图表暂停更新
   if (!window._chartIntervalSet) {
     window._chartIntervalSet = true;
-    setInterval(() => {
-      const user = loadUser();
-      if (user) {
-        updateWalletChart(user);
+    let chartIntervalId = null;
+    let isChartVisible = true;
+    
+    // Start interval
+    const startChartInterval = () => {
+      if (chartIntervalId) return;
+      chartIntervalId = setInterval(() => {
+        const user = loadUser();
+        if (user && isChartVisible) {
+          updateWalletChart(user);
+        }
+      }, 60 * 1000);
+    };
+    
+    // Stop interval
+    const stopChartInterval = () => {
+      if (chartIntervalId) {
+        clearInterval(chartIntervalId);
+        chartIntervalId = null;
       }
-    }, 60 * 1000);
+    };
+    
+    // Store cleanup function for memory management (Requirements: 6.1)
+    window._cleanupChartInterval = stopChartInterval;
+    
+    // Use IntersectionObserver to detect visibility
+    if ('IntersectionObserver' in window) {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          isChartVisible = entry.isIntersecting;
+          if (entry.isIntersecting) {
+            // Chart became visible, resume updates
+            startChartInterval();
+            const user = loadUser();
+            if (user) {
+              updateWalletChart(user);
+            }
+          } else {
+            // Chart not visible, pause updates
+            stopChartInterval();
+          }
+        });
+      }, {
+        threshold: 0.1 // Trigger when at least 10% visible
+      });
+      
+      observer.observe(chartEl);
+      
+      // Store observer for cleanup (Requirements: 6.1)
+      window._chartObserver = observer;
+    } else {
+      // Fallback: always update if IntersectionObserver not supported
+      startChartInterval();
+    }
   }
   
   // Add resize listener for responsive chart (only set once)
   // This ensures the chart adapts to window/zoom changes by recalculating
   // SVG viewBox dimensions and redrawing the chart
+  // Performance optimization: Use debounce utility (Requirements: 2.2)
   if (!window._chartResizeListenerSet) {
     window._chartResizeListenerSet = true;
-    let resizeTimeout;
-    window.addEventListener('resize', () => {
-      // Debounce resize events to avoid excessive redraws (100ms delay)
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        const user = loadUser();
-        if (user) {
-          updateWalletChart(user);
-        }
-      }, 100);
-    });
+    
+    const debouncedUpdate = debounce(() => {
+      const user = loadUser();
+      if (user) {
+        updateWalletChart(user);
+      }
+    }, 200); // 200ms debounce as per requirements
+    
+    window.addEventListener('resize', debouncedUpdate);
+    
+    // Store resize handler for cleanup (Requirements: 6.2)
+    window._chartResizeHandler = debouncedUpdate;
   }
+}
+
+/**
+ * Cleanup wallet chart resources
+ * Performance optimization: Memory management (Requirements: 6.1)
+ */
+export function cleanupWalletChart() {
+  // Cleanup interval
+  if (window._cleanupChartInterval) {
+    window._cleanupChartInterval();
+    window._cleanupChartInterval = null;
+  }
+  
+  // Cleanup observer
+  if (window._chartObserver) {
+    window._chartObserver.disconnect();
+    window._chartObserver = null;
+  }
+  
+  // Cleanup resize listener
+  if (window._chartResizeHandler) {
+    window.removeEventListener('resize', window._chartResizeHandler);
+    window._chartResizeHandler = null;
+  }
+  
+  // Reset flags
+  window._chartIntervalSet = false;
+  window._chartResizeListenerSet = false;
 }

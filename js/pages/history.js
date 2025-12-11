@@ -161,8 +161,15 @@ function renderTransactionList(transactions) {
     return;
   }
   
-  listEl.innerHTML = transactions.map(tx => `
-    <div class="history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}" data-tx-id="${tx.id}">
+  // Use DocumentFragment for better performance
+  const fragment = document.createDocumentFragment();
+  
+  transactions.forEach(tx => {
+    const item = document.createElement('div');
+    item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
+    item.dataset.txId = tx.id;
+    
+    item.innerHTML = `
       <div class="history-item-header">
         <div class="history-item-type">
           <div class="history-item-icon ${tx.type}">
@@ -200,23 +207,25 @@ function renderTransactionList(transactions) {
       <div class="history-item-detail">
         ${renderTransactionDetail(tx)}
       </div>
-    </div>
-  `).join('');
-  
-  // Bind click events
-  listEl.querySelectorAll('.history-item').forEach(item => {
+    `;
+    
+    // Bind click event
     item.addEventListener('click', (e) => {
       // Prevent default behavior and stop propagation
       e.preventDefault();
       e.stopPropagation();
       
-      const txId = item.dataset.txId;
-      const tx = transactions.find(t => t.id === txId);
       if (tx) {
         toggleTransactionDetail(item, tx);
       }
     });
+    
+    fragment.appendChild(item);
   });
+  
+  // Single DOM update
+  listEl.innerHTML = '';
+  listEl.appendChild(fragment);
 }
 
 /**

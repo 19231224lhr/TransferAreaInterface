@@ -1252,3 +1252,156 @@
 [data-theme="dark"] .language-hint {
   color: var(--color-text-tertiary);
 }
+
+/* ========================================
+   性能模式选择器
+   ======================================== */
+
+.performance-selector-area {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.performance-selector {
+  display: flex;
+  gap: 12px;
+  flex-direction: column;
+}
+
+.performance-option {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--color-card-bg);
+  border: 2px solid var(--color-border-light);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.performance-option:hover {
+  background: var(--color-card-bg-secondary);
+  border-color: var(--color-border);
+  transform: translateY(-1px);
+}
+
+.performance-option.active {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(251, 191, 36, 0.04));
+  border-color: #f59e0b;
+  box-shadow: 0 4px 16px rgba(245, 158, 11, 0.15);
+}
+
+.performance-option.active:hover {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.12), rgba(251, 191, 36, 0.06));
+}
+
+.performance-option-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.05));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.performance-option-icon svg {
+  width: 22px;
+  height: 22px;
+  color: #f59e0b;
+  transition: all 0.25s ease;
+}
+
+.performance-option.active .performance-option-icon {
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+.performance-option.active .performance-option-icon svg {
+  color: white;
+}
+
+.performance-option-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.performance-option-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  transition: color 0.25s ease;
+}
+
+.performance-option-desc {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+  transition: color 0.25s ease;
+}
+
+.performance-option.active .performance-option-label {
+  color: #d97706;
+}
+
+.performance-option.active .performance-option-desc {
+  color: #f59e0b;
+}
+
+/* 深色模式下激活状态的文字颜色 */
+[data-theme="dark"] .performance-option.active .performance-option-label {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .performance-option.active .performance-option-desc {
+  color: #fcd34d;
+}
+
+.performance-check {
+  width: 22px;
+  height: 22px;
+  color: #10b981;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.performance-option.active .performance-check {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.performance-hint {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* 橙色图标样式 */
+.profile-setting-icon--orange {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(251, 191, 36, 0.05));
+}
+
+.profile-setting-icon--orange svg {
+  color: #f59e0b;
+}
+
+/* 响应式 */
+@media (max-width: 480px) {
+  .performance-selector {
+    gap: 10px;
+  }
+  
+  .performance-option {
+    padding: 14px 16px;
+  }
+}

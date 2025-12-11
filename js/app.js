@@ -50,6 +50,7 @@ import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignDat
 import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.js';
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
+import performanceModeManager from './utils/performanceMode.js';
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
@@ -266,6 +267,12 @@ function init() {
   // Initialize theme
   loadThemeSetting();
   initThemeSelector();
+  
+  // Initialize performance mode
+  performanceModeManager.loadMode();
+  performanceModeManager.applyMode();
+  // Export to window for global access
+  window.performanceModeManager = performanceModeManager;
   
   // Initialize user menu
   initUserMenu();

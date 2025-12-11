@@ -34,6 +34,7 @@
   <link rel="stylesheet" href="/css/main-v2.css?v=20251204u" />
   <link rel="stylesheet" href="/css/history.css?v=20251210a" />
   <link rel="stylesheet" href="/css/footer.css?v=20251210a" />
+  <link rel="stylesheet" href="/css/energy-saving.css?v=20251211a" />
 
   <!-- 其他样式 -->
   <link rel="stylesheet" href="/wallet_struct_styles.css?v=3" />
@@ -2783,6 +2784,51 @@
                   </button>
                 </div>
                 <p class="theme-hint" data-i18n="profile.theme.hint">选择您偏好的界面主题</p>
+              </div>
+            </div>
+
+            <!-- 性能模式设置 -->
+            <div class="profile-setting-group">
+              <div class="profile-setting-title">
+                <div class="profile-setting-icon profile-setting-icon--orange">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+                <h3 data-i18n="profile.performance.title">性能模式</h3>
+              </div>
+              <div class="performance-selector-area">
+                <div class="performance-selector" id="performanceSelector">
+                  <button class="performance-option active" data-mode="premium">
+                    <div class="performance-option-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    </div>
+                    <div class="performance-option-content">
+                      <span class="performance-option-label" data-i18n="profile.performance.premium">顶级模式</span>
+                      <span class="performance-option-desc" data-i18n="profile.performance.premiumDesc">完整视觉效果</span>
+                    </div>
+                    <svg class="performance-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                  <button class="performance-option" data-mode="energy-saving">
+                    <div class="performance-option-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                      </svg>
+                    </div>
+                    <div class="performance-option-content">
+                      <span class="performance-option-label" data-i18n="profile.performance.energySaving">节能模式</span>
+                      <span class="performance-option-desc" data-i18n="profile.performance.energySavingDesc">简化视觉效果，提升流畅度</span>
+                    </div>
+                    <svg class="performance-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </button>
+                </div>
+                <p class="performance-hint" data-i18n="profile.performance.hint">节能模式将禁用毛玻璃效果、简化动画以提升性能</p>
               </div>
             </div>
           </div>

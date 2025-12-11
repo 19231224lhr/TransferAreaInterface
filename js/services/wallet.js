@@ -164,7 +164,9 @@ export function renderWallet() {
   if (!list) return;
   
   const addresses = Object.keys((u.wallet && u.wallet.addressMsg) || {});
-  list.innerHTML = '';
+  
+  // Use DocumentFragment for better performance
+  const fragment = document.createDocumentFragment();
   
   addresses.forEach((a) => {
     const item = document.createElement('div');
@@ -227,14 +229,19 @@ export function renderWallet() {
       });
     }
     
-    list.appendChild(item);
-    
     // Add operations menu
     const metaEl = item.querySelector('.addr-ops-container');
     if (metaEl) {
       addAddressOperationsMenu(metaEl, a, item);
     }
+    
+    // Append to fragment instead of directly to DOM
+    fragment.appendChild(item);
   });
+  
+  // Single DOM update
+  list.innerHTML = '';
+  list.appendChild(fragment);
   
   // Update wallet chart after rendering
   if (typeof window.updateWalletChart === 'function') {
@@ -996,7 +1003,10 @@ export function rebuildAddrList() {
   const addrList = document.getElementById('srcAddrList');
   if (!addrList) return;
   
-  addrList.innerHTML = srcAddrs.map(a => {
+  // Use DocumentFragment for better performance
+  const fragment = document.createDocumentFragment();
+  
+  srcAddrs.forEach(a => {
     const meta = walletMap[a] || {};
     const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
     const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
@@ -1010,7 +1020,10 @@ export function rebuildAddrList() {
     const coinLetter = coinName.charAt(0);
     const shortAddr = a;
     
-    return `<label class="src-addr-item item-type-${color}" data-addr="${a}">
+    const label = document.createElement('label');
+    label.className = `src-addr-item item-type-${color}`;
+    label.dataset.addr = a;
+    label.innerHTML = `
       <input type="checkbox" value="${a}">
       <div class="item-backdrop"></div>
       
@@ -1032,8 +1045,14 @@ export function rebuildAddrList() {
       </div>
       
       <div class="selection-outline"></div>
-    </label>`;
-  }).join('');
+    `;
+    
+    fragment.appendChild(label);
+  });
+  
+  // Single DOM update
+  addrList.innerHTML = '';
+  addrList.appendChild(fragment);
   
   // Auto-select logic
   autoSelectFromAddress(addrList);
