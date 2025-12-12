@@ -6,6 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { loadUser } from '../utils/storage.js';
+import { escapeHtml } from '../utils/security.js';
 
 /**
  * Update wallet structure display (copied from backup lines 3663-3850)
@@ -62,13 +63,13 @@ export function updateWalletStruct() {
   // Account ID Card
   html += '<div class="wb-account-id-box">';
   html += '<div class="wb-account-id-label">Account ID</div>';
-  html += `<div class="wb-account-id-val">${u.accountId || '未设置'}</div>`;
+  html += `<div class="wb-account-id-val">${escapeHtml(u.accountId || '未设置')}</div>`;
   html += '</div>';
 
   // Main Address Row
   html += '<div class="wb-info-row">';
   html += '<div class="wb-info-label">主地址</div>';
-  html += `<div class="wb-info-val">${u.address || '未设置'}</div>`;
+  html += `<div class="wb-info-val">${escapeHtml(u.address || '未设置')}</div>`;
   html += '</div>';
 
   // 获取担保组织信息 - 优先从 localStorage 读取
@@ -99,7 +100,7 @@ export function updateWalletStruct() {
   if (guarantorInfo && guarantorInfo.groupID) {
     html += '<div class="wb-guar-box">';
     html += '<div class="wb-guar-label">担保组织</div>';
-    html += `<div class="wb-guar-val">${guarantorInfo.groupID}</div>`;
+    html += `<div class="wb-guar-val">${escapeHtml(guarantorInfo.groupID)}</div>`;
     html += '</div>';
   } else {
     html += '<div class="wb-guar-box wb-guar-none">';
@@ -134,16 +135,16 @@ export function updateWalletStruct() {
       html += `<details class="wb-detail-card">`;
       html += `<summary class="wb-summary">
         <div class="wb-summary-content">
-          <span class="wb-addr-short">${key.slice(0, 8)}...${key.slice(-8)}</span>
+          <span class="wb-addr-short">${escapeHtml(key.slice(0, 8))}...${escapeHtml(key.slice(-8))}</span>
           <div class="wb-coin-tag-wrapper">${getCoinLabel(typeId)}</div>
-          <span class="wb-balance-tag">${valObj.totalValue || 0} ${typeId === 0 ? 'PGC' : typeId === 1 ? 'BTC' : 'ETH'}</span>
+          <span class="wb-balance-tag">${escapeHtml(String(valObj.totalValue || 0))} ${typeId === 0 ? 'PGC' : typeId === 1 ? 'BTC' : 'ETH'}</span>
         </div>
       </summary>`;
 
       html += '<div class="wb-content">';
       html += '<div style="margin-bottom:12px">';
       html += '<div class="wb-label wb-mb-sm">完整地址</div>';
-      html += `<div class="wb-code-box">${key}</div>`;
+      html += `<div class="wb-code-box">${escapeHtml(key)}</div>`;
       html += '</div>';
 
       html += `<div class="wb-row"><span class="wb-label">UTXO 价值</span><span class="wb-value wb-text-success">${valObj.utxoValue || 0}</span></div>`;
@@ -160,10 +161,10 @@ export function updateWalletStruct() {
           const utxo = utxos[utxoKey];
           html += `<div class="wb-utxo-item">`;
           html += `<div class="wb-utxo-info">`;
-          html += `<div class="wb-utxo-hash" title="${utxoKey}">${utxoKey}</div>`;
-          html += `<div class="wb-utxo-val">${utxo.Value} ${getCoinLabel(utxo.Type || 0)}</div>`;
+          html += `<div class="wb-utxo-hash" title="${escapeHtml(utxoKey)}">${escapeHtml(utxoKey)}</div>`;
+          html += `<div class="wb-utxo-val">${escapeHtml(String(utxo.Value))} ${getCoinLabel(utxo.Type || 0)}</div>`;
           html += `</div>`;
-          html += `<button class="btn secondary wb-btn-xs" onclick="window.showUtxoDetail('${key}', '${utxoKey}')">详情</button>`;
+          html += `<button class="btn secondary wb-btn-xs" onclick="window.showUtxoDetail('${escapeHtml(key)}', '${escapeHtml(utxoKey)}')">详情</button>`;
           html += `</div>`;
         });
         html += '</div></div>';
@@ -178,10 +179,10 @@ export function updateWalletStruct() {
           const cer = txCers[cerKey];
           html += `<div class="wb-utxo-item">`;
           html += `<div class="wb-utxo-info">`;
-          html += `<div class="wb-utxo-hash" title="${cerKey}">${cerKey}</div>`;
-          html += `<div class="wb-utxo-val">${cer.Value} ${getCoinLabel(cer.Type || 0)}</div>`;
+          html += `<div class="wb-utxo-hash" title="${escapeHtml(cerKey)}">${escapeHtml(cerKey)}</div>`;
+          html += `<div class="wb-utxo-val">${escapeHtml(String(cer.Value))} ${getCoinLabel(cer.Type || 0)}</div>`;
           html += `</div>`;
-          html += `<button class="btn secondary wb-btn-xs" onclick="window.showTxCerDetail('${key}', '${cerKey}')">详情</button>`;
+          html += `<button class="btn secondary wb-btn-xs" onclick="window.showTxCerDetail('${escapeHtml(key)}', '${escapeHtml(cerKey)}')">详情</button>`;
           html += `</div>`;
         });
         html += '</div></div>';

@@ -9,6 +9,7 @@ import { loadUser } from '../utils/storage.js';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal.js';
 import { buildNewTX } from './transaction.js';
+import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security.js';
 
 /**
  * Normalize address input
@@ -18,10 +19,10 @@ function normalizeAddrInput(addr) {
 }
 
 /**
- * Validate address format
+ * Validate address format (internal helper, uses security.js validateAddress)
  */
 function isValidAddressFormat(addr) {
-  return /^[0-9a-f]{40}$/.test(addr);
+  return validateAddress(addr).valid;
 }
 
 /**
@@ -102,108 +103,135 @@ export function initTransferSubmit() {
     return res;
   };
   
+  // Create submission guard to prevent double-submit
+  const transferSubmitGuard = createSubmissionGuard('transfer-submit');
+  
   tfBtn.addEventListener('click', async () => {
-    const { walletMap, walletGasTotal } = getWalletSnapshot();
-    
-    if (txErr) {
-      txErr.textContent = '';
-      txErr.classList.add('hidden');
-    }
-    
-    // Hide previous transaction result buttons
-    const txResultActions = document.getElementById('txResultActions');
-    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
-    if (txResultActions) txResultActions.classList.add('hidden');
-    if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
-    
-    const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]'))
-      .filter(x => x.checked)
-      .map(x => x.value);
-    
-    if (sel.length === 0) {
-      showTxValidationError(t('modal.pleaseLoginFirst'), null, t('tx.addressNotSelected'));
+    // Prevent double-submit (check if already submitting)
+    if (!transferSubmitGuard.start()) {
       return;
     }
     
-    for (const addr of sel) {
-      if (!getAddrMeta(addr)) {
-        showTxValidationError(t('toast.cannotParseAddress'), null, t('tx.addressError'));
-        return;
-      }
+    // Add loading state to button (only modify span text to preserve SVG)
+    const btnSpan = tfBtn.querySelector('span');
+    const originalText = btnSpan ? btnSpan.textContent : tfBtn.textContent;
+    tfBtn.disabled = true;
+    if (btnSpan) {
+      btnSpan.textContent = t('common.loading') || '处理中...';
+    } else {
+      tfBtn.textContent = t('common.loading') || '处理中...';
     }
     
-    const rows = Array.from(billList.querySelectorAll('.recipient-card'));
-    if (rows.length === 0) {
-      showTxValidationError(t('wallet.addRecipient'), null, t('tx.missingTransferInfo'));
-      return;
-    }
-    
-    const isCross = tfMode.value === 'cross';
-    if (isCross && rows.length !== 1) {
-      showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit'));
-      return;
-    }
-    
-    const changeMap = {};
-    if (chPGC.value) changeMap[0] = chPGC.value;
-    if (chBTC.value) changeMap[1] = chBTC.value;
-    if (chETH.value) changeMap[2] = chETH.value;
-    
-    const bills = {};
-    const vd = { 0: 0, 1: 0, 2: 0 };
-    let outInterest = 0;
-    
-    for (const r of rows) {
-      const toEl = r.querySelector('[data-name="to"]');
-      const mtEl = r.querySelector('[data-name="mt"]');
-      const valEl = r.querySelector('[data-name="val"]');
-      const gidEl = r.querySelector('[data-name="gid"]');
-      const pubEl = r.querySelector('[data-name="pub"]');
-      const gasEl = r.querySelector('[data-name="gas"]');
+    try {
+      const { walletMap, walletGasTotal } = getWalletSnapshot();
       
-      const to = String((toEl && toEl.value) || '').trim();
-      const normalizedTo = normalizeAddrInput(to);
-      const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
-      const mt = Number(mtRaw);
-      const val = Number((valEl && valEl.value) || 0);
-      const gid = String((gidEl && gidEl.value) || '').trim();
-      const comb = String((pubEl && pubEl.value) || '').trim();
-      const parsedPub = parsePub(comb);
-      const { x: px, y: py, ok: pubOk } = parsedPub;
-      const tInt = Number((gasEl && gasEl.value) || 0);
+      if (txErr) {
+        txErr.textContent = '';
+        txErr.classList.add('hidden');
+      }
       
-      if (!to) {
-        showTxValidationError(t('modal.inputIncomplete'), toEl, t('tx.addressEmpty'));
+      // Hide previous transaction result buttons
+      const txResultActions = document.getElementById('txResultActions');
+      const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+      if (txResultActions) txResultActions.classList.add('hidden');
+      if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
+      
+      const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]'))
+        .filter(x => x.checked)
+        .map(x => x.value);
+      
+      if (sel.length === 0) {
+        showTxValidationError(t('modal.pleaseLoginFirst'), null, t('tx.addressNotSelected'));
         return;
       }
-      if (!isValidAddressFormat(normalizedTo)) {
-        showTxValidationError(t('toast.cannotParseAddress'), toEl, t('tx.addressFormatError'));
+      
+      for (const addr of sel) {
+        if (!getAddrMeta(addr)) {
+          showTxValidationError(t('toast.cannotParseAddress'), null, t('tx.addressError'));
+          return;
+        }
+      }
+      
+      const rows = Array.from(billList.querySelectorAll('.recipient-card'));
+      if (rows.length === 0) {
+        showTxValidationError(t('wallet.addRecipient'), null, t('tx.missingTransferInfo'));
         return;
       }
+      
+      const isCross = tfMode.value === 'cross';
+      if (isCross && rows.length !== 1) {
+        showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit'));
+        return;
+      }
+      
+      const changeMap = {};
+      if (chPGC.value) changeMap[0] = chPGC.value;
+      if (chBTC.value) changeMap[1] = chBTC.value;
+      if (chETH.value) changeMap[2] = chETH.value;
+      
+      const bills = {};
+      const vd = { 0: 0, 1: 0, 2: 0 };
+      let outInterest = 0;
+      
+      for (const r of rows) {
+        const toEl = r.querySelector('[data-name="to"]');
+        const mtEl = r.querySelector('[data-name="mt"]');
+        const valEl = r.querySelector('[data-name="val"]');
+        const gidEl = r.querySelector('[data-name="gid"]');
+        const pubEl = r.querySelector('[data-name="pub"]');
+        const gasEl = r.querySelector('[data-name="gas"]');
+        
+        const to = String((toEl && toEl.value) || '').trim();
+        const normalizedTo = normalizeAddrInput(to);
+        const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
+        const mt = Number(mtRaw);
+        const val = Number((valEl && valEl.value) || 0);
+        const gid = String((gidEl && gidEl.value) || '').trim();
+        const comb = String((pubEl && pubEl.value) || '').trim();
+        const parsedPub = parsePub(comb);
+        const { x: px, y: py, ok: pubOk } = parsedPub;
+        const tInt = Number((gasEl && gasEl.value) || 0);
+        
+        // Address validation using security.js
+        if (!to) {
+          showTxValidationError(t('validation.addressRequired') || t('modal.inputIncomplete'), toEl, t('tx.addressEmpty'));
+          return;
+        }
+      const addrValidation = validateAddress(normalizedTo);
+      if (!addrValidation.valid) {
+        showTxValidationError(addrValidation.message, toEl, t('tx.addressFormatError'));
+        return;
+      }
+      
+      // Currency validation
       if (![0, 1, 2].includes(mt)) {
         showTxValidationError(t('transfer.currency'), null, t('tx.currencyError'));
         return;
       }
-      if (!Number.isFinite(val)) {
-        showTxValidationError(t('transfer.amount'), valEl, t('tx.amountError'));
+      
+      // Amount validation using security.js (require amount > 0)
+      const amountValidation = validateTransferAmount(val, { min: 0.00000001 });
+      if (!amountValidation.valid) {
+        showTxValidationError(amountValidation.error, valEl, t('tx.amountError'));
         return;
       }
-      if (val === 0) {
-        showTxValidationError(t('transfer.amount'), valEl, t('tx.amountCannotBeZero'));
-        return;
+      
+      // Organization ID validation using security.js
+      if (gid) {
+        const orgValidation = validateOrgId(gid);
+        if (!orgValidation.valid) {
+          showTxValidationError(orgValidation.message, gidEl, t('tx.orgIdFormatError'));
+          return;
+        }
       }
-      if (val < 0) {
-        showTxValidationError(t('transfer.amount'), valEl, t('tx.amountCannotBeNegative'));
-        return;
-      }
-      if (gid && !/^\d{8}$/.test(gid)) {
-        showTxValidationError(t('transfer.guarantorOrgId'), gidEl, t('tx.orgIdFormatError'));
-        return;
-      }
+      
+      // Public key validation
       if (!pubOk) {
         showTxValidationError(t('transfer.publicKey'), pubEl, t('tx.publicKeyFormatError'));
         return;
       }
+      
+      // Gas validation
       if (!Number.isFinite(tInt)) {
         showTxValidationError('Gas', gasEl, t('tx.gasParamError'));
         return;
@@ -404,6 +432,17 @@ export function initTransferSubmit() {
     if (buildTxBtn) {
       buildTxBtn.classList.remove('hidden');
       buildTxBtn.dataset.buildInfo = JSON.stringify(build);
+    }
+    } finally {
+      // Restore button state (restore span text to preserve SVG)
+      tfBtn.disabled = false;
+      const btnSpan = tfBtn.querySelector('span');
+      if (btnSpan) {
+        btnSpan.textContent = originalText;
+      } else {
+        tfBtn.textContent = originalText;
+      }
+      transferSubmitGuard.end();
     }
   });
   

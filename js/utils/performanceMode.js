@@ -6,6 +6,124 @@
  * Requirements: 0.4, 0.5
  */
 
+/**
+ * RAF-based batch update queue for DOM operations
+ * Collects updates and applies them in the next animation frame
+ */
+class BatchUpdateQueue {
+  constructor() {
+    /** @type {Map<string, Function>} */
+    this.updates = new Map();
+    this.scheduled = false;
+  }
+
+  /**
+   * Schedule a DOM update to run in next animation frame
+   * @param {string} key - Unique key for this update (for deduplication)
+   * @param {Function} updateFn - Function that performs the DOM update
+   */
+  schedule(key, updateFn) {
+    this.updates.set(key, updateFn);
+    
+    if (!this.scheduled) {
+      this.scheduled = true;
+      requestAnimationFrame(() => this.flush());
+    }
+  }
+
+  /**
+   * Execute all scheduled updates
+   */
+  flush() {
+    const updates = Array.from(this.updates.values());
+    this.updates.clear();
+    this.scheduled = false;
+    
+    for (const update of updates) {
+      try {
+        update();
+      } catch (err) {
+        console.error('[BatchUpdateQueue] Update failed:', err);
+      }
+    }
+  }
+
+  /**
+   * Clear all scheduled updates without executing
+   */
+  clear() {
+    this.updates.clear();
+    this.scheduled = false;
+  }
+}
+
+// Global batch update queue instance
+const batchUpdateQueue = new BatchUpdateQueue();
+
+/**
+ * Schedule a DOM update to run in next animation frame
+ * @param {string} key - Unique key for this update (for deduplication)
+ * @param {Function} updateFn - Function that performs the DOM update
+ */
+export function scheduleBatchUpdate(key, updateFn) {
+  batchUpdateQueue.schedule(key, updateFn);
+}
+
+/**
+ * Force flush all pending batch updates
+ */
+export function flushBatchUpdates() {
+  batchUpdateQueue.flush();
+}
+
+/**
+ * Clear all pending batch updates
+ */
+export function clearBatchUpdates() {
+  batchUpdateQueue.clear();
+}
+
+/**
+ * Debounce function with requestAnimationFrame
+ * @param {Function} fn - Function to debounce
+ * @returns {Function} Debounced function
+ */
+export function rafDebounce(fn) {
+  let rafId = null;
+  
+  return function (...args) {
+    if (rafId) {
+      cancelAnimationFrame(rafId);
+    }
+    rafId = requestAnimationFrame(() => {
+      fn.apply(this, args);
+      rafId = null;
+    });
+  };
+}
+
+/**
+ * Throttle function with requestAnimationFrame
+ * @param {Function} fn - Function to throttle
+ * @returns {Function} Throttled function
+ */
+export function rafThrottle(fn) {
+  let rafId = null;
+  let lastArgs = null;
+  
+  return function (...args) {
+    lastArgs = args;
+    
+    if (rafId === null) {
+      rafId = requestAnimationFrame(() => {
+        fn.apply(this, lastArgs);
+        rafId = null;
+        lastArgs = null;
+      });
+    }
+  };
+}
+
 class PerformanceModeManager {
   constructor() {
     this.mode = 'premium'; // 'premium' | 'energy-saving'

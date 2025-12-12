@@ -231,3 +231,160 @@ export default {
   throttleCancelable,
   rafThrottleCancelable
 };
+
+/**
+ * EventListenerManager - Manages event listeners with automatic cleanup
+ * Prevents memory leaks by tracking all listeners and providing cleanup methods
+ */
+export class EventListenerManager {
+  constructor() {
+    /** @type {Map<Element, Map<string, Array<{handler: Function, options: object}>>>} */
+    this.listeners = new Map();
+    /** @type {AbortController|null} */
+    this.abortController = null;
+  }
+
+  /**
+   * Create or get the AbortController for this manager
+   * @returns {AbortController}
+   */
+  getAbortController() {
+    if (!this.abortController || this.abortController.signal.aborted) {
+      this.abortController = new AbortController();
+    }
+    return this.abortController;
+  }
+
+  /**
+   * Add an event listener with automatic tracking
+   * @param {Element} element - Target element
+   * @param {string} eventType - Event type (e.g., 'click', 'scroll')
+   * @param {Function} handler - Event handler function
+   * @param {object} [options] - Event listener options
+   * @returns {Function} Cleanup function to remove this specific listener
+   */
+  add(element, eventType, handler, options = {}) {
+    if (!element) return () => {};
+
+    // Merge AbortController signal with options
+    const mergedOptions = {
+      ...options,
+      signal: this.getAbortController().signal
+    };
+
+    // Track listener
+    if (!this.listeners.has(element)) {
+      this.listeners.set(element, new Map());
+    }
+    const elementListeners = this.listeners.get(element);
+    if (!elementListeners.has(eventType)) {
+      elementListeners.set(eventType, []);
+    }
+    elementListeners.get(eventType).push({ handler, options: mergedOptions });
+
+    // Add listener
+    element.addEventListener(eventType, handler, mergedOptions);
+
+    // Return cleanup function
+    return () => {
+      this.remove(element, eventType, handler, mergedOptions);
+    };
+  }
+
+  /**
+   * Remove a specific event listener
+   * @param {Element} element - Target element
+   * @param {string} eventType - Event type
+   * @param {Function} handler - Event handler function
+   * @param {object} [options] - Event listener options
+   */
+  remove(element, eventType, handler, options = {}) {
+    if (!element) return;
+
+    element.removeEventListener(eventType, handler, options);
+
+    // Update tracking
+    const elementListeners = this.listeners.get(element);
+    if (elementListeners) {
+      const handlers = elementListeners.get(eventType);
+      if (handlers) {
+        const index = handlers.findIndex(h => h.handler === handler);
+        if (index !== -1) {
+          handlers.splice(index, 1);
+        }
+        if (handlers.length === 0) {
+          elementListeners.delete(eventType);
+        }
+      }
+      if (elementListeners.size === 0) {
+        this.listeners.delete(element);
+      }
+    }
+  }
+
+  /**
+   * Remove all event listeners from a specific element
+   * @param {Element} element - Target element
+   */
+  removeAll(element) {
+    const elementListeners = this.listeners.get(element);
+    if (!elementListeners) return;
+
+    elementListeners.forEach((handlers, eventType) => {
+      handlers.forEach(({ handler, options }) => {
+        element.removeEventListener(eventType, handler, options);
+      });
+    });
+
+    this.listeners.delete(element);
+  }
+
+  /**
+   * Clean up all tracked event listeners using AbortController
+   * This is the most efficient way to remove all listeners at once
+   */
+  cleanup() {
+    if (this.abortController) {
+      this.abortController.abort();
+      this.abortController = null;
+    }
+    this.listeners.clear();
+  }
+
+  /**
+   * Get count of tracked listeners
+   * @returns {number}
+   */
+  get listenerCount() {
+    let count = 0;
+    this.listeners.forEach(elementListeners => {
+      elementListeners.forEach(handlers => {
+        count += handlers.length;
+      });
+    });
+    return count;
+  }
+}
+
+/**
+ * Global event listener manager for the application
+ * Use this for page-level event listeners that need cleanup on navigation
+ */
+export const globalEventManager = new EventListenerManager();
+
+/**
+ * Create a scoped event listener manager
+ * Use this for component-level cleanup
+ * @returns {EventListenerManager}
+ */
+export function createEventManager() {
+  return new EventListenerManager();
+}
+
+/**
+ * Helper to clean up page-specific listeners
+ * Call this when navigating away from a page
+ */
+export function cleanupPageListeners() {
+  globalEventManager.cleanup();
+}

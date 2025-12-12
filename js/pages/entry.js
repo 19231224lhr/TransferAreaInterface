@@ -6,6 +6,7 @@
 
 import { loadUser } from '../utils/storage.js';
 import { t } from '../i18n/index.js';
+import { escapeHtml } from '../utils/security.js';
 
 /**
  * Update wallet brief list on entry page
@@ -37,7 +38,7 @@ export function updateWalletBrief() {
       
       const items = addrs.map(a => {
         const o = originOf(a);
-        return `<li data-addr="${a}"><span class="wallet-addr">${a}</span><span class="origin-badge ${o.cls}">${o.label}</span></li>`;
+        return `<li data-addr="${escapeHtml(a)}"><span class="wallet-addr">${escapeHtml(a)}</span><span class="origin-badge ${o.cls}">${o.label}</span></li>`;
       }).join('');
       brief.innerHTML = items;
       

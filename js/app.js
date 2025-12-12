@@ -50,7 +50,47 @@ import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignDat
 import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.js';
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
-import performanceModeManager from './utils/performanceMode.js';
+import { debounce, throttle, delegate, EventListenerManager, globalEventManager, createEventManager, cleanupPageListeners } from './utils/eventUtils.js';
+import store, { 
+  selectUser, selectRoute, selectTheme, selectLanguage,
+  setUser, setRoute, setThemeState, setLanguageState, setLoading, setModalOpen
+} from './utils/store.js';
+import {
+  encryptPrivateKey,
+  decryptPrivateKey,
+  migrateToEncrypted,
+  clearLegacyKey,
+  getPrivateKey,
+  verifyPassword,
+  changePassword,
+  checkEncryptionStatus,
+  hasEncryptedKey,
+  hasLegacyKey
+} from './utils/keyEncryption.js';
+import { 
+  escapeHtml, 
+  createElement, 
+  validateTransferAmount, 
+  validateAddress, 
+  validatePrivateKey,
+  validateOrgId,
+  createSubmissionGuard,
+  withSubmissionGuard,
+  fetchWithTimeout,
+  fetchWithRetry,
+  secureFetch,
+  secureFetchWithRetry,
+  initErrorBoundary,
+  withErrorBoundary,
+  reportError
+} from './utils/security.js';
+import performanceModeManager, { 
+  scheduleBatchUpdate, 
+  flushBatchUpdates, 
+  clearBatchUpdates,
+  rafDebounce,
+  rafThrottle 
+} from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
 
 // UI
@@ -255,12 +295,78 @@ window.sha256Hex = sha256Hex;
 // Helper functions
 window.wait = wait;
 
+// Security functions
+window.escapeHtml = escapeHtml;
+window.createElement = createElement;
+window.validateTransferAmount = validateTransferAmount;
+window.validateAddress = validateAddress;
+window.validatePrivateKey = validatePrivateKey;
+window.validateOrgId = validateOrgId;
+window.createSubmissionGuard = createSubmissionGuard;
+window.withSubmissionGuard = withSubmissionGuard;
+window.fetchWithTimeout = fetchWithTimeout;
+window.fetchWithRetry = fetchWithRetry;
+window.secureFetch = secureFetch;
+window.secureFetchWithRetry = secureFetchWithRetry;
+window.withErrorBoundary = withErrorBoundary;
+window.reportError = reportError;
+
+// Performance functions
+window.scheduleBatchUpdate = scheduleBatchUpdate;
+window.flushBatchUpdates = flushBatchUpdates;
+window.clearBatchUpdates = clearBatchUpdates;
+window.rafDebounce = rafDebounce;
+window.rafThrottle = rafThrottle;
+
+// Event management functions
+window.debounce = debounce;
+window.throttle = throttle;
+window.delegate = delegate;
+window.EventListenerManager = EventListenerManager;
+window.globalEventManager = globalEventManager;
+window.createEventManager = createEventManager;
+window.cleanupPageListeners = cleanupPageListeners;
+
+// State management
+window.store = store;
+window.selectUser = selectUser;
+window.selectRoute = selectRoute;
+window.selectTheme = selectTheme;
+window.selectLanguage = selectLanguage;
+window.setUser = setUser;
+window.setRoute = setRoute;
+window.setThemeState = setThemeState;
+window.setLanguageState = setLanguageState;
+window.setLoading = setLoading;
+window.setModalOpen = setModalOpen;
+
+// Key encryption functions
+window.encryptPrivateKey = encryptPrivateKey;
+window.decryptPrivateKey = decryptPrivateKey;
+window.migrateToEncrypted = migrateToEncrypted;
+window.clearLegacyKey = clearLegacyKey;
+window.getPrivateKey = getPrivateKey;
+window.verifyPassword = verifyPassword;
+window.changePassword = changePassword;
+window.checkEncryptionStatus = checkEncryptionStatus;
+window.hasEncryptedKey = hasEncryptedKey;
+window.hasLegacyKey = hasLegacyKey;
+
 // ========================================
 // Global Initialization
 // ========================================
 
 function init() {
   console.log('PanguPay - Modular Version Initializing...');
+  
+  // Initialize error boundary first (before any other code that might throw)
+  initErrorBoundary({
+    showError: (title, message) => {
+      // Use toast to show errors to users
+      showErrorToast(message, title);
+    },
+    logToConsole: true
+  });
   
   // Initialize language
   loadLanguageSetting();

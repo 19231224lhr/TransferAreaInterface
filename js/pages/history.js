@@ -5,6 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
+import { escapeHtml } from '../utils/security.js';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [
@@ -172,15 +173,15 @@ function renderTransactionList(transactions) {
     item.innerHTML = `
       <div class="history-item-header">
         <div class="history-item-type">
-          <div class="history-item-icon ${tx.type}">
+          <div class="history-item-icon ${escapeHtml(tx.type)}">
             ${tx.type === 'send' ? '↑' : '↓'}
           </div>
           <span class="history-item-label">
-            ${tx.type === 'send' ? t('history.send') : t('history.receive')} ${tx.currency}
+            ${tx.type === 'send' ? t('history.send') : t('history.receive')} ${escapeHtml(tx.currency)}
           </span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="history-item-status ${tx.status}">
+          <span class="history-item-status ${escapeHtml(tx.status)}">
             ${t(`history.status.${tx.status}`)}
           </span>
           <svg class="history-item-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -191,18 +192,18 @@ function renderTransactionList(transactions) {
       <div class="history-item-body">
         <div class="history-item-info">
           <span class="history-item-info-label">${tx.type === 'send' ? t('history.to') : t('history.from')}</span>
-          <span class="history-item-info-value">${formatAddress(tx.type === 'send' ? tx.to : tx.from)}</span>
+          <span class="history-item-info-value">${escapeHtml(formatAddress(tx.type === 'send' ? tx.to : tx.from))}</span>
         </div>
         <div class="history-item-info">
           <span class="history-item-info-label">${t('history.txHash')}</span>
-          <span class="history-item-info-value">${formatAddress(tx.txHash)}</span>
+          <span class="history-item-info-value">${escapeHtml(formatAddress(tx.txHash))}</span>
         </div>
       </div>
       <div class="history-item-footer">
-        <span class="history-item-amount ${tx.type}">
-          ${tx.type === 'send' ? '-' : '+'} ${tx.amount.toLocaleString()} ${tx.currency}
+        <span class="history-item-amount ${escapeHtml(tx.type)}">
+          ${tx.type === 'send' ? '-' : '+'} ${escapeHtml(String(tx.amount.toLocaleString()))} ${escapeHtml(tx.currency)}
         </span>
-        <span class="history-item-time">${formatDate(tx.timestamp)}</span>
+        <span class="history-item-time">${escapeHtml(formatDate(tx.timestamp))}</span>
       </div>
       <div class="history-item-detail">
         ${renderTransactionDetail(tx)}
@@ -246,15 +247,15 @@ function renderTransactionDetail(tx) {
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.amount')}</span>
-          <span class="history-detail-value">${tx.amount.toLocaleString()} ${tx.currency}</span>
+          <span class="history-detail-value">${escapeHtml(String(tx.amount.toLocaleString()))} ${escapeHtml(tx.currency)}</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.gas')}</span>
-          <span class="history-detail-value">${tx.gas} PGC</span>
+          <span class="history-detail-value">${escapeHtml(String(tx.gas))} PGC</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.time')}</span>
-          <span class="history-detail-value">${new Date(tx.timestamp).toLocaleString('zh-CN')}</span>
+          <span class="history-detail-value">${escapeHtml(new Date(tx.timestamp).toLocaleString('zh-CN'))}</span>
         </div>
       </div>
     </div>
@@ -264,15 +265,15 @@ function renderTransactionDetail(tx) {
       <div class="history-detail-card">
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.from')}</span>
-          <span class="history-detail-value">${tx.from}</span>
+          <span class="history-detail-value">${escapeHtml(tx.from)}</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.to')}</span>
-          <span class="history-detail-value">${tx.to}</span>
+          <span class="history-detail-value">${escapeHtml(tx.to)}</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.guarantorOrg')}</span>
-          <span class="history-detail-value">${tx.guarantorOrg}</span>
+          <span class="history-detail-value">${escapeHtml(tx.guarantorOrg)}</span>
         </div>
       </div>
     </div>
@@ -282,22 +283,22 @@ function renderTransactionDetail(tx) {
       <div class="history-detail-card">
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.txHash')}</span>
-          <span class="history-detail-value">${tx.txHash}</span>
+          <span class="history-detail-value">${escapeHtml(tx.txHash)}</span>
         </div>
         ${tx.blockNumber ? `
           <div class="history-detail-row">
             <span class="history-detail-label">${t('history.blockNumber')}</span>
-            <span class="history-detail-value">${tx.blockNumber.toLocaleString()}</span>
+            <span class="history-detail-value">${escapeHtml(String(tx.blockNumber.toLocaleString()))}</span>
           </div>
           <div class="history-detail-row">
             <span class="history-detail-label">${t('history.confirmations')}</span>
-            <span class="history-detail-value">${tx.confirmations}</span>
+            <span class="history-detail-value">${escapeHtml(String(tx.confirmations))}</span>
           </div>
         ` : ''}
         ${tx.failureReason ? `
           <div class="history-detail-row">
             <span class="history-detail-label">${t('history.failureReason')}</span>
-            <span class="history-detail-value" style="color: #ef4444;">${tx.failureReason}</span>
+            <span class="history-detail-value" style="color: #ef4444;">${escapeHtml(tx.failureReason)}</span>
           </div>
         ` : ''}
       </div>

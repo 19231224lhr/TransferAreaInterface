@@ -60,6 +60,79 @@ export const COIN_NAMES = {
   2: 'ETH'
 };
 
+/** Coin CSS class names (for styling) */
+export const COIN_CLASSES = {
+  0: 'pgc',
+  1: 'btc',
+  2: 'eth'
+};
+
+/** Coin display colors */
+export const COIN_COLORS = {
+  0: '#10b981', // PGC - green
+  1: '#f59e0b', // BTC - orange
+  2: '#3b82f6'  // ETH - blue
+};
+
+/** Coin conversion rates to PGC */
+export const COIN_TO_PGC_RATES = {
+  0: 1,        // PGC
+  1: 1000000,  // BTC
+  2: 1000      // ETH
+};
+
+/**
+ * Get coin name by type ID
+ * @param {number} typeId - Coin type ID (0, 1, 2)
+ * @returns {string} Coin name ('PGC', 'BTC', 'ETH')
+ */
+export function getCoinName(typeId) {
+  return COIN_NAMES[typeId] || 'PGC';
+}
+
+/**
+ * Get coin CSS class by type ID
+ * @param {number} typeId - Coin type ID (0, 1, 2)
+ * @returns {string} CSS class name ('pgc', 'btc', 'eth')
+ */
+export function getCoinClass(typeId) {
+  return COIN_CLASSES[typeId] || 'pgc';
+}
+
+/**
+ * Get coin color by type ID
+ * @param {number} typeId - Coin type ID (0, 1, 2)
+ * @returns {string} Hex color code
+ */
+export function getCoinColor(typeId) {
+  return COIN_COLORS[typeId] || COIN_COLORS[0];
+}
+
+/**
+ * Convert amount to PGC equivalent
+ * @param {number} amount - Amount in original coin
+ * @param {number} typeId - Coin type ID (0, 1, 2)
+ * @returns {number} Amount in PGC equivalent
+ */
+export function convertToPGC(amount, typeId) {
+  const rate = COIN_TO_PGC_RATES[typeId] || 1;
+  return amount * rate;
+}
+
+/**
+ * Get coin info object with all properties
+ * @param {number} typeId - Coin type ID (0, 1, 2)
+ * @returns {{name: string, className: string, color: string, rate: number}}
+ */
+export function getCoinInfo(typeId) {
+  return {
+    name: getCoinName(typeId),
+    className: getCoinClass(typeId),
+    color: getCoinColor(typeId),
+    rate: COIN_TO_PGC_RATES[typeId] || 1
+  };
+}
+
 
 // ========================================
 // Exchange Rates

@@ -474,5 +474,43 @@ export default {
   'footer.allRights': '版权所有',
   'footer.privacy': '隐私政策',
   'footer.terms': '服务条款',
-  'footer.cookies': 'Cookie 政策'
+  'footer.cookies': 'Cookie 政策',
+
+  // 验证消息
+  'validation.required': '此字段为必填项',
+  'validation.amountRequired': '请输入金额',
+  'validation.amountInvalid': '无效的金额',
+  'validation.amountPositive': '金额必须大于0',
+  'validation.amountMin': '金额不能小于 {min}',
+  'validation.amountTooLarge': '金额超出安全范围',
+  'validation.amountDecimals': '最多支持 {decimals} 位小数',
+  'validation.addressRequired': '请输入地址',
+  'validation.addressLength': '地址长度必须为40位十六进制字符',
+  'validation.addressFormat': '地址格式错误，必须为十六进制字符',
+  'validation.privateKeyRequired': '请输入私钥',
+  'validation.privateKeyLength': '私钥长度必须为64位十六进制字符',
+  'validation.privateKeyFormat': '私钥格式错误，必须为十六进制字符',
+  'validation.orgIdRequired': '请输入担保组织ID',
+  'validation.orgIdFormat': '担保组织ID必须为8位数字',
+
+  // 错误消息
+  'error.unexpected': '发生意外错误',
+  'error.pleaseRefresh': '请刷新页面后重试',
+  'error.networkError': '网络错误',
+  'error.checkNetwork': '请检查网络连接后重试',
+  'error.requestTimeout': '请求超时，请重试',
+  'error.tryAgain': '请稍后重试',
+
+  // 转账相关
+  'transfer.optimizedAddresses': '检测到本次转账中有 {count} 个来源地址在本次转账中未被实际使用，已自动优化',
+  'transfer.crossChainSingleInput': '跨链交易只能有一个来源地址',
+  'transfer.crossChainMainCurrency': '跨链交易只能使用主货币',
+  'transfer.crossChainSingleOutput': '跨链交易只能有一个找零地址',
+  'transfer.mustJoinGuarantor': '跨链交易必须加入担保组织',
+  'transfer.confirmExchangeGas': '确认兑换 Gas',
+  'transfer.exchangeGasDesc': '将使用 {amount} PGC 兑换 {amount} Gas，用于本次交易。确认继续？',
+  'transfer.confirmExchange': '确认兑换',
+  'transfer.crossChainLimit': '跨链交易限制',
+  'transfer.selectChangeAddress': '请为跨链交易选择主货币找零地址',
+  'transfer.changeAddressMissing': '找零地址缺失'
 };

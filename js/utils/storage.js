@@ -2,6 +2,8 @@
  * Storage Utility Functions
  * 
  * Provides localStorage operations for accounts, profiles, and organization data.
+ * 
+ * @module utils/storage
  */
 
 import { 
@@ -12,15 +14,22 @@ import {
   GROUP_LIST 
 } from '../config/constants.js';
 
+/**
+ * @typedef {import('../types.js').User} User
+ * @typedef {import('../types.js').UserProfile} UserProfile
+ * @typedef {import('../types.js').GuarChoice} GuarChoice
+ * @typedef {import('../types.js').GuarGroup} GuarGroup
+ */
+
 // ========================================
 // Account Data
 // ========================================
 
 /**
  * Convert basic account info to full account structure
- * @param {object} basic - Basic account info
- * @param {object|null} prev - Previous account data (for merging)
- * @returns {object} Full account structure
+ * @param {Partial<User>} basic - Basic account info
+ * @param {User|null} [prev] - Previous account data (for merging)
+ * @returns {User} Full account structure
  */
 export function toAccount(basic, prev) {
   const isSame = prev && prev.accountId && basic && basic.accountId && 
@@ -75,7 +84,7 @@ export function toAccount(basic, prev) {
 
 /**
  * Load user account from localStorage
- * @returns {object|null} User account data or null if not found
+ * @returns {User|null} User account data or null if not found
  */
 export function loadUser() {
   try {
@@ -101,7 +110,8 @@ export function loadUser() {
 
 /**
  * Save user account to localStorage
- * @param {object} user - User account data to save
+ * @param {Partial<User>} user - User account data to save
+ * @returns {void}
  */
 export function saveUser(user) {
   try {

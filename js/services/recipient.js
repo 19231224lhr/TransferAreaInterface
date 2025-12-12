@@ -126,7 +126,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       <div class="recipient-amount-row">
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.amount')}</span>
-          <input id="${idBase}_val" class="input" type="number" min="0" step="any" placeholder="0.00" aria-label="金额" data-name="val">
+          <input id="${idBase}_val" class="input" type="number" min="0.00000001" step="any" placeholder="0.00" aria-label="金额" data-name="val">
         </div>
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.currency')}</span>

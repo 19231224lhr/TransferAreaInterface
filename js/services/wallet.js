@@ -12,6 +12,8 @@ import { updateWalletChart } from '../ui/charts.js';
 import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
 import { importFromPrivHex } from './account.js';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
+import { escapeHtml } from '../utils/security.js';
+import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants.js';
 
 /**
  * Update wallet brief display (count and list)
@@ -36,9 +38,9 @@ export function updateWalletBrief() {
       brief.innerHTML = addrs.slice(0, 3).map(addr => {
         const meta = u.wallet.addressMsg[addr] || {};
         const typeId = Number(meta.type || 0);
-        const coinType = typeId === 1 ? 'BTC' : (typeId === 2 ? 'ETH' : 'PGC');
+        const coinType = getCoinName(typeId);
         const shortAddr = addr.length > 12 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
-        return `<div class="wallet-brief-item"><span class="wallet-brief-addr">${shortAddr}</span><span class="wallet-brief-coin">${coinType}</span></div>`;
+        return `<div class="wallet-brief-item"><span class="wallet-brief-addr">${escapeHtml(shortAddr)}</span><span class="wallet-brief-coin">${escapeHtml(coinType)}</span></div>`;
       }).join('');
     }
   }
@@ -176,16 +178,16 @@ export function renderWallet() {
     const typeId0 = Number(meta && meta.type !== undefined ? meta.type : 0);
     const amtCash0 = Number((meta && meta.value && meta.value.utxoValue) || 0);
     const gas0 = readAddressInterest(meta);
-    const coinType = typeId0 === 1 ? 'BTC' : (typeId0 === 2 ? 'ETH' : 'PGC');
-    const coinClass = typeId0 === 1 ? 'btc' : (typeId0 === 2 ? 'eth' : 'pgc');
+    const coinType = getCoinName(typeId0);
+    const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
 
     item.innerHTML = `
       <div class="addr-card-summary">
-        <div class="addr-card-avatar coin--${coinClass}">${coinType}</div>
+        <div class="addr-card-avatar coin--${coinClass}">${escapeHtml(coinType)}</div>
         <div class="addr-card-main">
-          <span class="addr-card-hash" title="${a}">${shortAddr}</span>
-          <span class="addr-card-balance">${amtCash0} ${coinType}</span>
+          <span class="addr-card-hash" title="${escapeHtml(a)}">${escapeHtml(shortAddr)}</span>
+          <span class="addr-card-balance">${escapeHtml(String(amtCash0))} ${escapeHtml(coinType)}</span>
         </div>
         <div class="addr-card-arrow">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -195,22 +197,22 @@ export function renderWallet() {
         <div class="addr-card-detail-inner">
           <div class="addr-detail-row">
             <span class="addr-detail-label">${t('address.fullAddress')}</span>
-            <span class="addr-detail-value">${a}</span>
+            <span class="addr-detail-value">${escapeHtml(a)}</span>
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">${t('address.balance')}</span>
-            <span class="addr-detail-value">${amtCash0} ${coinType}</span>
+            <span class="addr-detail-value">${escapeHtml(String(amtCash0))} ${escapeHtml(coinType)}</span>
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">GAS</span>
-            <span class="addr-detail-value gas">${gas0}</span>
+            <span class="addr-detail-value gas">${escapeHtml(String(gas0))}</span>
           </div>
           <div class="addr-card-actions">
-            <button class="addr-action-btn addr-action-btn--primary btn-add" data-addr="${a}" title="${t('address.add')}">
+            <button class="addr-action-btn addr-action-btn--primary btn-add" data-addr="${escapeHtml(a)}" title="${t('address.add')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               ${t('address.add')}
             </button>
-            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-addr="${a}" title="${t('address.clear')}">
+            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-addr="${escapeHtml(a)}" title="${t('address.clear')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               ${t('address.clear')}
             </button>
@@ -399,7 +401,7 @@ function handleExportPrivateKey(address, menu) {
   
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
-    if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${priv}</code>`; }
+    if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${escapeHtml(priv)}</code>`; }
   } else {
     if (title) title.textContent = t('wallet.exportFailed');
     if (text) { text.classList.add('tip--error'); text.textContent = t('wallet.noPrivateKey'); }
@@ -525,7 +527,7 @@ export function handleAddToAddress(address) {
   updateTotalGasBadge(u);
 
   // Update UI
-  const coinType = typeId === 1 ? 'BTC' : (typeId === 2 ? 'ETH' : 'PGC');
+  const coinType = getCoinName(typeId);
   
   // Show Toast
   showMiniToast(`+${inc} ${coinType}`, 'success');
@@ -597,7 +599,7 @@ export function handleZeroAddress(address) {
   
   // Update UI
   const typeId = Number(found && found.type !== undefined ? found.type : 0);
-  const coinType = typeId === 1 ? 'BTC' : (typeId === 2 ? 'ETH' : 'PGC');
+  const coinType = getCoinName(typeId);
   
   // Show Toast
   showMiniToast(t('address.clear'), 'info');
@@ -633,7 +635,7 @@ export function handleZeroAddress(address) {
 function updateAddressCardDisplay(address, found) {
   const key = String(address).toLowerCase();
   const typeId = Number(found && found.type !== undefined ? found.type : 0);
-  const coinType = typeId === 1 ? 'BTC' : (typeId === 2 ? 'ETH' : 'PGC');
+  const coinType = getCoinName(typeId);
   const balance = Number((found && found.value && found.value.utxoValue) || 0);
   const gas = Number(found.estInterest || found.gas || 0);
   
@@ -953,7 +955,7 @@ function fillChange() {
   const optsBTC = getAddrsByType(1);
   const optsETH = getAddrsByType(2);
 
-  const buildOptions = (opts) => opts.map(a => `<option value="${a}">${a}</option>`).join('');
+  const buildOptions = (opts) => opts.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
 
   if (chPGC) chPGC.innerHTML = buildOptions(optsPGC);
   if (chBTC) chBTC.innerHTML = buildOptions(optsBTC);
@@ -973,7 +975,7 @@ function fillChange() {
       return;
     }
 
-    if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${a}"><code class="break">${a}</code></div>`).join('');
+    if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${escapeHtml(a)}"><code class="break">${escapeHtml(a)}</code></div>`).join('');
 
     // Preserve existing selection if valid, otherwise select first
     const currentVal = hidden ? hidden.value : '';
@@ -1011,12 +1013,10 @@ export function rebuildAddrList() {
     const tId = Number(meta && meta.type !== undefined ? meta.type : 0);
     const amt = Number((meta && meta.value && meta.value.utxoValue) || 0);
     
-    // Coin icons and colors
-    const coinColors = { 0: 'pgc', 1: 'btc', 2: 'eth' };
-    const coinNames = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
-    
-    const color = coinColors[tId] || 'pgc';
-    const coinName = coinNames[tId] || 'PGC';
+    // Coin icons and colors - use centralized config
+    const coinInfo = getCoinInfo(tId);
+    const color = coinInfo.className;
+    const coinName = coinInfo.name;
     const coinLetter = coinName.charAt(0);
     const shortAddr = a;
     
@@ -1024,20 +1024,20 @@ export function rebuildAddrList() {
     label.className = `src-addr-item item-type-${color}`;
     label.dataset.addr = a;
     label.innerHTML = `
-      <input type="checkbox" value="${a}">
+      <input type="checkbox" value="${escapeHtml(a)}">
       <div class="item-backdrop"></div>
       
       <div class="item-content">
         <div class="item-left">
-          <div class="coin-icon coin-icon--${color}">${coinLetter}</div>
+          <div class="coin-icon coin-icon--${escapeHtml(color)}">${escapeHtml(coinLetter)}</div>
           <div class="addr-info">
-            <span class="addr-text" title="${a}">${shortAddr}</span>
-            <span class="coin-name-tiny">${coinName}</span>
+            <span class="addr-text" title="${escapeHtml(a)}">${escapeHtml(shortAddr)}</span>
+            <span class="coin-name-tiny">${escapeHtml(coinName)}</span>
           </div>
         </div>
         
         <div class="item-right">
-          <span class="amount-num" title="${amt}">${amt}</span>
+          <span class="amount-num" title="${escapeHtml(String(amt))}">${escapeHtml(String(amt))}</span>
           <div class="check-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>

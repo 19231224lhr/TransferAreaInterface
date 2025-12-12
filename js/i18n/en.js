@@ -474,5 +474,43 @@ export default {
   'footer.allRights': 'All rights reserved',
   'footer.privacy': 'Privacy',
   'footer.terms': 'Terms',
-  'footer.cookies': 'Cookies'
+  'footer.cookies': 'Cookies',
+
+  // Validation messages
+  'validation.required': 'This field is required',
+  'validation.amountRequired': 'Please enter amount',
+  'validation.amountInvalid': 'Invalid amount',
+  'validation.amountPositive': 'Amount must be greater than 0',
+  'validation.amountMin': 'Amount cannot be less than {min}',
+  'validation.amountTooLarge': 'Amount exceeds safe range',
+  'validation.amountDecimals': 'Maximum {decimals} decimal places allowed',
+  'validation.addressRequired': 'Please enter address',
+  'validation.addressLength': 'Address must be 40 hexadecimal characters',
+  'validation.addressFormat': 'Invalid address format, must be hexadecimal',
+  'validation.privateKeyRequired': 'Please enter private key',
+  'validation.privateKeyLength': 'Private key must be 64 hexadecimal characters',
+  'validation.privateKeyFormat': 'Invalid private key format, must be hexadecimal',
+  'validation.orgIdRequired': 'Please enter guarantor organization ID',
+  'validation.orgIdFormat': 'Guarantor organization ID must be 8 digits',
+
+  // Error messages
+  'error.unexpected': 'An unexpected error occurred',
+  'error.pleaseRefresh': 'Please refresh the page and try again',
+  'error.networkError': 'Network error',
+  'error.checkNetwork': 'Please check your network connection and try again',
+  'error.requestTimeout': 'Request timed out, please try again',
+  'error.tryAgain': 'Please try again later',
+
+  // Transfer related
+  'transfer.optimizedAddresses': 'Detected {count} source addresses not used in this transfer, automatically optimized',
+  'transfer.crossChainSingleInput': 'Cross-chain transactions can only have one source address',
+  'transfer.crossChainMainCurrency': 'Cross-chain transactions can only use main currency',
+  'transfer.crossChainSingleOutput': 'Cross-chain transactions can only have one change address',
+  'transfer.mustJoinGuarantor': 'Must join guarantor group for cross-chain transactions',
+  'transfer.confirmExchangeGas': 'Confirm Gas Exchange',
+  'transfer.exchangeGasDesc': 'Will use {amount} PGC to exchange for {amount} Gas for this transaction. Confirm?',
+  'transfer.confirmExchange': 'Confirm Exchange',
+  'transfer.crossChainLimit': 'Cross-chain Transaction Limit',
+  'transfer.selectChangeAddress': 'Please select main currency change address for cross-chain transaction',
+  'transfer.changeAddressMissing': 'Change address missing'
 };
