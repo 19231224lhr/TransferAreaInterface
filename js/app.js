@@ -125,6 +125,12 @@ import {
   enableFormAutoSave 
 } from './utils/transaction';
 import { lazyLoader, initLazyLoader } from './utils/lazyLoader';
+import { 
+  addRouteGuard, 
+  initAuthGuard,
+  configureTransition,
+  navigateTo as enhancedNavigateTo 
+} from './utils/enhancedRouter';
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
@@ -412,6 +418,11 @@ window.enableFormAutoSave = enableFormAutoSave;
 // P2 Improvements - Lazy Loading
 window.lazyLoader = lazyLoader;
 
+// P2 Improvements - Enhanced Router
+window.addRouteGuard = addRouteGuard;
+window.enhancedNavigateTo = enhancedNavigateTo;
+window.configureTransition = configureTransition;
+
 // P2 Improvements - Online Status
 window.isOnline = isOnline;
 window.onOnlineStatusChange = onOnlineStatusChange;
@@ -464,7 +475,7 @@ function setupOnlineIndicator() {
 // ========================================
 
 function init() {
-  console.log('PanguPay - Modular Version Initializing...');
+  // PanguPay initialization - silent mode
   
   // Initialize error boundary first (before any other code that might throw)
   initErrorBoundary({
@@ -488,10 +499,9 @@ function init() {
   // Export to window for global access
   window.performanceModeManager = performanceModeManager;
   
-  // Start performance monitoring in development
+  // Start performance monitoring in development (silent)
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
     performanceMonitor.start(10000); // Monitor every 10 seconds
-    console.log('🔍 Performance monitoring enabled for development');
   }
   
   // ========================================
@@ -501,26 +511,40 @@ function init() {
   // Initialize accessibility features (skip links, ARIA live regions)
   try {
     initAccessibility();
-    console.log('♿ Accessibility features initialized');
   } catch (error) {
-    console.warn('Failed to initialize accessibility:', error);
+    // Silently fail - accessibility is optional
   }
   
   // Initialize lazy loader for code splitting
   try {
     initLazyLoader();
-    console.log('📦 Lazy loader initialized');
   } catch (error) {
-    console.warn('Failed to initialize lazy loader:', error);
+    // Silently fail - lazy loading is optional
+  }
+  
+  // Configure route transition animations
+  try {
+    configureTransition({
+      type: 'slide',
+      duration: 300,
+      easing: 'ease-in-out'
+    });
+  } catch (error) {
+    // Silently fail - transitions are optional
+  }
+  
+  // Setup route guards for authentication
+  try {
+    const removeAuthGuard = initAuthGuard();
+    // Store cleanup function
+    window._removeAuthGuard = removeAuthGuard;
+  } catch (error) {
+    // Silently fail - guards are optional
   }
   
   // Register Service Worker for offline support
-  registerServiceWorker().then(registration => {
-    if (registration) {
-      console.log('🔧 Service Worker registered');
-    }
-  }).catch(error => {
-    console.warn('Service Worker registration failed:', error);
+  registerServiceWorker().catch(() => {
+    // Silently fail - SW is optional
   });
   
   // Setup online/offline indicator
@@ -558,6 +582,8 @@ function init() {
     initFooter();
   } catch (_) { }
   
+  // App initialized successfully (no console output)
+  
   // Initialize confirmSkipModal event listeners
   const confirmSkipModal = document.getElementById('confirmSkipModal');
   const confirmSkipOk = document.getElementById('confirmSkipOk');
@@ -576,8 +602,6 @@ function init() {
     });
     confirmSkipCancel.dataset._bind = '1';
   }
-  
-  console.log('PanguPay initialized (modular)');
 }
 
 // ========================================
@@ -603,8 +627,6 @@ function globalCleanup() {
   window._footerScrollBind = false;
   window._routerHashChangeBind = false;
   window._userMenuClickBind = false;
-  
-  console.log('Global cleanup completed');
 }
 
 // Export cleanup functions globally

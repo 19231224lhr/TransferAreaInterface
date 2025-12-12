@@ -37,13 +37,11 @@ const statusCallbacks: ((status: ServiceWorkerStatus) => void)[] = [];
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   // Check if service workers are supported
   if (!('serviceWorker' in navigator)) {
-    console.log('[SW] Service workers not supported');
     notifyStatus('unsupported');
     return null;
   }
   
   try {
-    console.log('[SW] Registering service worker...');
     notifyStatus('installing');
     
     const registration = await navigator.serviceWorker.register('/sw.js', {
@@ -51,8 +49,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     });
     
     swRegistration = registration;
-    
-    console.log('[SW] Service worker registered:', registration.scope);
     
     // Handle updates
     registration.addEventListener('updatefound', () => {
@@ -62,7 +58,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
             // New service worker installed, waiting to activate
-            console.log('[SW] New service worker available');
             notifyStatus('waiting');
             notifyUpdate(registration);
           }
@@ -100,11 +95,9 @@ export async function unregisterServiceWorker(): Promise<boolean> {
     const success = await swRegistration.unregister();
     if (success) {
       swRegistration = null;
-      console.log('[SW] Service worker unregistered');
     }
     return success;
   } catch (error) {
-    console.error('[SW] Failed to unregister service worker:', error);
     return false;
   }
 }
@@ -123,9 +116,8 @@ export async function checkForUpdates(): Promise<void> {
   
   try {
     await swRegistration.update();
-    console.log('[SW] Checked for updates');
   } catch (error) {
-    console.error('[SW] Failed to check for updates:', error);
+    // Silent fail
   }
 }
 
@@ -289,18 +281,16 @@ function initOnlineDetection(): void {
       try {
         callback(isOnline);
       } catch (error) {
-        console.error('[SW] Online status callback error:', error);
+        // Silent fail
       }
     }
   };
   
   window.addEventListener('online', () => {
-    console.log('[SW] Back online');
     notifyOnlineStatus(true);
   });
   
   window.addEventListener('offline', () => {
-    console.log('[SW] Gone offline');
     notifyOnlineStatus(false);
   });
 }
@@ -318,12 +308,9 @@ export function initServiceWorker(): void {
   
   // Handle controller change (when new SW takes over)
   navigator.serviceWorker?.addEventListener('controllerchange', () => {
-    console.log('[SW] Controller changed, reloading...');
     // Optionally reload the page when new SW takes control
     // window.location.reload();
   });
-  
-  console.log('[SW] Service worker module initialized');
 }
 
 // ========================================

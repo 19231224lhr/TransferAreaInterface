@@ -82,9 +82,13 @@ async function handleImport() {
   const inputEl = document.getElementById('importPrivHex');
   const priv = inputEl ? inputEl.value.trim() : '';
   
+  // Validate input manually (FormValidator requires a form element)
   if (!priv) {
     showErrorToast(t('modal.pleaseEnterPrivateKey'), t('modal.inputError'));
-    if (inputEl) inputEl.focus();
+    if (inputEl) {
+      inputEl.classList.add('is-invalid');
+      inputEl.focus();
+    }
     return;
   }
   
@@ -92,8 +96,17 @@ async function handleImport() {
   const normalized = priv.replace(/^0x/i, '');
   if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
     showErrorToast(t('modal.privateKeyFormatError'), t('modal.formatError'));
-    if (inputEl) inputEl.focus();
+    if (inputEl) {
+      inputEl.classList.add('is-invalid');
+      inputEl.focus();
+    }
     return;
+  }
+  
+  // Clear any previous error state
+  if (inputEl) {
+    inputEl.classList.remove('is-invalid');
+    inputEl.classList.add('is-valid');
   }
   
   if (importBtn) importBtn.disabled = true;

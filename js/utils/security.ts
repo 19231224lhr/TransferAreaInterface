@@ -624,8 +624,6 @@ export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
       });
     }
   }, true);
-  
-  console.log('Error boundary initialized');
 }
 
 /**

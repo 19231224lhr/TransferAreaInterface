@@ -82,27 +82,25 @@ npm run build
 ```
 TransferAreaInterface/
 ├── index.html                 # 主页面入口
-├── package.json               # npm 配置 (开发依赖)
+├── sw.js                      # Service Worker (离线支持)
+├── package.json               # npm 配置
 ├── vite.config.js             # Vite 构建配置
 ├── tsconfig.json              # TypeScript 配置
 ├── jsconfig.json              # JavaScript 类型检查配置
+├── IMPROVEMENT_REPORT.md      # 优化报告文档
 ├── .gitignore                 # Git 忽略配置
 ├── css/                       # 模块化样式文件
 │   ├── base.css              # 基础样式与 CSS 变量
 │   ├── animations.css        # 动画效果
 │   ├── components.css        # 通用组件样式
+│   ├── p2-improvements.css   # P2 优化样式（A11y、Loading、表单验证等）
 │   ├── header.css            # 顶部导航栏
 │   ├── welcome.css           # 欢迎页样式
 │   ├── wallet.css            # 钱包主页样式
 │   ├── transaction.css       # 转账表单样式
-│   ├── login.css             # 登录页样式
-│   ├── new-user.css          # 注册页样式
-│   ├── import-wallet.css     # 导入钱包样式
-│   ├── join-group.css        # 加入担保组织样式
-│   ├── entry.css             # 入口页样式
 │   ├── toast.css             # Toast 提示样式
-│   └── utilities.css         # 工具类样式
-├── js/                        # 前端 JavaScript/TypeScript 代码
+│   └── ...                   # 其他页面样式
+├── js/                        # 前端代码 (JS/TS 混合)
 │   ├── app.js                # 应用入口
 │   ├── router.js             # 路由管理
 │   ├── types.js              # 类型定义 (JSDoc)
@@ -110,19 +108,44 @@ TransferAreaInterface/
 │   ├── config/
 │   │   └── constants.ts      # 配置常量 (TypeScript)
 │   ├── i18n/                 # 国际化
-│   │   ├── index.js
-│   │   ├── zh-CN.js
-│   │   └── en.js
+│   │   ├── index.js          # i18n 核心
+│   │   ├── zh-CN.js          # 简体中文翻译
+│   │   └── en.js             # 英文翻译
 │   ├── pages/                # 页面组件
+│   │   ├── welcome.js        # 欢迎页
+│   │   ├── login.js          # 登录页
+│   │   ├── newUser.js        # 注册页
+│   │   ├── main.js           # 钱包主页
+│   │   ├── history.js        # 历史记录
+│   │   └── ...               # 其他页面
 │   ├── services/             # 业务逻辑服务
+│   │   ├── account.ts        # 账户服务 (TypeScript)
+│   │   ├── transaction.ts    # 交易服务 (TypeScript)
+│   │   ├── transfer.ts       # 转账服务 (TypeScript)
+│   │   ├── wallet.js         # 钱包服务
+│   │   └── ...
 │   ├── ui/                   # UI 组件
+│   │   ├── header.js         # 头部组件
+│   │   ├── footer.js         # 底部组件
+│   │   ├── modal.js          # 模态框
+│   │   ├── toast.js          # Toast 提示
+│   │   ├── charts.js         # 图表组件
+│   │   └── ...
 │   └── utils/                # 工具函数
 │       ├── crypto.ts         # 加密工具 (TypeScript)
 │       ├── keyEncryption.ts  # 密钥加密 (TypeScript)
-│       ├── security.js       # 安全验证
-│       ├── storage.js        # 存储管理
-│       └── store.js          # 状态管理
-├── backend/                   # Go 后端代码
+│       ├── security.ts       # 安全验证 (TypeScript)
+│       ├── storage.ts        # 存储管理 (TypeScript)
+│       ├── accessibility.ts  # A11y 工具 (TypeScript)
+│       ├── loading.ts        # 加载管理 (TypeScript)
+│       ├── formValidator.ts  # 表单验证 (TypeScript)
+│       ├── transaction.ts    # 事务操作 (TypeScript)
+│       ├── enhancedRouter.ts # 增强路由 (TypeScript)
+│       ├── serviceWorker.ts  # Service Worker 管理 (TypeScript)
+│       ├── lazyLoader.ts     # 懒加载 (TypeScript)
+│       ├── store.js          # 状态管理
+│       └── ...
+├── backend/                   # Go 后端代码 (交易构建逻辑)
 │   ├── Account.go            # 账户与钱包结构体
 │   ├── NewAccount.go         # 创建新账户
 │   ├── GetAddressMsg.go      # 查询地址信息
@@ -130,29 +153,30 @@ TransferAreaInterface/
 │   ├── SendTX.go             # 构建与发送交易
 │   ├── Transaction.go        # 交易结构体定义
 │   ├── UTXO.go               # UTXO 数据结构
-│   ├── TXCer.go              # 交易凭证
-│   ├── core.go               # 通用工具函数
 │   ├── core/                 # 核心工具包
 │   │   ├── keyformat.go      # 密钥格式转换
 │   │   └── util.go           # 通用工具
 │   └── cmd/
 │       └── webserver/
-│           └── main.go       # Web 服务器入口
+│           └── main.go       # Web 服务器 (仅用于测试)
 ├── assets/                    # 静态资源
-├── dist/                      # 构建输出 (git ignored)
-├── node_modules/              # npm 依赖 (git ignored)
+│   └── logo.png
+├── dist/                      # 构建输出 (npm run build)
+├── node_modules/              # npm 依赖
 └── tests/                     # 测试文件
 ```
 
 ### 技术栈
 
-| 层级 | 技术 | 说明 |
-|------|------|------|
-| 前端框架 | Vanilla JS + TypeScript | 无框架，原生开发 |
-| 构建工具 | Vite 5.4 | 快速热更新，ES Module 支持 |
-| 类型系统 | TypeScript 5.9 | 渐进式类型化，JS/TS 混合 |
-| 后端 | Go 1.18+ | UTXO 交易逻辑 |
-| 静态服务 | Go net/http | 生产环境静态资源服务 |
+| 层级 | 技术 | 版本 | 说明 |
+|------|------|------|------|
+| 前端框架 | Vanilla JS + TypeScript | - | 无框架，原生开发，渐进式 TS 迁移 |
+| 构建工具 | Vite | 5.4.21 | 快速热更新，ES Module 支持 |
+| 类型系统 | TypeScript | 5.9.3 | 严格类型检查，JS/TS 混合 |
+| 样式 | CSS3 | - | 模块化 CSS，支持深色模式 |
+| 后端 | Go | 1.18+ | UTXO 交易逻辑（仅用于参考） |
+| 国际化 | 自研 i18n | - | 支持中英文，260+ 翻译键 |
+| 离线支持 | Service Worker | - | PWA 支持，离线缓存 |
 
 ---
 
@@ -166,6 +190,7 @@ TransferAreaInterface/
 - **毛玻璃效果**：使用 `backdrop-filter: blur()` 实现半透明模糊背景
 - **柔和阴影**：多层阴影营造悬浮卡片效果
 - **流畅动画**：贝塞尔曲线过渡与入场动画
+- **深色模式**：支持浅色/深色主题切换
 
 ### 核心页面与路由
 
@@ -179,10 +204,15 @@ TransferAreaInterface/
 | `#/join-group` | 担保组织 | 搜索并加入担保组织 |
 | `#/inquiry-main` | 确认页 | 账户与担保组织信息确认 |
 | `#/main` | 钱包主页 | 资产概览与转账功能 |
+| `#/history` | 历史记录 | 交易历史查询 |
+| `#/group-detail` | 组织详情 | 担保组织信息展示 |
+| `#/profile` | 个人信息 | 账户设置、语言切换、主题切换 |
 
-### 国际化 (i18n)
+### 核心功能特性
 
-前端实现了完整的双语国际化系统，支持简体中文（zh-CN）和英语（en）：
+#### 🌐 国际化 (i18n)
+
+完整的双语国际化系统，支持简体中文（zh-CN）和英语（en）：
 
 - **260+ 翻译键**：覆盖所有页面、组件和交互元素
 - **核心函数**：`t(key, params)` 翻译函数，支持参数替换
@@ -191,19 +221,44 @@ TransferAreaInterface/
 - **自动更新**：路由切换时自动更新所有翻译元素
 - **语言选择器**：个人信息页面提供 🇨🇳 简体中文 / 🇺🇸 English 切换
 
-**翻译键结构**：
-```
-common.*      - 通用UI元素（按钮、标签）
-header.*      - 头部和导航
-welcome.*     - 欢迎页
-wallet.*      - 钱包管理
-transfer.*    - 转账表单
-modal.*       - 模态对话框
-toast.*       - Toast通知
-profile.*     - 个人信息设置
-```
+#### 🔐 安全特性
 
-### 前端核心功能
+- **私钥加密存储**：使用 Web Crypto API 的 AES-256-GCM 加密
+- **PBKDF2 密钥派生**：100,000 次迭代，抗暴力破解
+- **XSS 防护**：输入转义、DOM 安全创建
+- **CSRF 防护**：安全请求封装、Token 验证
+- **输入验证**：地址、私钥、金额等统一验证
+
+#### ♿ 可访问性 (A11y)
+
+- **ARIA 支持**：完整的 ARIA 标签和角色
+- **键盘导航**：支持 Tab、Enter、Escape 等快捷键
+- **屏幕阅读器**：实时播报重要操作
+- **跳过链接**：快速导航到主要内容
+- **焦点管理**：模态框焦点陷阱、自动聚焦
+- **颜色对比**：符合 WCAG 2.1 AA 标准
+
+#### 🚀 性能优化
+
+- **代码分割**：懒加载页面模块，减少首屏加载时间
+- **Service Worker**：静态资源缓存，支持离线访问
+- **RAF 批量更新**：减少 DOM 重排，提升渲染性能
+- **事件管理**：防抖节流、事件委托、自动清理
+- **内存优化**：页面切换时清理监听器和定时器
+
+#### 📦 状态管理
+
+- **响应式 Store**：集中管理全局状态（用户、路由、主题、语言）
+- **订阅机制**：状态变化自动通知订阅者
+- **持久化**：关键状态自动保存到 localStorage
+- **选择器模式**：`selectUser`、`selectTheme` 等选择器函数
+
+#### 🎨 组件化开发
+
+- **模块化 CSS**：按功能拆分样式文件，易于维护
+- **可复用组件**：Toast、Modal、Loading、Charts 等
+- **事件系统**：统一的事件管理和清理机制
+- **表单验证**：声明式验证规则，实时反馈
 
 #### 1. 密钥生成与管理
 
@@ -280,7 +335,11 @@ showInfoToast('提示信息');
 
 ## 🔧 后端架构
 
+> **注意**：后端 Go 代码仅作为 UTXO 交易构建逻辑的参考实现，不是必需的运行组件。前端钱包已实现完整的密钥管理和交易构建功能。
+
 ### 核心数据结构
+
+后端 Go 代码展示了区块链钱包的核心数据模型，前端 TypeScript/JavaScript 代码与之保持一致：
 
 #### Account (账户)
 
@@ -447,67 +506,51 @@ err = account.SendTX(tx)
 `963f75db05b159d60bb1b554bed2c204dd66e0033dc95fe19d77c4745980ff03`
 - 对应地址：
 `b0b43b638f4bcc0fb941fca7e7b26d15612eb64d`
----
-
-## 🔐 API 接口
-
-### POST /api/account/new
-
-创建新账户，返回密钥对与地址信息。
-
-**响应示例**：
-```json
-{
-  "accountId": "12345678",
-  "address": "5bd548d76dcb3f9db1d213db01464406bef5dd09",
-  "privHex": "a1b2c3d4...",
-  "pubXHex": "e5f6a7b8...",
-  "pubYHex": "c9d0e1f2..."
-}
-```
-
-### POST /api/account/from-priv
-
-通过私钥恢复账户信息。
-
-**请求体**：
-```json
-{
-  "privHex": "a1b2c3d4..."
-}
-```
 
 ---
 
-## 🛡️ 安全建议
+## 🛡️ 安全特性
 
-生产环境部署时请注意：
+本项目实现了完整的安全防护措施：
 
-1. **私钥保护**：不直接暴露或保存明文私钥
-2. **密钥不可导出**：将 WebCrypto 密钥设为 `extractable: false`
-3. **加密存储**：使用 IndexedDB 加密存储敏感信息
-4. **HTTPS**：确保在 HTTPS 环境下运行
-5. **备份机制**：提供加密的密钥导入/导出功能
+1. **私钥加密存储**：使用 AES-256-GCM 加密，PBKDF2 密钥派生（100,000 次迭代）
+2. **Web Crypto API**：浏览器原生加密，密钥不可导出
+3. **XSS 防护**：所有用户输入经过转义和验证
+4. **CSRF 防护**：安全请求封装，自动添加 Token
+5. **输入验证**：统一的表单验证器，实时反馈
+6. **HTTPS 部署**：生产环境必须使用 HTTPS
+7. **Content Security Policy**：防止注入攻击
+8. **密码迁移**：自动检测并迁移明文私钥到加密存储
 
 ---
 
 ## 📝 更新日志
 
+### 2025年1月 - P2 中优先级优化
+
+- ✅ **可访问性 (A11y)**：ARIA 标签、键盘导航、屏幕阅读器支持、跳过链接
+- ✅ **Loading 状态管理**：引用计数加载器、骨架屏、进度条、元素级加载
+- ✅ **路由守卫**：认证检查、路由过渡动画、预加载、滚动管理
+- ✅ **错误恢复**：事务操作、检查点回滚、自动保存、表单草稿
+- ✅ **代码分割**：动态导入、懒加载、预加载策略、资源预取
+- ✅ **表单验证**：统一验证器、内置规则、实时反馈、A11y 集成
+- ✅ **Service Worker**：离线缓存、更新检测、在线状态监控
+
 ### 2025年1月 - TypeScript 迁移与工程化
 
 - ✅ **TypeScript 支持**：引入 TypeScript 5.9，支持 JS/TS 混合开发
 - ✅ **Vite 构建工具**：引入 Vite 5.4，提供快速热更新和构建
-- ✅ **类型安全**：关键模块 (crypto, keyEncryption, constants) 已转换为 TypeScript
+- ✅ **类型安全**：关键模块已转换为 TypeScript，提供完整类型定义
 - ✅ **开发体验**：类型检查、代码补全、错误提示
 - ✅ **构建优化**：esbuild 压缩，sourcemap 支持
 
 ### 2025年1月 - P0/P1 安全与性能优化
 
 - ✅ **国际化系统**：完整的中英文双语支持，260+ 翻译键，覆盖所有页面和组件
-- ✅ **私钥加密存储**：使用 Web Crypto API 实现 AES-GCM 加密
-- ✅ **安全防护**：XSS 防护、CSRF 防护、输入验证
+- ✅ **私钥加密存储**：使用 Web Crypto API 实现 AES-256-GCM 加密
+- ✅ **安全防护**：XSS 防护、CSRF 防护、输入验证、安全请求封装
 - ✅ **状态管理**：响应式 Store 类，支持订阅和持久化
-- ✅ **性能优化**：RAF 批量更新、内存泄漏修复
+- ✅ **性能优化**：RAF 批量更新、内存泄漏修复、事件管理优化
 - ✅ **完整的钱包转账表单**：来源地址选择、账单网格、按币种找零、交易选项与实时校验
 - ✅ **自定义币种下拉组件**：统一风格，支持 PGC/BTC/ETH Logo
 - ✅ **担保组织交互完善**：注册/导入/入口统一跳转流程，实时同步组织信息
@@ -515,6 +558,13 @@ err = account.SendTX(tx)
 - ✅ **Toast 提示系统**：四种类型提示，支持自动消失与手动关闭
 - ✅ **本地存储模块**：完整的 Account/Wallet/AddressData 结构镜像
 - ✅ **余额历史图表**：支持 PGC/BTC/ETH 切换与入场动画
+
+---
+
+## 📚 文档
+
+- [优化报告 (IMPROVEMENT_REPORT.md)](IMPROVEMENT_REPORT.md) - 详细的代码优化记录
+- [飞书文档](https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc) - 项目设计文档
 
 ---
 

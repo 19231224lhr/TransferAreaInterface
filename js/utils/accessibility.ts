@@ -601,8 +601,6 @@ export function initAccessibility(): void {
   
   // Initialize skip links
   initSkipLinks();
-  
-  console.log('Accessibility features initialized');
 }
 
 /**

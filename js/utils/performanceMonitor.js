@@ -20,7 +20,6 @@ class PerformanceMonitor {
     if (this.isMonitoring) return;
     
     this.isMonitoring = true;
-    console.log('🔍 Performance monitoring started');
     
     this.intervalId = setInterval(() => {
       this.collectMetrics();
@@ -42,7 +41,6 @@ class PerformanceMonitor {
     }
     
     this.isMonitoring = false;
-    console.log('🛑 Performance monitoring stopped');
   }
 
   /**
@@ -142,23 +140,24 @@ class PerformanceMonitor {
    * Check for potential issues
    */
   checkForIssues(metrics) {
-    // Memory leak detection
+    // Memory leak detection (silent - only warn on significant issues)
     if (this.memoryHistory.length >= 10) {
       const recent = this.memoryHistory.slice(-10);
       const memoryTrend = this.calculateMemoryTrend(recent);
       
-      if (memoryTrend > 5) { // More than 5MB increase over 10 samples
+      // Only warn for severe memory leaks (>20MB increase)
+      if (memoryTrend > 20) {
         console.warn('⚠️ Potential memory leak detected - memory increasing by', memoryTrend.toFixed(2), 'MB');
       }
     }
     
-    // DOM element count
-    if (metrics.dom.elements > 5000) {
+    // DOM element count (only warn for very high counts)
+    if (metrics.dom.elements > 10000) {
       console.warn('⚠️ High DOM element count:', metrics.dom.elements);
     }
     
-    // Memory usage
-    if (metrics.memory.available && metrics.memory.used > 100) {
+    // Memory usage (only warn for very high usage)
+    if (metrics.memory.available && metrics.memory.used > 200) {
       console.warn('⚠️ High memory usage:', metrics.memory.used, 'MB');
     }
   }

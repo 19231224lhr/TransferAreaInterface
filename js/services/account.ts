@@ -82,37 +82,194 @@ export async function newUser(): Promise<AccountData> {
 }
 
 /**
- * Import account from private key using local elliptic library
+ * Import account from private key using Web Crypto API (no external library needed)
  * @param privHex - Private key in hex format
  * @returns Account data
  */
 export async function importLocallyFromPrivHex(privHex: string): Promise<AccountData> {
-  const normalized = privHex.replace(/^0x/i, '');
+  const normalized = privHex.replace(/^0x/i, '').toLowerCase();
   
-  if (!(window as any).elliptic || !(window as any).elliptic.ec) {
-    throw new Error('Local import failed: missing elliptic library');
+  // Validate private key format (64 hex characters)
+  if (!/^[0-9a-f]{64}$/.test(normalized)) {
+    throw new Error('Private key format incorrect: must be 64 hex characters');
   }
   
-  const ec = new (window as any).elliptic.ec('p256');
-  let key: any;
+  // Convert hex to bytes
+  const privBytes = hexToBytes(normalized);
+  
+  // Create JWK for the private key
+  // P-256 curve expects 32-byte values, base64url encoded
+  const dBase64 = bytesToBase64url(privBytes);
+  
+  // Import the private key to get the public key
+  // We need to construct a valid JWK with d, x, y values
+  // For P-256, we can import with just 'd' and derive x, y
+  
   try {
-    key = ec.keyFromPrivate(normalized, 'hex');
-  } catch (e) {
-    throw new Error('Private key format incorrect or cannot be parsed');
+    // First, try to import as JWK with only 'd' parameter
+    // This requires generating a temporary key and extracting public components
+    
+    // Method: Generate a key pair, then use the private key bytes
+    // Actually Web Crypto doesn't support importing just 'd', we need x and y too
+    
+    // Alternative: Use the elliptic curve math manually or try different approach
+    // For P-256, we can use a workaround with ECDH
+    
+    // Create a JWK structure - we need to calculate x, y from d
+    // This requires elliptic curve point multiplication: (x, y) = d * G
+    
+    // Since Web Crypto doesn't expose point multiplication directly,
+    // we'll try to import using pkcs8 format instead
+    
+    // PKCS#8 structure for EC private key
+    const pkcs8Header = new Uint8Array([
+      0x30, 0x81, 0x87, // SEQUENCE, length 135
+      0x02, 0x01, 0x00, // INTEGER, version 0
+      0x30, 0x13,       // SEQUENCE, length 19
+      0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // OID 1.2.840.10045.2.1 (ecPublicKey)
+      0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // OID 1.2.840.10045.3.1.7 (prime256v1/P-256)
+      0x04, 0x6d,       // OCTET STRING, length 109
+      0x30, 0x6b,       // SEQUENCE, length 107
+      0x02, 0x01, 0x01, // INTEGER, version 1
+      0x04, 0x20        // OCTET STRING, length 32 (private key d)
+    ]);
+    
+    // We need the full PKCS#8 structure including the public key
+    // This is complex, let's try a simpler approach using the existing newUser logic
+    
+    // Generate a temporary keypair and replace the private key value conceptually
+    // Actually, the cleanest solution is to compute x,y from d using math
+    
+    // For now, let's use a pure JS implementation of P-256 point multiplication
+    // This is the secp256r1/P-256 curve
+    const result = await computePublicKeyFromPrivate(normalized);
+    
+    const uncompressedHex = '04' + result.x + result.y;
+    const uncompressed = hexToBytes(uncompressedHex);
+    
+    const sha = await crypto.subtle.digest('SHA-256', uncompressed);
+    const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
+    const accountId = generate8DigitFromInputHex(normalized);
+    
+    return { 
+      accountId, 
+      address, 
+      privHex: normalized, 
+      pubXHex: result.x, 
+      pubYHex: result.y 
+    };
+    
+  } catch (e: any) {
+    throw new Error('Private key format incorrect or cannot be parsed: ' + (e.message || e));
+  }
+}
+
+/**
+ * Compute public key (x, y) from private key using P-256 curve math
+ * Pure JavaScript implementation without external libraries
+ */
+async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string; y: string }> {
+  // P-256 curve parameters
+  const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
+  const a = BigInt('0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc');
+  const b = BigInt('0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b');
+  const Gx = BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296');
+  const Gy = BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5');
+  const n = BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551');
+  
+  const d = BigInt('0x' + privHex);
+  
+  if (d <= 0n || d >= n) {
+    throw new Error('Private key out of valid range');
   }
   
-  const pub = key.getPublic();
-  const xHex = pub.getX().toString(16).padStart(64, '0');
-  const yHex = pub.getY().toString(16).padStart(64, '0');
+  // Point multiplication: Q = d * G
+  const Q = pointMultiply(Gx, Gy, d, p, a);
   
-  const uncompressedHex = '04' + xHex + yHex;
-  const uncompressed = hexToBytes(uncompressedHex);
+  if (!Q) {
+    throw new Error('Invalid private key');
+  }
   
-  const sha = await crypto.subtle.digest('SHA-256', uncompressed as BufferSource);
-  const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
-  const accountId = generate8DigitFromInputHex(normalized);
+  // Convert to hex, pad to 64 characters
+  const xHex = Q.x.toString(16).padStart(64, '0');
+  const yHex = Q.y.toString(16).padStart(64, '0');
   
-  return { accountId, address, privHex: normalized, pubXHex: xHex, pubYHex: yHex };
+  return { x: xHex, y: yHex };
+}
+
+/**
+ * Modular inverse using extended Euclidean algorithm
+ */
+function modInverse(a: bigint, m: bigint): bigint {
+  let [old_r, r] = [a % m, m];
+  let [old_s, s] = [1n, 0n];
+  
+  while (r !== 0n) {
+    const q = old_r / r;
+    [old_r, r] = [r, old_r - q * r];
+    [old_s, s] = [s, old_s - q * s];
+  }
+  
+  return ((old_s % m) + m) % m;
+}
+
+/**
+ * Point addition on elliptic curve
+ */
+function pointAdd(
+  x1: bigint, y1: bigint, 
+  x2: bigint, y2: bigint, 
+  p: bigint, a: bigint
+): { x: bigint; y: bigint } | null {
+  if (x1 === x2 && y1 === y2) {
+    // Point doubling
+    const s = ((3n * x1 * x1 + a) * modInverse(2n * y1, p)) % p;
+    const x3 = ((s * s - 2n * x1) % p + p) % p;
+    const y3 = ((s * (x1 - x3) - y1) % p + p) % p;
+    return { x: x3, y: y3 };
+  } else {
+    // Point addition
+    const s = ((y2 - y1) * modInverse((x2 - x1 + p) % p, p)) % p;
+    const x3 = ((s * s - x1 - x2) % p + p) % p;
+    const y3 = ((s * (x1 - x3) - y1) % p + p) % p;
+    return { x: x3, y: y3 };
+  }
+}
+
+/**
+ * Scalar multiplication using double-and-add algorithm
+ */
+function pointMultiply(
+  Gx: bigint, Gy: bigint, 
+  k: bigint, 
+  p: bigint, a: bigint
+): { x: bigint; y: bigint } | null {
+  let result: { x: bigint; y: bigint } | null = null;
+  let addend: { x: bigint; y: bigint } | null = { x: Gx, y: Gy };
+  
+  while (k > 0n) {
+    if (k & 1n) {
+      if (result === null) {
+        result = addend;
+      } else if (addend) {
+        result = pointAdd(result.x, result.y, addend.x, addend.y, p, a);
+      }
+    }
+    if (addend) {
+      addend = pointAdd(addend.x, addend.y, addend.x, addend.y, p, a);
+    }
+    k >>= 1n;
+  }
+  
+  return result;
+}
+
+/**
+ * Convert bytes to base64url encoding
+ */
+function bytesToBase64url(bytes: Uint8Array): string {
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**
