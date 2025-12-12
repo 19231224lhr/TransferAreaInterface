@@ -440,16 +440,50 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     // Get user's private key for signing
     const userAddr = buildTXInfo.UserAddress[0];
     const userAddrData = addressMsg[userAddr];
-    const privHex = userAddrData?.privHex || userAccount.keys?.privHex || userAccount.privHex || '';
-    const pubXHex = userAddrData?.pubXHex || userAccount.keys?.pubXHex || userAccount.pubXHex || '';
-    const pubYHex = userAddrData?.pubYHex || userAccount.keys?.pubYHex || userAccount.pubYHex || '';
+    
+    // Debug: log key sources
+    console.log('Key sources for signing:', {
+      userAddr,
+      hasUserAddrData: !!userAddrData,
+      hasAccountKeys: !!userAccount.keys,
+      addrPrivHex: userAddrData?.privHex ? 'present' : 'missing',
+      addrPubXHex: userAddrData?.pubXHex ? 'present' : 'missing',
+      addrPubYHex: userAddrData?.pubYHex ? 'present' : 'missing',
+      keysPrivHex: userAccount.keys?.privHex ? 'present' : 'missing',
+      keysPubXHex: userAccount.keys?.pubXHex ? 'present' : 'missing',
+      keysPubYHex: userAccount.keys?.pubYHex ? 'present' : 'missing'
+    });
+    
+    // Try to get keys from multiple sources:
+    // 1. Address-specific data (for sub-wallets)
+    // 2. Account keys object (standard storage)
+    // 3. Direct account properties (legacy/fallback)
+    const privHex = userAddrData?.privHex || userAccount.keys?.privHex || (userAccount as any).privHex || '';
+    let pubXHex = userAddrData?.pubXHex || userAccount.keys?.pubXHex || (userAccount as any).pubXHex || '';
+    let pubYHex = userAddrData?.pubYHex || userAccount.keys?.pubYHex || (userAccount as any).pubYHex || '';
 
     if (!privHex) {
       throw new Error('Private key not found for signing');
     }
+    
+    // Validate private key format
+    const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
+    if (!/^[0-9a-f]{64}$/.test(normalizedPrivHex)) {
+      throw new Error('Private key format invalid: must be 64 hex characters');
+    }
+    
+    // If public key coordinates are missing or invalid, set to empty to trigger derivation
+    const validPubX = pubXHex && /^[0-9a-fA-F]{64}$/.test(pubXHex);
+    const validPubY = pubYHex && /^[0-9a-fA-F]{64}$/.test(pubYHex);
+    
+    if (!validPubX || !validPubY) {
+      console.warn('Public key coordinates missing or invalid, will be derived from private key during signing');
+      pubXHex = '';
+      pubYHex = '';
+    }
 
     // Sign transaction
-    const signature = await getTXUserSignature(tx, privHex, pubXHex, pubYHex);
+    const signature = await getTXUserSignature(tx, normalizedPrivHex, pubXHex, pubYHex);
     tx.UserSignature = {
       R: signature.r,
       S: signature.s

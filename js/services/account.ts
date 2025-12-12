@@ -94,60 +94,14 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
     throw new Error('Private key format incorrect: must be 64 hex characters');
   }
   
-  // Convert hex to bytes
-  const privBytes = hexToBytes(normalized);
-  
-  // Create JWK for the private key
-  // P-256 curve expects 32-byte values, base64url encoded
-  const dBase64 = bytesToBase64url(privBytes);
-  
-  // Import the private key to get the public key
-  // We need to construct a valid JWK with d, x, y values
-  // For P-256, we can import with just 'd' and derive x, y
-  
   try {
-    // First, try to import as JWK with only 'd' parameter
-    // This requires generating a temporary key and extracting public components
-    
-    // Method: Generate a key pair, then use the private key bytes
-    // Actually Web Crypto doesn't support importing just 'd', we need x and y too
-    
-    // Alternative: Use the elliptic curve math manually or try different approach
-    // For P-256, we can use a workaround with ECDH
-    
-    // Create a JWK structure - we need to calculate x, y from d
-    // This requires elliptic curve point multiplication: (x, y) = d * G
-    
-    // Since Web Crypto doesn't expose point multiplication directly,
-    // we'll try to import using pkcs8 format instead
-    
-    // PKCS#8 structure for EC private key
-    const pkcs8Header = new Uint8Array([
-      0x30, 0x81, 0x87, // SEQUENCE, length 135
-      0x02, 0x01, 0x00, // INTEGER, version 0
-      0x30, 0x13,       // SEQUENCE, length 19
-      0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, // OID 1.2.840.10045.2.1 (ecPublicKey)
-      0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, // OID 1.2.840.10045.3.1.7 (prime256v1/P-256)
-      0x04, 0x6d,       // OCTET STRING, length 109
-      0x30, 0x6b,       // SEQUENCE, length 107
-      0x02, 0x01, 0x01, // INTEGER, version 1
-      0x04, 0x20        // OCTET STRING, length 32 (private key d)
-    ]);
-    
-    // We need the full PKCS#8 structure including the public key
-    // This is complex, let's try a simpler approach using the existing newUser logic
-    
-    // Generate a temporary keypair and replace the private key value conceptually
-    // Actually, the cleanest solution is to compute x,y from d using math
-    
-    // For now, let's use a pure JS implementation of P-256 point multiplication
-    // This is the secp256r1/P-256 curve
+    // Use pure JS implementation of P-256 point multiplication to derive public key
     const result = await computePublicKeyFromPrivate(normalized);
     
     const uncompressedHex = '04' + result.x + result.y;
     const uncompressed = hexToBytes(uncompressedHex);
     
-    const sha = await crypto.subtle.digest('SHA-256', uncompressed);
+    const sha = await crypto.subtle.digest('SHA-256', uncompressed as BufferSource);
     const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
     const accountId = generate8DigitFromInputHex(normalized);
     
@@ -169,15 +123,17 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
  * Pure JavaScript implementation without external libraries
  */
 async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string; y: string }> {
+  // Normalize private key hex
+  const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
+  
   // P-256 curve parameters
   const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
   const a = BigInt('0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc');
-  const b = BigInt('0x5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b');
   const Gx = BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296');
   const Gy = BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5');
   const n = BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551');
   
-  const d = BigInt('0x' + privHex);
+  const d = BigInt('0x' + normalizedPrivHex);
   
   if (d <= 0n || d >= n) {
     throw new Error('Private key out of valid range');
@@ -201,7 +157,8 @@ async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string
  * Modular inverse using extended Euclidean algorithm
  */
 function modInverse(a: bigint, m: bigint): bigint {
-  let [old_r, r] = [a % m, m];
+  // Handle negative inputs by normalizing to positive
+  let [old_r, r] = [((a % m) + m) % m, m];
   let [old_s, s] = [1n, 0n];
   
   while (r !== 0n) {
@@ -214,6 +171,13 @@ function modInverse(a: bigint, m: bigint): bigint {
 }
 
 /**
+ * Modular operation helper - ensures result is always positive
+ */
+function mod(a: bigint, m: bigint): bigint {
+  return ((a % m) + m) % m;
+}
+
+/**
  * Point addition on elliptic curve
  */
 function pointAdd(
@@ -223,15 +187,19 @@ function pointAdd(
 ): { x: bigint; y: bigint } | null {
   if (x1 === x2 && y1 === y2) {
     // Point doubling
-    const s = ((3n * x1 * x1 + a) * modInverse(2n * y1, p)) % p;
-    const x3 = ((s * s - 2n * x1) % p + p) % p;
-    const y3 = ((s * (x1 - x3) - y1) % p + p) % p;
+    const numerator = mod(3n * x1 * x1 + a, p);
+    const denominator = mod(2n * y1, p);
+    const s = mod(numerator * modInverse(denominator, p), p);
+    const x3 = mod(s * s - 2n * x1, p);
+    const y3 = mod(s * (x1 - x3) - y1, p);
     return { x: x3, y: y3 };
   } else {
     // Point addition
-    const s = ((y2 - y1) * modInverse((x2 - x1 + p) % p, p)) % p;
-    const x3 = ((s * s - x1 - x2) % p + p) % p;
-    const y3 = ((s * (x1 - x3) - y1) % p + p) % p;
+    const dx = mod(x2 - x1, p);
+    const dy = mod(y2 - y1, p);
+    const s = mod(dy * modInverse(dx, p), p);
+    const x3 = mod(s * s - x1 - x2, p);
+    const y3 = mod(s * (x1 - x3) - y1, p);
     return { x: x3, y: y3 };
   }
 }
@@ -262,14 +230,6 @@ function pointMultiply(
   }
   
   return result;
-}
-
-/**
- * Convert bytes to base64url encoding
- */
-function bytesToBase64url(bytes: Uint8Array): string {
-  const base64 = btoa(String.fromCharCode(...bytes));
-  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 /**

@@ -8,7 +8,29 @@
  * - Error boundary helpers
  */
 
-import { t } from '../i18n/index.js';
+// Lazy import for i18n to avoid circular dependency
+let _t: ((key: string, fallback?: string) => string) | null = null;
+
+/**
+ * Get translation function lazily to avoid circular dependency
+ */
+function getT(): (key: string, fallback?: string) => string {
+  if (!_t) {
+    try {
+      // Dynamic import would be better but we use lazy evaluation
+      const i18n = (window as any).t;
+      if (typeof i18n === 'function') {
+        _t = i18n;
+      }
+    } catch {
+      // Ignore
+    }
+  }
+  return _t || ((key: string, fallback?: string) => fallback || key);
+}
+
+// Helper to get translation
+const t = (key: string, fallback?: string): string => getT()(key, fallback);
 
 // ========================================
 // Constants
@@ -504,12 +526,80 @@ export function reportError(errorInfo: ErrorInfo): void {
   }
 }
 
+// ========================================
+// Error Filter Configuration
+// ========================================
+
+/**
+ * Patterns for errors that should be silently ignored
+ * These are typically browser extension errors or expected network errors
+ */
+const IGNORED_ERROR_PATTERNS: RegExp[] = [
+  // Browser extension errors (Metamask, Phantom, Solana, etc.)
+  /Cannot redefine property: ethereum/i,
+  /evmAsk\.js/i,
+  /solanaActionsContentScript\.js/i,
+  /Could not establish connection/i,
+  /Receiving end does not exist/i,
+  /Extension context invalidated/i,
+  /chrome-extension:/i,
+  /moz-extension:/i,
+  /runtime\.lastError/i,
+  /Something went wrong/i,  // Generic extension error
+  /Unchecked runtime/i,
+  
+  // WebSocket connection errors (Vite HMR in dev)
+  /WebSocket connection.*failed/i,
+  /ws:\/\/localhost/i,
+  /token=\w+.*failed/i,  // Vite HMR token errors
+  
+  // Service Worker fetch errors (expected when offline or during dev)
+  /FetchEvent.*network error/i,
+  /FetchEvent.*promise was rejected/i,
+  /cacheFirst/i,
+  /net::ERR_FAILED/i,
+  /Failed to fetch/i,
+  /NetworkError/i,
+  /Load failed/i,
+  /sw\.js/i,  // Service worker errors
+  
+  // API errors (backend not connected during development)
+  /\/api\//i,
+  /localhost:8081/i,
+  /localhost:3000.*\.js\?t=/i,  // Vite cache-busted requests
+  
+  // Generic network errors
+  /请求超时/i,
+  /ECONNREFUSED/i,
+  /ERR_CONNECTION_REFUSED/i,
+  /TypeError: Failed to fetch/i,
+];
+
+/**
+ * Check if an error should be ignored based on patterns
+ * Handles null/undefined inputs gracefully
+ */
+function shouldIgnoreError(errorStr: string | null | undefined, filenameStr?: string | null): boolean {
+  // Handle null/undefined inputs
+  const safeErrorStr = String(errorStr || '');
+  const safeFilenameStr = String(filenameStr || '');
+  
+  // Skip empty errors
+  if (!safeErrorStr && !safeFilenameStr) {
+    return true;
+  }
+  
+  const combined = `${safeErrorStr} ${safeFilenameStr}`;
+  return IGNORED_ERROR_PATTERNS.some(pattern => pattern.test(combined));
+}
+
 /**
  * Initialize global error boundary
  * Should be called once during app initialization
  */
 export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
-  const { showError, logToConsole = true } = options;
+  const { showError: _showError, logToConsole = false } = options; // Default to false to reduce console noise
+  // Note: _showError is reserved for future use (e.g., showing error UI to users)
   
   // Global error handler
   window.addEventListener('error', (event: ErrorEvent) => {
@@ -521,40 +611,21 @@ export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
       return true;
     }
     
-    // Skip browser extension errors
     const msgStr = String(message || '');
     const fileStr = String(filename || '');
     
-    if (msgStr.includes('Cannot redefine property: ethereum') ||
-        fileStr.includes('evmAsk.js') ||
-        fileStr.includes('solanaActionsContentScript.js') ||
-        msgStr.includes('Could not establish connection')) {
+    // Check against ignore patterns
+    if (shouldIgnoreError(msgStr, fileStr)) {
       event.preventDefault();
       return true;
     }
     
-    // Skip HTTP/API related errors (since backend is not yet connected)
-    if (msgStr.includes('fetch') ||
-        msgStr.includes('HTTP') ||
-        msgStr.includes('api/') ||
-        msgStr.includes('POST') ||
-        msgStr.includes('GET') ||
-        msgStr.includes('404') ||
-        msgStr.includes('401') ||
-        msgStr.includes('500')) {
-      event.preventDefault();
-      if (logToConsole) {
-        console.warn('HTTP/API error (suppressed, backend not connected):', msgStr);
-      }
-      return true;
+    // Only log meaningful application errors
+    if (logToConsole && msgStr && !msgStr.includes('[object')) {
+      console.error('Application error:', { message: msgStr, filename: fileStr, lineno, colno });
     }
     
-    // Only log if error has meaningful content
-    if (logToConsole && (msgStr || fileStr || error)) {
-      console.error('Global error caught:', { message: msgStr, filename: fileStr, lineno, colno, error });
-    }
-    
-    // Only report error if it has meaningful content
+    // Report to error handlers
     if (message || error) {
       reportError({
         type: 'error',
@@ -575,46 +646,18 @@ export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
     const reason = event.reason;
     const reasonStr = String(reason || '');
     
-    // Skip browser extension errors
-    if (reasonStr.includes('Could not establish connection') ||
-        reasonStr.includes('Receiving end does not exist') ||
-        reasonStr.includes('Something went wrong')) {
+    // Check against ignore patterns
+    if (shouldIgnoreError(reasonStr)) {
       event.preventDefault();
       return;
     }
     
-    // Skip ALL HTTP/API/fetch related errors (backend not yet connected)
-    if (reasonStr.includes('fetch') ||
-        reasonStr.includes('HTTP') ||
-        reasonStr.includes('api/') ||
-        reasonStr.includes('POST') ||
-        reasonStr.includes('GET') ||
-        reasonStr.includes('PUT') ||
-        reasonStr.includes('DELETE') ||
-        reasonStr.includes('404') ||
-        reasonStr.includes('401') ||
-        reasonStr.includes('403') ||
-        reasonStr.includes('500') ||
-        reasonStr.includes('Not Found') ||
-        reasonStr.includes('Unauthorized') ||
-        reasonStr.includes('NetworkError') ||
-        reasonStr.includes('Failed to fetch') ||
-        reasonStr.includes('请求超时') ||
-        reasonStr.includes('localhost:8081') ||
-        reasonStr.includes('localhost:3000')) {
-      event.preventDefault();
-      if (logToConsole) {
-        console.warn('HTTP/API error (suppressed, backend not connected):', reasonStr);
-      }
-      return;
-    }
-    
-    // Log error
-    if (logToConsole) {
+    // Only log meaningful errors
+    if (logToConsole && reasonStr && reasonStr !== '[object Object]') {
       console.error('Unhandled promise rejection:', reason);
     }
     
-    // Only report error if it has meaningful content
+    // Report to error handlers
     if (reasonStr && reasonStr !== '[object Object]') {
       reportError({
         type: 'unhandledrejection',

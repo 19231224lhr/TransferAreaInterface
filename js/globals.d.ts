@@ -214,9 +214,17 @@ declare global {
       init: () => void;
     };
 
+    // P2: Enhanced Router functions
+    addRouteGuard: (guard: any) => () => void;
+    enhancedNavigateTo: (route: string, options?: any) => Promise<boolean>;
+    configureTransition: (config: any) => void;
+
     // P2: Online status functions
     isOnline: () => boolean;
     onOnlineStatusChange: (callback: (online: boolean) => void) => () => void;
+    
+    // Internal cleanup functions
+    _removeAuthGuard?: () => void;
 
     // Global cleanup function
     globalCleanup: () => void;

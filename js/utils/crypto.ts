@@ -121,6 +121,128 @@ export const generate8DigitFromInputHex = (hex: string): string => {
 };
 
 // ========================================
+// P-256 Elliptic Curve Math (Pure JS)
+// ========================================
+
+/**
+ * Modular inverse using extended Euclidean algorithm
+ */
+function modInverse(a: bigint, m: bigint): bigint {
+  let [old_r, r] = [((a % m) + m) % m, m];
+  let [old_s, s] = [1n, 0n];
+  
+  while (r !== 0n) {
+    const q = old_r / r;
+    [old_r, r] = [r, old_r - q * r];
+    [old_s, s] = [s, old_s - q * s];
+  }
+  
+  return ((old_s % m) + m) % m;
+}
+
+/**
+ * Modular operation helper - ensures result is always positive
+ */
+function mod(a: bigint, m: bigint): bigint {
+  return ((a % m) + m) % m;
+}
+
+/**
+ * Point addition on elliptic curve
+ */
+function pointAdd(
+  x1: bigint, y1: bigint, 
+  x2: bigint, y2: bigint, 
+  p: bigint, a: bigint
+): { x: bigint; y: bigint } | null {
+  if (x1 === x2 && y1 === y2) {
+    // Point doubling
+    const numerator = mod(3n * x1 * x1 + a, p);
+    const denominator = mod(2n * y1, p);
+    const s = mod(numerator * modInverse(denominator, p), p);
+    const x3 = mod(s * s - 2n * x1, p);
+    const y3 = mod(s * (x1 - x3) - y1, p);
+    return { x: x3, y: y3 };
+  } else {
+    // Point addition
+    const dx = mod(x2 - x1, p);
+    const dy = mod(y2 - y1, p);
+    const s = mod(dy * modInverse(dx, p), p);
+    const x3 = mod(s * s - x1 - x2, p);
+    const y3 = mod(s * (x1 - x3) - y1, p);
+    return { x: x3, y: y3 };
+  }
+}
+
+/**
+ * Scalar multiplication using double-and-add algorithm
+ */
+function pointMultiply(
+  Gx: bigint, Gy: bigint, 
+  k: bigint, 
+  p: bigint, a: bigint
+): { x: bigint; y: bigint } | null {
+  let result: { x: bigint; y: bigint } | null = null;
+  let addend: { x: bigint; y: bigint } | null = { x: Gx, y: Gy };
+  
+  while (k > 0n) {
+    if (k & 1n) {
+      if (result === null) {
+        result = addend;
+      } else if (addend) {
+        result = pointAdd(result.x, result.y, addend.x, addend.y, p, a);
+      }
+    }
+    if (addend) {
+      addend = pointAdd(addend.x, addend.y, addend.x, addend.y, p, a);
+    }
+    k >>= 1n;
+  }
+  
+  return result;
+}
+
+/**
+ * Compute public key (x, y) from private key using P-256 curve math
+ * Pure JavaScript implementation without external libraries
+ */
+function computePublicKeyFromPrivate(privHex: string): { x: string; y: string } {
+  // Normalize private key hex - remove 0x prefix and ensure lowercase
+  const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
+  
+  // Validate hex format
+  if (!/^[0-9a-f]{64}$/.test(normalizedPrivHex)) {
+    throw new Error('Private key must be 64 hex characters');
+  }
+  
+  // P-256 curve parameters
+  const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
+  const a = BigInt('0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc');
+  const Gx = BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296');
+  const Gy = BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5');
+  const n = BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551');
+  
+  const d = BigInt('0x' + normalizedPrivHex);
+  
+  if (d <= 0n || d >= n) {
+    throw new Error('Private key out of valid range');
+  }
+  
+  // Point multiplication: Q = d * G
+  const Q = pointMultiply(Gx, Gy, d, p, a);
+  
+  if (!Q) {
+    throw new Error('Invalid private key - point multiplication failed');
+  }
+  
+  // Convert to hex, pad to 64 characters
+  const xHex = Q.x.toString(16).padStart(64, '0');
+  const yHex = Q.y.toString(16).padStart(64, '0');
+  
+  return { x: xHex, y: yHex };
+}
+
+// ========================================
 // ECDSA Signing (WebCrypto)
 // ========================================
 
@@ -141,29 +263,45 @@ export async function ecdsaSignData(
   pubYHex: string | null = null
 ): Promise<ECDSASignature> {
   try {
-    // 1. Import private key from hex
-    const dBytes = hexToBytes(privateKeyHex);
+    // Normalize private key hex - remove 0x prefix and ensure lowercase
+    const normalizedPrivHex = privateKeyHex.replace(/^0x/i, '').toLowerCase();
+    
+    // Validate private key format
+    if (!/^[0-9a-f]{64}$/.test(normalizedPrivHex)) {
+      throw new Error('Private key must be 64 hex characters, got: ' + normalizedPrivHex.length);
+    }
+    
+    // 1. Import private key from hex - ensure exactly 32 bytes
+    const dBytes = hexToBytes(normalizedPrivHex);
+    if (dBytes.length !== 32) {
+      throw new Error('Private key must be exactly 32 bytes, got: ' + dBytes.length);
+    }
     const dB64 = bytesToBase64url(dBytes);
     
-    // If public key coordinates not provided, derive them
+    // If public key coordinates not provided or empty, derive them
     let xB64: string, yB64: string;
-    if (pubXHex && pubYHex) {
-      xB64 = bytesToBase64url(hexToBytes(pubXHex));
-      yB64 = bytesToBase64url(hexToBytes(pubYHex));
-    } else {
-      // Need to derive public key - use elliptic library if available
-      if ((window as any).elliptic && (window as any).elliptic.ec) {
-        const EC = (window as any).elliptic.ec;
-        const ec = new EC('p256');
-        const keyPair = ec.keyFromPrivate(privateKeyHex, 'hex');
-        const pubPoint = keyPair.getPublic();
-        const xHex = pubPoint.getX().toString(16).padStart(64, '0');
-        const yHex = pubPoint.getY().toString(16).padStart(64, '0');
-        xB64 = bytesToBase64url(hexToBytes(xHex));
-        yB64 = bytesToBase64url(hexToBytes(yHex));
-      } else {
-        throw new Error('Public key coordinates required or elliptic library needed');
+    const hasValidPubKey = pubXHex && pubYHex && 
+                           pubXHex.length === 64 && pubYHex.length === 64 &&
+                           /^[0-9a-fA-F]{64}$/.test(pubXHex) && /^[0-9a-fA-F]{64}$/.test(pubYHex);
+    
+    if (hasValidPubKey) {
+      const xBytes = hexToBytes(pubXHex.toLowerCase());
+      const yBytes = hexToBytes(pubYHex.toLowerCase());
+      if (xBytes.length !== 32 || yBytes.length !== 32) {
+        throw new Error('Public key coordinates must be exactly 32 bytes each');
       }
+      xB64 = bytesToBase64url(xBytes);
+      yB64 = bytesToBase64url(yBytes);
+    } else {
+      // Derive public key from private key using P-256 curve math
+      const derived = computePublicKeyFromPrivate(normalizedPrivHex);
+      const xBytes = hexToBytes(derived.x);
+      const yBytes = hexToBytes(derived.y);
+      if (xBytes.length !== 32 || yBytes.length !== 32) {
+        throw new Error('Derived public key coordinates are invalid');
+      }
+      xB64 = bytesToBase64url(xBytes);
+      yB64 = bytesToBase64url(yBytes);
     }
     
     // 2. Create JWK and import key
@@ -175,13 +313,48 @@ export async function ecdsaSignData(
       d: dB64
     };
     
-    const privateKey = await crypto.subtle.importKey(
-      'jwk',
-      jwk,
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      false,
-      ['sign']
-    );
+    // Debug: log JWK structure (without exposing full private key)
+    console.log('JWK import attempt:', {
+      kty: jwk.kty,
+      crv: jwk.crv,
+      xLen: xB64.length,
+      yLen: yB64.length,
+      dLen: dB64.length
+    });
+    
+    let privateKey: CryptoKey;
+    try {
+      privateKey = await crypto.subtle.importKey(
+        'jwk',
+        jwk,
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        false,
+        ['sign']
+      );
+    } catch (importError) {
+      // If import fails, the public key might not match the private key
+      // Try to re-derive the public key
+      console.warn('JWK import failed, re-deriving public key from private key...');
+      const reDerived = computePublicKeyFromPrivate(normalizedPrivHex);
+      const reXBytes = hexToBytes(reDerived.x);
+      const reYBytes = hexToBytes(reDerived.y);
+      
+      const reJwk: JsonWebKey = {
+        kty: 'EC',
+        crv: 'P-256',
+        x: bytesToBase64url(reXBytes),
+        y: bytesToBase64url(reYBytes),
+        d: dB64
+      };
+      
+      privateKey = await crypto.subtle.importKey(
+        'jwk',
+        reJwk,
+        { name: 'ECDSA', namedCurve: 'P-256' },
+        false,
+        ['sign']
+      );
+    }
     
     // 3. Sign data (WebCrypto will hash with SHA-256 first)
     const sigBuffer = await crypto.subtle.sign(

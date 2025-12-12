@@ -3,37 +3,9 @@
  * 
  * This is the main entry file that initializes all modules and sets up the application.
  * All functionality is imported from modular files in the js/ directory.
+ * 
+ * Note: Error suppression is handled centrally by initErrorBoundary() in security.ts
  */
-
-// ========================================
-// Error Suppression (Browser Extensions)
-// ========================================
-try {
-  window.addEventListener('error', function (e) {
-    var m = String((e && e.message) || '');
-    var f = String((e && e.filename) || '');
-    if (m.indexOf('Cannot redefine property: ethereum') !== -1 || f.indexOf('evmAsk.js') !== -1) {
-      if (e.preventDefault) e.preventDefault();
-      return true;
-    }
-    if (f.indexOf('solanaActionsContentScript.js') !== -1 || m.indexOf('Could not establish connection') !== -1) {
-      if (e.preventDefault) e.preventDefault();
-      return true;
-    }
-  }, true);
-} catch (_) { }
-
-try {
-  window.addEventListener('unhandledrejection', function (e) {
-    var reason = String((e && e.reason) || '');
-    if (reason.indexOf('Could not establish connection') !== -1 || 
-        reason.indexOf('Receiving end does not exist') !== -1 ||
-        reason.indexOf('Something went wrong') !== -1) {
-      if (e.preventDefault) e.preventDefault();
-      return true;
-    }
-  }, true);
-} catch (_) { }
 
 // ========================================
 // Module Imports
@@ -453,6 +425,9 @@ function setupOnlineIndicator() {
   }
   
   // Update indicator based on online status
+  /**
+   * @param {boolean} online - Whether the app is online
+   */
   function updateIndicator(online) {
     if (online) {
       indicator.classList.remove('visible');
@@ -525,9 +500,7 @@ function init() {
   // Configure route transition animations
   try {
     configureTransition({
-      type: 'slide',
-      duration: 300,
-      easing: 'ease-in-out'
+      duration: 300
     });
   } catch (error) {
     // Silently fail - transitions are optional
