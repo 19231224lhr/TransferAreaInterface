@@ -1,0 +1,529 @@
+/**
+ * P2 Improvements CSS
+ * 
+ * Styles for P2 optimization features:
+ * - Skip links (accessibility)
+ * - Form validation errors
+ * - Loading states
+ * - Progress indicators
+ * - Skeleton loading
+ * - Offline indicator
+ */
+
+/* ========================================
+   Skip Links (Accessibility)
+   ======================================== */
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 12px 24px;
+  background: var(--primary-color, #0ea5e9);
+  color: white;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0 0 8px 8px;
+  z-index: 10000;
+  transition: top 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: none;
+}
+
+.skip-link:focus-visible {
+  outline: 3px solid var(--primary-color, #0ea5e9);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   Form Validation Errors
+   ======================================== */
+
+.field-error {
+  display: block;
+  color: var(--error-color, #ef4444);
+  font-size: 13px;
+  margin-top: 6px;
+  padding-left: 4px;
+  animation: fieldErrorIn 0.2s ease;
+}
+
+.field-error.hidden {
+  display: none;
+}
+
+@keyframes fieldErrorIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Invalid input state */
+input.is-invalid,
+textarea.is-invalid,
+select.is-invalid {
+  border-color: var(--error-color, #ef4444) !important;
+  background-color: rgba(239, 68, 68, 0.05);
+}
+
+input.is-invalid:focus,
+textarea.is-invalid:focus,
+select.is-invalid:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+}
+
+/* Valid input state */
+input.is-valid,
+textarea.is-valid,
+select.is-valid {
+  border-color: var(--success-color, #22c55e) !important;
+}
+
+input.is-valid:focus,
+textarea.is-valid:focus,
+select.is-valid:focus {
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+}
+
+/* ========================================
+   Loading States
+   ======================================== */
+
+/* Element loading state */
+.is-loading {
+  position: relative;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+.is-loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(1px);
+}
+
+/* Loading spinner */
+.loading-spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Loading text */
+.loading-text {
+  vertical-align: middle;
+}
+
+/* Button loading state */
+button.is-loading .loading-spinner {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+}
+
+/* ========================================
+   Skeleton Loading
+   ======================================== */
+
+.skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base, #e2e8f0) 25%,
+    var(--skeleton-highlight, #f1f5f9) 50%,
+    var(--skeleton-base, #e2e8f0) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeleton--text {
+  height: 16px;
+  width: 100%;
+}
+
+.skeleton--circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.skeleton--rect {
+  height: 100px;
+  width: 100%;
+}
+
+@keyframes skeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Dark theme skeleton */
+[data-theme="dark"] .skeleton {
+  --skeleton-base: #374151;
+  --skeleton-highlight: #4b5563;
+}
+
+/* Skeleton loading container */
+.skeleton-loading {
+  min-height: 100px;
+}
+
+/* ========================================
+   Progress Loading
+   ======================================== */
+
+.progress-loading {
+  width: 100%;
+  padding: 16px 0;
+}
+
+.progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--border-color, #e2e8f0);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--primary-color, #0ea5e9), var(--primary-light, #38bdf8));
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  text-align: center;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+}
+
+/* Indeterminate progress */
+.progress-bar.indeterminate {
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--primary-color, #0ea5e9) 50%,
+    transparent 100%
+  );
+  animation: progressIndeterminate 1.5s ease-in-out infinite;
+}
+
+@keyframes progressIndeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* ========================================
+   Offline Indicator
+   ======================================== */
+
+.offline-indicator {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  padding: 12px 24px;
+  background: var(--warning-bg, #fef3c7);
+  color: var(--warning-color, #92400e);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 9999;
+  transition: transform 0.3s ease;
+}
+
+.offline-indicator.visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.offline-indicator svg {
+  width: 20px;
+  height: 20px;
+}
+
+.offline-indicator__text {
+  font-weight: 500;
+}
+
+/* ========================================
+   Update Available Banner
+   ======================================== */
+
+.update-banner {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 16px 20px;
+  background: var(--card-bg, white);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 9998;
+  max-width: 400px;
+  transform: translateX(calc(100% + 40px));
+  transition: transform 0.3s ease;
+}
+
+.update-banner.visible {
+  transform: translateX(0);
+}
+
+.update-banner__icon {
+  width: 40px;
+  height: 40px;
+  background: var(--primary-light-bg, #e0f2fe);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-color, #0ea5e9);
+  flex-shrink: 0;
+}
+
+.update-banner__content {
+  flex: 1;
+}
+
+.update-banner__title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 2px;
+}
+
+.update-banner__desc {
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+}
+
+.update-banner__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.update-banner__btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.update-banner__btn--primary {
+  background: var(--primary-color, #0ea5e9);
+  color: white;
+}
+
+.update-banner__btn--primary:hover {
+  background: var(--primary-dark, #0284c7);
+}
+
+.update-banner__btn--secondary {
+  background: transparent;
+  color: var(--text-muted, #64748b);
+}
+
+.update-banner__btn--secondary:hover {
+  background: var(--bg-secondary, #f1f5f9);
+}
+
+/* ========================================
+   Focus Visible Improvements
+   ======================================== */
+
+/* Better focus indicators for accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-color, #0ea5e9);
+  outline-offset: 2px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--primary-color, #0ea5e9);
+  outline-offset: 2px;
+}
+
+/* Remove default outline for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ========================================
+   Screen Reader Only
+   ======================================== */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ========================================
+   High Contrast Mode Support
+   ======================================== */
+
+@media (prefers-contrast: high) {
+  .field-error {
+    font-weight: 600;
+    text-decoration: underline;
+  }
+  
+  input.is-invalid,
+  textarea.is-invalid,
+  select.is-invalid {
+    border-width: 3px;
+  }
+  
+  .skeleton {
+    background: var(--border-color, #e2e8f0);
+    animation: none;
+  }
+  
+  :focus-visible {
+    outline-width: 3px;
+  }
+}
+
+/* ========================================
+   Reduced Motion Support
+   ======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .skip-link,
+  .field-error,
+  .loading-spinner,
+  .skeleton,
+  .progress-bar,
+  .offline-indicator,
+  .update-banner {
+    animation: none;
+    transition: none;
+  }
+  
+  .loading-spinner {
+    /* Use opacity pulse instead of rotation */
+    animation: pulse 1s ease-in-out infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+}
+
+/* ========================================
+   Route Transitions
+   ======================================== */
+
+.route-enter {
+  animation: routeEnter 0.3s ease forwards;
+}
+
+.route-leave {
+  animation: routeLeave 0.3s ease forwards;
+}
+
+@keyframes routeEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes routeLeave {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+/* Slide transitions */
+.route-slide-left-enter {
+  animation: slideLeftEnter 0.3s ease forwards;
+}
+
+.route-slide-right-enter {
+  animation: slideRightEnter 0.3s ease forwards;
+}
+
+@keyframes slideLeftEnter {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideRightEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

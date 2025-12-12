@@ -177,6 +177,47 @@ declare global {
     hasEncryptedKey: (accountId: string) => boolean;
     hasLegacyKey: (user: any) => boolean;
 
+    // P2: Accessibility functions
+    announce: (message: string, priority?: 'polite' | 'assertive') => void;
+    setAriaLabel: (element: HTMLElement, label: string) => void;
+    makeAccessibleButton: (element: HTMLElement, label: string) => void;
+
+    // P2: Loading management functions
+    loadingManager: any;
+    showLoading: (message?: string) => void;
+    hideLoading: () => void;
+    withLoading: <T>(promise: Promise<T>, text?: string) => Promise<T>;
+    showElementLoading: (element: HTMLElement) => void;
+    hideElementLoading: (element: HTMLElement) => void;
+
+    // P2: Form validation functions
+    FormValidator: any;
+    validators: any;
+    addInlineValidation: (input: string | HTMLElement, rules: any[], options?: any) => () => void;
+
+    // P2: Transaction/Rollback functions
+    withTransaction: (operations: any[], options?: any) => Promise<any>;
+    createCheckpoint: (id: string, keys: string[]) => any;
+    restoreCheckpoint: (id: string) => boolean;
+    enableFormAutoSave: (form: string | HTMLElement, formId: string, options?: any) => () => void;
+
+    // P2: Lazy loading functions
+    lazyLoader: {
+      registerModule: (id: string, config: any) => void;
+      loadModule: <T>(id: string) => Promise<T>;
+      preloadModule: (id: string) => void;
+      isModuleLoaded: (id: string) => boolean;
+      clearCache: (id?: string) => void;
+      registerPage: (route: string, loader: any) => void;
+      loadPage: (route: string) => Promise<any>;
+      preloadPage: (route: string) => void;
+      init: () => void;
+    };
+
+    // P2: Online status functions
+    isOnline: () => boolean;
+    onOnlineStatusChange: (callback: (online: boolean) => void) => () => void;
+
     // Global cleanup function
     globalCleanup: () => void;
 

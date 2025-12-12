@@ -31,61 +31,49 @@
 - **Node.js 18+** (前端开发环境，可选)
 - 现代浏览器 (Chrome/Firefox/Edge/Safari)
 
-### 方式一：快速启动 (无需 Node.js)
+### 启动方式
 
-如果只是运行项目，不需要安装 Node.js 依赖：
+**本项目已采用现代化前端架构（Vite + TypeScript），必须使用 Vite 开发服务器启动。**
 
 ```bash
-# 克隆项目
+# 1. 克隆项目
 git clone https://github.com/19231224lhr/TransferAreaInterface.git
 cd TransferAreaInterface
 
-# 启动 Go 后端服务器 (同时提供前端静态资源)
-go run ./backend/cmd/webserver/main.go
-
-# 访问钱包界面
-# 打开浏览器访问: http://localhost:8081/
-```
-
-### 方式二：开发模式 (推荐开发者使用)
-
-如果需要进行前端开发，建议安装依赖并使用 Vite 开发服务器：
-
-```bash
-# 克隆项目
-git clone https://github.com/19231224lhr/TransferAreaInterface.git
-cd TransferAreaInterface
-
-# 安装前端依赖
+# 2. 安装依赖
 npm install
 
-# 启动 Go 后端 API 服务器 (在一个终端)
-go run ./backend/cmd/webserver/main.go
-
-# 启动 Vite 开发服务器 (在另一个终端)
+# 3. 启动开发服务器
 npm run dev
 
-# 访问开发环境
+# 4. 访问应用
 # 打开浏览器访问: http://localhost:3000/
 ```
 
 ### 前端命令一览
 
 ```bash
-npm run dev       # 启动 Vite 开发服务器 (热更新)
+npm run dev       # 启动 Vite 开发服务器 (热更新、TypeScript 支持)
 npm run build     # 构建生产版本到 dist/ 目录
 npm run preview   # 预览构建结果
 npm run typecheck # 运行 TypeScript 类型检查
 ```
 
-### 为什么有两种启动方式？
+### 生产部署
 
-| 方式 | 适用场景 | 说明 |
-|------|----------|------|
-| Go 服务器 | 生产部署、快速预览 | 直接读取源文件，无需构建 |
-| Vite 服务器 | 前端开发 | 热更新、TypeScript 支持、开发体验更好 |
+```bash
+# 构建生产版本
+npm run build
 
-> **注意**：Go 后端服务器直接提供 `index.html` 和 `js/` 目录中的源文件。Vite 开发服务器提供更好的开发体验（热更新、错误提示等）。两者访问的是相同的前端代码。
+# 部署 dist/ 目录到静态服务器
+# 例如: Nginx, Apache, Vercel, Netlify 等
+```
+
+> **⚠️ 重要提示**：
+> - 前端使用 ES Module 和 TypeScript，**需要构建工具支持**
+> - 不支持直接通过 Go 服务器访问源文件
+> - 开发环境请使用 `npm run dev`
+> - 生产环境请部署 `npm run build` 构建后的 `dist/` 目录
 
 ---
 

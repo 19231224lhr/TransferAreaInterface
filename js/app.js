@@ -93,6 +93,39 @@ import performanceModeManager, {
 } from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
 
+// P2 Improvements - Accessibility, Loading, Service Worker, etc.
+import { 
+  initAccessibility, 
+  announce,
+  setAriaLabel,
+  makeAccessibleButton 
+} from './utils/accessibility';
+import { 
+  loadingManager, 
+  showLoading, 
+  hideLoading, 
+  withLoading,
+  showElementLoading,
+  hideElementLoading 
+} from './utils/loading';
+import { 
+  registerServiceWorker, 
+  isOnline, 
+  onOnlineStatusChange 
+} from './utils/serviceWorker';
+import { 
+  FormValidator, 
+  validators,
+  addInlineValidation 
+} from './utils/formValidator';
+import { 
+  withTransaction, 
+  createCheckpoint, 
+  restoreCheckpoint,
+  enableFormAutoSave 
+} from './utils/transaction';
+import { lazyLoader, initLazyLoader } from './utils/lazyLoader';
+
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal.js';
@@ -352,6 +385,80 @@ window.checkEncryptionStatus = checkEncryptionStatus;
 window.hasEncryptedKey = hasEncryptedKey;
 window.hasLegacyKey = hasLegacyKey;
 
+// P2 Improvements - Accessibility
+window.announce = announce;
+window.setAriaLabel = setAriaLabel;
+window.makeAccessibleButton = makeAccessibleButton;
+
+// P2 Improvements - Loading Management
+window.loadingManager = loadingManager;
+window.showLoading = showLoading;
+window.hideLoading = hideLoading;
+window.withLoading = withLoading;
+window.showElementLoading = showElementLoading;
+window.hideElementLoading = hideElementLoading;
+
+// P2 Improvements - Form Validation
+window.FormValidator = FormValidator;
+window.validators = validators;
+window.addInlineValidation = addInlineValidation;
+
+// P2 Improvements - Transaction/Rollback
+window.withTransaction = withTransaction;
+window.createCheckpoint = createCheckpoint;
+window.restoreCheckpoint = restoreCheckpoint;
+window.enableFormAutoSave = enableFormAutoSave;
+
+// P2 Improvements - Lazy Loading
+window.lazyLoader = lazyLoader;
+
+// P2 Improvements - Online Status
+window.isOnline = isOnline;
+window.onOnlineStatusChange = onOnlineStatusChange;
+
+// ========================================
+// P2: Online/Offline Indicator Setup
+// ========================================
+
+/**
+ * Setup online/offline indicator
+ */
+function setupOnlineIndicator() {
+  // Create offline indicator element
+  let indicator = document.getElementById('offlineIndicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'offlineIndicator';
+    indicator.className = 'offline-indicator';
+    indicator.setAttribute('role', 'alert');
+    indicator.setAttribute('aria-live', 'assertive');
+    indicator.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/>
+      </svg>
+      <span class="offline-indicator__text">${t('offline.message', '网络已断开，部分功能不可用')}</span>
+    `;
+    document.body.appendChild(indicator);
+  }
+  
+  // Update indicator based on online status
+  function updateIndicator(online) {
+    if (online) {
+      indicator.classList.remove('visible');
+    } else {
+      indicator.classList.add('visible');
+      // Announce to screen readers
+      announce(t('offline.message', '网络已断开，部分功能不可用'), 'assertive');
+    }
+  }
+  
+  // Initial check
+  updateIndicator(isOnline());
+  
+  // Listen for online/offline changes
+  onOnlineStatusChange(updateIndicator);
+}
+
 // ========================================
 // Global Initialization
 // ========================================
@@ -386,6 +493,42 @@ function init() {
     performanceMonitor.start(10000); // Monitor every 10 seconds
     console.log('🔍 Performance monitoring enabled for development');
   }
+  
+  // ========================================
+  // P2 Improvements Initialization
+  // ========================================
+  
+  // Initialize accessibility features (skip links, ARIA live regions)
+  try {
+    initAccessibility();
+    console.log('♿ Accessibility features initialized');
+  } catch (error) {
+    console.warn('Failed to initialize accessibility:', error);
+  }
+  
+  // Initialize lazy loader for code splitting
+  try {
+    initLazyLoader();
+    console.log('📦 Lazy loader initialized');
+  } catch (error) {
+    console.warn('Failed to initialize lazy loader:', error);
+  }
+  
+  // Register Service Worker for offline support
+  registerServiceWorker().then(registration => {
+    if (registration) {
+      console.log('🔧 Service Worker registered');
+    }
+  }).catch(error => {
+    console.warn('Service Worker registration failed:', error);
+  });
+  
+  // Setup online/offline indicator
+  setupOnlineIndicator();
+  
+  // ========================================
+  // End P2 Improvements
+  // ========================================
   
   // Initialize user menu
   initUserMenu();

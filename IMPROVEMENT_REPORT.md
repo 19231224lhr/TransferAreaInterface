@@ -1135,95 +1135,64 @@ window.addEventListener('scroll', handleScroll);
 
 ## 🟡 P2 - 中优先级问题
 
-### 14. **可访问性 (A11y) 问题**
+### ✅ 14. **可访问性 (A11y) 问题** [已完成]
 
 **问题描述**:
 - 缺少 ARIA 标签
 - 键盘导航支持不完整
 - 颜色对比度可能不足
 
-**改进建议**:
-```html
-<!-- 添加 ARIA 支持 -->
-<button 
-  id="tfSendBtn"
-  aria-label="发送转账"
-  aria-describedby="transferDescription"
-  role="button"
->
-  发送
-</button>
+#### ✅ 实施方案
 
-<!-- 添加跳过链接 -->
-<a href="#main-content" class="skip-link">跳到主要内容</a>
+**实现文件**: [js/utils/accessibility.ts](js/utils/accessibility.ts)
 
-<!-- Focus 管理 -->
-<script>
-// 模态框打开时聚焦到第一个可交互元素
-function openModal(modal) {
-  modal.classList.remove('hidden');
-  const firstFocusable = modal.querySelector('button, input, select, textarea');
-  firstFocusable?.focus();
-}
-</script>
-```
+**功能特性**:
+- `setAriaLabel()` - 设置 ARIA 标签
+- `setAriaDescribedBy()` - 设置 ARIA 描述关联
+- `createFocusTrap()` - 创建焦点陷阱（用于模态框）
+- `enableKeyboardNavigation()` - 启用键盘导航
+- `announce()` - 屏幕阅读器播报
+- `initSkipLinks()` - 初始化跳过链接
+- `makeAccessibleButton()` - 使元素可访问
+- `getContrastRatio()` - 计算颜色对比度
+
+**CSS 支持**: [css/p2-improvements.css](css/p2-improvements.css)
+- `.skip-link` - 跳过链接样式
+- `.sr-only` - 屏幕阅读器专用
+- 高对比度模式支持
+- 减少动画支持
 
 ---
 
-### 17. **Loading 状态管理**
+### ✅ 17. **Loading 状态管理** [已完成]
 
 **问题描述**:
 - 多处手动管理加载状态
 - 加载中用户可重复点击
 - 部分操作无加载提示
 
-**改进建议**:
-```javascript
-// 创建加载状态管理器
-class LoadingManager {
-  constructor() {
-    this.loadingCount = 0;
-    this.overlay = document.getElementById('actionOverlay');
-  }
-  
-  show(text) {
-    this.loadingCount++;
-    if (this.loadingCount === 1) {
-      const textEl = document.getElementById('actionOverlayText');
-      if (textEl) textEl.textContent = text;
-      this.overlay?.classList.remove('hidden');
-    }
-  }
-  
-  hide() {
-    this.loadingCount = Math.max(0, this.loadingCount - 1);
-    if (this.loadingCount === 0) {
-      this.overlay?.classList.add('hidden');
-    }
-  }
-  
-  async wrap(promise, text) {
-    this.show(text);
-    try {
-      return await promise;
-    } finally {
-      this.hide();
-    }
-  }
-}
+#### ✅ 实施方案
 
-export const loading = new LoadingManager();
+**实现文件**: [js/utils/loading.ts](js/utils/loading.ts)
 
-// 使用
-const result = await loading.wrap(
-  buildNewTX(info, user),
-  t('transfer.buildingTransaction')
-);
-```
+**功能特性**:
+- `LoadingManager` 类 - 引用计数管理加载状态
+- `showLoading(text)` - 显示全局加载
+- `hideLoading()` - 隐藏全局加载
+- `withLoading(promise, text)` - 包装 Promise 自动管理加载
+- `showElementLoading(element)` - 元素级加载状态
+- `createSkeleton()` - 创建骨架屏加载
+- `createProgressLoading()` - 创建进度条加载
+
+**CSS 支持**: [css/p2-improvements.css](css/p2-improvements.css)
+- `.is-loading` - 元素加载状态
+- `.loading-spinner` - 加载动画
+- `.skeleton` - 骨架屏样式
+- `.progress-loading` - 进度条样式
 
 ---
 
-### 18. **路由守卫优化**
+### ✅ 18. **路由守卫优化** [已完成]
 
 **文件**: [js/router.js](js/router.js)
 
@@ -1232,226 +1201,134 @@ const result = await loading.wrap(
 - 无路由过渡动画
 - 路由参数处理不完善
 
-**改进建议**:
-```javascript
-// 增强路由器
-const router = {
-  guards: [],
-  
-  addGuard(guard) {
-    this.guards.push(guard);
-  },
-  
-  async navigate(path) {
-    const from = currentRoute;
-    const to = { path, params: parseParams(path) };
-    
-    // 执行路由守卫
-    for (const guard of this.guards) {
-      const result = await guard(to, from);
-      if (result === false) return;
-      if (typeof result === 'string') {
-        return this.navigate(result);
-      }
-    }
-    
-    // 执行路由切换动画
-    await this.transition(from, to);
-    
-    // 更新路由
-    this.currentRoute = to;
-  }
-};
+#### ✅ 实施方案
 
-// 添加认证守卫
-router.addGuard((to, from) => {
-  const protectedRoutes = ['/main', '/history', '/group-detail'];
-  if (protectedRoutes.includes(to.path) && !loadUser()) {
-    showWarningToast(t('auth.loginRequired'));
-    return '/welcome';
-  }
-  return true;
-});
-```
+**实现文件**: [js/utils/enhancedRouter.ts](js/utils/enhancedRouter.ts)
+
+**功能特性**:
+- `addRouteGuard()` - 添加路由守卫
+- `navigateTo()` - 带守卫的导航
+- `authGuard` - 内置认证守卫
+- `configureTransition()` - 配置路由过渡动画
+- `setScrollBehavior()` - 滚动行为管理
+- `prefetchRoute()` - 路由预加载
+- `setRouteMetadata()` - 路由元数据
+
+**CSS 支持**: [css/p2-improvements.css](css/p2-improvements.css)
+- `.route-enter` / `.route-leave` - 路由过渡动画
+- `.route-slide-left-enter` / `.route-slide-right-enter` - 滑动过渡
 
 ---
 
-### 19. **错误边界和恢复**
+### ✅ 19. **错误边界和恢复** [已完成]
 
 **问题描述**:
 - 关键操作失败后无恢复方案
 - 数据一致性无保证
 
-**改进建议**:
-```javascript
-// 事务性操作封装
-async function withTransaction(operations) {
-  const backups = [];
-  
-  try {
-    for (const op of operations) {
-      // 保存回滚数据
-      if (op.backup) {
-        backups.push({ key: op.key, data: localStorage.getItem(op.key) });
-      }
-      // 执行操作
-      await op.execute();
-    }
-  } catch (error) {
-    // 回滚
-    for (const backup of backups.reverse()) {
-      if (backup.data === null) {
-        localStorage.removeItem(backup.key);
-      } else {
-        localStorage.setItem(backup.key, backup.data);
-      }
-    }
-    throw error;
-  }
-}
+#### ✅ 实施方案
 
-// 使用
-await withTransaction([
-  { 
-    key: STORAGE_KEY,
-    backup: true,
-    execute: () => saveUser(newUser)
-  },
-  {
-    execute: () => updateUI()
-  }
-]);
-```
+**实现文件**: [js/utils/transaction.ts](js/utils/transaction.ts)
+
+**功能特性**:
+- `withTransaction()` - 事务性操作包装
+- `createStorageOperation()` - 创建 localStorage 操作
+- `createDOMSnapshot()` - DOM 快照和恢复
+- `createCheckpoint()` - 创建状态检查点
+- `restoreCheckpoint()` - 恢复检查点
+- `startAutoSave()` - 自动保存数据
+- `enableFormAutoSave()` - 表单自动保存
+- `getFormDraft()` / `clearFormDraft()` - 表单草稿管理
 
 ---
 
-### 20. **代码分割和懒加载**
+### ✅ 20. **代码分割和懒加载** [已完成]
 
 **问题描述**:
 - 所有 JS 模块同步加载
 - 首屏加载时间可能较长
 - 现在改成JS和TS并存了，可能需要时刻注意
 
-**改进建议**:
-```javascript
-// 使用动态 import 实现懒加载
-const routes = {
-  '/main': () => import('./pages/main.js'),
-  '/history': () => import('./pages/history.js'),
-  '/join-group': () => import('./pages/joinGroup.js'),
-};
+#### ✅ 实施方案
 
-async function loadRoute(path) {
-  const loader = routes[path];
-  if (loader) {
-    const module = await loader();
-    module.init?.();
-  }
-}
+**实现文件**: [js/utils/lazyLoader.ts](js/utils/lazyLoader.ts)
 
-// 预加载可能需要的模块
-function prefetch(path) {
-  const loader = routes[path];
-  if (loader) {
-    // 使用空闲时间预加载
-    requestIdleCallback(() => loader());
-  }
-}
-```
+**功能特性**:
+- `registerLazyModule()` - 注册懒加载模块
+- `loadModule()` - 按需加载模块
+- `preloadModule()` - 预加载模块
+- `registerPageLoader()` - 注册页面加载器
+- `loadPage()` / `preloadPage()` - 页面懒加载
+- `lazyComponent()` - 创建懒加载组件
+- `setupPreloading()` - 配置预加载策略（hover/visible/idle）
+- `prefetchResource()` / `preloadResource()` - 资源预取
+
+**性能优化**:
+- 慢速网络自动禁用预加载
+- 空闲时间预加载队列
+- 失败重试机制
 
 ---
 
-### 21. **表单验证统一**
+### ✅ 21. **表单验证统一** [已完成]
 
 **问题描述**:
 - 验证逻辑分散在各个文件
 - 错误提示风格不一致
 
-**改进建议**:
-```javascript
-// 创建统一验证器
-const validators = {
-  required: (value) => value ? null : t('validation.required'),
-  
-  address: (value) => {
-    const normalized = normalizeAddrInput(value);
-    if (!normalized) return t('validation.addressRequired');
-    if (!/^[0-9a-f]{40}$/i.test(normalized)) return t('validation.addressInvalid');
-    return null;
-  },
-  
-  privateKey: (value) => {
-    const normalized = value?.trim().replace(/^0x/i, '');
-    if (!normalized) return t('validation.privateKeyRequired');
-    if (!/^[0-9a-f]{64}$/i.test(normalized)) return t('validation.privateKeyInvalid');
-    return null;
-  },
-  
-  amount: (value, { min = 0, max = Infinity } = {}) => {
-    const num = parseFloat(value);
-    if (!Number.isFinite(num)) return t('validation.amountInvalid');
-    if (num < min) return t('validation.amountMin', { min });
-    if (num > max) return t('validation.amountMax', { max });
-    return null;
-  }
-};
+#### ✅ 实施方案
 
-// 表单验证工具
-function validateForm(form, rules) {
-  const errors = {};
-  for (const [field, fieldRules] of Object.entries(rules)) {
-    const value = form[field]?.value;
-    for (const rule of fieldRules) {
-      const error = typeof rule === 'function' ? rule(value) : validators[rule]?.(value);
-      if (error) {
-        errors[field] = error;
-        break;
-      }
-    }
-  }
-  return { valid: Object.keys(errors).length === 0, errors };
-}
-```
+**实现文件**: [js/utils/formValidator.ts](js/utils/formValidator.ts)
+
+**功能特性**:
+- `FormValidator` 类 - 表单验证器
+- 内置验证规则:
+  - `required` - 必填
+  - `address` - 地址格式
+  - `privateKey` - 私钥格式
+  - `amount` - 金额验证
+  - `orgId` - 组织 ID
+  - `email` - 邮箱格式
+  - `minLength` / `maxLength` - 长度限制
+  - `pattern` - 正则匹配
+  - `match` - 字段匹配（确认密码）
+- `addInlineValidation()` - 实时输入验证
+- `validateValue()` - 单值验证
+
+**CSS 支持**: [css/p2-improvements.css](css/p2-improvements.css)
+- `.field-error` - 错误提示样式
+- `.is-invalid` / `.is-valid` - 输入框状态
+- 错误动画效果
 
 ---
 
-### 22. **Service Worker 和离线支持**
+### ✅ 22. **Service Worker 和离线支持** [已完成]
 
 **问题描述**:
 - 无离线访问能力
 - 网络中断时体验差
 
-**改进建议**:
-```javascript
-// sw.js - Service Worker
-const CACHE_NAME = 'pangupay-v1';
-const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/css/base.css',
-  '/js/app.js',
-  '/assets/logo.png'
-];
+#### ✅ 实施方案
 
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS_TO_CACHE))
-  );
-});
+**实现文件**: 
+- [sw.js](sw.js) - Service Worker 主文件
+- [js/utils/serviceWorker.ts](js/utils/serviceWorker.ts) - 注册和管理
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      return response || fetch(event.request);
-    })
-  );
-});
+**功能特性**:
+- 静态资源缓存（CSS、JS、图片）
+- 缓存策略：
+  - 静态资源：Cache First
+  - API 请求：Network First
+- `registerServiceWorker()` - 注册 Service Worker
+- `checkForUpdates()` - 检查更新
+- `skipWaiting()` - 跳过等待，立即激活
+- `isOnline()` - 在线状态检测
+- `onOnlineStatusChange()` - 监听在线状态变化
+- `clearCache()` - 清除缓存
 
-// 注册
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-```
+**CSS 支持**: [css/p2-improvements.css](css/p2-improvements.css)
+- `.offline-indicator` - 离线指示器
+- `.update-banner` - 更新提示横幅
 
 ---
 
