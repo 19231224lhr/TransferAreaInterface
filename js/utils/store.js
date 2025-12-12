@@ -63,11 +63,11 @@ const initialState = {
 class Store {
   /**
    * Create a new Store instance
-   * @param {AppState} [initialState] - Initial state
+   * @param {Partial<AppState>} [initialState] - Initial state
    */
-  constructor(initialState = {}) {
+  constructor(initialState = /** @type {Partial<AppState>} */ ({})) {
     /** @type {AppState} */
-    this._state = { ...initialState };
+    this._state = /** @type {AppState} */ ({ ...initialState });
     
     /** @type {Set<StateListener>} */
     this._listeners = new Set();

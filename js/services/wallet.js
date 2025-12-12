@@ -13,7 +13,7 @@ import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.
 import { importFromPrivHex } from './account.js';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security.js';
-import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants.js';
+import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants.ts';
 
 /**
  * Update wallet brief display (count and list)

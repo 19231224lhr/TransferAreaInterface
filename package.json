@@ -1,0 +1,24 @@
+{
+  "name": "transferareainterface",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "盘古系统转账区 - 基于 UTXO 模型的区块链支付钱包前端界面与后端核心代码实现。",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^5.4.21"
+  }
+}

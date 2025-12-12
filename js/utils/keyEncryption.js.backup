@@ -41,11 +41,12 @@ export const ENCRYPTION_META_STORAGE = 'encryptionMeta';
 
 /**
  * Convert ArrayBuffer to hex string
- * @param {ArrayBuffer} buffer
+ * @param {ArrayBuffer|Uint8Array} buffer
  * @returns {string}
  */
 function bufferToHex(buffer) {
-  return Array.from(new Uint8Array(buffer))
+  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  return Array.from(bytes)
     .map(b => b.toString(16).padStart(2, '0'))
     .join('');
 }
@@ -93,9 +94,10 @@ function bufferToString(buffer) {
  */
 async function deriveKey(password, salt) {
   // Import password as key material
+  const passwordBuffer = stringToBuffer(password);
   const keyMaterial = await crypto.subtle.importKey(
     'raw',
-    stringToBuffer(password),
+    /** @type {BufferSource} */ (passwordBuffer),
     { name: 'PBKDF2' },
     false,
     ['deriveBits', 'deriveKey']
@@ -105,7 +107,7 @@ async function deriveKey(password, salt) {
   return crypto.subtle.deriveKey(
     {
       name: 'PBKDF2',
-      salt: salt,
+      salt: /** @type {BufferSource} */ (salt),
       iterations: PBKDF2_ITERATIONS,
       hash: 'SHA-256'
     },
@@ -136,9 +138,9 @@ export async function encryptPrivateKey(privateKeyHex, password) {
 
   // Encrypt the private key
   const encryptedBuffer = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv },
+    { name: 'AES-GCM', iv: /** @type {BufferSource} */ (iv) },
     key,
-    stringToBuffer(privateKeyHex)
+    /** @type {BufferSource} */ (stringToBuffer(privateKeyHex))
   );
 
   return {
@@ -172,9 +174,9 @@ export async function decryptPrivateKey(encryptedHex, salt, iv, password) {
   try {
     // Decrypt
     const decryptedBuffer = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: ivBuffer },
+      { name: 'AES-GCM', iv: /** @type {BufferSource} */ (ivBuffer) },
       key,
-      encryptedBuffer
+      /** @type {BufferSource} */ (encryptedBuffer)
     );
 
     return bufferToString(new Uint8Array(decryptedBuffer));
@@ -193,8 +195,8 @@ export async function decryptPrivateKey(encryptedHex, salt, iv, password) {
  * @property {string} encrypted - Encrypted private key
  * @property {string} salt - Encryption salt
  * @property {string} iv - Encryption IV
- * @property {number} version - Encryption version
- * @property {number} timestamp - Encryption timestamp
+ * @property {number} [version] - Encryption version
+ * @property {number} [timestamp] - Encryption timestamp
  */
 
 /**

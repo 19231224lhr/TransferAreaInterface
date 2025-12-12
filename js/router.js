@@ -6,7 +6,7 @@
 
 import { updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage.js';
-import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.js';
+import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 import { updateHeaderUser } from './ui/header.js';
 
 // Page modules - imported for initialization

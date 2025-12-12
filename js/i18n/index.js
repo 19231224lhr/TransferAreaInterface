@@ -6,7 +6,7 @@
 
 import zhCN from './zh-CN.js';
 import en from './en.js';
-import { I18N_STORAGE_KEY } from '../config/constants.js';
+import { I18N_STORAGE_KEY } from '../config/constants.ts';
 
 // Translation dictionaries
 const translations = {

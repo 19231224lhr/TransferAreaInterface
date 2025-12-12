@@ -6,7 +6,7 @@
 
 import { loadUser, saveUser, getJoinedGroup, saveGuarChoice } from '../utils/storage.js';
 import { t } from '../i18n/index.js';
-import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.js';
+import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 import { escapeHtml } from '../utils/security.js';
 
 // Current selected group

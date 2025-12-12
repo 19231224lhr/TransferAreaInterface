@@ -1,0 +1,51 @@
+{
+  "compilerOptions": {
+    // Language and Environment
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    
+    // Type Checking
+    "strict": false,
+    "noImplicitAny": false,
+    "strictNullChecks": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    
+    // JavaScript Support
+    "allowJs": true,
+    "checkJs": true,
+    
+    // Interop Constraints
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
+    "isolatedModules": true,
+    
+    // Output
+    "noEmit": true,
+    "declaration": false,
+    
+    // Resolution
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    
+    // Path Mapping
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["js/*"]
+    }
+  },
+  "include": [
+    "js/**/*.ts",
+    "js/**/*.js",
+    "js/globals.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "backend"
+  ]
+}

@@ -6,7 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { showSuccessToast } from '../utils/toast.js';
-import { THEME_STORAGE_KEY } from '../config/constants.js';
+import { THEME_STORAGE_KEY } from '../config/constants.ts';
 
 // Current theme state
 let currentTheme = 'light';

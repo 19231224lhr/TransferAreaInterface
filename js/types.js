@@ -32,11 +32,29 @@
  */
 
 /**
+ * @typedef {Object} UTXOPosition
+ * @property {number} Blocknum - Block number
+ * @property {number} IndexX - X index
+ * @property {number} IndexY - Y index
+ * @property {number} IndexZ - Z index
+ */
+
+/**
+ * @typedef {Object} UTXOSource
+ * @property {string} TXID - Transaction ID
+ * @property {number} VOut - Output index
+ */
+
+/**
  * @typedef {Object} UTXO
  * @property {number} Value - UTXO value
  * @property {number} Type - Coin type (0=PGC, 1=BTC, 2=ETH)
  * @property {string} [TxHash] - Transaction hash
  * @property {number} [Index] - UTXO index
+ * @property {number} [Time] - Timestamp
+ * @property {UTXOPosition} [Position] - Position in blockchain
+ * @property {boolean} [IsTXCerUTXO] - Whether this is a TXCer UTXO
+ * @property {UTXOSource} [UTXO] - Source transaction info
  */
 
 /**
@@ -44,6 +62,9 @@
  * @property {number} Value - Certificate value
  * @property {number} Type - Coin type
  * @property {string} [CerHash] - Certificate hash
+ * @property {number} [Time] - Timestamp
+ * @property {UTXOPosition} [Position] - Position in blockchain
+ * @property {UTXOSource} [UTXO] - Source transaction info
  */
 
 /**

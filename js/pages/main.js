@@ -8,7 +8,7 @@ import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.js';
 import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, handleZeroAddress, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from '../services/wallet.js';
 import { initTransferSubmit, initBuildTransaction } from '../services/transfer.js';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
-import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.js';
+import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 
 // Re-export for convenience
 export { renderWallet };

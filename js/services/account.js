@@ -4,7 +4,7 @@
  * Provides account management functions including creation, import, and sub-wallet management.
  */
 
-import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto.js';
+import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto.ts';
 import { loadUser, saveUser, toAccount } from '../utils/storage.js';
 import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';

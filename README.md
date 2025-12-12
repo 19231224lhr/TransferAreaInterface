@@ -4,7 +4,8 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat-square&logo=go" alt="Go Version" />
-  <img src="https://img.shields.io/badge/JavaScript-ES2020-F7DF1E?style=flat-square&logo=javascript" alt="JS Version" />
+  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
 </p>
 
@@ -14,9 +15,9 @@
 
 本项目是一个完整的区块链钱包解决方案，包含：
 
-- **前端界面**：基于原生 HTML/CSS/JavaScript 的现代化钱包 UI
+- **前端界面**：基于原生 HTML/CSS/JavaScript + TypeScript 的现代化钱包 UI
 - **后端核心**：Go 语言实现的 UTXO 交易构建与签名逻辑
-- **Web 服务器**：提供前端静态资源服务与 API 接口
+- **Web 服务器**：Go 静态资源服务器 + Vite 开发服务器
 
 更多详细信息参考飞书文档：https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc
 
@@ -26,22 +27,65 @@
 
 ### 环境要求
 
-- Go 1.18+ (后端)
+- **Go 1.18+** (后端服务器)
+- **Node.js 18+** (前端开发环境，可选)
 - 现代浏览器 (Chrome/Firefox/Edge/Safari)
 
-### 启动项目
+### 方式一：快速启动 (无需 Node.js)
+
+如果只是运行项目，不需要安装 Node.js 依赖：
 
 ```bash
 # 克隆项目
 git clone https://github.com/19231224lhr/TransferAreaInterface.git
 cd TransferAreaInterface
 
-# 启动 Web 服务器
+# 启动 Go 后端服务器 (同时提供前端静态资源)
 go run ./backend/cmd/webserver/main.go
 
 # 访问钱包界面
 # 打开浏览器访问: http://localhost:8081/
 ```
+
+### 方式二：开发模式 (推荐开发者使用)
+
+如果需要进行前端开发，建议安装依赖并使用 Vite 开发服务器：
+
+```bash
+# 克隆项目
+git clone https://github.com/19231224lhr/TransferAreaInterface.git
+cd TransferAreaInterface
+
+# 安装前端依赖
+npm install
+
+# 启动 Go 后端 API 服务器 (在一个终端)
+go run ./backend/cmd/webserver/main.go
+
+# 启动 Vite 开发服务器 (在另一个终端)
+npm run dev
+
+# 访问开发环境
+# 打开浏览器访问: http://localhost:3000/
+```
+
+### 前端命令一览
+
+```bash
+npm run dev       # 启动 Vite 开发服务器 (热更新)
+npm run build     # 构建生产版本到 dist/ 目录
+npm run preview   # 预览构建结果
+npm run typecheck # 运行 TypeScript 类型检查
+```
+
+### 为什么有两种启动方式？
+
+| 方式 | 适用场景 | 说明 |
+|------|----------|------|
+| Go 服务器 | 生产部署、快速预览 | 直接读取源文件，无需构建 |
+| Vite 服务器 | 前端开发 | 热更新、TypeScript 支持、开发体验更好 |
+
+> **注意**：Go 后端服务器直接提供 `index.html` 和 `js/` 目录中的源文件。Vite 开发服务器提供更好的开发体验（热更新、错误提示等）。两者访问的是相同的前端代码。
 
 ---
 
@@ -50,7 +94,11 @@ go run ./backend/cmd/webserver/main.go
 ```
 TransferAreaInterface/
 ├── index.html                 # 主页面入口
-├── app.js                     # 前端核心逻辑 (5000+ 行)
+├── package.json               # npm 配置 (开发依赖)
+├── vite.config.js             # Vite 构建配置
+├── tsconfig.json              # TypeScript 配置
+├── jsconfig.json              # JavaScript 类型检查配置
+├── .gitignore                 # Git 忽略配置
 ├── css/                       # 模块化样式文件
 │   ├── base.css              # 基础样式与 CSS 变量
 │   ├── animations.css        # 动画效果
@@ -66,6 +114,26 @@ TransferAreaInterface/
 │   ├── entry.css             # 入口页样式
 │   ├── toast.css             # Toast 提示样式
 │   └── utilities.css         # 工具类样式
+├── js/                        # 前端 JavaScript/TypeScript 代码
+│   ├── app.js                # 应用入口
+│   ├── router.js             # 路由管理
+│   ├── types.js              # 类型定义 (JSDoc)
+│   ├── globals.d.ts          # 全局类型声明 (TypeScript)
+│   ├── config/
+│   │   └── constants.ts      # 配置常量 (TypeScript)
+│   ├── i18n/                 # 国际化
+│   │   ├── index.js
+│   │   ├── zh-CN.js
+│   │   └── en.js
+│   ├── pages/                # 页面组件
+│   ├── services/             # 业务逻辑服务
+│   ├── ui/                   # UI 组件
+│   └── utils/                # 工具函数
+│       ├── crypto.ts         # 加密工具 (TypeScript)
+│       ├── keyEncryption.ts  # 密钥加密 (TypeScript)
+│       ├── security.js       # 安全验证
+│       ├── storage.js        # 存储管理
+│       └── store.js          # 状态管理
 ├── backend/                   # Go 后端代码
 │   ├── Account.go            # 账户与钱包结构体
 │   ├── NewAccount.go         # 创建新账户
@@ -83,8 +151,20 @@ TransferAreaInterface/
 │       └── webserver/
 │           └── main.go       # Web 服务器入口
 ├── assets/                    # 静态资源
+├── dist/                      # 构建输出 (git ignored)
+├── node_modules/              # npm 依赖 (git ignored)
 └── tests/                     # 测试文件
 ```
+
+### 技术栈
+
+| 层级 | 技术 | 说明 |
+|------|------|------|
+| 前端框架 | Vanilla JS + TypeScript | 无框架，原生开发 |
+| 构建工具 | Vite 5.4 | 快速热更新，ES Module 支持 |
+| 类型系统 | TypeScript 5.9 | 渐进式类型化，JS/TS 混合 |
+| 后端 | Go 1.18+ | UTXO 交易逻辑 |
+| 静态服务 | Go net/http | 生产环境静态资源服务 |
 
 ---
 
@@ -425,9 +505,21 @@ err = account.SendTX(tx)
 
 ## 📝 更新日志
 
-### 最新更新
+### 2025年1月 - TypeScript 迁移与工程化
+
+- ✅ **TypeScript 支持**：引入 TypeScript 5.9，支持 JS/TS 混合开发
+- ✅ **Vite 构建工具**：引入 Vite 5.4，提供快速热更新和构建
+- ✅ **类型安全**：关键模块 (crypto, keyEncryption, constants) 已转换为 TypeScript
+- ✅ **开发体验**：类型检查、代码补全、错误提示
+- ✅ **构建优化**：esbuild 压缩，sourcemap 支持
+
+### 2025年1月 - P0/P1 安全与性能优化
 
 - ✅ **国际化系统**：完整的中英文双语支持，260+ 翻译键，覆盖所有页面和组件
+- ✅ **私钥加密存储**：使用 Web Crypto API 实现 AES-GCM 加密
+- ✅ **安全防护**：XSS 防护、CSRF 防护、输入验证
+- ✅ **状态管理**：响应式 Store 类，支持订阅和持久化
+- ✅ **性能优化**：RAF 批量更新、内存泄漏修复
 - ✅ **完整的钱包转账表单**：来源地址选择、账单网格、按币种找零、交易选项与实时校验
 - ✅ **自定义币种下拉组件**：统一风格，支持 PGC/BTC/ETH Logo
 - ✅ **担保组织交互完善**：注册/导入/入口统一跳转流程，实时同步组织信息

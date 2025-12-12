@@ -12,7 +12,7 @@ import {
   GUAR_CHOICE_KEY,
   DEFAULT_GROUP,
   GROUP_LIST 
-} from '../config/constants.js';
+} from '../config/constants.ts';
 
 /**
  * @typedef {import('../types.js').User} User

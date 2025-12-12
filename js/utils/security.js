@@ -101,10 +101,10 @@ export function createElement(tagName, className = '', textContent = '', attribu
 /**
  * Validate transfer amount with detailed error messages
  * @param {string|number} amount - Amount to validate
- * @param {Object} options - Validation options
- * @param {number} options.min - Minimum allowed value (default: 0)
- * @param {number} options.max - Maximum allowed value (default: Number.MAX_SAFE_INTEGER)
- * @param {number} options.decimals - Maximum decimal places (default: 8)
+ * @param {Object} [options] - Validation options
+ * @param {number} [options.min] - Minimum allowed value (default: 0)
+ * @param {number} [options.max] - Maximum allowed value (default: Number.MAX_SAFE_INTEGER)
+ * @param {number} [options.decimals] - Maximum decimal places (default: 8)
  * @returns {{valid: boolean, value?: number, error?: string}} Validation result
  */
 export function validateTransferAmount(amount, options = {}) {
@@ -128,7 +128,7 @@ export function validateTransferAmount(amount, options = {}) {
     if (min === 0 || min < 0.00000001) {
       return { valid: false, error: t('validation.amountPositive') || '金额必须大于0' };
     }
-    return { valid: false, error: (t('validation.amountMin') || '金额必须大于 {min}').replace('{min}', min) };
+    return { valid: false, error: (t('validation.amountMin') || '金额必须大于 {min}').replace('{min}', String(min)) };
   }
   
   // Check maximum (safety check)
@@ -142,7 +142,7 @@ export function validateTransferAmount(amount, options = {}) {
   if (decimalPart && decimalPart.length > decimals) {
     return { 
       valid: false, 
-      error: (t('validation.amountDecimals') || '最多支持 {decimals} 位小数').replace('{decimals}', decimals) 
+      error: (t('validation.amountDecimals') || '最多支持 {decimals} 位小数').replace('{decimals}', String(decimals)) 
     };
   }
   
@@ -152,8 +152,8 @@ export function validateTransferAmount(amount, options = {}) {
 /**
  * Validate blockchain address format
  * @param {string} address - Address to validate
- * @param {Object} options - Validation options
- * @param {boolean} options.required - Whether address is required
+ * @param {Object} [options] - Validation options
+ * @param {boolean} [options.required] - Whether address is required (default: true)
  * @returns {{valid: boolean, value?: string, error?: string}} Validation result
  */
 export function validateAddress(address, options = {}) {
@@ -213,8 +213,8 @@ export function validatePrivateKey(privateKey) {
 /**
  * Validate guarantor organization ID
  * @param {string} orgId - Organization ID to validate
- * @param {Object} options - Validation options
- * @param {boolean} options.required - Whether org ID is required
+ * @param {Object} [options] - Validation options
+ * @param {boolean} [options.required] - Whether org ID is required (default: false)
  * @returns {{valid: boolean, value?: string, error?: string}} Validation result
  */
 export function validateOrgId(orgId, options = {}) {
@@ -368,12 +368,13 @@ export async function fetchWithRetry(url, options = {}, retries = DEFAULT_RETRY_
 /**
  * Secure fetch with CSRF token support
  * @param {string} url - Request URL
- * @param {Object} options - Fetch options
+ * @param {RequestInit} [options] - Fetch options
  * @returns {Promise<Response>} Fetch response
  */
 export async function secureFetch(url, options = {}) {
   // Get CSRF token from meta tag if available
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const csrfMeta = /** @type {HTMLMetaElement | null} */ (document.querySelector('meta[name="csrf-token"]'));
+  const csrfToken = csrfMeta?.content || '';
   
   const secureHeaders = {
     'Content-Type': 'application/json',
@@ -391,17 +392,18 @@ export async function secureFetch(url, options = {}) {
 /**
  * Secure fetch with all protections (timeout, retry, CSRF)
  * @param {string} url - Request URL
- * @param {Object} options - Fetch options
- * @param {Object} config - Configuration
- * @param {number} config.timeout - Timeout in milliseconds
- * @param {number} config.retries - Number of retries
+ * @param {RequestInit} [options] - Fetch options
+ * @param {Object} [config] - Configuration
+ * @param {number} [config.timeout] - Timeout in milliseconds
+ * @param {number} [config.retries] - Number of retries
  * @returns {Promise<Response>} Fetch response
  */
 export async function secureFetchWithRetry(url, options = {}, config = {}) {
   const { timeout = DEFAULT_FETCH_TIMEOUT, retries = DEFAULT_RETRY_COUNT } = config;
   
   // Get CSRF token from meta tag if available
-  const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+  const csrfMeta = /** @type {HTMLMetaElement | null} */ (document.querySelector('meta[name="csrf-token"]'));
+  const csrfToken = csrfMeta?.content || '';
   
   const secureHeaders = {
     'Content-Type': 'application/json',
@@ -455,9 +457,9 @@ export function reportError(errorInfo) {
 /**
  * Initialize global error boundary
  * Should be called once during app initialization
- * @param {Object} options - Configuration options
- * @param {Function} options.showError - Function to show error to user
- * @param {boolean} options.logToConsole - Whether to log to console
+ * @param {Object} [options] - Configuration options
+ * @param {Function} [options.showError] - Function to show error to user
+ * @param {boolean} [options.logToConsole] - Whether to log to console (default: true)
  */
 export function initErrorBoundary(options = {}) {
   const { showError, logToConsole = true } = options;
@@ -465,6 +467,12 @@ export function initErrorBoundary(options = {}) {
   // Global error handler
   window.addEventListener('error', (event) => {
     const { message, filename, lineno, colno, error } = event;
+    
+    // Skip empty/undefined errors
+    if (!message && !filename && !error) {
+      event.preventDefault();
+      return true;
+    }
     
     // Skip browser extension errors
     const msgStr = String(message || '');
@@ -478,29 +486,47 @@ export function initErrorBoundary(options = {}) {
       return true;
     }
     
-    // Log error
-    if (logToConsole) {
-      console.error('Global error caught:', { message, filename, lineno, colno, error });
+    // Skip HTTP/API related errors (since backend is not yet connected)
+    if (msgStr.includes('fetch') ||
+        msgStr.includes('HTTP') ||
+        msgStr.includes('api/') ||
+        msgStr.includes('POST') ||
+        msgStr.includes('GET') ||
+        msgStr.includes('404') ||
+        msgStr.includes('401') ||
+        msgStr.includes('500')) {
+      event.preventDefault();
+      if (logToConsole) {
+        console.warn('HTTP/API error (suppressed, backend not connected):', msgStr);
+      }
+      return true;
     }
     
-    // Report error
-    reportError({
-      type: 'error',
-      message,
-      filename,
-      lineno,
-      colno,
-      stack: error?.stack,
-      timestamp: Date.now()
-    });
-    
-    // Show error to user if handler provided
-    if (showError && typeof showError === 'function') {
-      showError(
-        t('error.unexpected') || '发生意外错误',
-        t('error.pleaseRefresh') || '请刷新页面后重试'
-      );
+    // Only log if error has meaningful content
+    if (logToConsole && (msgStr || fileStr || error)) {
+      console.error('Global error caught:', { message: msgStr, filename: fileStr, lineno, colno, error });
     }
+    
+    // Only report error if it has meaningful content
+    if (message || error) {
+      reportError({
+        type: 'error',
+        message: msgStr,
+        filename: fileStr,
+        lineno,
+        colno,
+        stack: error?.stack,
+        timestamp: Date.now()
+      });
+    }
+    
+    // Don't show error to user for now (backend not connected)
+    // if (showError && typeof showError === 'function') {
+    //   showError(
+    //     t('error.unexpected') || '发生意外错误',
+    //     t('error.pleaseRefresh') || '请刷新页面后重试'
+    //   );
+    // }
     
     return false;
   }, true);
@@ -518,31 +544,58 @@ export function initErrorBoundary(options = {}) {
       return;
     }
     
+    // Skip ALL HTTP/API/fetch related errors (backend not yet connected)
+    if (reasonStr.includes('fetch') ||
+        reasonStr.includes('HTTP') ||
+        reasonStr.includes('api/') ||
+        reasonStr.includes('POST') ||
+        reasonStr.includes('GET') ||
+        reasonStr.includes('PUT') ||
+        reasonStr.includes('DELETE') ||
+        reasonStr.includes('404') ||
+        reasonStr.includes('401') ||
+        reasonStr.includes('403') ||
+        reasonStr.includes('500') ||
+        reasonStr.includes('Not Found') ||
+        reasonStr.includes('Unauthorized') ||
+        reasonStr.includes('NetworkError') ||
+        reasonStr.includes('Failed to fetch') ||
+        reasonStr.includes('请求超时') ||
+        reasonStr.includes('localhost:8081') ||
+        reasonStr.includes('localhost:3000')) {
+      event.preventDefault();
+      if (logToConsole) {
+        console.warn('HTTP/API error (suppressed, backend not connected):', reasonStr);
+      }
+      return;
+    }
+    
     // Log error
     if (logToConsole) {
       console.error('Unhandled promise rejection:', reason);
     }
     
-    // Report error
-    reportError({
-      type: 'unhandledrejection',
-      message: reasonStr,
-      stack: reason?.stack,
-      timestamp: Date.now()
-    });
-    
-    // Show error to user if handler provided (only for significant errors)
-    if (showError && typeof showError === 'function') {
-      // Check if it's a network error
-      if (reasonStr.includes('NetworkError') || 
-          reasonStr.includes('Failed to fetch') ||
-          reasonStr.includes('请求超时')) {
-        showError(
-          t('error.networkError') || '网络错误',
-          t('error.checkNetwork') || '请检查网络连接后重试'
-        );
-      }
+    // Only report error if it has meaningful content
+    if (reasonStr && reasonStr !== '[object Object]') {
+      reportError({
+        type: 'unhandledrejection',
+        message: reasonStr,
+        stack: reason?.stack,
+        timestamp: Date.now()
+      });
     }
+    
+    // Don't show error to user for now (backend not connected)
+    // if (showError && typeof showError === 'function') {
+    //   if (reasonStr.includes('NetworkError') || 
+    //       reasonStr.includes('Failed to fetch') ||
+    //       reasonStr.includes('请求超时')) {
+    //     showError(
+    //       t('error.networkError') || '网络错误',
+    //       t('error.checkNetwork') || '请检查网络连接后重试'
+    //     );
+    //   }
+    // }
   }, true);
   
   console.log('Error boundary initialized');
@@ -551,9 +604,9 @@ export function initErrorBoundary(options = {}) {
 /**
  * Wrap async function with error boundary
  * @param {Function} fn - Async function to wrap
- * @param {Object} options - Options
- * @param {Function} options.onError - Custom error handler
- * @param {*} options.fallback - Fallback value on error
+ * @param {Object} [options] - Options
+ * @param {Function} [options.onError] - Custom error handler
+ * @param {*} [options.fallback] - Fallback value on error
  * @returns {Function} Wrapped function
  */
 export function withErrorBoundary(fn, options = {}) {

@@ -4,7 +4,7 @@
  * Provides transaction building and signing functions for UTXO-based transactions.
  */
 
-import { bytesToHex, ecdsaSignData } from '../utils/crypto.js';
+import { bytesToHex, ecdsaSignData } from '../utils/crypto.ts';
 
 // ========================================
 // Serialization Helpers

@@ -40,13 +40,13 @@ try {
 // ========================================
 
 // Config
-import { STORAGE_KEY, I18N_STORAGE_KEY, THEME_STORAGE_KEY, DEFAULT_GROUP, GROUP_LIST } from './config/constants.js';
+import { STORAGE_KEY, I18N_STORAGE_KEY, THEME_STORAGE_KEY, DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 
 // i18n
 import { t, setLanguage, getCurrentLanguage, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
 
 // Utils
-import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignData, sha256, sha256Hex } from './utils/crypto.js';
+import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignData, sha256, sha256Hex } from './utils/crypto.ts';
 import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.js';
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
@@ -66,7 +66,7 @@ import {
   checkEncryptionStatus,
   hasEncryptedKey,
   hasLegacyKey
-} from './utils/keyEncryption.js';
+} from './utils/keyEncryption.ts';
 import { 
   escapeHtml, 
   createElement, 
