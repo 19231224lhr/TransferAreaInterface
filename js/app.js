@@ -47,7 +47,7 @@ import { t, setLanguage, getCurrentLanguage, updatePageTranslations, loadLanguag
 
 // Utils
 import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignData, sha256, sha256Hex } from './utils/crypto.ts';
-import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.js';
+import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.ts';
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
 import { debounce, throttle, delegate, EventListenerManager, globalEventManager, createEventManager, cleanupPageListeners } from './utils/eventUtils.js';
@@ -83,7 +83,7 @@ import {
   initErrorBoundary,
   withErrorBoundary,
   reportError
-} from './utils/security.js';
+} from './utils/security.ts';
 import performanceModeManager, { 
   scheduleBatchUpdate, 
   flushBatchUpdates, 
@@ -104,10 +104,10 @@ import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js'
 import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
-import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.js';
+import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.ts';
 import { renderWallet, updateWalletBrief as walletUpdateBrief, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet.js';
-import { buildNewTX, getTXOutputHash, getTXHash, getTXID, getTXUserSignature, exchangeRate } from './services/transaction.js';
-import { initTransferSubmit, initBuildTransaction } from './services/transfer.js';
+import { buildNewTX, getTXOutputHash, getTXHash, getTXID, getTXUserSignature, exchangeRate } from './services/transaction.ts';
+import { initTransferSubmit, initBuildTransaction } from './services/transfer.ts';
 import { updateWalletStruct } from './services/walletStruct.js';
 
 // Pages

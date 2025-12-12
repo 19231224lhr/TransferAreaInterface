@@ -5,14 +5,14 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, saveUser, getJoinedGroup, toAccount } from '../utils/storage.js';
+import { loadUser, saveUser, getJoinedGroup, toAccount } from '../utils/storage.ts';
 import { readAddressInterest, BASE_LIFT, toPt } from '../utils/helpers.js';
 import { getActionModalElements } from '../ui/modal.js';
 import { updateWalletChart } from '../ui/charts.js';
 import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
-import { importFromPrivHex } from './account.js';
+import { importFromPrivHex } from './account.ts';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
-import { escapeHtml } from '../utils/security.js';
+import { escapeHtml } from '../utils/security.ts';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants.ts';
 
 /**

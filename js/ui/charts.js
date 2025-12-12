@@ -4,7 +4,7 @@
  * Provides chart rendering functionality for wallet balance.
  */
 
-import { loadUser } from '../utils/storage.js';
+import { loadUser } from '../utils/storage.ts';
 import { debounce, rafThrottle } from '../utils/eventUtils.js';
 
 // Chart history storage key

@@ -1604,10 +1604,14 @@ export default {
    - ✅ 验证 Vite 构建成功
 
 3. **第三阶段 - TypeScript 文件转换**
-   - ✅ `js/config/constants.ts` - 配置常量和类型
-   - ✅ `js/utils/crypto.ts` - 加密/哈希/签名工具
-   - ✅ `js/utils/keyEncryption.ts` - 私钥加密模块
-   - ⏳ 剩余文件可按需转换: transaction.js, transfer.js, account.js, storage.js, security.js
+   - ✅ `js/config/constants.ts` - 配置常量和类型 (CoinTypeId, GuarantorGroup, CoinInfo)
+   - ✅ `js/utils/crypto.ts` - 加密/哈希/签名工具 (ECDSASignature)
+   - ✅ `js/utils/keyEncryption.ts` - 私钥加密模块 (EncryptedKeyData, EncryptResult)
+   - ✅ `js/services/transaction.ts` - 交易构建模块 (Transaction, BuildTXInfo, TXOutput)
+   - ✅ `js/services/transfer.ts` - 转账表单逻辑 (TransferBill)
+   - ✅ `js/services/account.ts` - 账户管理模块 (AccountData, AddressMetadata)
+   - ✅ `js/utils/storage.ts` - 本地存储模块 (User, Wallet, UserProfile)
+   - ✅ `js/utils/security.ts` - 安全工具模块 (ValidationResult, SubmissionGuard, ErrorBoundary)
 
 **新增配置文件**:
 - `package.json` - npm 项目配置
@@ -1635,10 +1639,10 @@ npm run typecheck # 运行 TypeScript 类型检查
 1. 完善 P2 中优先级问题
 2. 添加基础单元测试
 3. 优化路由守卫和过渡动画
-4. 继续转换剩余关键文件为 TypeScript
+4. 将剩余 UI/Pages 模块转换为 TypeScript
 
 ### 阶段四 (4-6周)
-1. 完成 TypeScript 完整迁移
+1. 完成所有 JS 文件的 TypeScript 迁移
 2. 持续性能监控和优化
 3. 添加 E2E 测试
 

@@ -5,8 +5,8 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser } from '../utils/storage.js';
-import { escapeHtml } from '../utils/security.js';
+import { loadUser } from '../utils/storage.ts';
+import { escapeHtml } from '../utils/security.ts';
 
 /**
  * Update wallet structure display (copied from backup lines 3663-3850)

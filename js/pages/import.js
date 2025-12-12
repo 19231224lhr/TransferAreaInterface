@@ -4,8 +4,8 @@
  * Handles the import wallet page logic.
  */
 
-import { loadUser, saveUser, toAccount } from '../utils/storage.js';
-import { importFromPrivHex } from '../services/account.js';
+import { loadUser, saveUser, toAccount } from '../utils/storage.ts';
+import { importFromPrivHex } from '../services/account.ts';
 import { showErrorToast } from '../utils/toast.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';
 import { t } from '../i18n/index.js';

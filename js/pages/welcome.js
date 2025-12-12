@@ -4,7 +4,7 @@
  * Handles the welcome/landing page logic.
  */
 
-import { loadUser } from '../utils/storage.js';
+import { loadUser } from '../utils/storage.ts';
 
 /**
  * Update welcome page buttons based on login state

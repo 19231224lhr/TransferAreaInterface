@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { escapeHtml } from '../utils/security.js';
+import { escapeHtml } from '../utils/security.ts';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [

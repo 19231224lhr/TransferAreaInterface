@@ -5,7 +5,7 @@
  */
 
 import { t, getCurrentLanguage, setLanguage, updateLanguageSelectorUI, updatePageTranslations } from '../i18n/index.js';
-import { loadUser, loadUserProfile, saveUserProfile } from '../utils/storage.js';
+import { loadUser, loadUserProfile, saveUserProfile } from '../utils/storage.ts';
 import { showSuccessToast, showErrorToast, showWarningToast } from '../utils/toast.js';
 import { getCurrentTheme, setTheme, updateThemeSelectorUI } from './theme.js';
 

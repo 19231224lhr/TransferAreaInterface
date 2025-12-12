@@ -4,8 +4,8 @@
  * Handles the new user/account creation page logic.
  */
 
-import { saveUser, loadUser } from '../utils/storage.js';
-import { newUser } from '../services/account.js';
+import { saveUser, loadUser } from '../utils/storage.ts';
+import { newUser } from '../services/account.ts';
 import { showSuccessToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';

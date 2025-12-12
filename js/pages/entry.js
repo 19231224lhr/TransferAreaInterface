@@ -4,9 +4,9 @@
  * Handles the wallet management entry page logic.
  */
 
-import { loadUser } from '../utils/storage.js';
+import { loadUser } from '../utils/storage.ts';
 import { t } from '../i18n/index.js';
-import { escapeHtml } from '../utils/security.js';
+import { escapeHtml } from '../utils/security.ts';
 
 /**
  * Update wallet brief list on entry page
