@@ -24,7 +24,7 @@ export default {
   'common.separator': '、',
 
   // 页面标题
-  'page.title': 'PanguPay - 盘古支付',
+  'page.title': 'PanguPay',
 
   // 头部菜单
   'header.userInfo': '用户信息',
