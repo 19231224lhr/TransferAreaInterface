@@ -40,16 +40,16 @@ try {
 // ========================================
 
 // Config
-import { STORAGE_KEY, I18N_STORAGE_KEY, THEME_STORAGE_KEY, DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
+// Note: Constants imported in child modules
 
 // i18n
 import { t, setLanguage, getCurrentLanguage, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
 
 // Utils
-import { bytesToHex, hexToBytes, crc32, generate8DigitFromInputHex, ecdsaSignData, sha256, sha256Hex } from './utils/crypto.ts';
-import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, saveGuarChoice, clearGuarChoice, resetOrgSelectionForNewUser } from './utils/storage.ts';
+import { bytesToHex, hexToBytes, sha256, sha256Hex } from './utils/crypto';
+import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, saveUserProfile, getJoinedGroup, resetOrgSelectionForNewUser } from './utils/storage';
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
-import { wait, toFiniteNumber, readAddressInterest, copyToClipboard } from './utils/helpers.js';
+import { wait, copyToClipboard } from './utils/helpers.js';
 import { debounce, throttle, delegate, EventListenerManager, globalEventManager, createEventManager, cleanupPageListeners } from './utils/eventUtils.js';
 import store, { 
   selectUser, selectRoute, selectTheme, selectLanguage,
@@ -66,7 +66,7 @@ import {
   checkEncryptionStatus,
   hasEncryptedKey,
   hasLegacyKey
-} from './utils/keyEncryption.ts';
+} from './utils/keyEncryption';
 import { 
   escapeHtml, 
   createElement, 
@@ -83,7 +83,7 @@ import {
   initErrorBoundary,
   withErrorBoundary,
   reportError
-} from './utils/security.ts';
+} from './utils/security';
 import performanceModeManager, { 
   scheduleBatchUpdate, 
   flushBatchUpdates, 
@@ -95,19 +95,19 @@ import performanceMonitor from './utils/performanceMonitor.js';
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
-import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip, showConfirmModal, getActionModalElements } from './ui/modal.js';
+import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal.js';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
-import { initProfilePage, updateProfileDisplay } from './ui/profile.js';
+import { initProfilePage } from './ui/profile.js';
 import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
 import { initNetworkChart, cleanupNetworkChart } from './ui/networkChart.js';
 import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js';
 import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
-import { newUser, importFromPrivHex, importLocallyFromPrivHex, addNewSubWallet } from './services/account.ts';
-import { renderWallet, updateWalletBrief as walletUpdateBrief, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet.js';
-import { buildNewTX, getTXOutputHash, getTXHash, getTXID, getTXUserSignature, exchangeRate } from './services/transaction.ts';
-import { initTransferSubmit, initBuildTransaction } from './services/transfer.ts';
+import { newUser, importFromPrivHex, addNewSubWallet } from './services/account';
+import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet.js';
+import { buildNewTX, exchangeRate } from './services/transaction';
+import { initTransferSubmit, initBuildTransaction } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
 
 // Pages
@@ -119,7 +119,7 @@ import { initImportPage, resetImportState } from './pages/import.js';
 import { initMainPage, handleMainRoute } from './pages/main.js';
 import { initJoinGroupPage, startInquiryAnimation, resetInquiryState } from './pages/joinGroup.js';
 import { initGroupDetailPage, updateGroupDetailDisplay } from './pages/groupDetail.js';
-import { initHistoryPage, resetHistoryPageState } from './pages/history.js';
+import { initHistoryPage } from './pages/history.js';
 
 // Router
 import { router, routeTo, showCard, initRouter } from './router.js';
@@ -153,7 +153,7 @@ window.addNewSubWallet = addNewSubWallet;
 // Storage functions
 window.loadUser = loadUser;
 window.saveUser = saveUser;
-window.toAccount = toAccount;
+window.toAccount = (basic) => toAccount(basic, loadUser()); // Wrapper to match expected signature
 window.clearAccountStorage = clearAccountStorage;
 window.loadUserProfile = loadUserProfile;
 window.saveUserProfile = saveUserProfile;

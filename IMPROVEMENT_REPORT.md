@@ -1330,6 +1330,7 @@ await withTransaction([
 **问题描述**:
 - 所有 JS 模块同步加载
 - 首屏加载时间可能较长
+- 现在改成JS和TS并存了，可能需要时刻注意
 
 **改进建议**:
 ```javascript
@@ -1449,48 +1450,6 @@ self.addEventListener('fetch', (event) => {
 // 注册
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
-}
-```
-
----
-
-### 23. **构建工具优化**
-
-**问题描述**:
-- 无构建流程
-- CSS/JS 未压缩
-- 无代码检查
-
-**改进建议**:
-```json
-// package.json
-{
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "lint": "eslint js/**/*.js",
-    "format": "prettier --write ."
-  },
-  "devDependencies": {
-    "vite": "^5.0.0",
-    "eslint": "^8.50.0",
-    "prettier": "^3.0.0"
-  }
-}
-
-// vite.config.js
-export default {
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          vendor: ['elliptic'],
-          i18n: ['./js/i18n/index.js', './js/i18n/zh-CN.js', './js/i18n/en.js']
-        }
-      }
-    }
-  }
 }
 ```
 

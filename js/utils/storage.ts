@@ -13,7 +13,7 @@ import {
   DEFAULT_GROUP,
   GROUP_LIST,
   GuarantorGroup
-} from '../config/constants.ts';
+} from '../config/constants';
 
 // ========================================
 // Type Definitions

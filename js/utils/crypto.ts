@@ -187,7 +187,7 @@ export async function ecdsaSignData(
     const sigBuffer = await crypto.subtle.sign(
       { name: 'ECDSA', hash: 'SHA-256' },
       privateKey,
-      data
+      data as BufferSource
     );
     
     // 4. Parse signature (r || s, each 32 bytes)
@@ -238,7 +238,7 @@ export async function ecdsaSignHash(
  * @returns Hash bytes
  */
 export async function sha256(data: Uint8Array | ArrayBuffer): Promise<Uint8Array> {
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
   return new Uint8Array(hashBuffer);
 }
 

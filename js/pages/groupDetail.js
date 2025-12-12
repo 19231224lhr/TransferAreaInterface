@@ -4,7 +4,7 @@
  * Handles the group detail page logic.
  */
 
-import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/storage.ts';
+import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/storage';
 import { t } from '../i18n/index.js';
 import { showModalTip, showConfirmModal } from '../ui/modal.js';
 import { copyToClipboard, wait } from '../utils/helpers.js';

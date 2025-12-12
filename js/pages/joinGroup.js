@@ -4,10 +4,10 @@
  * Handles the join guarantor organization page logic.
  */
 
-import { loadUser, saveUser, getJoinedGroup, saveGuarChoice } from '../utils/storage.ts';
+import { loadUser, saveUser, getJoinedGroup, saveGuarChoice } from '../utils/storage';
 import { t } from '../i18n/index.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
-import { escapeHtml } from '../utils/security.ts';
+import { escapeHtml } from '../utils/security';
 
 // Current selected group
 let currentSelectedGroup = DEFAULT_GROUP;

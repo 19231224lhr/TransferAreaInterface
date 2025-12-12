@@ -4,7 +4,7 @@
  * Handles the login page logic.
  */
 
-import { loadUser } from '../utils/storage.ts';
+import { loadUser } from '../utils/storage';
 import { updateHeaderUser } from '../ui/header.js';
 
 /**

@@ -4,11 +4,11 @@
  * Provides account management functions including creation, import, and sub-wallet management.
  */
 
-import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto.ts';
-import { loadUser, saveUser, toAccount, User } from '../utils/storage.ts';
+import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto';
+import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';
-import { showSuccessToast, showErrorToast } from '../utils/toast.js';
+import { showSuccessToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 
 // ========================================
@@ -108,7 +108,7 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
   const uncompressedHex = '04' + xHex + yHex;
   const uncompressed = hexToBytes(uncompressedHex);
   
-  const sha = await crypto.subtle.digest('SHA-256', uncompressed);
+  const sha = await crypto.subtle.digest('SHA-256', uncompressed as BufferSource);
   const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
   const accountId = generate8DigitFromInputHex(normalized);
   
@@ -222,14 +222,19 @@ export async function addNewSubWallet(): Promise<void> {
     }
     
     // Show success (smooth transition from loading state)
-    showUnifiedSuccess(t('modal.walletAddSuccess'), t('modal.walletAddSuccessDesc'), () => {
-      if (typeof (window as any).renderWallet === 'function') {
-        try { (window as any).renderWallet(); } catch { }
-      }
-      if (typeof (window as any).updateWalletBrief === 'function') {
-        try { (window as any).updateWalletBrief(); } catch { }
-      }
-    });
+    showUnifiedSuccess(
+      t('modal.walletAddSuccess'), 
+      t('modal.walletAddSuccessDesc'), 
+      () => {
+        if (typeof (window as any).renderWallet === 'function') {
+          try { (window as any).renderWallet(); } catch { }
+        }
+        if (typeof (window as any).updateWalletBrief === 'function') {
+          try { (window as any).updateWalletBrief(); } catch { }
+        }
+      },
+      undefined // no cancel callback
+    );
     
   } catch (e: any) {
     hideUnifiedOverlay();

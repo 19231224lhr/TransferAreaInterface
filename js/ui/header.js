@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, loadUserProfile, computeCurrentOrgId, clearAccountStorage } from '../utils/storage.ts';
+import { loadUser, loadUserProfile, computeCurrentOrgId, clearAccountStorage } from '../utils/storage';
 
 /**
  * Update header user display

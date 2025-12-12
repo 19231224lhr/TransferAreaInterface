@@ -5,7 +5,7 @@
  */
 
 import { updatePageTranslations } from './i18n/index.js';
-import { loadUser, saveUser, getJoinedGroup } from './utils/storage.ts';
+import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 import { updateHeaderUser } from './ui/header.js';
 

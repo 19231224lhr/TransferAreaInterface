@@ -4,7 +4,7 @@
  * Provides transaction building and signing functions for UTXO-based transactions.
  */
 
-import { bytesToHex, ecdsaSignData, ECDSASignature } from '../utils/crypto.ts';
+import { bytesToHex, ecdsaSignData, ECDSASignature } from '../utils/crypto';
 
 // ========================================
 // Type Definitions
@@ -177,7 +177,7 @@ export function getTXOutputSerializedData(output: TXOutput): Uint8Array {
 export async function getTXOutputHash(output: TXOutput): Promise<Uint8Array> {
   try {
     const data = getTXOutputSerializedData(output);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
     return new Uint8Array(hashBuffer);
   } catch (err: any) {
     console.error('TXOutput hash calculation failed:', err);
@@ -206,7 +206,7 @@ export function getTXSerializedData(tx: Transaction): Uint8Array {
  */
 export async function getTXHash(tx: Transaction): Promise<Uint8Array> {
   const data = getTXSerializedData(tx);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data as BufferSource);
   return new Uint8Array(hashBuffer);
 }
 
