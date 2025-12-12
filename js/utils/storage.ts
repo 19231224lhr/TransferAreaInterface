@@ -41,6 +41,7 @@ export interface AddressData {
   txCers: Record<string, any>;
   value: AddressValue;
   estInterest: number;
+  gas?: number;
   origin?: string;
   privHex?: string;
   pubXHex?: string;
@@ -60,6 +61,7 @@ export interface Wallet {
   totalValue: number;
   TotalValue?: number;
   valueDivision: Record<number, number>;
+  ValueDivision?: Record<number, number>;
   updateTime: number;
   updateBlock: number;
   history?: HistoryRecord[];

@@ -55,6 +55,8 @@ declare global {
     initChangeAddressSelects: () => void;
     initRecipientCards: () => void;
     initAdvancedOptions: () => void;
+    __refreshSrcAddrList: () => void;
+    updateSummaryAddr: () => void;
 
     // UTXO/TXCer detail modal functions
     showUtxoDetail: (addrKey: string, utxoKey: string) => void;

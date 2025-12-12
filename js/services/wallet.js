@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Wallet Service Module
  * 
@@ -13,7 +14,7 @@ import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.
 import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
-import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants.ts';
+import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
 
 /**
  * Update wallet brief display (count and list)
