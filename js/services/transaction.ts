@@ -441,19 +441,6 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     const userAddr = buildTXInfo.UserAddress[0];
     const userAddrData = addressMsg[userAddr];
     
-    // Debug: log key sources
-    console.log('Key sources for signing:', {
-      userAddr,
-      hasUserAddrData: !!userAddrData,
-      hasAccountKeys: !!userAccount.keys,
-      addrPrivHex: userAddrData?.privHex ? 'present' : 'missing',
-      addrPubXHex: userAddrData?.pubXHex ? 'present' : 'missing',
-      addrPubYHex: userAddrData?.pubYHex ? 'present' : 'missing',
-      keysPrivHex: userAccount.keys?.privHex ? 'present' : 'missing',
-      keysPubXHex: userAccount.keys?.pubXHex ? 'present' : 'missing',
-      keysPubYHex: userAccount.keys?.pubYHex ? 'present' : 'missing'
-    });
-    
     // Try to get keys from multiple sources:
     // 1. Address-specific data (for sub-wallets)
     // 2. Account keys object (standard storage)

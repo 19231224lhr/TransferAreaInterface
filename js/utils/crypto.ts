@@ -204,7 +204,7 @@ function pointMultiply(
 
 /**
  * Compute public key (x, y) from private key using P-256 curve math
- * Pure JavaScript implementation without external libraries
+ * Prefers elliptic library if available, falls back to pure JS implementation
  */
 function computePublicKeyFromPrivate(privHex: string): { x: string; y: string } {
   // Normalize private key hex - remove 0x prefix and ensure lowercase
@@ -215,6 +215,22 @@ function computePublicKeyFromPrivate(privHex: string): { x: string; y: string } 
     throw new Error('Private key must be 64 hex characters');
   }
   
+  // Try to use elliptic library if available (faster and more tested)
+  if ((window as any).elliptic && (window as any).elliptic.ec) {
+    try {
+      const EC = (window as any).elliptic.ec;
+      const ec = new EC('p256');
+      const keyPair = ec.keyFromPrivate(normalizedPrivHex, 'hex');
+      const pubPoint = keyPair.getPublic();
+      const xHex = pubPoint.getX().toString(16).padStart(64, '0');
+      const yHex = pubPoint.getY().toString(16).padStart(64, '0');
+      return { x: xHex, y: yHex };
+    } catch (e) {
+      console.warn('Elliptic library failed, falling back to pure JS implementation:', e);
+    }
+  }
+  
+  // Fallback: Pure JavaScript implementation
   // P-256 curve parameters
   const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
   const a = BigInt('0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc');
@@ -304,7 +320,7 @@ export async function ecdsaSignData(
       yB64 = bytesToBase64url(yBytes);
     }
     
-    // 2. Create JWK and import key
+    // 2. Create JWK and import key using WebCrypto API
     const jwk: JsonWebKey = {
       kty: 'EC',
       crv: 'P-256',
@@ -313,17 +329,9 @@ export async function ecdsaSignData(
       d: dB64
     };
     
-    // Debug: log JWK structure (without exposing full private key)
-    console.log('JWK import attempt:', {
-      kty: jwk.kty,
-      crv: jwk.crv,
-      xLen: xB64.length,
-      yLen: yB64.length,
-      dLen: dB64.length
-    });
-    
     let privateKey: CryptoKey;
     try {
+      // Try to import the key with provided/derived public key coordinates
       privateKey = await crypto.subtle.importKey(
         'jwk',
         jwk,
@@ -333,8 +341,7 @@ export async function ecdsaSignData(
       );
     } catch (importError) {
       // If import fails, the public key might not match the private key
-      // Try to re-derive the public key
-      console.warn('JWK import failed, re-deriving public key from private key...');
+      // Re-derive the public key from private key
       const reDerived = computePublicKeyFromPrivate(normalizedPrivHex);
       const reXBytes = hexToBytes(reDerived.x);
       const reYBytes = hexToBytes(reDerived.y);

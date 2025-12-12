@@ -120,12 +120,28 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
 
 /**
  * Compute public key (x, y) from private key using P-256 curve math
- * Pure JavaScript implementation without external libraries
+ * Prefers elliptic library if available, falls back to pure JS implementation
  */
 async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string; y: string }> {
   // Normalize private key hex
   const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
   
+  // Try to use elliptic library if available (faster and more tested)
+  if ((window as any).elliptic && (window as any).elliptic.ec) {
+    try {
+      const EC = (window as any).elliptic.ec;
+      const ec = new EC('p256');
+      const keyPair = ec.keyFromPrivate(normalizedPrivHex, 'hex');
+      const pubPoint = keyPair.getPublic();
+      const xHex = pubPoint.getX().toString(16).padStart(64, '0');
+      const yHex = pubPoint.getY().toString(16).padStart(64, '0');
+      return { x: xHex, y: yHex };
+    } catch (e) {
+      console.warn('Elliptic library failed, falling back to pure JS implementation:', e);
+    }
+  }
+  
+  // Fallback: Pure JavaScript implementation
   // P-256 curve parameters
   const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
   const a = BigInt('0xffffffff00000001000000000000000000000000fffffffffffffffffffffffc');
