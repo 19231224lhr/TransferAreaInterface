@@ -23,6 +23,21 @@ export default {
   'common.collapseMore': 'Show Less',
   'common.separator': ', ',
 
+  // Password and Encryption
+  'encryption.setPassword': 'Set Password',
+  'encryption.enterPassword': 'Enter Password',
+  'encryption.confirmPassword': 'Confirm Password',
+  'encryption.passwordMismatch': 'Passwords do not match',
+  'encryption.passwordRequired': 'Password is required',
+  'encryption.passwordTooShort': 'Password must be at least 6 characters',
+  'encryption.wrongPassword': 'Wrong password',
+  'encryption.setPasswordDesc': 'Set a password to protect your private key (at least 6 characters)',
+  'encryption.enterPasswordDesc': 'Enter password to unlock your private key',
+  'encryption.migrationTitle': 'Security Upgrade',
+  'encryption.migrationDesc': 'Unencrypted private key detected. Please set a password to encrypt it.',
+  'encryption.encryptSuccess': 'Private key encrypted successfully',
+  'encryption.decryptFailed': 'Decryption failed, please check your password',
+
   // Page Title
   'page.title': 'PanguPay - Pangu Payment',
 

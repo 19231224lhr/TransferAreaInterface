@@ -10,6 +10,7 @@ import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';
 import { showSuccessToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
+import { secureFetchWithRetry } from '../utils/security';
 
 // ========================================
 // Type Definitions
@@ -256,11 +257,10 @@ function pointMultiply(
 export async function importFromPrivHex(privHex: string): Promise<AccountData> {
   // Try backend API first; fall back to local calculation if unavailable
   try {
-    const res = await fetch('/api/keys/from-priv', {
+    const res = await secureFetchWithRetry('/api/keys/from-priv', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ privHex })
-    });
+    }, { timeout: 10000, retries: 2 });
     if (res.ok) {
       const data = await res.json();
       const normalized = (data.privHex || privHex).replace(/^0x/i, '').toLowerCase().replace(/^0+/, '');
@@ -400,7 +400,9 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     
     // Try backend API first, fall back to local
     try {
-      const res = await fetch('/api/account/new', { method: 'POST' });
+      const res = await secureFetchWithRetry('/api/account/new', { 
+        method: 'POST' 
+      }, { timeout: 10000, retries: 2 });
       if (res.ok) {
         data = await res.json();
       } else {

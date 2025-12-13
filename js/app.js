@@ -40,6 +40,13 @@ import {
   hasLegacyKey
 } from './utils/keyEncryption';
 import { 
+  showPasswordPrompt,
+  encryptAndSavePrivateKey,
+  getDecryptedPrivateKey,
+  checkAndPromptMigration,
+  saveUserWithEncryption
+} from './utils/keyEncryptionUI';
+import { 
   escapeHtml, 
   createElement, 
   validateTransferAmount, 
@@ -382,6 +389,13 @@ window.changePassword = changePassword;
 window.checkEncryptionStatus = checkEncryptionStatus;
 window.hasEncryptedKey = hasEncryptedKey;
 window.hasLegacyKey = hasLegacyKey;
+
+// Key encryption UI functions
+window.showPasswordPrompt = showPasswordPrompt;
+window.encryptAndSavePrivateKey = encryptAndSavePrivateKey;
+window.getDecryptedPrivateKey = getDecryptedPrivateKey;
+window.checkAndPromptMigration = checkAndPromptMigration;
+window.saveUserWithEncryption = saveUserWithEncryption;
 
 // P2 Improvements - Accessibility
 window.announce = announce;

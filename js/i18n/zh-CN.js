@@ -23,6 +23,21 @@ export default {
   'common.collapseMore': '收起',
   'common.separator': '、',
 
+  // 密码和加密相关
+  'encryption.setPassword': '设置密码',
+  'encryption.enterPassword': '输入密码',
+  'encryption.confirmPassword': '确认密码',
+  'encryption.passwordMismatch': '两次输入的密码不一致',
+  'encryption.passwordRequired': '请输入密码',
+  'encryption.passwordTooShort': '密码至少需要6个字符',
+  'encryption.wrongPassword': '密码错误',
+  'encryption.setPasswordDesc': '请设置密码保护您的私钥（至少6位）',
+  'encryption.enterPasswordDesc': '请输入密码解锁私钥',
+  'encryption.migrationTitle': '安全升级',
+  'encryption.migrationDesc': '检测到未加密的私钥，请设置密码以加密存储',
+  'encryption.encryptSuccess': '私钥已加密保存',
+  'encryption.decryptFailed': '解密失败，请检查密码',
+
   // 页面标题
   'page.title': 'PanguPay',
 

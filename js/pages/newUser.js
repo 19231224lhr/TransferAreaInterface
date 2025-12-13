@@ -10,6 +10,7 @@ import { showSuccessToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
 import { updateHeaderUser } from '../ui/header.js';
+import { secureFetchWithRetry } from '../utils/security';
 
 // Flag to prevent duplicate account creation
 let isCreatingAccount = false;
@@ -40,7 +41,9 @@ export async function handleCreate(showToast = true) {
     let data;
     
     try {
-      const res = await fetch('/api/account/new', { method: 'POST' });
+      const res = await secureFetchWithRetry('/api/account/new', { 
+        method: 'POST' 
+      }, { timeout: 10000, retries: 2 });
       if (res.ok) {
         data = await res.json();
       } else {

@@ -371,6 +371,155 @@ button.is-loading .loading-spinner {
 }
 
 /* ========================================
+   Password Prompt Modal
+   ======================================== */
+
+.password-prompt-modal {
+  max-width: 400px;
+  padding: 24px;
+}
+
+.password-prompt-modal .modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 8px;
+}
+
+.password-prompt-modal .modal-desc {
+  font-size: 14px;
+  color: var(--text-muted, #64748b);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.password-input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-prompt-modal .modal-input {
+  width: 100%;
+  padding: 12px 44px 12px 16px;
+  font-size: 14px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-primary, #1e293b);
+  transition: all 0.2s ease;
+}
+
+.password-prompt-modal .modal-input:focus {
+  outline: none;
+  border-color: var(--primary-color, #0ea5e9);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.15);
+}
+
+.password-prompt-modal .modal-input::placeholder {
+  color: var(--text-muted, #94a3b8);
+}
+
+.pwd-toggle-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 4px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted, #94a3b8);
+  transition: color 0.2s ease;
+}
+
+.pwd-toggle-btn:hover {
+  color: var(--text-primary, #1e293b);
+}
+
+.pwd-toggle-btn .hidden {
+  display: none;
+}
+
+.password-prompt-modal .modal-error {
+  margin-top: 12px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--error-color, #ef4444);
+  background: rgba(239, 68, 68, 0.08);
+  border-radius: 6px;
+}
+
+.password-prompt-modal .modal-error.hidden {
+  display: none;
+}
+
+.password-prompt-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.modal-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.modal-btn--primary {
+  background: var(--primary-color, #0ea5e9);
+  color: white;
+}
+
+.modal-btn--primary:hover {
+  background: var(--primary-dark, #0284c7);
+}
+
+.modal-btn--secondary {
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-muted, #64748b);
+}
+
+.modal-btn--secondary:hover {
+  background: var(--border-color, #e2e8f0);
+  color: var(--text-primary, #1e293b);
+}
+
+/* Dark theme */
+[data-theme="dark"] .password-prompt-modal .modal-title {
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .password-prompt-modal .modal-desc {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .password-prompt-modal .modal-input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+[data-theme="dark"] .password-prompt-modal .modal-input:focus {
+  border-color: #0ea5e9;
+}
+
+[data-theme="dark"] .modal-btn--secondary {
+  background: #334155;
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .modal-btn--secondary:hover {
+  background: #475569;
+  color: #f1f5f9;
+}
+
+/* ========================================
    Focus Visible Improvements
    ======================================== */
 
