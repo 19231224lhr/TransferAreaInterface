@@ -12,6 +12,7 @@ import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
 import { updateWalletBrief } from './entry.js';
 import { updateHeaderUser } from '../ui/header.js';
+import { addInlineValidation, quickValidate } from '../utils/formValidator.ts';
 
 /**
  * Reset import page state
@@ -82,9 +83,9 @@ async function handleImport() {
   const inputEl = document.getElementById('importPrivHex');
   const priv = inputEl ? inputEl.value.trim() : '';
   
-  // Validate input manually (FormValidator requires a form element)
-  if (!priv) {
-    showErrorToast(t('modal.pleaseEnterPrivateKey'), t('modal.inputError'));
+  const validationError = quickValidate(priv, ['required', 'privateKey']);
+  if (validationError) {
+    showErrorToast(validationError, t('modal.inputError'));
     if (inputEl) {
       inputEl.classList.add('is-invalid');
       inputEl.focus();
@@ -92,22 +93,7 @@ async function handleImport() {
     return;
   }
   
-  // Simple validation: allow 0x prefix; after removing prefix must be 64 hex chars
   const normalized = priv.replace(/^0x/i, '');
-  if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-    showErrorToast(t('modal.privateKeyFormatError'), t('modal.formatError'));
-    if (inputEl) {
-      inputEl.classList.add('is-invalid');
-      inputEl.focus();
-    }
-    return;
-  }
-  
-  // Clear any previous error state
-  if (inputEl) {
-    inputEl.classList.remove('is-invalid');
-    inputEl.classList.add('is-valid');
-  }
   
   if (importBtn) importBtn.disabled = true;
   
@@ -303,6 +289,10 @@ async function handleImport() {
  */
 export function initImportPage() {
   resetImportState('account');
+  addInlineValidation('#importPrivHex', [
+    { validator: 'required', message: t('modal.pleaseEnterPrivateKey') || '请输入私钥' },
+    { validator: 'privateKey', message: t('modal.privateKeyFormatError') || '私钥格式错误，需要64位十六进制' }
+  ], { showOnInput: true, debounceMs: 200 });
   
   // Bind import button event
   const importBtn = document.getElementById('importBtn');

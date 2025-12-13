@@ -8,6 +8,7 @@ import { loadUser, saveUser, getJoinedGroup, saveGuarChoice } from '../utils/sto
 import { t } from '../i18n/index.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 import { escapeHtml } from '../utils/security';
+import { addInlineValidation, quickValidate } from '../utils/formValidator.ts';
 
 // Current selected group
 let currentSelectedGroup = DEFAULT_GROUP;
@@ -397,11 +398,25 @@ function initGroupSearch() {
   const groupSearch = document.getElementById('groupSearch');
   const groupSuggest = document.getElementById('groupSuggest');
   const joinSearchBtn = document.getElementById('joinSearchBtn');
+  addInlineValidation('#groupSearch', [
+    { validator: 'required', message: t('join.enterOrgNumber') || '请输入组织编号' },
+    { validator: 'orgId', message: t('validation.orgIdFormat') || '担保组织ID必须为8位数字' }
+  ], { showOnInput: true, debounceMs: 150 });
   
   if (!groupSearch) return;
   
   groupSearch.addEventListener('input', () => {
     const q = groupSearch.value.trim();
+    const err = quickValidate(q, ['required', 'orgId']);
+    if (joinSearchBtn) joinSearchBtn.disabled = !!err;
+    if (err) {
+      if (groupSuggest) groupSuggest.classList.add('hidden');
+      const sr = document.getElementById('searchResult');
+      const searchEmpty = document.getElementById('searchEmpty');
+      if (sr) sr.classList.add('hidden');
+      if (searchEmpty) searchEmpty.classList.remove('hidden');
+      return;
+    }
     if (!q) {
       if (groupSuggest) groupSuggest.classList.add('hidden');
       const sr = document.getElementById('searchResult');
