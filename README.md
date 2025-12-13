@@ -79,75 +79,149 @@ npm run build
 
 ## 🏗️ 项目架构
 
+### 📁 目录结构
+
 ```
 TransferAreaInterface/
-├── index.html                 # 主页面入口
-├── sw.js                      # Service Worker (离线支持)
-├── package.json               # npm 配置
-├── vite.config.js             # Vite 构建配置
-├── tsconfig.json              # TypeScript 配置
-├── jsconfig.json              # JavaScript 类型检查配置
-├── IMPROVEMENT_REPORT.md      # 优化报告文档
-├── .gitignore                 # Git 忽略配置
-├── css/                       # 模块化样式文件
-│   ├── base.css              # 基础样式与 CSS 变量
-│   ├── animations.css        # 动画效果
-│   ├── components.css        # 通用组件样式
-│   ├── p2-improvements.css   # P2 优化样式（A11y、Loading、表单验证等）
-│   ├── header.css            # 顶部导航栏
-│   ├── welcome.css           # 欢迎页样式
-│   ├── wallet.css            # 钱包主页样式
-│   ├── transaction.css       # 转账表单样式
-│   ├── toast.css             # Toast 提示样式
-│   └── ...                   # 其他页面样式
-├── js/                        # 前端代码 (JS/TS 混合)
-│   ├── app.js                # 应用入口
-│   ├── router.js             # 路由管理
-│   ├── types.js              # 类型定义 (JSDoc)
-│   ├── globals.d.ts          # 全局类型声明 (TypeScript)
-│   ├── config/
-│   │   └── constants.ts      # 配置常量 (TypeScript)
-│   ├── i18n/                 # 国际化
-│   │   ├── index.js          # i18n 核心
-│   │   ├── zh-CN.js          # 简体中文翻译
-│   │   └── en.js             # 英文翻译
-│   ├── pages/                # 页面组件
-│   │   ├── welcome.js        # 欢迎页
-│   │   ├── login.js          # 登录页
-│   │   ├── newUser.js        # 注册页
-│   │   ├── main.js           # 钱包主页
-│   │   ├── history.js        # 历史记录
-│   │   └── ...               # 其他页面
-│   ├── services/             # 业务逻辑服务
-│   │   ├── account.ts        # 账户服务 (TypeScript)
-│   │   ├── transaction.ts    # 交易服务 (TypeScript)
-│   │   ├── transfer.ts       # 转账服务 (TypeScript)
-│   │   ├── wallet.js         # 钱包服务
-│   │   └── ...
-│   ├── ui/                   # UI 组件
-│   │   ├── header.js         # 头部组件
-│   │   ├── footer.js         # 底部组件
+├── 📄 index.html                 # 主页面入口（SPA 应用入口）
+├── 📄 sw.js                      # Service Worker（PWA 离线支持）
+├── 📄 README.md                  # 项目说明文档
+├── 📄 IMPROVEMENT_REPORT.md      # 代码优化详细报告
+├──
+├── 🔧 配置文件
+│   ├── package.json             # npm 项目配置（依赖、脚本命令）
+│   ├── package-lock.json        # npm 依赖版本锁定
+│   ├── vite.config.js           # Vite 构建工具配置
+│   ├── tsconfig.json            # TypeScript 编译器配置
+│   ├── jsconfig.json            # JavaScript 类型检查配置（VS Code）
+│   ├── go.mod                   # Go 模块配置（后端）
+│   └── .gitignore               # Git 版本控制忽略规则
+├──
+├── 🎨 css/                       # 模块化样式文件
+│   ├── base.css                 # 基础样式、CSS 变量、全局重置
+│   ├── animations.css           # 动画效果（淡入淡出、滑动、缩放）
+│   ├── components.css           # 通用组件样式（按钮、卡片、表单）
+│   ├── utilities.css            # 工具类样式（布局、间距、颜色）
+│   ├── p2-improvements.css      # P2 优化样式（A11y、Loading、路由过渡）
+│   ├── header.css / footer.css  # 头部和底部导航栏
+│   ├── welcome.css              # 欢迎页（首页）
+│   ├── login.css / new-user.css # 登录和注册页
+│   ├── wallet.css               # 钱包主页（资产概览）
+│   ├── transaction.css          # 转账表单页
+│   ├── history.css              # 交易历史记录页
+│   ├── profile.css              # 应用入口（初始化、全局配置）
+│   ├── router.js                # 路由管理（SPA 路由系统）
+│   ├── types.js                 # 类型定义（JSDoc 类型注释）
+│   ├── globals.d.ts             # 全局类型声明（TypeScript）
+│   ├──
+│   ├── 📁 config/               # 配置模块
+│   │  
+│   ├── 📁 i18n/                 # 国际化（i18n）
+│   │   ├── index.js             # i18n 核心（t() 翻译函数）
+│   │   ├── zh-CN.js             # 简体中文翻译（260+ 键）
+│   │   └── en.js                # 英文翻译（260+ 键）
+│   ├──   # 欢迎页（#/）
+│   │   ├── login.js             # 登录页（#/login）
+│   │   ├── newUser.js           # 注册页（#/new-user）
+│   │   ├── entry.js             # 入口页（#/entry 钱包地址管理）
+│   │   ├── import.js            # 导入页（#/import 导入子地址）
+│   │   ├── joinGroup.js         # 加入担保组织（#/join-group）
+│   │   ├── main.js              # 钱包主页（#/main 资产概览）
+│   │   ├── history.js           # 账户服务（创建、登录）TypeScript
+│   │   ├── transaction.ts       # 交易服务（构建交易）TypeScript
+│   │   ├── transfer.ts          # 转账服务（转账逻辑）TypeScript
+│   │   ├── wallet.js            # 钱包服务（地址管理、余额查询）
+│   │   ├── walletStruct.js      # 钱包结构体展示
+│   │   └── recipient.js         # 收款人管理
+│   ├──   # 头部导航栏（用户信息、菜单）
+│   │   ├── footer.js            # 底部导航栏
+│   │   ├── modal.js             # 模态框组件
+│   │   ├── toast.js             # Toast 提示组件
+│   │   ├── charts.js            # 图表组件（余额历史折线图）
+│   │   ├── networkChart.js      # 网络关系图
+│   │   ├── profile.js           # 个人信息展示
+│   │   ├── theme.js             # 加密工具（ECDSA、SHA-256）TypeScript
+│       ├── keyEncryption.ts     # 密钥加密（AES-256-GCM）TypeScript
+│       ├── security.ts          # 安全验证（XSS、CSRF、输入验证）TypeScript
+│       ├── storage.ts           # 本地存储管理（localStorage 封装）TypeScript
+│       ├── accessibility.ts     # A11y 工具（ARIA、键盘导航）TypeScript
+│       ├── loading.ts           # 加载管理（Loading、骨架屏）TypeScript
+│       ├── formValidator.ts     # 表单验证器（统一验证规则）TypeScript
+│       ├── transaction.ts       # 事务操作（检查点、自动保存）TypeScript
+│       ├── enhancedRouter.ts    # 增强路由（守卫、过渡动画）TypeScript
+│       ├── serviceWorker.ts     # Service Worker 管理（注册、更新）TypeScript
+│       ├── lazyLoader.ts        # 懒加载管理（动态导入）TypeScript
+│       ├── eventUtils.js        # 事件管理（防内存泄漏）
+│       ├── store.js             # 状态管理（响应式 Store）
+│       ├── helpers.js           # 通用辅助函数
+│       └── performanceMode.js   # 性能优化（RAF 批量更新）
+├──
+├── 🔧 backend/                  # Go 后端代码（UTXO 交易构建逻辑）
 │   │   ├── modal.js          # 模态框
 │   │   ├── toast.js          # Toast 提示
-│   │   ├── charts.js         # 图表组件
-│   │   └── ...
-│   └── utils/                # 工具函数
-│       ├── crypto.ts         # 加密工具 (TypeScript)
-│       ├── keyEncryption.ts  # 密钥加密 (TypeScript)
-│       ├── security.ts       # 安全验证 (TypeScript)
-│       ├── storage.ts        # 存储管理 (TypeScript)
-│       ├── accessibility.ts  # A11y 工具 (TypeScript)
-│       ├── loading.ts        # 加载管理 (TypeScript)
-│       ├── formValidator.ts  # 表单验证 (TypeScript)
-│       ├── transaction.ts    # 事务操作 (TypeScript)
-│       ├── enhancedRouter.ts # 增强路由 (TypeScript)
-│       ├── serviceWorker.ts  # Service Worker 管理 (TypeScript)
-│       ├── lazyLoader.ts     # 懒加载 (TypeScript)
-│       ├── store.js          # 状态管理
+│   │   ├── charts.js            # 账户与钱包结构体定义
+│   ├── NewAccount.go            # 创建新账户（密钥对生成）
+│   ├── GetAddressMsg.go         # 查询地址信息（RPC 调用）
+│   ├── JoinGroup.go             # 加入担保组织（RPC 申请）
+│   ├── SendTX.go                # 构建与发送交易
+│   ├── Transaction.go           # 交易结构体定义
+│   ├── TXCer.go                 # 交易凭证（TXCertificate）
+│   ├── UTXO.go                  # UTXO 数据结构
+│   ├── core.go                  # 核心功能（签名、序列化）
+│   ├──
+│   ├── 📁 core/                 # 核心工具包
+│   │   ├── keyformat.go         # 密钥格式转换（JWK、Hex）
+│   │   └── util.go              # 通用工具函数
+│   ├──
+│   ├── 📁 cmd/webserver/        # Web 服务器（Go 静态服务器）
+│   │   └── main.go              # 服务器入口（仅用于开发测试）
+│   ├──
+│   ├── 📁 build/                # 构建产物（Git 忽略）
+│   │   └── webserver.exe        # 编译后的可执行文件
+│   ├──
+│   ├── 📁 test_serialize/       # 序列化测试
+│   │   └── main.go
+│   └── 📁 verify_tx/            # 交易验证测试
+│       ├── main.go
 │       └── ...
-├── backend/                   # Go 后端代码 (交易构建逻辑)
-│   ├── Account.go            # 账户与钱包结构体
-│   ├── NewAccount.go         # 创建新账户
+├──
+├── 📦 assets/                   # 静态资源（图片、Logo）
+│   ├── logo.png                 # 项目 Logo
+│   ├── logo2.png / logo3.png    # 备用 Logo
+│   └── avatar.png               # 默认头像
+├──
+├── 🚀 dist/                     # 构建输出（npm run build 生成）
+│   ├── index.html               # 打包后的 HTML 入口
+│   ├── css/                     # 打包后的 CSS
+│   ├── js/                      # 打包后的 JS（代码分割）
+│   └── assets/                  # 打包后的静态资源
+├──
+├── 📚 node_modules/             # npm 依赖（Git 忽略）
+│   ├── typescript/              # TypeScript 编译器
+│   ├── vite/                    # Vite 构建工具
+│   └── ...
+├──
+└── 🧪 tests/                    # 测试文件
+    ├── sync.test.html           # 同步测试页面
+    └── sync.test.js             # 同步测试脚本
+```
+
+### 📦 配置文件说明
+
+项目根目录下的配置文件都是各个工具**强制要求**放置的位置，无法移动：
+
+| 文件 | 作用 | 工具 | 可否移动 |
+|------|------|------|----------|
+| `package.json` | npm 项目配置（依赖、脚本） | npm/Node.js | ❌ 必须在根目录 |
+| `package-lock.json` | npm 依赖版本锁定 | npm | ❌ 必须在根目录 |
+| `tsconfig.json` | TypeScript 编译器配置 | TypeScript | ❌ 必须在根目录 |
+| `jsconfig.json` | JavaScript 类型检查配置 | VS Code | ❌ 必须在根目录 |
+| `vite.config.js` | Vite 构建工具配置 | Vite | ❌ 必须在根目录 |
+| `go.mod` | Go 模块配置 | Go | ❌ 必须在根目录 |
+| `.gitignore` | Git 忽略文件规则 | Git | ❌ 必须在根目录 |
+| `sw.js` | Service Worker（PWA 离线支持） | 浏览器 | ⚠️ 建议根目录 |
+
+> **💡 整理说明**：由于工具链的强制要求，配置文件必须保留在根目录。已将编译产物 `webserver.exe` 移动到 `backend/build/` 目录，保持根目录整洁。 ├── NewAccount.go         # 创建新账户
 │   ├── GetAddressMsg.go      # 查询地址信息
 │   ├── JoinGroup.go          # 加入担保组织
 │   ├── SendTX.go             # 构建与发送交易
