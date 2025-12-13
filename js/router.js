@@ -9,23 +9,57 @@ import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 import { updateHeaderUser } from './ui/header.js';
 
-// Page modules - imported for initialization
-import { updateWelcomeButtons } from './pages/welcome.js';
-import { updateWalletBrief } from './pages/entry.js';
-import { resetLoginPageState } from './pages/login.js';
-import { handleCreate, resetCreatingFlag } from './pages/newUser.js';
-import { resetImportState } from './pages/import.js';
-import { handleMainRoute } from './pages/main.js';
-import { startInquiryAnimation } from './pages/joinGroup.js';
-import { updateGroupDetailDisplay } from './pages/groupDetail.js';
-import { renderWallet, refreshOrgPanel } from './services/wallet.js';
-import { initProfilePage } from './ui/profile.js';
-import { resetHistoryPageState } from './pages/history.js';
+// Lazy page loaders (registered on demand)
+const pageLoaders = {
+  '/welcome': () => import('./pages/welcome.js'),
+  '/entry': () => import('./pages/entry.js'),
+  '/login': () => import('./pages/login.js'),
+  '/new': () => import('./pages/newUser.js'),
+  '/import': () => import('./pages/import.js'),
+  '/wallet-import': () => import('./pages/import.js'),
+  '/main': () => import('./pages/main.js'),
+  '/join-group': () => import('./pages/joinGroup.js'),
+  '/inquiry': () => import('./pages/joinGroup.js'),
+  '/inquiry-main': () => import('./pages/joinGroup.js'),
+  '/group-detail': () => import('./pages/groupDetail.js'),
+  '/profile': () => import('./ui/profile.js'),
+  '/history': () => import('./pages/history.js')
+};
 
 // ========================================
 // Card References (will be populated on init)
 // ========================================
 let welcomeCard, entryCard, newUserCard, loginCard, importCard;
+
+/**
+ * Dynamically load a page module for the given route
+ * @param {string} route
+ * @returns {Promise<any|null>}
+ */
+async function loadPageModule(route) {
+  const loader = pageLoaders[route];
+  if (!loader) return null;
+  try {
+    return await loader();
+  } catch (err) {
+    console.warn(`[router] failed to load page '${route}'`, err);
+    return null;
+  }
+}
+
+/**
+ * Best-effort helper to call a function exposed either on window or on the lazy-loaded module
+ */
+async function callPageFn(route, fnName, fallbackFnName) {
+  const mod = await loadPageModule(route);
+  const fn = (typeof window[fnName] === 'function') ? window[fnName] : (mod && typeof mod[fnName] === 'function' ? mod[fnName] : null);
+  const fb = fallbackFnName ? ((typeof window[fallbackFnName] === 'function') ? window[fallbackFnName] : (mod && typeof mod[fallbackFnName] === 'function' ? mod[fallbackFnName] : null)) : null;
+  if (fn) {
+    fn();
+  } else if (fb) {
+    fb();
+  }
+}
 
 /**
  * Initialize card references
@@ -138,122 +172,96 @@ export function router() {
   switch (h) {
     case '/welcome':
       showCard(welcomeCard);
-      // Call init function from window to ensure it's available
-      if (typeof window.initWelcomePage === 'function') {
-        window.initWelcomePage();
-      } else {
-        updateWelcomeButtons();
-      }
+      void callPageFn('/welcome', 'initWelcomePage', 'updateWelcomeButtons');
       break;
       
     case '/main':
       showCard(document.getElementById('walletCard'));
-      if (typeof window.initMainPage === 'function') {
-        window.initMainPage();
-      } else {
-        handleMainRoute();
-      }
+      void callPageFn('/main', 'initMainPage', 'handleMainRoute');
       break;
       
     case '/entry':
       showCard(entryCard);
-      if (typeof window.initEntryPage === 'function') {
-        window.initEntryPage();
-      } else {
-        updateWalletBrief();
-      }
+      void callPageFn('/entry', 'initEntryPage', 'updateWalletBrief');
       break;
       
     case '/login':
       showCard(loginCard);
-      if (typeof window.initLoginPage === 'function') {
-        window.initLoginPage();
-      } else {
-        resetLoginPageState();
-      }
+      void callPageFn('/login', 'initLoginPage', 'resetLoginPageState');
       break;
       
     case '/new':
       resetOrgSelectionForNewUser();
       showCard(newUserCard);
-      if (typeof window.initNewUserPage === 'function') {
-        window.initNewUserPage();
-      }
+      void callPageFn('/new', 'initNewUserPage');
       handleNewUserRoute();
       break;
       
     case '/import':
       showCard(importCard);
-      if (typeof window.initImportPage === 'function') {
-        window.initImportPage();
-      } else {
-        resetImportState('account');
-      }
+      void callPageFn('/import', 'initImportPage', 'resetImportState');
       break;
       
     case '/wallet-import':
       showCard(importCard);
-      if (typeof window.resetImportState === 'function') {
-        window.resetImportState('wallet');
-      }
-      if (typeof window.initImportPage === 'function') {
-        window.initImportPage();
-      }
+      void loadPageModule('/wallet-import').then((mod) => {
+        const resetFn = (mod && typeof mod.resetImportState === 'function') ? mod.resetImportState : (typeof window.resetImportState === 'function' ? window.resetImportState : null);
+        if (resetFn) resetFn('wallet');
+        const initFn = (mod && typeof mod.initImportPage === 'function') ? mod.initImportPage : (typeof window.initImportPage === 'function' ? window.initImportPage : null);
+        if (initFn) initFn();
+      });
       break;
       
     case '/join-group':
       handleJoinGroupRoute();
-      if (typeof window.initJoinGroupPage === 'function') {
-        window.initJoinGroupPage();
-      }
+      void callPageFn('/join-group', 'initJoinGroupPage');
       break;
       
     case '/group-detail':
       showCard(document.getElementById('groupDetailCard'));
-      if (typeof window.initGroupDetailPage === 'function') {
-        window.initGroupDetailPage();
-      } else {
-        updateGroupDetailDisplay();
-      }
+      void callPageFn('/group-detail', 'initGroupDetailPage', 'updateGroupDetailDisplay');
       break;
       
     case '/inquiry':
       showCard(document.getElementById('inquiryCard'));
-      startInquiryAnimation(() => {
-        const u3 = loadUser();
-        if (u3) {
-          u3.orgNumber = '10000000';
-          saveUser(u3);
-        }
-        // 直接跳转到 main 页面，不显示 member-info 页面
-        routeTo('#/main');
+      void loadPageModule('/inquiry').then((mod) => {
+        const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
+        if (!fn) return;
+        fn(() => {
+          const u3 = loadUser();
+          if (u3) {
+            u3.orgNumber = '10000000';
+            saveUser(u3);
+          }
+          routeTo('#/main');
+        });
       });
       break;
       
     case '/inquiry-main':
       showCard(document.getElementById('inquiryCard'));
-      startInquiryAnimation(() => {
-        routeTo('#/main');
+      void loadPageModule('/inquiry-main').then((mod) => {
+        const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
+        if (!fn) return;
+        fn(() => {
+          routeTo('#/main');
+        });
       });
       break;
       
     case '/profile':
       showCard(document.getElementById('profileCard'));
-      initProfilePage();
+      void callPageFn('/profile', 'initProfilePage');
       break;
       
     case '/history':
       showCard(document.getElementById('historyCard'));
-      if (typeof window.initHistoryPage === 'function') {
-        window.initHistoryPage();
-      } else {
-        resetHistoryPageState();
-      }
+      void callPageFn('/history', 'initHistoryPage', 'resetHistoryPageState');
       break;
       
     default:
       showCard(welcomeCard);
-      updateWelcomeButtons();
+      void callPageFn('/welcome', 'updateWelcomeButtons');
   }
   
   // Update translations after route change
@@ -279,7 +287,12 @@ function resetOrgSelectionForNewUser() {
  * Handle /new route
  */
 function handleNewUserRoute() {
-  resetCreatingFlag();
+  const doReset = async () => {
+    const mod = await loadPageModule('/new');
+    const fn = (mod && typeof mod.resetCreatingFlag === 'function') ? mod.resetCreatingFlag : (typeof window.resetCreatingFlag === 'function' ? window.resetCreatingFlag : null);
+    if (fn) fn();
+  };
+  void doReset();
   
   const resultEl = document.getElementById('result');
   const createBtn = document.getElementById('createBtn');
@@ -297,7 +310,14 @@ function handleNewUserRoute() {
     if (newNextBtn) newNextBtn.classList.remove('hidden');
   } else {
     if (resultEl) resultEl.classList.add('hidden');
-    handleCreate(false).catch(() => { });
+    const startCreate = async () => {
+      const mod = await loadPageModule('/new');
+      const fn = (mod && typeof mod.handleCreate === 'function') ? mod.handleCreate : (typeof window.handleCreate === 'function' ? window.handleCreate : null);
+      if (fn) {
+        try { await fn(false); } catch (_) { }
+      }
+    };
+    void startCreate();
   }
 }
 

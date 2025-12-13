@@ -109,7 +109,6 @@ import {
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal.js';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
-import { initProfilePage } from './ui/profile.js';
 import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
 import { initNetworkChart, cleanupNetworkChart } from './ui/networkChart.js';
 import { initWalletStructToggle, initTxDetailModal } from './ui/walletStruct.js';
@@ -122,19 +121,35 @@ import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit, initBuildTransaction } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
 
-// Pages
-import { initWelcomePage, updateWelcomeButtons } from './pages/welcome.js';
-import { initEntryPage, updateWalletBrief } from './pages/entry.js';
-import { initLoginPage, resetLoginPageState } from './pages/login.js';
-import { initNewUserPage, handleCreate, resetCreatingFlag } from './pages/newUser.js';
-import { initImportPage, resetImportState } from './pages/import.js';
-import { initMainPage, handleMainRoute } from './pages/main.js';
-import { initJoinGroupPage, startInquiryAnimation, resetInquiryState } from './pages/joinGroup.js';
-import { initGroupDetailPage, updateGroupDetailDisplay } from './pages/groupDetail.js';
-import { initHistoryPage } from './pages/history.js';
-
 // Router
 import { router, routeTo, showCard, initRouter } from './router.js';
+
+// Lazy page loaders (avoid pulling all page code on first screen)
+const pageLazyLoaders = {
+  welcome: () => import('./pages/welcome.js'),
+  entry: () => import('./pages/entry.js'),
+  login: () => import('./pages/login.js'),
+  newUser: () => import('./pages/newUser.js'),
+  import: () => import('./pages/import.js'),
+  main: () => import('./pages/main.js'),
+  joinGroup: () => import('./pages/joinGroup.js'),
+  groupDetail: () => import('./pages/groupDetail.js'),
+  history: () => import('./pages/history.js')
+};
+
+/** Lazy helper: call a page fn when first used */
+function createLazyPageFn(routeKey, fnName, argMapper) {
+  return async (...args) => {
+    const loader = pageLazyLoaders[routeKey];
+    if (!loader) return;
+    const mod = await loader();
+    const fn = mod && typeof mod[fnName] === 'function' ? mod[fnName] : null;
+    if (fn) {
+      return argMapper ? fn(...argMapper(args)) : fn(...args);
+    }
+    return undefined;
+  };
+}
 
 // ========================================
 // Global Function Exports (for HTML onclick compatibility)
@@ -157,7 +172,7 @@ window.toggleTheme = toggleTheme;
 window.getCurrentTheme = getCurrentTheme;
 
 // Account functions
-window.handleCreate = handleCreate;
+window.handleCreate = createLazyPageFn('newUser', 'handleCreate');
 window.newUser = newUser;
 window.importFromPrivHex = importFromPrivHex;
 window.addNewSubWallet = addNewSubWallet;
@@ -174,7 +189,7 @@ window.resetOrgSelectionForNewUser = resetOrgSelectionForNewUser;
 
 // Wallet functions
 window.renderWallet = renderWallet;
-window.updateWalletBrief = updateWalletBrief;
+window.updateWalletBrief = createLazyPageFn('entry', 'updateWalletBrief');
 
 // UTXO/TXCer detail modal functions
 window.showUtxoDetail = (addrKey, utxoKey) => {
@@ -250,6 +265,7 @@ window.initRefreshSrcAddrList = initRefreshSrcAddrList;
 window.initChangeAddressSelects = initChangeAddressSelects;
 window.initRecipientCards = initRecipientCards;
 window.initAdvancedOptions = initAdvancedOptions;
+window.updateWalletBrief = createLazyPageFn('entry', 'updateWalletBrief');
 
 // UI functions
 window.showToast = showToast;
@@ -266,24 +282,24 @@ window.copyToClipboard = copyToClipboard;
 window.updateHeaderUser = updateHeaderUser;
 
 // Page init functions
-window.initProfilePage = initProfilePage;
-window.initWelcomePage = initWelcomePage;
-window.initEntryPage = initEntryPage;
-window.initLoginPage = initLoginPage;
-window.initNewUserPage = initNewUserPage;
-window.initImportPage = initImportPage;
-window.initMainPage = initMainPage;
-window.initJoinGroupPage = initJoinGroupPage;
-window.initGroupDetailPage = initGroupDetailPage;
-window.initHistoryPage = initHistoryPage;
-window.updateWelcomeButtons = updateWelcomeButtons;
-window.resetLoginPageState = resetLoginPageState;
-window.startInquiryAnimation = startInquiryAnimation;
-window.resetInquiryState = resetInquiryState;
-window.resetCreatingFlag = resetCreatingFlag;
-window.resetImportState = resetImportState;
-window.handleMainRoute = handleMainRoute;
-window.updateGroupDetailDisplay = updateGroupDetailDisplay;
+window.initProfilePage = createLazyPageFn('profile', 'initProfilePage');
+window.initWelcomePage = createLazyPageFn('welcome', 'initWelcomePage');
+window.initEntryPage = createLazyPageFn('entry', 'initEntryPage');
+window.initLoginPage = createLazyPageFn('login', 'initLoginPage');
+window.initNewUserPage = createLazyPageFn('newUser', 'initNewUserPage');
+window.initImportPage = createLazyPageFn('import', 'initImportPage');
+window.initMainPage = createLazyPageFn('main', 'initMainPage');
+window.initJoinGroupPage = createLazyPageFn('joinGroup', 'initJoinGroupPage');
+window.initGroupDetailPage = createLazyPageFn('groupDetail', 'initGroupDetailPage');
+window.initHistoryPage = createLazyPageFn('history', 'initHistoryPage');
+window.updateWelcomeButtons = createLazyPageFn('welcome', 'updateWelcomeButtons');
+window.resetLoginPageState = createLazyPageFn('login', 'resetLoginPageState');
+window.startInquiryAnimation = createLazyPageFn('joinGroup', 'startInquiryAnimation');
+window.resetInquiryState = createLazyPageFn('joinGroup', 'resetInquiryState');
+window.resetCreatingFlag = createLazyPageFn('newUser', 'resetCreatingFlag');
+window.resetImportState = createLazyPageFn('import', 'resetImportState');
+window.handleMainRoute = createLazyPageFn('main', 'handleMainRoute');
+window.updateGroupDetailDisplay = createLazyPageFn('groupDetail', 'updateGroupDetailDisplay');
 
 // Chart functions
 window.updateWalletChart = updateWalletChart;
