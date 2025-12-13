@@ -83,7 +83,10 @@ import {
 import { 
   registerServiceWorker, 
   isOnline, 
-  onOnlineStatusChange 
+  onOnlineStatusChange,
+  onUpdateAvailable,
+  skipWaiting,
+  checkForUpdates
 } from './utils/serviceWorker';
 import { 
   FormValidator, 
@@ -416,6 +419,9 @@ window.configureTransition = configureTransition;
 window.isOnline = isOnline;
 window.onOnlineStatusChange = onOnlineStatusChange;
 
+// P2 Improvements - Service Worker Update Hooks
+window.checkForUpdates = checkForUpdates;
+
 // ========================================
 // P2: Online/Offline Indicator Setup
 // ========================================
@@ -460,6 +466,84 @@ function setupOnlineIndicator() {
   
   // Listen for online/offline changes
   onOnlineStatusChange(updateIndicator);
+}
+
+// ========================================
+// P2: Service Worker Update Banner
+// ========================================
+
+/**
+ * Setup update banner to surface new service worker versions
+ */
+function setupServiceWorkerUpdates() {
+  let banner = document.getElementById('updateBanner');
+  if (!banner) {
+    banner = document.createElement('div');
+    banner.id = 'updateBanner';
+    banner.className = 'update-banner';
+    banner.setAttribute('role', 'status');
+    banner.setAttribute('aria-live', 'polite');
+    banner.innerHTML = `
+      <div class="update-banner__icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2v6h-6" />
+          <path d="M3 13a9 9 0 0 1 15-6.7L21 8" />
+          <path d="M3 22v-6h6" />
+          <path d="M21 11a9 9 0 0 1-15 6.7L3 16" />
+        </svg>
+      </div>
+      <div class="update-banner__content">
+        <div class="update-banner__title">${t('update.available', '检测到新版本')}</div>
+        <div class="update-banner__desc">${t('update.prompt', '点击更新以获取最新内容')}</div>
+      </div>
+      <div class="update-banner__actions">
+        <button class="update-banner__btn update-banner__btn--secondary" data-action="dismiss">${t('update.later', '稍后')}</button>
+        <button class="update-banner__btn update-banner__btn--primary" data-action="update">${t('update.apply', '立即更新')}</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+  }
+  
+  const updateButton = banner.querySelector('[data-action="update"]');
+  const dismissButton = banner.querySelector('[data-action="dismiss"]');
+  let reloadBound = false;
+  
+  const hideBanner = () => banner.classList.remove('visible');
+  const showBanner = () => banner.classList.add('visible');
+  
+  // Reload once the new service worker takes control
+  const bindReloadOnControllerChange = () => {
+    if (reloadBound) return;
+    reloadBound = true;
+    navigator.serviceWorker?.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
+  };
+  
+  if (updateButton && !updateButton.dataset._bind) {
+    updateButton.addEventListener('click', () => {
+      try {
+        skipWaiting();
+        bindReloadOnControllerChange();
+        hideBanner();
+      } catch (_) {
+        // Silent fail - SW update is best-effort
+      }
+    });
+    updateButton.dataset._bind = '1';
+  }
+  
+  if (dismissButton && !dismissButton.dataset._bind) {
+    dismissButton.addEventListener('click', () => {
+      hideBanner();
+    });
+    dismissButton.dataset._bind = '1';
+  }
+  
+  // Listen for update availability
+  onUpdateAvailable(() => {
+    showBanner();
+  });
 }
 
 // ========================================
@@ -540,9 +624,12 @@ function init() {
   }
   
   // Register Service Worker for offline support
-  registerServiceWorker().catch(() => {
-    // Silently fail - SW is optional
-  });
+  setupServiceWorkerUpdates();
+  registerServiceWorker()
+    .then(() => checkForUpdates())
+    .catch(() => {
+      // Silently fail - SW is optional
+    });
   
   // Setup online/offline indicator
   setupOnlineIndicator();
