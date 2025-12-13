@@ -1656,10 +1656,17 @@ Already defined above with darker background
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 8px;
   color: #1d4ed8;
+  appearance: none;
+  -webkit-appearance: none;
+  background-clip: padding-box;
+  overflow: hidden;
   cursor: pointer;
   transition: all 0.25s ease;
   flex-shrink: 0;
   position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
 }
 
 .recipient-lookup-btn svg {
@@ -1696,6 +1703,36 @@ Already defined above with darker background
 
 .recipient-lookup-btn:active:not(.is-loading) {
   transform: scale(0.95);
+  color: #1d4ed8;
+}
+
+/* 深色模式下的查询按钮样式 */
+[data-theme="dark"] .recipient-lookup-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:hover:not(.is-loading) {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:active:not(.is-loading) {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.4);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .recipient-lookup-btn .lookup-spinner {
+  border-color: rgba(148, 163, 184, 0.3);
+  border-top-color: #38bdf8;
 }
 
 .recipient-lookup-btn.is-loading {
@@ -2124,7 +2161,16 @@ Already defined above with darker background
   background: var(--neutral-100);
   border-radius: var(--radius-md);
   border: none;
+  box-shadow: none;
   animation: optionsReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 深色模式下的高级选项容器 - 整片灰色背景 */
+[data-theme="dark"] .options-grid {
+  /* 与上方 TO 区域一致的外圈灰色 */
+  background: var(--neutral-100);
+  border: none;
+  box-shadow: none;
 }
 
 /* 内层白色卡片 - 与recipient-card一致 */
@@ -4029,8 +4075,10 @@ Already defined above with darker background
 
 /* 选项网格 */
 [data-theme="dark"] .options-grid {
-  background: var(--color-card-bg);
-  border-color: var(--color-border);
+  /* 保持与 TO 容器一致 */
+  background: var(--neutral-100);
+  border: none;
+  box-shadow: none;
 }
 
 [data-theme="dark"] .options-label {
@@ -4403,4 +4451,13 @@ input[type="number"] {
   background: linear-gradient(135deg, rgba(15, 23, 42, 0.6) 0%, rgba(30, 41, 59, 0.4) 100%);
   border-color: rgba(71, 85, 105, 0.3);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   深色模式 - 高级选项卡片
+   ======================================== */
+
+[data-theme="dark"] .options-card {
+  background: var(--color-card-bg-solid);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
