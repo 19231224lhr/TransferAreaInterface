@@ -7,6 +7,7 @@
 import { t } from '../i18n/index.js';
 import { showSuccessToast } from '../utils/toast.js';
 import { THEME_STORAGE_KEY } from '../config/constants.ts';
+import { store, setThemeState, selectTheme } from '../utils/store.js';
 
 // Current theme state
 let currentTheme = 'light';
@@ -33,6 +34,9 @@ export function setTheme(theme, showNotification = true) {
   
   // Update current theme
   currentTheme = theme;
+  
+  // Sync to centralized store for state management
+  setThemeState(theme);
   
   // Update DOM
   document.documentElement.setAttribute('data-theme', theme);
@@ -81,6 +85,9 @@ export function loadThemeSetting() {
       }
     }
     document.documentElement.setAttribute('data-theme', currentTheme);
+    
+    // Sync to centralized store for state management
+    setThemeState(currentTheme);
   } catch (e) {
     console.warn('Failed to load theme setting:', e);
     currentTheme = 'light';

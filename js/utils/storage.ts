@@ -14,6 +14,7 @@ import {
   GROUP_LIST,
   GuarantorGroup
 } from '../config/constants';
+import { store, setUser } from './store.js';
 
 // ========================================
 // Type Definitions
@@ -161,7 +162,12 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
 export function loadUser(): User | null {
   try {
     const rawAcc = localStorage.getItem(STORAGE_KEY);
-    if (rawAcc) return JSON.parse(rawAcc) as User;
+    if (rawAcc) {
+      const user = JSON.parse(rawAcc) as User;
+      // Sync to centralized store for state management
+      setUser(user);
+      return user;
+    }
     
     // Try legacy storage key
     const legacy = localStorage.getItem('walletUser');
@@ -171,8 +177,13 @@ export function loadUser(): User | null {
       try { 
         localStorage.setItem(STORAGE_KEY, JSON.stringify(acc)); 
       } catch { }
+      // Sync to centralized store for state management
+      setUser(acc);
       return acc;
     }
+    
+    // No user found, sync null to store
+    setUser(null);
     return null;
   } catch (e) {
     console.warn('Failed to load user data', e);
@@ -214,6 +225,9 @@ export function saveUser(user: Partial<User>): void {
     
     localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
     
+    // Sync to centralized store for state management
+    setUser(acc);
+    
     // Update header user display
     if (typeof (window as any).updateHeaderUser === 'function') {
       (window as any).updateHeaderUser(acc);
@@ -236,6 +250,9 @@ export function clearAccountStorage(): void {
   try { localStorage.removeItem('walletUser'); } catch { }
   try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { }
   try { localStorage.removeItem('guarChoice'); } catch { }
+  
+  // Sync to centralized store for state management
+  setUser(null);
 }
 
 // ========================================

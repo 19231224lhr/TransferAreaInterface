@@ -143,6 +143,7 @@ const pageLazyLoaders = {
   import: () => import('./pages/import.js'),
   main: () => import('./pages/main.js'),
   joinGroup: () => import('./pages/joinGroup.js'),
+  profile: () => import('./ui/profile.js'),
   groupDetail: () => import('./pages/groupDetail.js'),
   history: () => import('./pages/history.js')
 };
@@ -589,8 +590,8 @@ function init() {
   // Export to window for global access
   window.performanceModeManager = performanceModeManager;
   
-  // Start performance monitoring in development (silent)
-  if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+  // Start performance monitoring only when explicitly enabled
+  if ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && (window).__PERF_DEBUG === true) {
     performanceMonitor.start(10000); // Monitor every 10 seconds
   }
   

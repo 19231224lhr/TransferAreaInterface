@@ -140,7 +140,11 @@ class PerformanceMonitor {
    * Check for potential issues
    */
   checkForIssues(metrics) {
-    // Memory leak detection (silent - only warn on significant issues)
+    // Only emit warnings when explicitly enabled via window.__PERF_DEBUG
+    const shouldWarn = typeof window !== 'undefined' && (window).__PERF_DEBUG === true;
+    if (!shouldWarn) return;
+
+    // Memory leak detection (warn on significant issues)
     if (this.memoryHistory.length >= 10) {
       const recent = this.memoryHistory.slice(-10);
       const memoryTrend = this.calculateMemoryTrend(recent);
@@ -202,6 +206,10 @@ class PerformanceMonitor {
       return;
     }
     
+    // Only print report when explicitly enabled via window.__PERF_DEBUG
+    const shouldLog = typeof window !== 'undefined' && (window).__PERF_DEBUG === true;
+    if (!shouldLog) return;
+
     console.group('📊 Performance Report');
     console.log('Memory:', status.latest.memory);
     console.log('DOM Elements:', status.latest.dom.elements);

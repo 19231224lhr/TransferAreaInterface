@@ -120,8 +120,8 @@ class Store {
       this._state.transfer = { ...prevState.transfer, ...updates.transfer };
     }
 
-    // Log state changes in dev mode
-    if (this._devMode) {
+    // Log state changes only when explicitly enabled via window.__STORE_DEBUG
+    if (this._devMode && typeof window !== 'undefined' && (window).__STORE_DEBUG === true) {
       console.log('[Store] State updated:', {
         updates,
         newState: this._state

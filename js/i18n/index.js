@@ -7,6 +7,7 @@
 import zhCN from './zh-CN.js';
 import en from './en.js';
 import { I18N_STORAGE_KEY } from '../config/constants.ts';
+import { store, setLanguageState, selectLanguage } from '../utils/store.js';
 
 // Translation dictionaries
 const translations = {
@@ -35,6 +36,8 @@ export function loadLanguageSetting() {
     if (saved && translations[saved]) {
       currentLanguage = saved;
     }
+    // Sync to centralized store for state management
+    setLanguageState(currentLanguage);
   } catch (e) {
     console.warn('Failed to load language setting', e);
   }
@@ -65,6 +68,10 @@ export function setLanguage(lang) {
   }
   currentLanguage = lang;
   saveLanguageSetting(lang);
+  
+  // Sync to centralized store for state management
+  setLanguageState(lang);
+  
   updatePageTranslations();
   
   // Update welcome page buttons if on welcome page

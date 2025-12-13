@@ -8,6 +8,8 @@ import { updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 import { updateHeaderUser } from './ui/header.js';
+import { cleanupPageListeners } from './utils/eventUtils.js';
+import { store, setRoute } from './utils/store.js';
 
 // Lazy page loaders (registered on demand)
 const pageLoaders = {
@@ -157,11 +159,17 @@ export function routeTo(hash) {
  * Main router function - handles hash changes
  */
 export function router() {
+  // Clean up page-level event listeners from previous page to prevent memory leaks
+  cleanupPageListeners();
+  
   initCardRefs();
   
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
   const allowNoUser = ['/welcome', '/login', '/new', '/profile'];
+  
+  // Update route state in store for centralized state management
+  setRoute(h);
   
   // Redirect to welcome if not logged in and route requires login
   if (!u && allowNoUser.indexOf(h) === -1) {
