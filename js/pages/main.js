@@ -7,6 +7,7 @@
 import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.ts';
 import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, handleZeroAddress, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from '../services/wallet.js';
 import { initTransferSubmit, initBuildTransaction } from '../services/transfer.ts';
+import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 
@@ -58,10 +59,21 @@ export function handleMainRoute() {
   // Initialize and rebuild source address list
   initRefreshSrcAddrList();
   rebuildAddrList();
+
+  // Restore transfer draft after UI is ready (best-effort)
+  restoreTransferDraft().catch(() => {});
   
   // Initialize transfer submit and build transaction
   initTransferSubmit();
   initBuildTransaction();
+
+  // Start transfer draft auto-save
+  try {
+    const stop = initTransferDraftPersistence();
+    window._stopTransferDraft = stop;
+  } catch (_) {
+    // ignore
+  }
   
   // Initialize wallet structure toggle
   initWalletStructToggle();

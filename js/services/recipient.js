@@ -110,7 +110,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         <div class="recipient-addr-field">
           <span class="recipient-field-label">${t('transfer.recipientAddress')}</span>
           <div class="recipient-addr-input-wrap">
-            <input id="${idBase}_to" class="input" type="text" placeholder="${t('transfer.enterRecipientAddress')}" aria-label="目标地址" data-name="to">
+            <input id="${idBase}_to" name="recipient_to" class="input" type="text" placeholder="${t('transfer.enterRecipientAddress')}" aria-label="目标地址" data-name="to">
             <button type="button" class="recipient-lookup-btn" aria-label="查询地址信息" title="自动补全担保组织与公钥" data-role="addr-lookup">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/>
@@ -126,10 +126,11 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       <div class="recipient-amount-row">
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.amount')}</span>
-          <input id="${idBase}_val" class="input" type="number" min="0.00000001" step="any" placeholder="0.00" aria-label="金额" data-name="val">
+          <input id="${idBase}_val" name="recipient_val" class="input" type="number" min="0.00000001" step="any" placeholder="0.00" aria-label="金额" data-name="val">
         </div>
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.currency')}</span>
+          <input type="hidden" name="recipient_mt" value="0" data-name="mt-hidden">
           <div id="${idBase}_mt" class="recipient-coin-select" role="button" aria-label="币种" data-name="mt" data-val="0">
             <div class="recipient-coin-value">
               <span class="coin-label">PGC</span>
@@ -150,16 +151,16 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           <div class="recipient-details-content">
             <div class="recipient-field">
               <span class="recipient-field-label">${t('transfer.publicKey')}</span>
-              <input id="${idBase}_pub" class="input" type="text" placeholder="04 + X + Y or X,Y" aria-label="公钥" data-name="pub">
+              <input id="${idBase}_pub" name="recipient_pub" class="input" type="text" placeholder="04 + X + Y or X,Y" aria-label="公钥" data-name="pub">
             </div>
             <div class="recipient-details-row">
               <div class="recipient-field">
                 <span class="recipient-field-label">${t('transfer.guarantorOrgId')}</span>
-                <input id="${idBase}_gid" class="input" type="text" placeholder="${t('transfer.optional')}" value="" aria-label="担保组织ID" data-name="gid">
+                <input id="${idBase}_gid" name="recipient_gid" class="input" type="text" placeholder="${t('transfer.optional')}" value="" aria-label="担保组织ID" data-name="gid">
               </div>
               <div class="recipient-field">
                 <span class="recipient-field-label">${t('transfer.transferGas')}</span>
-                <input id="${idBase}_gas" class="input" type="number" min="0" step="any" placeholder="0" aria-label="转移Gas" data-name="gas">
+                <input id="${idBase}_gas" name="recipient_gas" class="input" type="number" min="0" step="any" placeholder="0" aria-label="转移Gas" data-name="gas">
               </div>
             </div>
           </div>
@@ -299,6 +300,8 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         if (!item) return;
         const v = item.getAttribute('data-val');
         cs.dataset.val = v;
+        const hiddenMt = card.querySelector('[data-name="mt-hidden"]');
+        if (hiddenMt) hiddenMt.value = v;
         const valEl = cs.querySelector('.recipient-coin-value');
         if (valEl) {
           const labels = { '0': { t: 'PGC' }, '1': { t: 'BTC' }, '2': { t: 'ETH' } };

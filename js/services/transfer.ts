@@ -10,6 +10,8 @@ import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal.js';
 import { buildNewTX, BuildTXInfo } from './transaction';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
+import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
+import { clearTransferDraft } from './transferDraft';
 
 // ========================================
 // Type Definitions
@@ -137,6 +139,10 @@ export function initTransferSubmit(): void {
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
   
   tfBtn.addEventListener('click', async () => {
+    const checkpointId = `transfer-generate-${Date.now()}`;
+    // Persisted draft keys we may want to restore quickly on unexpected failure
+    createCheckpoint(checkpointId, ['auto-save-transfer-v1', 'form-draft-transfer-v1']);
+
     // Prevent double-submit (check if already submitting)
     if (!transferSubmitGuard.start()) {
       return;
@@ -152,6 +158,17 @@ export function initTransferSubmit(): void {
       tfBtn.textContent = t('common.loading') || '处理中...';
     }
     
+    // Snapshot key UI elements so we can restore to a stable state if something throws unexpectedly.
+    const snapTxErr = txErr ? createDOMSnapshot(txErr) : null;
+    const txResultActions = document.getElementById('txResultActions');
+    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+    const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
+    const buildTxBtn = document.getElementById('buildTxBtn');
+    const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
+    const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
+    const snapViewBuild = viewBuildInfoBtn ? createDOMSnapshot(viewBuildInfoBtn) : null;
+    const snapBuildBtn = buildTxBtn ? createDOMSnapshot(buildTxBtn as any) : null;
+
     try {
       const { walletMap, walletGasTotal } = getWalletSnapshot();
       
@@ -161,8 +178,6 @@ export function initTransferSubmit(): void {
       }
       
       // Hide previous transaction result buttons
-      const txResultActions = document.getElementById('txResultActions');
-      const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
       if (txResultActions) txResultActions.classList.add('hidden');
       if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
       
@@ -458,11 +473,21 @@ export function initTransferSubmit(): void {
       }
 
       // Show "Build Transaction" button and save BuildTXInfo
-      const buildTxBtn = document.getElementById('buildTxBtn');
       if (buildTxBtn) {
         buildTxBtn.classList.remove('hidden');
         (buildTxBtn as any).dataset.buildInfo = JSON.stringify(build);
       }
+    } catch (err: any) {
+      // Restore stable UI state and storage snapshot
+      try { if (snapTxErr) restoreFromSnapshot(snapTxErr); } catch (_) { }
+      try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
+      try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
+      try { if (snapViewBuild) restoreFromSnapshot(snapViewBuild); } catch (_) { }
+      try { if (snapBuildBtn) restoreFromSnapshot(snapBuildBtn); } catch (_) { }
+      try { restoreCheckpoint(checkpointId); } catch (_) { }
+
+      const msg = err?.message || String(err);
+      showModalTip(t('toast.buildTxFailed') || '操作失败', msg, true);
     } finally {
       // Restore button state (restore span text to preserve SVG)
       tfBtn.disabled = false;
@@ -487,6 +512,13 @@ export function initBuildTransaction(): void {
   if (!buildTxBtn || (buildTxBtn as any).dataset._buildBind) return;
   
   buildTxBtn.addEventListener('click', async () => {
+    const checkpointId = `transfer-build-${Date.now()}`;
+    createCheckpoint(checkpointId, ['auto-save-transfer-v1', 'form-draft-transfer-v1']);
+    const txResultActions = document.getElementById('txResultActions');
+    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+    const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
+    const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
+
     try {
       showModalTip(t('transfer.generateTxStruct'), t('toast.buildingTx'), false);
 
@@ -510,8 +542,14 @@ export function initBuildTransaction(): void {
       }
 
       showModalTip(t('toast.buildTxSuccess'), t('toast.buildTxSuccessDesc'), false);
+
+      // On successful build, clear drafts to reduce confusion and stale restores.
+      clearTransferDraft();
     } catch (err: any) {
       const errMsg = err.message || String(err);
+      try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
+      try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
+      try { restoreCheckpoint(checkpointId); } catch (_) { }
       showModalTip(t('toast.buildTxFailed'), errMsg, true);
     }
   });

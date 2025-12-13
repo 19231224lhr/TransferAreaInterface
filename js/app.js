@@ -94,7 +94,8 @@ import {
   withTransaction, 
   createCheckpoint, 
   restoreCheckpoint,
-  enableFormAutoSave 
+  enableFormAutoSave,
+  recoverPendingLocalStorageTransactions
 } from './utils/transaction';
 import { lazyLoader, initLazyLoader } from './utils/lazyLoader';
 import { 
@@ -482,6 +483,13 @@ function init() {
   // ========================================
   // P2 Improvements Initialization
   // ========================================
+
+  // Recover from any interrupted localStorage transaction
+  try {
+    recoverPendingLocalStorageTransactions();
+  } catch (_) {
+    // Silently fail - recovery is best-effort
+  }
   
   // Initialize accessibility features (skip links, ARIA live regions)
   try {

@@ -1025,7 +1025,7 @@ export function rebuildAddrList() {
     label.className = `src-addr-item item-type-${color}`;
     label.dataset.addr = a;
     label.innerHTML = `
-      <input type="checkbox" value="${escapeHtml(a)}">
+      <input type="checkbox" name="srcAddr" value="${escapeHtml(a)}">
       <div class="item-backdrop"></div>
       
       <div class="item-content">

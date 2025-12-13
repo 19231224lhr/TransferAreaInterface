@@ -18,6 +18,16 @@ export type OperationType = 'localStorage' | 'dom' | 'custom';
 export interface Operation {
   type: OperationType;
   key?: string;
+  /**
+   * Optional metadata to support durable localStorage journaling.
+   * If present, a pending journal can be written and recovered after refresh/crash.
+   */
+  action?: 'set' | 'remove';
+  /**
+   * For localStorage operations, the serialized value that will be written.
+   * Use null for remove.
+   */
+  value?: string | null;
   execute: () => void | Promise<void>;
   rollback?: () => void | Promise<void>;
   backup?: () => any;
@@ -47,6 +57,74 @@ interface BackupEntry {
 }
 
 // ========================================
+// Durable localStorage journal (crash-safe)
+// ========================================
+
+const LS_TXN_JOURNAL_KEY = '__localStorage_txn_journal__';
+
+interface LocalStorageTxnJournalEntry {
+  key: string;
+  before: string | null;
+  after: string | null;
+}
+
+interface LocalStorageTxnJournal {
+  id: string;
+  status: 'pending' | 'done';
+  startedAt: number;
+  entries: LocalStorageTxnJournalEntry[];
+}
+
+function readJournal(): LocalStorageTxnJournal | null {
+  try {
+    const raw = localStorage.getItem(LS_TXN_JOURNAL_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as LocalStorageTxnJournal;
+  } catch {
+    return null;
+  }
+}
+
+function writeJournal(journal: LocalStorageTxnJournal): void {
+  localStorage.setItem(LS_TXN_JOURNAL_KEY, JSON.stringify(journal));
+}
+
+function clearJournal(): void {
+  try {
+    localStorage.removeItem(LS_TXN_JOURNAL_KEY);
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Recover from a pending localStorage transaction journal.
+ * - If a journal is found in `pending` state, rollback to `before` values.
+ * - Always clears the journal afterward.
+ */
+export function recoverPendingLocalStorageTransactions(): boolean {
+  const journal = readJournal();
+  if (!journal) return false;
+
+  try {
+    if (journal.status === 'pending') {
+      for (let i = journal.entries.length - 1; i >= 0; i--) {
+        const entry = journal.entries[i];
+        if (entry.before === null) {
+          localStorage.removeItem(entry.key);
+        } else {
+          localStorage.setItem(entry.key, entry.before);
+        }
+      }
+    }
+  } finally {
+    clearJournal();
+  }
+
+  return true;
+}
+
+// ========================================
 // Transaction Manager
 // ========================================
 
@@ -60,8 +138,26 @@ export async function withTransaction(
   const { onProgress, onError, continueOnError = false } = options;
   const backups: BackupEntry[] = [];
   let executedCount = 0;
+  let journalWritten = false;
   
   try {
+    // Pre-build a durable journal for localStorage operations that provide metadata.
+    const journalEntries: LocalStorageTxnJournalEntry[] = [];
+    for (const op of operations) {
+      if (op.type !== 'localStorage' || !op.key) continue;
+      if (op.action !== 'set' && op.action !== 'remove') continue;
+      // Snapshot "before" at start; use provided "after" value.
+      const before = localStorage.getItem(op.key);
+      const after = op.action === 'remove' ? null : (op.value ?? null);
+      journalEntries.push({ key: op.key, before, after });
+    }
+
+    if (journalEntries.length > 0) {
+      const id = `txn-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      writeJournal({ id, status: 'pending', startedAt: Date.now(), entries: journalEntries });
+      journalWritten = true;
+    }
+
     // Execute operations
     for (let i = 0; i < operations.length; i++) {
       const op = operations[i];
@@ -112,6 +208,12 @@ export async function withTransaction(
   } catch (error) {
     // Rollback on failure
     await rollbackOperations(backups);
+
+    if (journalWritten) {
+      // Ensure a crash-safe rollback as well.
+      // (If we are here, execution already failed; restore from journal "before" values.)
+      recoverPendingLocalStorageTransactions();
+    }
     
     return {
       success: false,
@@ -119,6 +221,11 @@ export async function withTransaction(
       error: error as Error,
       errorIndex: executedCount
     };
+  } finally {
+    // Mark journal as done (or clear). We clear on success; on failure it is cleared in recovery.
+    if (journalWritten) {
+      clearJournal();
+    }
   }
 }
 
@@ -164,12 +271,14 @@ export function createStorageOperation(
   options: { serialize?: boolean } = {}
 ): Operation {
   const { serialize = true } = options;
+  const data = serialize ? JSON.stringify(value) : String(value);
   
   return {
     type: 'localStorage',
     key,
+    action: 'set',
+    value: data,
     execute: () => {
-      const data = serialize ? JSON.stringify(value) : value;
       localStorage.setItem(key, data);
     },
     backup: () => localStorage.getItem(key)
@@ -183,6 +292,8 @@ export function createRemoveOperation(key: string): Operation {
   return {
     type: 'localStorage',
     key,
+    action: 'remove',
+    value: null,
     execute: () => {
       localStorage.removeItem(key);
     },
@@ -416,10 +527,11 @@ export function startAutoSave(config: AutoSaveConfig): () => void {
   const save = (): void => {
     try {
       const data = getData();
-      localStorage.setItem(key, JSON.stringify({
+      // Use transactional write so a refresh/crash can't leave partial/inconsistent state.
+      void safeSetItem(key, {
         data,
         timestamp: Date.now()
-      }));
+      });
       
       if (onSave) {
         onSave(data);
@@ -436,16 +548,39 @@ export function startAutoSave(config: AutoSaveConfig): () => void {
     }
     debounceTimer = window.setTimeout(save, debounceMs);
   };
+
+  const flushNow = (): void => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = undefined;
+    }
+    save();
+  };
   
   // Start interval saving
   intervalTimer = window.setInterval(save, interval);
   
   // Initial save
   save();
+
+  // Ensure we don't lose the latest edits on refresh/tab close
+  const handlePageHide = (): void => {
+    flushNow();
+  };
+  const handleVisibility = (): void => {
+    if (document.visibilityState === 'hidden') {
+      flushNow();
+    }
+  };
+
+  window.addEventListener('pagehide', handlePageHide);
+  document.addEventListener('visibilitychange', handleVisibility);
   
   const stop = (): void => {
     if (debounceTimer) clearTimeout(debounceTimer);
     if (intervalTimer) clearInterval(intervalTimer);
+    window.removeEventListener('pagehide', handlePageHide);
+    document.removeEventListener('visibilitychange', handleVisibility);
     autoSavers.delete(key);
   };
   
@@ -509,10 +644,15 @@ export function saveFormDraft(
   data: Record<string, any>
 ): void {
   const key = `form-draft-${formId}`;
-  localStorage.setItem(key, JSON.stringify({
-    data,
-    timestamp: Date.now()
-  }));
+  try {
+    // Transactional write to prevent partial state.
+    void safeSetItem(key, {
+      data,
+      timestamp: Date.now()
+    });
+  } catch {
+    // ignore
+  }
 }
 
 /**
@@ -546,7 +686,11 @@ export function getFormDraft<T extends Record<string, any>>(
  */
 export function clearFormDraft(formId: string): void {
   const key = `form-draft-${formId}`;
-  localStorage.removeItem(key);
+  try {
+    void safeRemoveItem(key);
+  } catch {
+    // ignore
+  }
 }
 
 /**
@@ -555,9 +699,9 @@ export function clearFormDraft(formId: string): void {
 export function enableFormAutoSave(
   form: HTMLFormElement | string,
   formId: string,
-  options: { debounceMs?: number; excludeFields?: string[] } = {}
+  options: { debounceMs?: number; excludeFields?: string[]; includeUncheckedCheckboxes?: boolean } = {}
 ): () => void {
-  const { debounceMs = 1000, excludeFields = [] } = options;
+  const { debounceMs = 1000, excludeFields = [], includeUncheckedCheckboxes = false } = options;
   
   const formEl = typeof form === 'string' 
     ? document.querySelector<HTMLFormElement>(form)
@@ -569,14 +713,37 @@ export function enableFormAutoSave(
   
   const save = (): void => {
     const data: Record<string, any> = {};
+
+    // Capture FormData (supports duplicate keys), then optionally include unchecked checkboxes.
     const formData = new FormData(formEl);
-    
     for (const [key, value] of formData.entries()) {
-      if (!excludeFields.includes(key)) {
+      if (excludeFields.includes(key)) continue;
+      if (key in data) {
+        const existing = data[key];
+        if (Array.isArray(existing)) {
+          existing.push(value);
+        } else {
+          data[key] = [existing, value];
+        }
+      } else {
         data[key] = value;
       }
     }
-    
+
+    if (includeUncheckedCheckboxes) {
+      const checkboxes = Array.from(formEl.querySelectorAll<HTMLInputElement>('input[type="checkbox"][name]'));
+      for (const cb of checkboxes) {
+        const name = cb.name;
+        if (!name || excludeFields.includes(name)) continue;
+
+        // If checkbox group is not represented in FormData, store empty/false.
+        // If represented, leave it alone (handled above).
+        if (!(name in data)) {
+          data[name] = cb.checked ? (cb.value || 'on') : '';
+        }
+      }
+    }
+
     saveFormDraft(formId, data);
   };
   
@@ -584,13 +751,35 @@ export function enableFormAutoSave(
     if (debounceTimer) clearTimeout(debounceTimer);
     debounceTimer = window.setTimeout(save, debounceMs);
   };
+
+  const flushNow = (): void => {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+      debounceTimer = undefined;
+    }
+    save();
+  };
+
+  const handlePageHide = (): void => {
+    flushNow();
+  };
+
+  const handleVisibility = (): void => {
+    if (document.visibilityState === 'hidden') {
+      flushNow();
+    }
+  };
   
   formEl.addEventListener('input', handleInput);
   formEl.addEventListener('change', handleInput);
+  window.addEventListener('pagehide', handlePageHide);
+  document.addEventListener('visibilitychange', handleVisibility);
   
   return () => {
     formEl.removeEventListener('input', handleInput);
     formEl.removeEventListener('change', handleInput);
+    window.removeEventListener('pagehide', handlePageHide);
+    document.removeEventListener('visibilitychange', handleVisibility);
     if (debounceTimer) clearTimeout(debounceTimer);
   };
 }
@@ -610,14 +799,40 @@ export function restoreFormFromDraft(
   
   const draft = getFormDraft(formId);
   if (!draft) return false;
-  
+
   for (const [name, value] of Object.entries(draft)) {
-    const field = formEl.querySelector<HTMLInputElement | HTMLTextAreaElement>(`[name="${name}"]`);
-    if (field) {
-      if (field.type === 'checkbox') {
-        (field as HTMLInputElement).checked = !!value;
+    const fields = Array.from(formEl.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(`[name="${name}"]`));
+    if (fields.length === 0) continue;
+
+    // Multi-value (e.g., checkbox groups / repeated inputs)
+    if (Array.isArray(value)) {
+      const values = value.map(v => String(v));
+      for (const field of fields) {
+        if ((field as HTMLInputElement).type === 'checkbox') {
+          const cb = field as HTMLInputElement;
+          cb.checked = values.includes(cb.value || 'on');
+        } else {
+          // Assign by index when possible
+          const idx = fields.indexOf(field);
+          const v = values[idx] ?? '';
+          (field as any).value = String(v);
+        }
+      }
+      continue;
+    }
+
+    // Single-value
+    for (const field of fields) {
+      if ((field as HTMLInputElement).type === 'checkbox') {
+        const cb = field as HTMLInputElement;
+        if (typeof value === 'string') {
+          // For checkbox, treat empty string as unchecked
+          cb.checked = value !== '' && value !== 'false' && value !== '0';
+        } else {
+          cb.checked = !!value;
+        }
       } else {
-        field.value = String(value);
+        (field as any).value = String(value);
       }
     }
   }

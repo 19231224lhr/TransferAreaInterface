@@ -1999,7 +1999,7 @@
               </div>
 
               <!-- 转账流程 -->
-              <div class="transfer-flow">
+              <form class="transfer-flow" id="transferForm" autocomplete="off">
                 <!-- From: 来源地址 -->
                 <div class="transfer-from">
                   <div class="transfer-section-label">
@@ -2037,7 +2037,7 @@
                   </div>
                   <div id="billList" class="recipients-list" role="list"></div>
                 </div>
-              </div>
+
 
               <!-- 转账选项 - 折叠区 -->
               <div class="transfer-options">
@@ -2066,14 +2066,14 @@
                       <div class="options-split-group">
                         <label class="option-field-label" for="extraGasPGC" data-i18n="wallet.extraGas">额外Gas兑换</label>
                         <div class="option-input-wrapper">
-                          <input id="extraGasPGC" class="option-input" type="number" min="0" step="any" placeholder="0" value="0" />
+                          <input id="extraGasPGC" name="extraGasPGC" class="option-input" type="number" min="0" step="any" placeholder="0" value="0" />
                           <span class="option-suffix option-suffix--pgc">PGC</span>
                         </div>
                       </div>
                       <div class="options-split-group">
                         <label class="option-field-label" for="txGasInput" data-i18n="wallet.txGas">交易Gas</label>
                         <div class="option-input-wrapper">
-                          <input id="txGasInput" class="option-input" type="number" min="0" step="any" placeholder="1" value="1" />
+                          <input id="txGasInput" name="txGasInput" class="option-input" type="number" min="0" step="any" placeholder="1" value="1" />
                           <span class="option-suffix option-suffix--gas">GAS</span>
                         </div>
                       </div>
@@ -2081,7 +2081,7 @@
                     <!-- PGC 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label" data-i18n="transfer.pgcReceiveAddress">PGC 接受地址</label>
-                      <select id="chAddrPGC" class="input" style="display:none"></select>
+                      <select id="chAddrPGC" name="chAddrPGC" class="input" style="display:none"></select>
                       <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="PGC">
                         <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span
@@ -2098,7 +2098,7 @@
                     <!-- BTC 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label" data-i18n="transfer.btcReceiveAddress">BTC 接受地址</label>
-                      <select id="chAddrBTC" class="input" style="display:none"></select>
+                      <select id="chAddrBTC" name="chAddrBTC" class="input" style="display:none"></select>
                       <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="BTC">
                         <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span
@@ -2115,7 +2115,7 @@
                     <!-- ETH 找零地址 -->
                     <div class="option-field">
                       <label class="option-field-label" data-i18n="transfer.ethReceiveAddress">ETH 接受地址</label>
-                      <select id="chAddrETH" class="input" style="display:none"></select>
+                      <select id="chAddrETH" name="chAddrETH" class="input" style="display:none"></select>
                       <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
                         data-coin="ETH">
                         <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span
@@ -2134,7 +2134,7 @@
                       <label class="option-field-label">PreTXCer</label>
                       <div class="option-toggle-wrapper">
                         <label class="toggle-switch">
-                          <input id="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" checked />
+                          <input id="useTXCerChk" name="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" checked />
                           <span class="toggle-slider"></span>
                         </label>
                       </div>
@@ -2143,16 +2143,16 @@
                   </div>
 
                   <!-- 隐藏的原始表单字段 -->
-                  <select id="tfMode" class="input" style="display:none">
+                  <select id="tfMode" name="tfMode" class="input" style="display:none">
                     <option value="quick" selected>快速转账</option>
                     <option value="cross">跨链转账</option>
                     <option value="pledge">质押交易</option>
                   </select>
-                  <select id="useTXCer" class="input" style="display:none">
+                  <select id="useTXCer" name="useTXCer" class="input" style="display:none">
                     <option value="true" selected>是</option>
                     <option value="false">否</option>
                   </select>
-                  <select id="isPledge" class="input" style="display:none">
+                  <select id="isPledge" name="isPledge" class="input" style="display:none">
                     <option value="false" selected>否</option>
                     <option value="true">是</option>
                   </select>
@@ -2161,14 +2161,14 @@
 
               <!-- 提交按钮 -->
               <div class="transfer-submit">
-                <button id="tfSendBtn" class="submit-btn submit-btn--primary ripple" aria-label="生成交易结构体" data-i18n-aria="transfer.generateTxStruct">
+                <button id="tfSendBtn" type="button" class="submit-btn submit-btn--primary ripple" aria-label="生成交易结构体" data-i18n-aria="transfer.generateTxStruct">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="22" y1="2" x2="11" y2="13"></line>
                     <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                   </svg>
                   <span data-i18n="transfer.generateTxStruct">生成交易结构体</span>
                 </button>
-                <button id="buildTxBtn" class="submit-btn submit-btn--secondary hidden" aria-label="构造交易" data-i18n-aria="transfer.buildTx" data-i18n="transfer.buildTx">
+                <button id="buildTxBtn" type="button" class="submit-btn submit-btn--secondary hidden" aria-label="构造交易" data-i18n-aria="transfer.buildTx" data-i18n="transfer.buildTx">
                   构造交易
                 </button>
               </div>
@@ -2195,6 +2195,8 @@
                   <span data-i18n="transfer.viewTxInfo">查看交易信息</span>
                 </button>
               </div>
+
+              </form>
             </div>
 
             <!-- 底部担保组织面板 - 已移至独立页面 -->
