@@ -11,6 +11,8 @@ import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../u
 import { showSuccessToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';
+import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
+import { clearLegacyKey } from '../utils/keyEncryption';
 
 // ========================================
 // Type Definitions
@@ -339,6 +341,20 @@ export async function addNewSubWallet(): Promise<void> {
     
     saveUser(acc);
     
+    // P0-1 Fix: Prompt user to encrypt the new sub-wallet private key
+    // Note: Sub-wallet keys are stored per-address, encryption is optional
+    try {
+      // For sub-wallets, we use the address as the key identifier
+      // The main account encryption status determines if we prompt
+      if (!hasEncryptedKey(u.accountId)) {
+        // Main account not encrypted, prompt for sub-wallet encryption
+        await encryptAndSavePrivateKey(`${u.accountId}_${addr}`, privHex);
+      }
+    } catch (encryptErr) {
+      // Encryption is optional - don't block sub-wallet creation
+      console.warn('Sub-wallet key encryption skipped:', encryptErr);
+    }
+    
     // Refresh UI if functions are available
     if ((window as any).__refreshSrcAddrList) {
       try { (window as any).__refreshSrcAddrList(); } catch (_) { }
@@ -444,7 +460,7 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     if (pubXEl) pubXEl.textContent = data.pubXHex;
     if (pubYEl) pubYEl.textContent = data.pubYHex;
     
-    // Save user data
+    // Save user data first (with plaintext key for backward compatibility)
     saveUser({
       accountId: data.accountId,
       address: data.address,
@@ -460,6 +476,27 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     // Show success notification if requested
     if (showToastNotification) {
       showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
+    }
+    
+    // P0-1 Fix: Prompt user to encrypt private key after account creation
+    // This is non-blocking - user can skip encryption
+    try {
+      if (!hasEncryptedKey(data.accountId)) {
+        const encrypted = await encryptAndSavePrivateKey(data.accountId, data.privHex);
+        if (encrypted) {
+          // Clear plaintext key from storage after successful encryption
+          const user = loadUser();
+          if (user) {
+            const updatedUser = clearLegacyKey(user as any);
+            if (updatedUser) {
+              saveUser(updatedUser as any);
+            }
+          }
+        }
+      }
+    } catch (encryptErr) {
+      // Encryption is optional - don't block account creation
+      console.warn('Private key encryption skipped:', encryptErr);
     }
     
     return data;

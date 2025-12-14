@@ -2,10 +2,114 @@
  * Login Page Module
  * 
  * Handles the login page logic.
+ * Now includes mandatory password setup for private key encryption.
+ * Features: password strength indicator, confirm password with match validation.
  */
 
 import { loadUser } from '../utils/storage';
 import { updateHeaderUser } from '../ui/header.js';
+import { encryptPrivateKey, saveEncryptedKey } from '../utils/keyEncryption';
+import { t } from '../i18n/index.js';
+
+/**
+ * Calculate password strength
+ * @param {string} password
+ * @returns {'weak' | 'medium' | 'strong' | ''}
+ */
+function getPasswordStrength(password) {
+  if (!password || password.length === 0) return '';
+  if (password.length < 6) return 'weak';
+  
+  let score = 0;
+  
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (/[a-z]/.test(password)) score++;
+  if (/[A-Z]/.test(password)) score++;
+  if (/[0-9]/.test(password)) score++;
+  if (/[^a-zA-Z0-9]/.test(password)) score++;
+  
+  if (score <= 2) return 'weak';
+  if (score <= 4) return 'medium';
+  return 'strong';
+}
+
+/**
+ * Update password strength indicator
+ */
+function updatePasswordStrength() {
+  const passwordInput = document.getElementById('loginPassword');
+  const strengthFill = document.getElementById('loginStrengthFill');
+  const strengthText = document.getElementById('loginStrengthText');
+  
+  const password = passwordInput?.value || '';
+  const strength = getPasswordStrength(password);
+  
+  if (strengthFill) {
+    strengthFill.className = 'login-strength-fill' + (strength ? ' ' + strength : '');
+  }
+  
+  if (strengthText) {
+    strengthText.className = 'login-strength-text' + (strength ? ' ' + strength : '');
+    if (strength) {
+      const labels = {
+        weak: t('login.strengthWeak', '弱'),
+        medium: t('login.strengthMedium', '中'),
+        strong: t('login.strengthStrong', '强')
+      };
+      strengthText.textContent = labels[strength];
+    } else {
+      strengthText.textContent = '';
+    }
+  }
+  
+  // Also update match status when password changes
+  updatePasswordMatch();
+}
+
+/**
+ * Update password match indicator
+ */
+function updatePasswordMatch() {
+  const passwordInput = document.getElementById('loginPassword');
+  const confirmInput = document.getElementById('loginConfirmPassword');
+  const matchIcon = document.getElementById('loginPasswordMatchIcon');
+  const matchText = document.getElementById('loginPasswordMatchText');
+  
+  const password = passwordInput?.value || '';
+  const confirm = confirmInput?.value || '';
+  
+  // Hide if confirm is empty
+  if (!confirm) {
+    if (matchIcon) matchIcon.classList.add('hidden');
+    if (matchText) matchText.classList.add('hidden');
+    return;
+  }
+  
+  const isMatch = password === confirm;
+  
+  if (matchIcon) {
+    matchIcon.classList.remove('hidden');
+    const successIcon = matchIcon.querySelector('.match-success');
+    const errorIcon = matchIcon.querySelector('.match-error');
+    
+    if (isMatch) {
+      successIcon?.classList.remove('hidden');
+      errorIcon?.classList.add('hidden');
+    } else {
+      successIcon?.classList.add('hidden');
+      errorIcon?.classList.remove('hidden');
+    }
+  }
+  
+  if (matchText) {
+    matchText.classList.remove('hidden');
+    matchText.className = 'login-match-text ' + (isMatch ? 'match' : 'mismatch');
+    matchText.textContent = isMatch 
+      ? t('login.passwordMatch', '密码一致') 
+      : t('login.passwordMismatch', '密码不一致');
+  }
+}
 
 /**
  * Reset login page to initial state
@@ -18,6 +122,8 @@ export function resetLoginPageState() {
   const nextBtn = document.getElementById('loginNextBtn');
   const cancelBtn = document.getElementById('loginCancelBtn');
   const inputEl = document.getElementById('loginPrivHex');
+  const passwordEl = document.getElementById('loginPassword');
+  const confirmEl = document.getElementById('loginConfirmPassword');
   
   // Reset all animation classes
   if (formCard) {
@@ -37,17 +143,56 @@ export function resetLoginPageState() {
   if (nextBtn) nextBtn.classList.add('hidden');
   if (cancelBtn) cancelBtn.classList.add('hidden');
   
-  // Clear input
+  // Clear inputs
   if (inputEl) {
     inputEl.value = '';
     inputEl.type = 'password';
   }
+  if (passwordEl) {
+    passwordEl.value = '';
+    passwordEl.type = 'password';
+  }
+  if (confirmEl) {
+    confirmEl.value = '';
+    confirmEl.type = 'password';
+  }
   
-  // Reset eye icon state - initial state is closed eye (password hidden)
+  // Reset eye icon state for private key - initial state is closed eye (password hidden)
   const eyeOpen = document.querySelector('#loginToggleVisibility .eye-open');
   const eyeClosed = document.querySelector('#loginToggleVisibility .eye-closed');
   if (eyeOpen) eyeOpen.classList.add('hidden');
   if (eyeClosed) eyeClosed.classList.remove('hidden');
+  
+  // Reset eye icon state for password
+  const pwdEyeOpen = document.querySelector('#loginPasswordToggle .eye-open');
+  const pwdEyeClosed = document.querySelector('#loginPasswordToggle .eye-closed');
+  if (pwdEyeOpen) pwdEyeOpen.classList.add('hidden');
+  if (pwdEyeClosed) pwdEyeClosed.classList.remove('hidden');
+  
+  // Reset password strength indicator
+  const strengthFill = document.getElementById('loginStrengthFill');
+  const strengthText = document.getElementById('loginStrengthText');
+  if (strengthFill) strengthFill.className = 'login-strength-fill';
+  if (strengthText) {
+    strengthText.className = 'login-strength-text';
+    strengthText.textContent = '';
+  }
+  
+  // Reset password match indicator
+  const matchIcon = document.getElementById('loginPasswordMatchIcon');
+  const matchText = document.getElementById('loginPasswordMatchText');
+  if (matchIcon) {
+    matchIcon.classList.add('hidden');
+    const successIcon = matchIcon.querySelector('.match-success');
+    const errorIcon = matchIcon.querySelector('.match-error');
+    if (successIcon) successIcon.classList.add('hidden');
+    if (errorIcon) errorIcon.classList.add('hidden');
+  }
+  if (matchText) {
+    matchText.classList.add('hidden');
+    matchText.className = 'login-match-text hidden';
+    matchText.textContent = '';
+  }
   
   // Reset private key collapse state
   const privContainer = document.getElementById('loginPrivContainer');
@@ -62,7 +207,7 @@ export function resetLoginPageState() {
 export function initLoginPage() {
   resetLoginPageState();
   
-  // Bind visibility toggle event
+  // Bind visibility toggle event for private key
   const loginToggleVisibility = document.getElementById('loginToggleVisibility');
   const loginPrivHexInput = document.getElementById('loginPrivHex');
   
@@ -84,6 +229,43 @@ export function initLoginPage() {
         if (eyeClosed) eyeClosed.classList.remove('hidden');
       }
     });
+  }
+  
+  // Bind visibility toggle event for password
+  const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+  const loginPasswordInput = document.getElementById('loginPassword');
+  const loginConfirmInput = document.getElementById('loginConfirmPassword');
+  
+  if (loginPasswordToggle && loginPasswordInput && !loginPasswordToggle.dataset._loginBind) {
+    loginPasswordToggle.dataset._loginBind = 'true';
+    loginPasswordToggle.addEventListener('click', () => {
+      const eyeOpen = loginPasswordToggle.querySelector('.eye-open');
+      const eyeClosed = loginPasswordToggle.querySelector('.eye-closed');
+      
+      if (loginPasswordInput.type === 'password') {
+        loginPasswordInput.type = 'text';
+        if (loginConfirmInput) loginConfirmInput.type = 'text';
+        if (eyeOpen) eyeOpen.classList.remove('hidden');
+        if (eyeClosed) eyeClosed.classList.add('hidden');
+      } else {
+        loginPasswordInput.type = 'password';
+        if (loginConfirmInput) loginConfirmInput.type = 'password';
+        if (eyeOpen) eyeOpen.classList.add('hidden');
+        if (eyeClosed) eyeClosed.classList.remove('hidden');
+      }
+    });
+  }
+  
+  // Bind password input for strength indicator
+  if (loginPasswordInput && !loginPasswordInput.dataset._loginStrengthBind) {
+    loginPasswordInput.dataset._loginStrengthBind = 'true';
+    loginPasswordInput.addEventListener('input', updatePasswordStrength);
+  }
+  
+  // Bind confirm password input for match indicator
+  if (loginConfirmInput && !loginConfirmInput.dataset._loginMatchBind) {
+    loginConfirmInput.dataset._loginMatchBind = 'true';
+    loginConfirmInput.addEventListener('input', updatePasswordMatch);
   }
   
   // Bind back button
@@ -176,12 +358,16 @@ export function initLoginPage() {
 async function handleLoginClick() {
   const loginBtn = document.getElementById('loginBtn');
   const inputEl = document.getElementById('loginPrivHex');
+  const passwordEl = document.getElementById('loginPassword');
+  const confirmEl = document.getElementById('loginConfirmPassword');
   const priv = inputEl ? inputEl.value.trim() : '';
+  const password = passwordEl ? passwordEl.value.trim() : '';
+  const confirmPassword = confirmEl ? confirmEl.value.trim() : '';
   
-  // Validation
+  // Validation - Private key
   if (!priv) {
-    if (typeof window.showErrorToast === 'function' && typeof window.t === 'function') {
-      window.showErrorToast(window.t('modal.pleaseEnterPrivateKeyHex'), window.t('modal.inputIncomplete'));
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('modal.pleaseEnterPrivateKeyHex', '请输入私钥'), t('modal.inputIncomplete', '输入不完整'));
     }
     if (inputEl) inputEl.focus();
     return;
@@ -189,10 +375,44 @@ async function handleLoginClick() {
   
   const normalized = priv.replace(/^0x/i, '');
   if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-    if (typeof window.showErrorToast === 'function' && typeof window.t === 'function') {
-      window.showErrorToast(window.t('modal.privateKeyFormat64'), window.t('modal.formatError'));
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('modal.privateKeyFormat64', '私钥格式错误，需要64位十六进制'), t('modal.formatError', '格式错误'));
     }
     if (inputEl) inputEl.focus();
+    return;
+  }
+  
+  // Validation - Password
+  if (!password) {
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('login.passwordRequired', '请输入钱包密码'), t('modal.inputIncomplete', '输入不完整'));
+    }
+    if (passwordEl) passwordEl.focus();
+    return;
+  }
+  
+  if (password.length < 6) {
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('login.passwordTooShort', '密码至少需要6位'), t('modal.formatError', '格式错误'));
+    }
+    if (passwordEl) passwordEl.focus();
+    return;
+  }
+  
+  // Validation - Confirm Password
+  if (!confirmPassword) {
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('login.confirmPasswordRequired', '请再次输入密码'), t('modal.inputIncomplete', '输入不完整'));
+    }
+    if (confirmEl) confirmEl.focus();
+    return;
+  }
+  
+  if (password !== confirmPassword) {
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(t('login.passwordMismatch', '两次输入的密码不一致'), t('modal.formatError', '格式错误'));
+    }
+    if (confirmEl) confirmEl.focus();
     return;
   }
   
@@ -237,6 +457,10 @@ async function handleLoginClick() {
     } else {
       throw new Error('importFromPrivHex function not available');
     }
+    
+    // Encrypt private key with password
+    const encryptedData = await encryptPrivateKey(data.privHex, password);
+    saveEncryptedKey(data.accountId, encryptedData);
     
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) {
@@ -287,14 +511,16 @@ async function handleLoginClick() {
       }
     }
     
+    // Save user WITHOUT plaintext private key (it's encrypted now)
     if (typeof window.saveUser === 'function') {
       window.saveUser({
         accountId: data.accountId,
         address: data.address,
-        privHex: data.privHex,
+        // Don't save privHex in plaintext - it's encrypted
         pubXHex: data.pubXHex,
         pubYHex: data.pubYHex,
-        flowOrigin: 'login'
+        flowOrigin: 'login',
+        _encrypted: true
       });
     }
     
@@ -306,8 +532,8 @@ async function handleLoginClick() {
     if (cancelBtn) cancelBtn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
     
-    if (typeof window.showSuccessToast === 'function' && typeof window.t === 'function') {
-      window.showSuccessToast(window.t('toast.login.successDesc'), window.t('toast.login.success'));
+    if (typeof window.showSuccessToast === 'function') {
+      window.showSuccessToast(t('toast.login.successDesc', '登录成功'), t('toast.login.success', '成功'));
     }
     
   } catch (e) {
@@ -333,8 +559,8 @@ async function handleLoginClick() {
       setTimeout(() => tipBlock.classList.remove('expanding'), 350);
     }
     
-    if (typeof window.showErrorToast === 'function' && typeof window.t === 'function') {
-      window.showErrorToast(e.message || window.t('modal.cannotRecognizeKey'), window.t('modal.loginFailed'));
+    if (typeof window.showErrorToast === 'function') {
+      window.showErrorToast(e.message || t('modal.cannotRecognizeKey', '无法识别私钥'), t('modal.loginFailed', '登录失败'));
     }
     console.error(e);
   } finally {

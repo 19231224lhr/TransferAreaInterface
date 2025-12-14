@@ -17,6 +17,7 @@ const pageLoaders = {
   '/entry': () => import('./pages/entry.js'),
   '/login': () => import('./pages/login.js'),
   '/new': () => import('./pages/newUser.js'),
+  '/set-password': () => import('./pages/setPassword.js'),
   '/import': () => import('./pages/import.js'),
   '/wallet-import': () => import('./pages/import.js'),
   '/main': () => import('./pages/main.js'),
@@ -83,7 +84,7 @@ export function showCard(card) {
   
   // Hide all cards
   const allCardIds = [
-    'welcomeCard', 'entryCard', 'newUserCard', 'loginCard', 'importCard',
+    'welcomeCard', 'entryCard', 'newUserCard', 'setPasswordCard', 'loginCard', 'importCard',
     'nextCard', 'walletCard', 'inquiryCard',
     'profileCard', 'groupDetailCard', 'historyCard'
   ];
@@ -169,7 +170,7 @@ export function router() {
   
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
-  const allowNoUser = ['/welcome', '/login', '/new', '/profile'];
+  const allowNoUser = ['/welcome', '/login', '/new', '/set-password', '/profile'];
   
   // Update route state in store for centralized state management
   setRoute(h);
@@ -206,6 +207,11 @@ export function router() {
       showCard(newUserCard);
       void callPageFn('/new', 'initNewUserPage');
       handleNewUserRoute();
+      break;
+      
+    case '/set-password':
+      showCard(document.getElementById('setPasswordCard'));
+      void callPageFn('/set-password', 'initSetPasswordPage');
       break;
       
     case '/import':

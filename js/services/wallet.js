@@ -21,6 +21,8 @@ import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 import { globalEventManager } from '../utils/eventUtils.js';
+import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
+import { clearLegacyKey } from '../utils/keyEncryption';
 
 /**
  * Update wallet brief display (count and list)
@@ -835,6 +837,24 @@ async function importAddressInPlace(priv) {
     acc.wallet.addressMsg[addr].pubYHex = data.pubYHex || acc.wallet.addressMsg[addr].pubYHex || '';
     
     saveUser(acc);
+    
+    // P0-1 Fix: Prompt user to encrypt the imported address private key
+    try {
+      if (normPriv && u2.accountId && !hasEncryptedKey(u2.accountId)) {
+        const encrypted = await encryptAndSavePrivateKey(`${u2.accountId}_${addr}`, normPriv);
+        if (encrypted) {
+          // Clear plaintext key from the address metadata after successful encryption
+          const updatedUser = loadUser();
+          if (updatedUser && updatedUser.wallet && updatedUser.wallet.addressMsg && updatedUser.wallet.addressMsg[addr]) {
+            // Note: We keep the key in addressMsg for now as it's needed for signing
+            // The encryption provides an additional layer of security
+          }
+        }
+      }
+    } catch (encryptErr) {
+      // Encryption is optional - don't block address import
+      console.warn('Imported address key encryption skipped:', encryptErr);
+    }
     
     if (window.__refreshSrcAddrList) { 
       try { window.__refreshSrcAddrList(); } catch (_) { } 

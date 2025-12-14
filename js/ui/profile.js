@@ -310,6 +310,9 @@ export function bindProfileEvents() {
     performanceSelector.dataset._bind = '1';
   }
   
+  // Lock timeout selector
+  initLockTimeoutSelector();
+  
   // Update language selector UI state
   updateLanguageSelectorUI();
   
@@ -338,6 +341,86 @@ export function updatePerformanceSelectorUI() {
       opt.classList.add('active');
     } else {
       opt.classList.remove('active');
+    }
+  });
+}
+
+/**
+ * Initialize lock timeout selector
+ */
+function initLockTimeoutSelector() {
+  const lockTimeoutInput = document.getElementById('lockTimeoutInput');
+  const lockTimeoutPresets = document.getElementById('lockTimeoutPresets');
+  
+  if (!lockTimeoutInput) return;
+  
+  // Load saved timeout from localStorage (in minutes)
+  const savedTimeout = localStorage.getItem('lockTimeoutMinutes');
+  const currentMinutes = savedTimeout ? parseInt(savedTimeout, 10) : 10;
+  lockTimeoutInput.value = currentMinutes;
+  
+  // Update preset buttons
+  updateLockTimeoutPresets(currentMinutes);
+  
+  // Input change handler
+  if (!lockTimeoutInput.dataset._bind) {
+    lockTimeoutInput.addEventListener('change', () => {
+      let value = parseInt(lockTimeoutInput.value, 10);
+      // Clamp value between 1 and 60
+      if (isNaN(value) || value < 1) value = 1;
+      if (value > 60) value = 60;
+      lockTimeoutInput.value = value;
+      
+      saveLockTimeout(value);
+      updateLockTimeoutPresets(value);
+    });
+    lockTimeoutInput.dataset._bind = '1';
+  }
+  
+  // Preset buttons handler
+  if (lockTimeoutPresets && !lockTimeoutPresets.dataset._bind) {
+    const presets = lockTimeoutPresets.querySelectorAll('.lock-timeout-preset');
+    presets.forEach(preset => {
+      preset.addEventListener('click', () => {
+        const minutes = parseInt(preset.getAttribute('data-minutes'), 10);
+        if (!isNaN(minutes)) {
+          lockTimeoutInput.value = minutes;
+          saveLockTimeout(minutes);
+          updateLockTimeoutPresets(minutes);
+        }
+      });
+    });
+    lockTimeoutPresets.dataset._bind = '1';
+  }
+}
+
+/**
+ * Save lock timeout and apply to screen lock module
+ * @param {number} minutes - Timeout in minutes
+ */
+function saveLockTimeout(minutes) {
+  localStorage.setItem('lockTimeoutMinutes', String(minutes));
+  
+  // Apply to screen lock module if available
+  if (typeof window.setLockTimeout === 'function') {
+    window.setLockTimeout(minutes * 60 * 1000); // Convert to milliseconds
+  }
+  
+  showSuccessToast(t('toast.lockTimeout.saved', { minutes }), t('common.success'));
+}
+
+/**
+ * Update lock timeout preset buttons UI
+ * @param {number} currentMinutes - Current timeout in minutes
+ */
+function updateLockTimeoutPresets(currentMinutes) {
+  const presets = document.querySelectorAll('.lock-timeout-preset');
+  presets.forEach(preset => {
+    const minutes = parseInt(preset.getAttribute('data-minutes'), 10);
+    if (minutes === currentMinutes) {
+      preset.classList.add('active');
+    } else {
+      preset.classList.remove('active');
     }
   });
 }

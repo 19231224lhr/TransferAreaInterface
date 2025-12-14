@@ -689,6 +689,8 @@
   align-items: center;
   gap: 12px;
   padding: 14px 18px;
+  margin-top: 20px;
+  margin-bottom: 8px;
   background: linear-gradient(135deg, #fef3c7, #fef9c3);
   border: 1px solid #fcd34d;
   border-radius: 12px;
@@ -842,6 +844,226 @@
 /* ========================================
    隐藏类
    ======================================== */
+
+/* ========================================
+   密码设置表单
+   ======================================== */
+
+.new-password-form {
+  margin-bottom: 24px;
+  animation: passwordFormEnter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes passwordFormEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.new-password-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.new-password-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.new-password-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.new-password-icon svg {
+  width: 24px;
+  height: 24px;
+  color: white;
+}
+
+.new-password-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+
+.new-password-info p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.new-password-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.new-password-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.new-password-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.new-password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.new-password-input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
+  font-size: 14px;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
+}
+
+.new-password-input:focus {
+  background: white;
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.12);
+}
+
+.new-password-input::placeholder {
+  color: #94a3b8;
+}
+
+.new-password-toggle {
+  position: absolute;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.new-password-toggle:hover {
+  color: #8b5cf6;
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.new-password-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.new-password-toggle svg.hidden {
+  display: none;
+}
+
+/* 密码强度指示器 */
+.new-password-strength {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.strength-bar {
+  flex: 1;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.strength-fill {
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.strength-fill.weak {
+  width: 33%;
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.strength-fill.medium {
+  width: 66%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.strength-fill.strong {
+  width: 100%;
+  background: linear-gradient(90deg, #22c55e, #4ade80);
+}
+
+.strength-text {
+  font-size: 12px;
+  color: #64748b;
+  min-width: 60px;
+}
+
+.strength-text.weak { color: #ef4444; }
+.strength-text.medium { color: #f59e0b; }
+.strength-text.strong { color: #22c55e; }
+
+/* 密码提示 */
+.new-password-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #fef3c7, #fef9c3);
+  border: 1px solid #fcd34d;
+  border-radius: 10px;
+}
+
+.new-password-tip svg {
+  width: 18px;
+  height: 18px;
+  color: #d97706;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.new-password-tip span {
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
 
 .hidden {
   display: none !important;
@@ -1016,4 +1238,73 @@
 
 [data-theme="dark"] .new-action-btn--primary:hover {
   box-shadow: 0 8px 24px rgba(88, 28, 135, 0.5);
+}
+
+
+/* 密码表单深色模式 */
+[data-theme="dark"] .new-password-card {
+  background: var(--color-card-bg-solid);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .new-password-header {
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .new-password-info h3 {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-password-info p {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-password-label {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .new-password-input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .new-password-input:focus {
+  background: var(--color-bg-tertiary);
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+}
+
+[data-theme="dark"] .new-password-input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .new-password-toggle {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .new-password-toggle:hover {
+  color: #a78bfa;
+  background: rgba(139, 92, 246, 0.15);
+}
+
+[data-theme="dark"] .strength-bar {
+  background: var(--color-border);
+}
+
+[data-theme="dark"] .strength-text {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .new-password-tip {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.08));
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+[data-theme="dark"] .new-password-tip svg {
+  color: var(--color-warning);
+}
+
+[data-theme="dark"] .new-password-tip span {
+  color: var(--color-warning-light);
 }

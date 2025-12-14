@@ -114,6 +114,15 @@ import {
   configureTransition,
   navigateTo as enhancedNavigateTo 
 } from './utils/enhancedRouter';
+import {
+  initScreenLock,
+  lockScreen,
+  unlockScreen,
+  isScreenLocked,
+  cleanupScreenLock,
+  setLockTimeout,
+  getLockTimeout
+} from './utils/screenLock';
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
@@ -140,6 +149,7 @@ const pageLazyLoaders = {
   entry: () => import('./pages/entry.js'),
   login: () => import('./pages/login.js'),
   newUser: () => import('./pages/newUser.js'),
+  setPassword: () => import('./pages/setPassword.js'),
   import: () => import('./pages/import.js'),
   main: () => import('./pages/main.js'),
   joinGroup: () => import('./pages/joinGroup.js'),
@@ -298,6 +308,7 @@ window.initWelcomePage = createLazyPageFn('welcome', 'initWelcomePage');
 window.initEntryPage = createLazyPageFn('entry', 'initEntryPage');
 window.initLoginPage = createLazyPageFn('login', 'initLoginPage');
 window.initNewUserPage = createLazyPageFn('newUser', 'initNewUserPage');
+window.initSetPasswordPage = createLazyPageFn('setPassword', 'initSetPasswordPage');
 window.initImportPage = createLazyPageFn('import', 'initImportPage');
 window.initMainPage = createLazyPageFn('main', 'initMainPage');
 window.initJoinGroupPage = createLazyPageFn('joinGroup', 'initJoinGroupPage');
@@ -429,6 +440,14 @@ window.lazyLoader = lazyLoader;
 window.addRouteGuard = addRouteGuard;
 window.enhancedNavigateTo = enhancedNavigateTo;
 window.configureTransition = configureTransition;
+
+// Screen Lock functions
+window.initScreenLock = initScreenLock;
+window.lockScreen = lockScreen;
+window.unlockScreen = unlockScreen;
+window.isScreenLocked = isScreenLocked;
+window.setLockTimeout = setLockTimeout;
+window.getLockTimeout = getLockTimeout;
 
 // P2 Improvements - Online Status
 window.isOnline = isOnline;
@@ -671,6 +690,39 @@ function init() {
     updateHeaderUser(user);
   });
   
+  // Initialize screen lock for security
+  // Initialize screen lock with saved timeout from localStorage
+  // Default: 10 minutes inactivity timeout, lock on start if user has encrypted key
+  requestAnimationFrame(() => {
+    const user = loadUser();
+    if (user && user.accountId) {
+      // Load saved timeout from localStorage, default to 10 minutes
+      let timeoutMs = 10 * 60 * 1000;
+      try {
+        const savedTimeout = localStorage.getItem('lockTimeoutMinutes');
+        if (savedTimeout) {
+          const minutes = parseInt(savedTimeout, 10);
+          if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
+            timeoutMs = minutes * 60 * 1000;
+          }
+        }
+      } catch {
+        // Ignore localStorage errors
+      }
+      
+      initScreenLock({
+        timeout: timeoutMs,
+        lockOnStart: true,
+        onLock: () => {
+          // Optional: pause any background operations
+        },
+        onUnlock: () => {
+          // Optional: resume operations
+        }
+      });
+    }
+  });
+  
   // Initialize network chart
   try {
     initNetworkChart();
@@ -719,6 +771,9 @@ function globalCleanup() {
   
   // Cleanup footer resources
   try { cleanupFooter(); } catch (_) { }
+  
+  // Cleanup screen lock
+  try { cleanupScreenLock(); } catch (_) { }
   
   // Clear global flags
   window._headerScrollBind = false;

@@ -534,7 +534,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: loginLogoRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: loginLogoRotate 1.2s linear infinite;
 }
 
 .login-loader-logo img {
@@ -687,13 +687,22 @@
   padding: 10px 12px;
   border-radius: 8px;
   display: block;
+  margin-bottom: 8px;
+}
+
+.login-result-value:last-child {
+  margin-bottom: 0;
 }
 
 /* 密钥区域 */
 .login-result-keys {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 16px;
+}
+
+.login-result-keys .login-result-item {
+  margin-bottom: 4px;
 }
 
 .login-result-item--private {
@@ -875,6 +884,118 @@
 }
 
 /* ========================================
+   密码强度指示器
+   ======================================== */
+
+.login-strength-bar {
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.login-strength-fill {
+  height: 100%;
+  width: 0;
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.login-strength-fill.weak {
+  width: 33%;
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+
+.login-strength-fill.medium {
+  width: 66%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+
+.login-strength-fill.strong {
+  width: 100%;
+  background: linear-gradient(90deg, #10b981, #34d399);
+}
+
+.login-strength-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.login-strength-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.login-strength-text {
+  font-size: 12px;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.login-strength-text.weak {
+  color: #ef4444;
+}
+
+.login-strength-text.medium {
+  color: #f59e0b;
+}
+
+.login-strength-text.strong {
+  color: #10b981;
+}
+
+/* ========================================
+   密码匹配指示器
+   ======================================== */
+
+.login-match-icon {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-match-icon svg {
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s ease;
+}
+
+.login-match-icon .match-success {
+  color: #10b981;
+}
+
+.login-match-icon .match-error {
+  color: #ef4444;
+}
+
+.login-match-icon svg.hidden {
+  display: none;
+}
+
+.login-match-text {
+  font-size: 12px;
+  margin-top: 6px;
+  transition: color 0.2s ease;
+}
+
+.login-match-text.match {
+  color: #10b981;
+}
+
+.login-match-text.mismatch {
+  color: #ef4444;
+}
+
+/* ========================================
    隐藏类
    ======================================== */
 
@@ -1024,7 +1145,7 @@
 }
 
 [data-theme="dark"] .login-loader-logo img {
-  animation: loginLogoRotate 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite,
+  animation: loginLogoRotate 1.2s linear infinite,
              loginLogoPulseDark 2s ease-in-out infinite;
 }
 
@@ -1083,4 +1204,42 @@
 
 [data-theme="dark"] .login-next-btn:hover {
   box-shadow: 0 8px 24px rgba(4, 120, 87, 0.5);
+}
+
+/* 密码强度指示器 - 深色模式 */
+[data-theme="dark"] .login-strength-bar {
+  background: var(--color-border);
+}
+
+[data-theme="dark"] .login-strength-label {
+  color: var(--color-text-tertiary);
+}
+
+/* 密码匹配指示器 - 深色模式 */
+[data-theme="dark"] .login-match-icon .match-success {
+  color: #34d399;
+}
+
+[data-theme="dark"] .login-match-icon .match-error {
+  color: #f87171;
+}
+
+[data-theme="dark"] .login-match-text.match {
+  color: #34d399;
+}
+
+[data-theme="dark"] .login-match-text.mismatch {
+  color: #f87171;
+}
+
+[data-theme="dark"] .login-strength-text.weak {
+  color: #f87171;
+}
+
+[data-theme="dark"] .login-strength-text.medium {
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .login-strength-text.strong {
+  color: #34d399;
 }

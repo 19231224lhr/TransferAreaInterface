@@ -2,44 +2,46 @@
  * New User Page Module
  * 
  * Handles the new user/account creation page logic.
+ * Flow: 1. Generate keypair -> 2. Show keypair info -> 3. Click next -> 4. Set password page
  */
 
-import { saveUser, loadUser } from '../utils/storage';
 import { newUser } from '../services/account';
-import { showSuccessToast } from '../utils/toast.js';
+import { showErrorToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
-import { updateHeaderUser } from '../ui/header.js';
 import { secureFetchWithRetry } from '../utils/security';
 
-// Flag to prevent duplicate account creation
-let isCreatingAccount = false;
+// Flag to prevent duplicate key generation
+let isGeneratingKeys = false;
+
+// Store generated account data temporarily
+let pendingAccountData = null;
 
 /**
- * Handle account creation
- * @param {boolean} showToast - Whether to show success toast notification
+ * Generate keypair and display it
+ * Called automatically when page loads
  */
-export async function handleCreate(showToast = true) {
-  // Prevent duplicate calls
-  if (isCreatingAccount) return;
-  isCreatingAccount = true;
+async function generateAndDisplayKeypair() {
+  if (isGeneratingKeys || pendingAccountData) return;
   
-  const btn = document.getElementById('createBtn');
-  if (btn) btn.disabled = true;
+  isGeneratingKeys = true;
+  
+  const loader = document.getElementById('newLoader');
+  const resultEl = document.getElementById('result');
+  const nextBtn = document.getElementById('newNextBtn');
+  const keyTip = document.getElementById('newKeyTip');
+  
+  // Show loader, hide everything else
+  if (loader) loader.classList.remove('hidden');
+  if (resultEl) resultEl.classList.add('hidden');
+  if (nextBtn) nextBtn.classList.add('hidden');
+  if (keyTip) keyTip.classList.add('hidden');
   
   try {
-    const loader = document.getElementById('newLoader');
-    const resultEl = document.getElementById('result');
-    const nextBtn = document.getElementById('newNextBtn');
-    
-    if (btn) btn.classList.add('hidden');
-    if (nextBtn) nextBtn.classList.add('hidden');
-    if (resultEl) resultEl.classList.add('hidden');
-    if (loader) loader.classList.remove('hidden');
-    
     const t0 = Date.now();
     let data;
     
+    // Try backend API first, fall back to local generation
     try {
       const res = await secureFetchWithRetry('/api/account/new', { 
         method: 'POST' 
@@ -53,23 +55,20 @@ export async function handleCreate(showToast = true) {
       data = await newUser();
     }
     
+    // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;
-    if (elapsed < 1000) await wait(1000 - elapsed);
+    if (elapsed < 800) await wait(800 - elapsed);
+    
+    // Store pending data
+    pendingAccountData = data;
+    
+    // Also store in window for set-password page
+    window.__pendingAccountData = data;
+    
+    // Hide loader
     if (loader) loader.classList.add('hidden');
     
-    // Hide success banner, use top toast notification instead
-    const successBanner = resultEl ? resultEl.querySelector('.new-result-success') : null;
-    if (successBanner) {
-      successBanner.style.display = 'none';
-    }
-    
-    if (resultEl) {
-      resultEl.classList.remove('hidden');
-      resultEl.classList.remove('fade-in');
-      resultEl.classList.remove('reveal');
-      requestAnimationFrame(() => resultEl.classList.add('reveal'));
-    }
-    
+    // Display keypair info
     const accountIdEl = document.getElementById('accountId');
     const addressEl = document.getElementById('address');
     const privHexEl = document.getElementById('privHex');
@@ -82,81 +81,58 @@ export async function handleCreate(showToast = true) {
     if (pubXEl) pubXEl.textContent = data.pubXHex;
     if (pubYEl) pubYEl.textContent = data.pubYHex;
     
-    // Clear old account data before saving new account
-    const oldUser = loadUser();
-    if (!oldUser || oldUser.accountId !== data.accountId) {
-      // Different account, clear old data
-      if (typeof window.clearAccountStorage === 'function') {
-        window.clearAccountStorage();
-      }
+    // Hide success banner
+    const successBanner = resultEl?.querySelector('.new-result-success');
+    if (successBanner) {
+      successBanner.style.display = 'none';
     }
     
-    saveUser({ 
-      accountId: data.accountId, 
-      address: data.address, 
-      privHex: data.privHex, 
-      pubXHex: data.pubXHex, 
-      pubYHex: data.pubYHex, 
-      flowOrigin: 'new' 
-    });
+    // Show keypair result with animation
+    if (resultEl) {
+      resultEl.classList.remove('hidden');
+      resultEl.classList.remove('reveal');
+      requestAnimationFrame(() => resultEl.classList.add('reveal'));
+    }
     
-    // Update header to show logged in user
-    const user = loadUser();
-    updateHeaderUser(user);
-    
-    if (btn) btn.classList.remove('hidden');
+    // Show tip and next button
+    if (keyTip) keyTip.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
     
-    // Only show top success notification when needed
-    if (showToast) {
-      showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
-    }
   } catch (err) {
-    alert('创建用户失败：' + err);
+    showErrorToast(t('new.generateFailed', '生成密钥失败') + ': ' + err.message, t('common.error', '错误'));
     console.error(err);
-    const nextBtn = document.getElementById('newNextBtn');
-    if (btn) btn.classList.remove('hidden');
-    if (nextBtn) nextBtn.classList.remove('hidden');
-  } finally {
-    if (btn) btn.disabled = false;
-    isCreatingAccount = false;
-    const loader = document.getElementById('newLoader');
     if (loader) loader.classList.add('hidden');
+  } finally {
+    isGeneratingKeys = false;
   }
 }
 
 /**
- * Reset the creating account flag
+ * Reset page state
  */
-export function resetCreatingFlag() {
-  isCreatingAccount = false;
+function resetPageState() {
+  const resultEl = document.getElementById('result');
+  const loader = document.getElementById('newLoader');
+  const nextBtn = document.getElementById('newNextBtn');
+  const keyTip = document.getElementById('newKeyTip');
+  
+  // Hide everything initially
+  if (resultEl) resultEl.classList.add('hidden');
+  if (loader) loader.classList.add('hidden');
+  if (nextBtn) nextBtn.classList.add('hidden');
+  if (keyTip) keyTip.classList.add('hidden');
+  
+  // Reset pending data and flags
+  pendingAccountData = null;
+  isGeneratingKeys = false;
 }
 
 /**
  * Initialize new user page
  */
 export function initNewUserPage() {
-  isCreatingAccount = false;
-  
-  // Bind create button event
-  const createBtn = document.getElementById('createBtn');
-  if (createBtn && !createBtn.dataset._newUserBind) {
-    createBtn.dataset._newUserBind = 'true';
-    
-    // Add ripple effect
-    createBtn.addEventListener('click', (evt) => {
-      const btn = evt.currentTarget;
-      const rect = btn.getBoundingClientRect();
-      const ripple = document.createElement('span');
-      ripple.className = 'ripple';
-      ripple.style.left = (evt.clientX - rect.left) + 'px';
-      ripple.style.top = (evt.clientY - rect.top) + 'px';
-      btn.appendChild(ripple);
-      setTimeout(() => ripple.remove(), 600);
-    });
-    
-    createBtn.addEventListener('click', () => handleCreate());
-  }
+  isGeneratingKeys = false;
+  resetPageState();
   
   // Bind back button
   const newBackBtn = document.getElementById('newBackBtn');
@@ -169,24 +145,23 @@ export function initNewUserPage() {
     });
   }
   
-  // Bind next button
+  // Bind next button - navigate to set password page
   const newNextBtn = document.getElementById('newNextBtn');
   if (newNextBtn && !newNextBtn.dataset._newUserBind) {
     newNextBtn.dataset._newUserBind = 'true';
     newNextBtn.addEventListener('click', () => {
-      const ov = document.getElementById('actionOverlay');
-      const ovt = document.getElementById('actionOverlayText');
-      if (ovt && typeof window.t === 'function') {
-        ovt.textContent = window.t('modal.enteringWalletPage');
+      if (!pendingAccountData) {
+        showErrorToast(t('new.noKeypair', '请先等待密钥生成完成'), t('common.error', '错误'));
+        return;
       }
-      if (ov) ov.classList.remove('hidden');
-      window.__skipExitConfirm = true;
-      setTimeout(() => {
-        if (ov) ov.classList.add('hidden');
-        if (typeof window.routeTo === 'function') {
-          window.routeTo('#/entry');
-        }
-      }, 600);
+      
+      // Store data for set-password page
+      window.__pendingAccountData = pendingAccountData;
+      
+      // Navigate to set password page
+      if (typeof window.routeTo === 'function') {
+        window.routeTo('#/set-password');
+      }
     });
   }
   
@@ -199,4 +174,23 @@ export function initNewUserPage() {
       privateKeyItem.classList.toggle('new-key-card--collapsed');
     });
   }
+  
+  // Auto-generate keypair when page loads
+  setTimeout(() => {
+    generateAndDisplayKeypair();
+  }, 100);
+}
+
+/**
+ * Get pending account data
+ */
+export function getPendingAccountData() {
+  return pendingAccountData;
+}
+
+/**
+ * Reset the creating account flag (for backward compatibility)
+ */
+export function resetCreatingFlag() {
+  isGeneratingKeys = false;
 }
