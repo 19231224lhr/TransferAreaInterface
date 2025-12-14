@@ -2,10 +2,15 @@
  * History Page Module
  * 
  * Handles the transaction history page logic.
+ * 
+ * Performance optimizations:
+ * - Uses scheduleBatchUpdate for batched DOM updates
+ * - Uses rafDebounce for filter button debouncing
  */
 
 import { t } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
+import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [
@@ -342,27 +347,33 @@ function toggleTransactionDetail(itemEl, tx) {
 
 /**
  * Update statistics
+ * Uses scheduleBatchUpdate for performance optimization
  */
 function updateStatistics(transactions) {
   const totalCountEl = document.getElementById('historyTotalCount');
   const totalVolumeEl = document.getElementById('historyTotalVolume');
   
-  if (totalCountEl) {
-    totalCountEl.textContent = transactions.length;
-  }
+  // Use scheduleBatchUpdate to batch DOM updates for better performance
+  scheduleBatchUpdate('history-total-count', () => {
+    if (totalCountEl) {
+      totalCountEl.textContent = transactions.length;
+    }
+  });
   
-  if (totalVolumeEl) {
-    const totalVolume = transactions.reduce((sum, tx) => {
-      if (tx.status === 'success') {
-        // Convert to USDT equivalent (simplified)
-        const rates = { PGC: 1, BTC: 100, ETH: 10 };
-        return sum + (tx.amount * (rates[tx.currency] || 1));
-      }
-      return sum;
-    }, 0);
-    
-    totalVolumeEl.textContent = totalVolume.toLocaleString();
-  }
+  scheduleBatchUpdate('history-total-volume', () => {
+    if (totalVolumeEl) {
+      const totalVolume = transactions.reduce((sum, tx) => {
+        if (tx.status === 'success') {
+          // Convert to USDT equivalent (simplified)
+          const rates = { PGC: 1, BTC: 100, ETH: 10 };
+          return sum + (tx.amount * (rates[tx.currency] || 1));
+        }
+        return sum;
+      }, 0);
+      
+      totalVolumeEl.textContent = totalVolume.toLocaleString();
+    }
+  });
 }
 
 /**
@@ -380,26 +391,34 @@ export function initHistoryPage() {
     });
   }
   
-  // Bind filter buttons
+  // Bind filter buttons with rafDebounce for performance optimization
   const filterButtons = document.querySelectorAll('.history-filter-btn');
+  
+  // Create debounced filter handler to prevent rapid re-renders
+  const handleFilterChange = rafDebounce((period) => {
+    currentFilter = period;
+    
+    // Filter and render
+    const filtered = filterTransactions(period);
+    renderTransactionList(filtered);
+    updateStatistics(filtered);
+    
+    // Reset selected transaction when filtering
+    selectedTransaction = null;
+  });
+  
   filterButtons.forEach(btn => {
     if (!btn.dataset._historyBind) {
       btn.dataset._historyBind = 'true';
       btn.addEventListener('click', () => {
         const period = btn.dataset.period;
-        currentFilter = period;
         
-        // Update active state
+        // Update active state immediately for responsive UI
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         
-        // Filter and render
-        const filtered = filterTransactions(period);
-        renderTransactionList(filtered);
-        updateStatistics(filtered);
-        
-        // Reset selected transaction when filtering
-        selectedTransaction = null;
+        // Debounce the actual filtering and rendering
+        handleFilterChange(period);
       });
     }
   });

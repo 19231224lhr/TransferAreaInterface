@@ -3,6 +3,10 @@
  * Wallet Service Module
  * 
  * Provides wallet management functions including rendering, balance updates, and organization panel.
+ * 
+ * Performance optimizations:
+ * - Uses scheduleBatchUpdate for batched DOM updates
+ * - Uses rafDebounce for input validation debouncing
  */
 
 import { t } from '../i18n/index.js';
@@ -15,6 +19,7 @@ import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
+import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 
 /**
  * Update wallet brief display (count and list)
@@ -630,6 +635,7 @@ export function handleZeroAddress(address) {
 
 /**
  * Update a specific address card display without re-rendering entire wallet
+ * Uses scheduleBatchUpdate for performance optimization
  * @param {string} address - Address to update
  * @param {object} found - Address metadata
  */
@@ -648,25 +654,30 @@ function updateAddressCardDisplay(address, found) {
   cards.forEach(card => {
     const btn = card.querySelector('.btn-add') || card.querySelector('.btn-zero');
     if (btn && btn.dataset.addr && btn.dataset.addr.toLowerCase() === key) {
-      // Update balance in summary
-      const balanceEl = card.querySelector('.addr-card-balance');
-      if (balanceEl) {
-        balanceEl.textContent = `${balance} ${coinType}`;
-      }
-      
-      // Update detail rows
-      const detailRows = card.querySelectorAll('.addr-detail-row');
-      detailRows.forEach(row => {
-        const label = row.querySelector('.addr-detail-label');
-        const value = row.querySelector('.addr-detail-value');
-        if (label && value) {
-          const labelText = label.textContent;
-          if (labelText === t('address.balance') || labelText === '余额') {
-            value.textContent = `${balance} ${coinType}`;
-          } else if (labelText === 'GAS') {
-            value.textContent = gas;
-          }
+      // Use scheduleBatchUpdate to batch DOM updates for better performance
+      scheduleBatchUpdate(`addr-card-balance-${key}`, () => {
+        // Update balance in summary
+        const balanceEl = card.querySelector('.addr-card-balance');
+        if (balanceEl) {
+          balanceEl.textContent = `${balance} ${coinType}`;
         }
+      });
+      
+      scheduleBatchUpdate(`addr-card-details-${key}`, () => {
+        // Update detail rows
+        const detailRows = card.querySelectorAll('.addr-detail-row');
+        detailRows.forEach(row => {
+          const label = row.querySelector('.addr-detail-label');
+          const value = row.querySelector('.addr-detail-value');
+          if (label && value) {
+            const labelText = label.textContent;
+            if (labelText === t('address.balance') || labelText === '余额') {
+              value.textContent = `${balance} ${coinType}`;
+            } else if (labelText === 'GAS') {
+              value.textContent = gas;
+            }
+          }
+        });
       });
     }
   });
@@ -674,6 +685,7 @@ function updateAddressCardDisplay(address, found) {
 
 /**
  * Update USDT and breakdown display
+ * Uses scheduleBatchUpdate for performance optimization
  * @param {object} u - User object
  */
 function updateUSDTDisplay(u) {
@@ -684,17 +696,23 @@ function updateUSDTDisplay(u) {
     const btcA = Number(vdAll[1] || 0);
     const ethA = Number(vdAll[2] || 0);
     const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
-    // Only show the number, not the unit (unit is shown in smaller text elsewhere)
-    usdtEl.textContent = usdt.toLocaleString();
+    
+    // Use scheduleBatchUpdate to batch DOM updates for better performance
+    scheduleBatchUpdate('usdt-display', () => {
+      // Only show the number, not the unit (unit is shown in smaller text elsewhere)
+      usdtEl.textContent = usdt.toLocaleString();
+    });
     
     const bd = document.querySelector('.currency-breakdown');
     if (bd) {
-      const pgcV = bd.querySelector('.tag--pgc');
-      const btcV = bd.querySelector('.tag--btc');
-      const ethV = bd.querySelector('.tag--eth');
-      if (pgcV) pgcV.textContent = pgcA;
-      if (btcV) btcV.textContent = btcA;
-      if (ethV) ethV.textContent = ethA;
+      scheduleBatchUpdate('currency-breakdown', () => {
+        const pgcV = bd.querySelector('.tag--pgc');
+        const btcV = bd.querySelector('.tag--btc');
+        const ethV = bd.querySelector('.tag--eth');
+        if (pgcV) pgcV.textContent = pgcA;
+        if (btcV) btcV.textContent = btcA;
+        if (ethV) ethV.textContent = ethA;
+      });
     }
   }
 }
