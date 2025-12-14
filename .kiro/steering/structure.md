@@ -43,6 +43,13 @@ TransferAreaInterface/
 │   ├── types.js            # JSDoc type definitions
 │   ├── globals.d.ts        # Global TypeScript declarations
 │   │
+│   ├── api/                # API client modules (TypeScript only)
+│   │   ├── client.ts       # Base API client with secureFetch
+│   │   ├── account.ts      # Account-related API endpoints
+│   │   ├── transaction.ts  # Transaction-related API endpoints
+│   │   ├── wallet.ts       # Wallet-related API endpoints
+│   │   └── types.ts        # API request/response type definitions
+│   │
 │   ├── config/             # Configuration
 │   │   ├── constants.ts    # App constants and types (TS)
 │   │   └── constants.js.backup # Original JS version
@@ -226,14 +233,20 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 
 ### Module Organization
 
-| Directory | Purpose | Language |
-|-----------|---------|----------|
-| `js/config/` | Configuration constants | TypeScript |
-| `js/services/` | Business logic | TypeScript (migrated) |
-| `js/utils/` | Utility functions | TypeScript (migrated) |
-| `js/pages/` | Page components | JavaScript |
-| `js/ui/` | UI components | JavaScript |
-| `js/i18n/` | Translations | JavaScript |
+| Directory | Purpose | Language | Status |
+|-----------|---------|----------|--------|
+| `js/api/` | API client modules (frontend-backend integration) | **TypeScript only** | 🆕 New |
+| `js/config/` | Configuration constants | TypeScript | ✅ Migrated |
+| `js/services/` | Business logic | TypeScript | ✅ Migrated |
+| `js/utils/` | Utility functions | TypeScript | ✅ Migrated |
+| `js/pages/` | Page components | JavaScript | 🔄 To migrate |
+| `js/ui/` | UI components | JavaScript | 🔄 To migrate |
+| `js/i18n/` | Translations | JavaScript | 🔄 To migrate |
+
+**Important Notes:**
+- 🆕 `js/api/` - **NEW directory for all API integration code** (TypeScript only)
+- ✅ All new code MUST be written in TypeScript
+- 🔄 Existing JavaScript files can remain as-is until major refactoring
 
 ### Backend (Go)
 
@@ -247,13 +260,16 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 |------|---------|
 | `js/app.js` | Application entry, routing, initialization |
 | `js/router.js` | Hash-based routing system |
+| **`js/api/client.ts`** | **🆕 Base API client with secureFetch (NEW)** |
+| **`js/api/account.ts`** | **🆕 Account API endpoints (NEW)** |
+| **`js/api/types.ts`** | **🆕 API request/response types (NEW)** |
 | `js/config/constants.ts` | All configuration constants and types |
 | `js/utils/security.ts` | Security utilities (XSS, CSRF, validation) |
 | `js/utils/storage.ts` | localStorage operations |
 | `js/utils/keyEncryption.ts` | Private key encryption core logic |
 | `js/utils/keyEncryptionUI.ts` | Private key encryption UI integration |
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
-| `js/services/account.ts` | Account management |
+| `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
 | `js/services/transferDraft.ts` | Transfer form state persistence |
 | `vite.config.js` | Build configuration |
@@ -263,6 +279,12 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `backend/core.go` | Signing, hashing, serialization utilities |
 | `backend/Account.go` | Account/Wallet/Address data structures |
 | `backend/Transaction.go` | Transaction struct and methods |
+
+**🆕 New API Integration Pattern:**
+- All API calls should go through `js/api/` modules
+- Use `apiClient` from `js/api/client.ts` for all HTTP requests
+- Define request/response types in `js/api/types.ts`
+- Business logic in `js/services/` should import from `js/api/`
 
 ### Backup Files
 
