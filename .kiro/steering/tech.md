@@ -37,15 +37,22 @@ Access at: http://localhost:3000/
 ### Build for Production
 
 ```bash
-npm run build      # Build to dist/ directory
+npm run build      # Build to dist/ directory (runs postbuild automatically)
 npm run preview    # Preview production build
 ```
+
+**Build Process:**
+1. Vite builds the application to `dist/`
+2. `postbuild` script runs automatically (`node scripts/copy-sw.js`)
+3. Service Worker (`sw.js`) is copied to `dist/` for offline support
 
 ### Type Checking
 
 ```bash
-npm run typecheck  # Run TypeScript type checking
+npm run typecheck  # Run TypeScript type checking (TS files only)
 ```
+
+**Note:** JavaScript files are excluded from type checking (`checkJs: false`) to prevent false errors during gradual migration.
 
 ### Run Go Tests (if any)
 
@@ -57,6 +64,16 @@ go test ./...
 
 ```bash
 go build ./backend/cmd/webserver
+```
+
+### Backend Testing Tools
+
+```bash
+# Serialization testing
+go run ./backend/test_serialize
+
+# Transaction verification
+go run ./backend/verify_tx
 ```
 
 ## API Endpoints
@@ -82,18 +99,25 @@ go build ./backend/cmd/webserver
 - **Target**: ES2020
 - **Module**: ESNext with bundler resolution
 - **Strict Mode**: Disabled (for gradual migration)
-- **JS Support**: `allowJs: true`, `checkJs: true`
+- **JS Support**: 
+  - `tsconfig.json`: `allowJs: true`, `checkJs: false` (TS files only)
+  - `jsconfig.json`: `checkJs: false` (no type checking for JS files)
 
 ### Key Files
-- `tsconfig.json` - TypeScript compiler options
-- `jsconfig.json` - JavaScript type checking (legacy)
+- `tsconfig.json` - TypeScript compiler options (TS files only)
+- `jsconfig.json` - JavaScript configuration (checkJs disabled to prevent false errors)
 - `js/globals.d.ts` - Global type declarations
 - `js/types.js` - JSDoc type definitions
 
 ### TypeScript Modules (已迁移)
+
+**Config:**
 - `js/config/constants.ts` - 配置常量和类型定义
+
+**Utils:**
 - `js/utils/crypto.ts` - 加密/哈希/签名工具
-- `js/utils/keyEncryption.ts` - 私钥加密模块
+- `js/utils/keyEncryption.ts` - 私钥加密核心逻辑
+- `js/utils/keyEncryptionUI.ts` - 私钥加密 UI 集成
 - `js/utils/security.ts` - 安全工具 (XSS, CSRF, 验证)
 - `js/utils/storage.ts` - 本地存储管理
 - `js/utils/accessibility.ts` - 无障碍工具
@@ -102,10 +126,37 @@ go build ./backend/cmd/webserver
 - `js/utils/enhancedRouter.ts` - 增强路由系统
 - `js/utils/lazyLoader.ts` - 懒加载管理
 - `js/utils/serviceWorker.ts` - Service Worker 管理
-- `js/utils/transaction.ts` - 事务操作
+- `js/utils/transaction.ts` - 事务操作和自动保存
+
+**Services:**
 - `js/services/account.ts` - 账户服务
-- `js/services/transaction.ts` - 交易服务
-- `js/services/transfer.ts` - 转账服务
+- `js/services/transaction.ts` - 交易构建服务
+- `js/services/transfer.ts` - 转账表单逻辑
+- `js/services/transferDraft.ts` - 转账草稿持久化
+
+### JavaScript Modules (未迁移)
+
+**Pages:** (all JavaScript)
+- `js/pages/*.js` - 所有页面组件
+
+**UI Components:** (all JavaScript)
+- `js/ui/*.js` - 所有 UI 组件
+
+**Services:** (partial)
+- `js/services/wallet.js` - 钱包操作
+- `js/services/walletStruct.js` - 钱包结构显示
+- `js/services/recipient.js` - 收款人管理
+
+**Utils:** (partial)
+- `js/utils/store.js` - 状态管理
+- `js/utils/toast.js` - Toast 提示
+- `js/utils/helpers.js` - 通用辅助函数
+- `js/utils/eventUtils.js` - 事件管理
+- `js/utils/performanceMode.js` - 性能优化模式
+- `js/utils/performanceMonitor.js` - 性能监控
+
+**i18n:**
+- `js/i18n/*.js` - 国际化系统
 
 ## Internationalization (i18n)
 
@@ -153,7 +204,24 @@ go build ./backend/cmd/webserver
 ### Private Key Encryption
 - **Algorithm**: AES-256-GCM with PBKDF2 key derivation
 - **Iterations**: 100,000 (anti-brute-force)
-- **Module**: `js/utils/keyEncryption.ts`
+- **Salt**: Random 16-byte salt per encryption
+- **IV**: Random 12-byte initialization vector per encryption
+- **Core Module**: `js/utils/keyEncryption.ts`
+- **UI Integration**: `js/utils/keyEncryptionUI.ts`
+
+**Key Functions:**
+- `encryptPrivateKey(privHex, password)` - Encrypt private key with password
+- `decryptPrivateKey(encryptedData, password)` - Decrypt private key
+- `saveEncryptedKey(accountId, encryptedData)` - Save to localStorage
+- `getPrivateKey(accountId, password)` - Retrieve and decrypt
+- `migrateToEncrypted(user, password)` - Migrate legacy plaintext keys
+- `checkEncryptionStatus(user)` - Check if migration needed
+
+**UI Functions:**
+- `showPasswordPrompt(options)` - Modal password input
+- `encryptAndSavePrivateKey(accountId, privHex)` - Full encryption workflow
+- `getDecryptedPrivateKey(accountId)` - Full decryption workflow with prompt
+- `checkAndPromptMigration()` - Auto-migration on app start
 
 ### XSS Protection
 - `escapeHtml()` - HTML entity encoding

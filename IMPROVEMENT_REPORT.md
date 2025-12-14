@@ -33,7 +33,7 @@
 
 ### 1. **私钥明文存储安全风险**
 
-**文件**: [js/utils/storage.js](js/utils/storage.js#L68-L75)
+**文件**: [js/utils/storage.ts](js/utils/storage.ts#L68-L75)
 
 **问题描述**:
 - 用户私钥 (`privHex`) 直接以明文存储在 `localStorage`
@@ -80,7 +80,7 @@ async function encryptPrivateKey(privHex, password) {
 #### ✅ 实施方案
 
 **1. 创建私钥加密模块**
-- 新建 `js/utils/keyEncryption.js` 模块
+- 新建 `js/utils/keyEncryption.ts` 模块
 - 使用 Web Crypto API 实现 PBKDF2 + AES-256-GCM 加密
 - 迭代次数：100,000 次，确保密钥推导安全性
 
@@ -99,7 +99,7 @@ async function encryptPrivateKey(privHex, password) {
 
 ```javascript
 // 1. 加密存储私钥
-import { encryptPrivateKey } from './utils/keyEncryption.js';
+import { encryptPrivateKey } from './utils/keyEncryption';
 
 const password = prompt('请设置密码保护私钥');
 const encrypted = await encryptPrivateKey(privHex, password);
@@ -128,7 +128,7 @@ if (hasLegacyKey()) {
 
 ### 2. **缺少 CSRF 保护**
 
-**文件**: [js/services/account.js](js/services/account.js), [js/services/transfer.js](js/services/transfer.js)
+**文件**: [js/services/account.ts](js/services/account.ts), [js/services/transfer.ts](js/services/transfer.ts)
 
 **问题描述**:
 - 所有 API 请求未携带 CSRF Token
@@ -153,7 +153,7 @@ async function secureFetch(url, options = {}) {
 
 #### ✅ 实施方案
 
-**1. 在 security.js 中添加安全请求函数**
+**1. 在 security.ts 中添加安全请求函数**
 - `secureFetch(url, options)` - 自动添加 CSRF Token 和安全请求头
 - `secureFetchWithRetry(url, options, config)` - 带重试的安全请求
 - 支持 SameSite Cookie 策略
@@ -166,7 +166,7 @@ async function secureFetch(url, options = {}) {
 #### 📖 使用方法
 
 ```javascript
-import { secureFetch } from './utils/security.js';
+import { secureFetch } from './utils/security';
 
 // 1. 普通 POST 请求
 const response = await secureFetch('/api/account/new', {
@@ -175,7 +175,7 @@ const response = await secureFetch('/api/account/new', {
 });
 
 // 2. 带重试的安全请求
-import { secureFetchWithRetry } from './utils/security.js';
+import { secureFetchWithRetry } from './utils/security';
 
 const response = await secureFetchWithRetry('/api/transfer', {
   method: 'POST',
@@ -198,7 +198,7 @@ const response = await secureFetchWithRetry('/api/transfer', {
 
 ### 3. **输入验证不完整**
 
-**文件**: [js/services/transfer.js](js/services/transfer.js#L40-L50)
+**文件**: [js/services/transfer.ts](js/services/transfer.ts#L40-L50)
 
 **问题描述**:
 - 转账金额仅验证是否为数字，未验证精度
@@ -266,7 +266,7 @@ import {
   validateTransferAmount, 
   validateAddress,
   createSubmissionGuard 
-} from './utils/security.js';
+} from './utils/security';
 
 // 1. 金额验证（要求 > 0.00000001）
 const amountCheck = validateTransferAmount(amount, { min: 0.00000001 });
@@ -358,7 +358,7 @@ span.textContent = shortAddr; // textContent 自动转义
 #### 📖 使用方法
 
 ```javascript
-import { escapeHtml } from './utils/security.js';
+import { escapeHtml } from './utils/security';
 
 // 1. 转义用户输入
 const safeAddress = escapeHtml(userInputAddress);
@@ -432,7 +432,7 @@ window.addEventListener('unhandledrejection', (event) => {
 #### 📖 使用方法
 
 ```javascript
-import { withErrorBoundary, registerErrorHandler } from './utils/security.js';
+import { withErrorBoundary, registerErrorHandler } from './utils/security';
 
 // 1. 包装关键函数
 const safeTransfer = withErrorBoundary(async (data) => {
@@ -470,9 +470,9 @@ registerErrorHandler((errorInfo) => {
 
 **涉及文件**:
 - [js/pages/newUser.js](js/pages/newUser.js#L17-L85)
-- [js/services/account.js](js/services/account.js#L130-L200)
+- [js/services/account.ts](js/services/account.ts#L130-L200)
 - [js/services/wallet.js](js/services/wallet.js#L40)
-- [js/services/transfer.js](js/services/transfer.js#L25)
+- [js/services/transfer.ts](js/services/transfer.ts#L25)
 
 **改进建议**:
 ```javascript
@@ -628,7 +628,7 @@ if (!button.dataset._clickBind) {
 
 ### 8. **异步操作缺乏超时处理**
 
-**文件**: [js/services/account.js](js/services/account.js#L60-L80)
+**文件**: [js/services/account.ts](js/services/account.ts#L60-L80)
 
 **问题描述**:
 - `fetch` 请求无超时设置
@@ -673,7 +673,7 @@ async function fetchWithRetry(url, options, retries = 3) {
 
 #### ✅ 实施方案
 
-**1. 在 security.js 中添加超时控制**
+**1. 在 security.ts 中添加超时控制**
 - `fetchWithTimeout(url, options, timeout)` - 带超时的 fetch
   - 默认超时 10 秒
   - 使用 AbortController 控制
@@ -688,7 +688,7 @@ async function fetchWithRetry(url, options, retries = 3) {
 #### 📖 使用方法
 
 ```javascript
-import { fetchWithTimeout, fetchWithRetry } from './utils/security.js';
+import { fetchWithTimeout, fetchWithRetry } from './utils/security';
 
 // 1. 带超时的请求
 const response = await fetchWithTimeout('/api/data', {
@@ -888,7 +888,7 @@ interface User {
   - ValidationResult - 验证结果
 
 **2. 添加函数注释**
-- 在 storage.js 中添加完整 JSDoc
+- 在 storage.ts 中添加完整 JSDoc
 - 标注参数和返回值类型
 
 #### 📖 使用方法
@@ -929,7 +929,7 @@ const result = validateAmount('100', { min: 0 });
 
 **当前代码**:
 ```javascript
-// transfer.js 中的硬编码
+// transfer.ts 中的硬编码
 const tipHtml = `检测到本次转账中有 <strong>${removedAddrs.length}</strong> 个来源地址...`;
 showTxValidationError('跨链交易只能有一个来源地址', null, '跨链交易限制');
 ```
@@ -974,7 +974,7 @@ export function formatDate(date, locale = getCurrentLanguage()) {
   - 其他补充 (7+)
 
 **2. 移除硬编码文本**
-- transfer.js 中的中文错误信息
+- transfer.ts 中的中文错误信息
 - wallet.js 中的提示文本
 - 所有弹窗标题和内容
 
@@ -1252,7 +1252,7 @@ setAriaDescribedBy(amountInput, 'amount-hint');
 
 ### 17. **Loading 状态管理**
 
-**文件**: [js/services/account.js](js/services/account.js), [js/services/transfer.js](js/services/transfer.js), [js/pages/main.js](js/pages/main.js)
+**文件**: [js/services/account.ts](js/services/account.ts), [js/services/transfer.ts](js/services/transfer.ts), [js/pages/main.js](js/pages/main.js)
 
 **问题描述**:
 - 多处手动管理加载状态，代码重复（20+ 处）
@@ -1517,7 +1517,7 @@ await navigateTo('/main'); // 自动执行所有守卫
 
 ### 19. **错误边界和恢复**
 
-**文件**: [js/services/transfer.js](js/services/transfer.js), [js/utils/storage.js](js/utils/storage.js)
+**文件**: [js/services/transfer.ts](js/services/transfer.ts), [js/utils/storage.ts](js/utils/storage.ts)
 
 **问题描述**:
 - 关键操作失败后无恢复方案（如转账提交失败）
@@ -2193,7 +2193,7 @@ clearCacheBtn.addEventListener('click', async () => {
 **完成时间**: 2025年1月
 
 **完成项目**:
-- ✅ P0-1: 私钥加密存储 - keyEncryption.js 模块
+- ✅ P0-1: 私钥加密存储 - keyEncryption.ts 模块
 - ✅ P0-2: CSRF 防护 - secureFetch 函数
 - ✅ P0-3: 输入验证 - 完整验证体系
 - ✅ P0-4: XSS 防护 - escapeHtml 全覆盖
@@ -2207,7 +2207,7 @@ clearCacheBtn.addEventListener('click', async () => {
 - ✅ P1-13: 性能优化 - RAF 批量更新
 
 **成果统计**:
-- 新增文件: 4 个核心模块 (security.js, store.js, keyEncryption.js, types.js)
+- 新增文件: 4 个核心模块 (security.ts, store.js, keyEncryption.ts, types.js)
 - 更新文件: 15+ 个现有文件
 - 新增代码: 约 2000+ 行
 - 修复问题: 13 个 P0/P1 级别问题
@@ -2231,7 +2231,7 @@ clearCacheBtn.addEventListener('click', async () => {
    - ✅ 创建 jsconfig.json 启用 checkJs 模式
    - ✅ 创建 globals.d.ts 声明 Window 扩展类型
    - ✅ 更新 types.js 中的 UTXO/TXCer 类型定义
-   - ✅ 修复 security.js, store.js, keyEncryption.js 中的类型错误
+   - ✅ 修复 security.ts, store.js, keyEncryption.ts 中的类型错误
    - ✅ 从 199 个类型错误降到 0 个
 
 2. **第二阶段 - 引入构建工具**

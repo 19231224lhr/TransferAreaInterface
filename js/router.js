@@ -7,7 +7,7 @@
 import { updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
-import { updateHeaderUser } from './ui/header.js';
+import { updateHeaderUser, initUserMenu } from './ui/header.js';
 import { cleanupPageListeners } from './utils/eventUtils.js';
 import { store, setRoute } from './utils/store.js';
 
@@ -161,6 +161,9 @@ export function routeTo(hash) {
 export function router() {
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
+  
+  // Reinitialize header user menu after cleanup
+  initUserMenu();
   
   initCardRefs();
   

@@ -6,6 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { loadUser, loadUserProfile, computeCurrentOrgId, clearAccountStorage } from '../utils/storage';
+import { globalEventManager } from '../utils/eventUtils.js';
 
 /**
  * Update header user display
@@ -172,8 +173,8 @@ export function updateHeaderUser(user) {
  */
 function bindAddressPopupEvent() {
   const menuAddressItem = document.getElementById('menuAddressItem');
-  if (menuAddressItem && !menuAddressItem.dataset._bind) {
-    menuAddressItem.addEventListener('click', (e) => {
+  if (menuAddressItem) {
+    globalEventManager.add(menuAddressItem, 'click', (e) => {
       e.stopPropagation();
       // Close balance popup
       const balancePopup = document.getElementById('menuBalancePopup');
@@ -206,8 +207,7 @@ function bindAddressPopupEvent() {
     });
     
     const popup = document.getElementById('menuAddressPopup');
-    if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
-    menuAddressItem.dataset._bind = '1';
+    if (popup) globalEventManager.add(popup, 'click', (e) => e.stopPropagation());
   }
 }
 
@@ -216,8 +216,8 @@ function bindAddressPopupEvent() {
  */
 function bindBalancePopupEvent() {
   const menuBalanceItem = document.getElementById('menuBalanceItem');
-  if (menuBalanceItem && !menuBalanceItem.dataset._bind) {
-    menuBalanceItem.addEventListener('click', (e) => {
+  if (menuBalanceItem) {
+    globalEventManager.add(menuBalanceItem, 'click', (e) => {
       e.stopPropagation();
       // Close address popup
       const addrPopup = document.getElementById('menuAddressPopup');
@@ -228,8 +228,7 @@ function bindBalancePopupEvent() {
     });
     
     const popup = document.getElementById('menuBalancePopup');
-    if (popup) popup.addEventListener('click', (e) => e.stopPropagation());
-    menuBalanceItem.dataset._bind = '1';
+    if (popup) globalEventManager.add(popup, 'click', (e) => e.stopPropagation());
   }
 }
 
@@ -238,8 +237,8 @@ function bindBalancePopupEvent() {
  */
 function bindOrgClickEvent() {
   const menuOrgItem = document.getElementById('menuOrgItem');
-  if (menuOrgItem && !menuOrgItem.dataset._bind) {
-    menuOrgItem.addEventListener('click', (e) => {
+  if (menuOrgItem) {
+    globalEventManager.add(menuOrgItem, 'click', (e) => {
       e.stopPropagation();
       // Close user menu
       const userMenu = document.getElementById('userMenu');
@@ -251,7 +250,6 @@ function bindOrgClickEvent() {
         location.hash = '#/group-detail';
       }
     });
-    menuOrgItem.dataset._bind = '1';
   }
 }
 
@@ -260,8 +258,8 @@ function bindOrgClickEvent() {
  */
 function bindMenuHeaderClickEvent() {
   const menuHeader = document.querySelector('.menu-header');
-  if (menuHeader && !menuHeader.dataset._bind) {
-    menuHeader.addEventListener('click', (e) => {
+  if (menuHeader) {
+    globalEventManager.add(menuHeader, 'click', (e) => {
       e.stopPropagation();
       // Close user menu
       const userMenu = document.getElementById('userMenu');
@@ -274,7 +272,6 @@ function bindMenuHeaderClickEvent() {
       }
     });
     menuHeader.style.cursor = 'pointer';
-    menuHeader.dataset._bind = '1';
   }
 }
 
@@ -350,29 +347,23 @@ export function initUserMenu() {
   
   if (!userButton || !userMenu) return;
   
-  if (!userButton.dataset._bind) {
-    userButton.addEventListener('click', (e) => {
-      e.stopPropagation();
-      userMenu.classList.toggle('hidden');
-    });
-    
-    // Close menu when clicking outside - only bind once globally
-    if (!window._userMenuClickBind) {
-      document.addEventListener('click', (e) => {
-        if (!userMenu.contains(e.target) && !userButton.contains(e.target)) {
-          userMenu.classList.add('hidden');
-        }
-      });
-      window._userMenuClickBind = true;
-    }
-    
-    userButton.dataset._bind = '1';
-  }
+  // Always rebind since globalEventManager clears on route change
+  globalEventManager.add(userButton, 'click', (e) => {
+    e.stopPropagation();
+    userMenu.classList.toggle('hidden');
+  });
   
-  // Bind logout button
+  // Close menu when clicking outside - always rebind since globalEventManager clears on route change
+  globalEventManager.add(document, 'click', (e) => {
+    if (!userMenu.contains(e.target) && !userButton.contains(e.target)) {
+      userMenu.classList.add('hidden');
+    }
+  });
+  
+  // Bind logout button - always rebind since globalEventManager clears on route change
   const logoutBtn = document.getElementById('logoutBtn');
-  if (logoutBtn && !logoutBtn.dataset._bind) {
-    logoutBtn.addEventListener('click', (e) => {
+  if (logoutBtn) {
+    globalEventManager.add(logoutBtn, 'click', (e) => {
       e.preventDefault();
       e.stopPropagation();
       
@@ -398,7 +389,6 @@ export function initUserMenu() {
         location.hash = '#/welcome';
       }
     });
-    logoutBtn.dataset._bind = '1';
   }
 }
 
@@ -452,9 +442,9 @@ export function initHeaderScroll() {
     ticking = false;
   }
   
-  // Only bind scroll listener once
+  // Only bind scroll listener once using globalEventManager
   if (!window._headerScrollBind) {
-    window.addEventListener('scroll', function() {
+    globalEventManager.add(window, 'scroll', function() {
       if (!ticking) {
         requestAnimationFrame(updateHeader);
         ticking = true;
@@ -465,7 +455,7 @@ export function initHeaderScroll() {
   
   // Listen for page changes (hash changes) - only bind once
   if (!window._headerHashChangeBind) {
-    window.addEventListener('hashchange', function() {
+    globalEventManager.add(window, 'hashchange', function() {
       setTimeout(function() {
         lastScrollY = window.scrollY;
         if (isHomePage() || window.scrollY <= 10) {

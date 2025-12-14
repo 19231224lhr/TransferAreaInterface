@@ -20,6 +20,7 @@ import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
+import { globalEventManager } from '../utils/eventUtils.js';
 
 /**
  * Update wallet brief display (count and list)
@@ -228,10 +229,10 @@ export function renderWallet() {
       </div>
     `;
     
-    // Add click to expand/collapse
+    // Add click to expand/collapse using globalEventManager
     const summaryEl = item.querySelector('.addr-card-summary');
     if (summaryEl) {
-      summaryEl.addEventListener('click', (e) => {
+      globalEventManager.add(summaryEl, 'click', (e) => {
         e.stopPropagation();
         item.classList.toggle('expanded');
       });
@@ -288,23 +289,23 @@ function addAddressOperationsMenu(container, address, cardItem) {
   ops.appendChild(menu);
   container.appendChild(ops);
   
-  toggle.addEventListener('click', (e) => {
+  globalEventManager.add(toggle, 'click', (e) => {
     e.stopPropagation();
     menu.classList.toggle('hidden');
   });
   
-  document.addEventListener('click', () => {
+  globalEventManager.add(document, 'click', () => {
     menu.classList.add('hidden');
   });
   
   // Delete handler
-  delBtn.addEventListener('click', (e) => {
+  globalEventManager.add(delBtn, 'click', (e) => {
     e.stopPropagation();
     handleDeleteAddress(address, menu);
   });
   
   // Export handler
-  expBtn.addEventListener('click', (e) => {
+  globalEventManager.add(expBtn, 'click', (e) => {
     e.stopPropagation();
     handleExportPrivateKey(address, menu);
   });
@@ -1076,9 +1077,9 @@ export function rebuildAddrList() {
   // Auto-select logic
   autoSelectFromAddress(addrList);
   
-  // Bind change event
+  // Bind change event using globalEventManager
   if (!addrList.dataset._changeBind) {
-    addrList.addEventListener('change', fillChange);
+    globalEventManager.add(addrList, 'change', fillChange);
     addrList.dataset._changeBind = '1';
   }
   
@@ -1193,7 +1194,7 @@ export function initTransferModeTabs() {
     }
   };
   
-  modeTabsContainer.addEventListener('click', (e) => {
+  globalEventManager.add(modeTabsContainer, 'click', (e) => {
     const tab = e.target.closest('.transfer-mode-tab') || e.target.closest('.mode-tab');
     if (tab) {
       if (modeTabsContainer.classList.contains('compact') && tab.classList.contains('active')) {
@@ -1213,8 +1214,8 @@ export function initTransferModeTabs() {
   
   let layoutTimer;
   const onResize = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout(updateModeTabsLayout, 50); };
-  window.addEventListener('resize', onResize);
-  window.addEventListener('orientationchange', onResize);
+  globalEventManager.add(window, 'resize', onResize);
+  globalEventManager.add(window, 'orientationchange', onResize);
   updateModeTabsLayout();
   
   // Initialize slider position
@@ -1240,7 +1241,7 @@ export function initTransferModeTabs() {
 function bindCustomSelect(box, hidden) {
   if (!box || box.dataset._bind) return;
   
-  box.addEventListener('click', (e) => { 
+  globalEventManager.add(box, 'click', (e) => { 
     e.stopPropagation(); 
     const sec = box.closest('.tx-section'); 
     const opening = !box.classList.contains('open'); 
@@ -1250,7 +1251,7 @@ function bindCustomSelect(box, hidden) {
   
   const menu = box.querySelector('.custom-select__menu');
   if (menu) {
-    menu.addEventListener('click', (ev) => {
+    globalEventManager.add(menu, 'click', (ev) => {
       ev.stopPropagation();
       const item = ev.target.closest('.custom-select__item');
       if (!item) return;
@@ -1267,7 +1268,7 @@ function bindCustomSelect(box, hidden) {
     });
   }
   
-  document.addEventListener('click', () => { 
+  globalEventManager.add(document, 'click', () => { 
     box.classList.remove('open'); 
     const sec = box.closest('.tx-section'); 
     if (sec) sec.classList.remove('has-open'); 

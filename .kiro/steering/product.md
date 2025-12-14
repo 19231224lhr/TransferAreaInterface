@@ -10,18 +10,25 @@ PanguPay (盘古支付 - 转账区钱包接口) is a blockchain wallet solution 
 - **Guarantor Organizations**: Users join guarantor groups for transaction validation
 - **Transaction Building**: UTXO-based transaction construction with signature verification
 - **Transaction Certificates (TXCer)**: Special transaction certificates for cross-chain operations
+- **Transfer Draft Persistence**: Auto-save transfer form state to prevent data loss on refresh
 - **Internationalization**: Full bilingual support (Chinese/English) with 260+ translation keys
 - **User Profiles**: Customizable avatars, nicknames, and bio with local storage
 - **Offline Support**: Service Worker enables offline access to cached resources
 - **Accessibility**: WCAG 2.1 AA compliant with screen reader support
+- **Performance Monitoring**: Built-in performance tracking and optimization modes
 
 ## Security Features
 
 - **Private Key Encryption**: AES-256-GCM encryption with PBKDF2 key derivation (100,000 iterations)
+  - Password-protected private key storage
+  - Automatic migration from legacy plaintext storage
+  - User-friendly password prompts with confirmation
+  - Secure key retrieval with password verification
 - **XSS Protection**: HTML escaping and safe DOM manipulation
 - **CSRF Protection**: Automatic token handling for API requests
 - **Input Validation**: Comprehensive validation for addresses, amounts, and private keys
 - **Error Boundary**: Global error handling with graceful degradation
+- **Auto-Save**: Encrypted draft persistence for sensitive form data
 
 ## User Flow
 
@@ -66,12 +73,22 @@ Developers and users interacting with a UTXO-based blockchain system requiring g
 - Lazy loading for non-critical modules
 - RAF-based batch DOM updates
 - Service Worker caching for offline access
+- Performance monitoring and optimization modes
+- Debounced auto-save for form inputs
 
 ### Developer Experience
-- TypeScript for type safety (gradual migration)
+- TypeScript for type safety (gradual migration from JS)
 - Comprehensive JSDoc documentation
-- Modular CSS architecture
+- Modular CSS architecture (25+ CSS files)
 - Centralized state management
+- `.backup` files for safe refactoring
+- Kiro IDE specs for feature development
+
+### Data Persistence
+- Auto-save for transfer forms (15-second intervals)
+- Structured draft persistence with versioning
+- Form-level auto-save as fallback
+- Encrypted storage for sensitive data
 
 ### Accessibility
 - ARIA labels and roles
@@ -79,3 +96,4 @@ Developers and users interacting with a UTXO-based blockchain system requiring g
 - Screen reader announcements
 - Focus management for modals
 - Skip links for navigation
+- High contrast support
