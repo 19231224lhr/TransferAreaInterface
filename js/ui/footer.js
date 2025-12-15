@@ -8,6 +8,17 @@
 let brandObserver = null;
 let animationFrame = null;
 
+const FLOAT_TRANSITION = 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+function ensureFloatLetterTransition(letter) {
+  // Important: transition must be set BEFORE the first transform update.
+  // If we set transform first and transition second, the browser will snap (jump)
+  // and only animate subsequent corrections, which looks like "jump up then fall".
+  if (letter && letter.style.transition !== FLOAT_TRANSITION) {
+    letter.style.transition = FLOAT_TRANSITION;
+  }
+}
+
 /**
  * Initialize footer animations
  */
@@ -17,6 +28,9 @@ export function initFooter() {
 
   const floatingLetters = document.querySelectorAll('.footer-brand-letter.float');
   if (floatingLetters.length === 0) return;
+
+  // Ensure transitions exist before any transform updates (prevents first-frame snapping).
+  floatingLetters.forEach((letter) => ensureFloatLetterTransition(letter));
 
   // Setup IntersectionObserver for brand element
   setupBrandObserver();
@@ -74,8 +88,21 @@ function setupBrandObserver() {
 function calculateAndUpdateProgress() {
   const brandElement = document.querySelector('.footer-brand');
   if (!brandElement) return;
+
+  // If footer/brand is hidden (display:none), DOMRect becomes {top:0,height:0}
+  // which incorrectly produces progress=1 and makes "Pay" jump.
+  // Guard against non-rendered state and keep letters at rest.
+  const style = window.getComputedStyle(brandElement);
+  if (style.display === 'none' || style.visibility === 'hidden') {
+    updateFloatingLetters(0);
+    return;
+  }
   
   const rect = brandElement.getBoundingClientRect();
+  if (rect.height === 0 || rect.width === 0) {
+    updateFloatingLetters(0);
+    return;
+  }
   const windowHeight = window.innerHeight;
   
   let progress = 0;
@@ -124,6 +151,8 @@ function updateFloatingLetters(progress) {
   // Apply transform to each floating letter with different timing
   floatingLetters.forEach((letter, index) => {
     const config = letterConfig[index] || letterConfig[0];
+
+    ensureFloatLetterTransition(letter);
     
     // Calculate adjusted progress for this letter (with offset)
     const adjustedProgress = Math.max(0, (progress - config.progressOffset) / (1 - config.progressOffset));
@@ -135,7 +164,6 @@ function updateFloatingLetters(progress) {
     const translateY = -maxFloatHeight * config.heightMult * eased;
     
     letter.style.transform = `translateY(${translateY}px) translateZ(0)`;
-    letter.style.transition = 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
   });
 }
 
