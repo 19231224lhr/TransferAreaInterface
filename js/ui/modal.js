@@ -96,6 +96,9 @@ export function showUnifiedSuccess(title, text, onOk, onCancel, isError = false)
       hideUnifiedOverlay();
       if (onOk) onOk();
     };
+    // Focus OK button to capture keyboard events (e.g., Space/Enter)
+    // Use setTimeout to ensure the DOM is fully updated
+    setTimeout(() => okBtn.focus(), 50);
   }
 }
 

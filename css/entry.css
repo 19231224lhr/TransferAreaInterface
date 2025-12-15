@@ -793,10 +793,14 @@
 
 [data-theme="dark"] .entry-toggle-btn {
   color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
 }
 
 [data-theme="dark"] .entry-toggle-btn:hover {
   color: var(--color-primary);
+  background: rgba(56, 189, 248, 0.08);
+  border-color: var(--color-primary);
 }
 
 [data-theme="dark"] .entry-empty-tip {

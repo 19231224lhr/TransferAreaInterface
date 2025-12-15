@@ -1311,13 +1311,16 @@ Already defined above with darker background
   z-index: 1;
   margin-top: 10px;
   margin-bottom: 0;
-  flex: 0;
+  flex: 1;
+  width: 100%;
+  min-width: 260px;
 }
 
 .network-chart-container {
   position: relative;
   height: 84px;
   min-height: 84px;
+  width: 100%;
 }
 
 .network-chart-svg {
@@ -1325,6 +1328,7 @@ Already defined above with darker background
   width: 100%;
   height: 100%;
   overflow: visible;
+  min-width: 200px;
 }
 
 .network-chart-fill {
@@ -2038,7 +2042,7 @@ Already defined above with darker background
    ======================================== */
 
 .transfer-options {
-  border-top: 1px solid rgba(226, 232, 240, 0.6);
+  border-top: none;
   flex-shrink: 0;
   position: relative;
 }
@@ -2048,28 +2052,26 @@ Already defined above with darker background
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 24px;
+  padding: 14px 0;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   user-select: none;
+  background: transparent !important;
+  border: none;
 }
 
 .options-toggle::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.02), rgba(139, 92, 246, 0.01));
-  opacity: 0;
-  transition: opacity 0.2s ease;
+  content: none;
+  display: none;
 }
 
 .options-toggle:hover::before {
-  opacity: 1;
+  opacity: 0;
 }
 
 .options-toggle:hover {
-  background: var(--neutral-50);
+  background: transparent !important;
 }
 
 .options-toggle-left {
@@ -2133,6 +2135,40 @@ Already defined above with darker background
   transform: rotate(180deg);
 }
 
+/* 深色模式下高级选项折叠按钮 */
+[data-theme="dark"] .options-toggle {
+  background: transparent !important;
+  border: none;
+}
+
+[data-theme="dark"] .options-toggle:hover {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .options-toggle-left {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .options-toggle-left svg {
+  color: var(--transfer-primary-light);
+}
+
+[data-theme="dark"] .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .options-toggle:hover .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .options-toggle.active .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .options-toggle-arrow svg {
+  color: var(--transfer-primary-light);
+}
+
 /* 内容区域 - 流畅展开动画 */
 .options-content {
   max-height: 0;
@@ -2141,13 +2177,13 @@ Already defined above with darker background
   transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
     opacity 0.25s ease,
     padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 0 24px;
+  padding: 0;
 }
 
 .options-content.show {
   max-height: 600px;
   opacity: 1;
-  padding: 0 24px 20px;
+  padding: 0 0 16px;
   overflow: visible;
 }
 
@@ -2163,6 +2199,7 @@ Already defined above with darker background
   border: none;
   box-shadow: none;
   animation: optionsReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  width: 100%;
 }
 
 /* 深色模式下的高级选项容器 - 整片灰色背景 */
@@ -3163,21 +3200,12 @@ Already defined above with darker background
 }
 
 .ripple::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.25);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  transition: width 0.5s ease, height 0.5s ease;
+  content: none;
 }
 
 .ripple:active::before {
-  width: 220px;
-  height: 220px;
+  width: 0;
+  height: 0;
 }
 
 /* ========================================
@@ -4354,7 +4382,7 @@ input[type="number"] {
 
 /* 修复高级选项上方的白色边框线 */
 [data-theme="dark"] .transfer-options {
-  border-top-color: rgba(100, 116, 139, 0.3);
+  border-top: none;
 }
 
 /* ========================================

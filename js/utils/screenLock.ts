@@ -42,7 +42,19 @@ interface ScreenLockState {
 // ========================================
 
 const DEFAULT_TIMEOUT = 10 * 60 * 1000; // 10 minutes
-const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'touchstart', 'scroll', 'click'];
+/**
+ * Activity listeners used to reset the idle timer.
+ * Only mouse activity (mousedown, mousemove, click) is monitored.
+ */
+const ACTIVITY_LISTENERS: Array<{
+  target: Document | Window;
+  event: string;
+  options?: AddEventListenerOptions | boolean;
+}> = [
+  { target: window, event: 'mousedown', options: { passive: true } },
+  { target: window, event: 'mousemove', options: { passive: true } },
+  { target: window, event: 'click', options: { passive: true } }
+];
 const LOCK_SCREEN_ID = 'screenLockOverlay';
 const STORAGE_KEY = 'screenLockState';
 
@@ -395,6 +407,12 @@ export function lockScreen(): void {
     // No encrypted key, can't lock
     return;
   }
+
+  // Stop any pending idle timer while locked.
+  if (state.timerId !== null) {
+    clearTimeout(state.timerId);
+    state.timerId = null;
+  }
   
   state.isLocked = true;
   
@@ -486,10 +504,10 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
   
   // Force timeout to 10 minutes (not configurable)
   state.config.timeout = DEFAULT_TIMEOUT;
-  
+
   // Add activity listeners
-  ACTIVITY_EVENTS.forEach(event => {
-    document.addEventListener(event, handleActivity, { passive: true });
+  ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
+    target.addEventListener(event, handleActivity, options as any);
   });
   
   // Check if should lock on start
@@ -500,16 +518,21 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data = JSON.parse(stored);
-        const elapsed = Date.now() - data.lastUnlock;
-        
-        // If last unlock was more than timeout ago, lock immediately
-        if (elapsed > state.config.timeout) {
-          lockScreen();
+        const storedAccountId = typeof data?.accountId === 'string' ? data.accountId : null;
+        const lastUnlock = typeof data?.lastUnlock === 'number' && Number.isFinite(data.lastUnlock)
+          ? data.lastUnlock
+          : null;
+
+        // If the stored state is for another account or malformed, fall back to lockOnStart behavior.
+        if (!lastUnlock || (storedAccountId && storedAccountId !== user.accountId)) {
+          if (state.config.lockOnStart) {
+            lockScreen();
+          }
         } else {
-          // Start timer for remaining time
-          state.timerId = window.setTimeout(() => {
-            checkAndLock();
-          }, state.config.timeout - elapsed);
+          const elapsed = Date.now() - lastUnlock;
+          if (elapsed > state.config.timeout) {
+            lockScreen();
+          }
         }
       } else if (state.config.lockOnStart) {
         // No stored state, lock on start
@@ -522,9 +545,11 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
       }
     }
   }
-  
-  // Start activity timer
-  resetActivityTimer();
+
+  // Start idle timer only when not locked
+  if (!state.isLocked) {
+    resetActivityTimer();
+  }
 }
 
 /**
@@ -532,8 +557,8 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
  */
 export function cleanupScreenLock(): void {
   // Remove activity listeners
-  ACTIVITY_EVENTS.forEach(event => {
-    document.removeEventListener(event, handleActivity);
+  ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
+    target.removeEventListener(event, handleActivity, options as any);
   });
   
   // Clear timer

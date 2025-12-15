@@ -12,6 +12,7 @@ const UPDATE_INTERVAL = 2000; // 2秒更新一次
 let speedData = [];
 let intervalId = null;
 let isVisible = false;
+let resizeObserver = null;
 
 // Initialize speed data with random values
 for (let i = 0; i < DATA_POINTS; i++) {
@@ -118,7 +119,8 @@ function renderChart() {
   const rect = svg.getBoundingClientRect();
   const width = rect.width || 300;
   const height = rect.height || 55;
-  
+
+  // If width is still 0, wait for the next layout pass (ResizeObserver will fire again)
   if (width === 0 || height === 0) return;
   
   // Calculate min/max for normalization
@@ -210,9 +212,26 @@ export function initNetworkChart() {
     startMonitoring();
   }
   
-  // Initial render
+  // Initial render - delay to ensure DOM is laid out
   updateNetworkStats();
-  renderChart();
+  // Use requestAnimationFrame to wait for layout, then render multiple times to ensure proper sizing
+  requestAnimationFrame(() => {
+    renderChart();
+    // Render again after a short delay in case layout wasn't complete
+    setTimeout(() => {
+      renderChart();
+    }, 100);
+  });
+
+  // Observe container size changes for immediate re-render when layout finishes
+  const container = document.querySelector('.network-chart-container');
+  if ('ResizeObserver' in window && container) {
+    resizeObserver = new ResizeObserver(() => {
+      renderChart();
+    });
+    resizeObserver.observe(container);
+    window._networkChartResizeObserver = resizeObserver;
+  }
   
   // Listen for window resize
   // Performance optimization: Use debounce utility (Requirements: 2.2)
@@ -241,5 +260,11 @@ export function cleanupNetworkChart() {
   if (window._networkChartResizeHandler) {
     window.removeEventListener('resize', window._networkChartResizeHandler);
     window._networkChartResizeHandler = null;
+  }
+
+  // Cleanup size observer
+  if (window._networkChartResizeObserver) {
+    window._networkChartResizeObserver.disconnect();
+    window._networkChartResizeObserver = null;
   }
 }
