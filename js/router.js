@@ -4,12 +4,14 @@
  * Provides hash-based routing for the SPA.
  */
 
-import { updatePageTranslations } from './i18n/index.js';
+import { t, updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
 import { updateHeaderUser, initUserMenu } from './ui/header.js';
 import { cleanupPageListeners } from './utils/eventUtils.js';
 import { store, setRoute } from './utils/store.js';
+import { withLoading } from './utils/loading';
+import { navigateTo as enhancedNavigateTo } from './utils/enhancedRouter';
 
 // Lazy page loaders (registered on demand)
 const pageLoaders = {
@@ -43,7 +45,10 @@ async function loadPageModule(route) {
   const loader = pageLoaders[route];
   if (!loader) return null;
   try {
-    return await loader();
+    return await withLoading(
+      loader(),
+      t('common.loading') || '加载中...'
+    );
   } catch (err) {
     console.warn(`[router] failed to load page '${route}'`, err);
     return null;
@@ -73,6 +78,45 @@ function initCardRefs() {
   newUserCard = document.getElementById('newUserCard');
   loginCard = document.getElementById('loginCard');
   importCard = document.getElementById('importCard');
+}
+
+/**
+ * Intercept hash anchor clicks so navigation goes through enhanced router/guards
+ */
+function bindHashLinkNavigation() {
+  if (window._hashLinkNavBind) return;
+  window._hashLinkNavBind = true;
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const anchor = target.closest('a[href^="#"]');
+    if (!anchor) return;
+
+    // Allow opting out
+    if (anchor.dataset.routerBypass === 'true') return;
+
+    const href = anchor.getAttribute('href') || '';
+    const hash = href.replace(/^#/, '');
+    if (!hash) return;
+
+    event.preventDefault();
+
+    void enhancedNavigateTo(hash).then((result) => {
+      // If navigation was blocked, keep current view
+      if (result === false) return;
+
+      // If hash didn't actually change, force UI refresh
+      const current = (location.hash || '#').replace(/^#/, '');
+      if (current === hash) {
+        router();
+      }
+    }).catch(() => {
+      // Fallback to legacy routing on error
+      router();
+    });
+  });
 }
 
 /**
@@ -149,11 +193,24 @@ export function showCard(card) {
  * @param {string} hash - Hash route (e.g., '#/welcome')
  */
 export function routeTo(hash) {
-  if (location.hash !== hash) {
-    location.hash = hash;
-  }
-  // Execute router immediately as fallback
-  router();
+  const targetPath = (hash || '#/welcome').replace(/^#/, '');
+  const previous = (location.hash || '#').replace(/^#/, '');
+
+  void enhancedNavigateTo(targetPath).then((result) => {
+    // If navigation was blocked, do nothing
+    if (result === false) {
+      return;
+    }
+
+    // If hash did not change (same route), manually run router to refresh UI
+    const current = (location.hash || '#').replace(/^#/, '');
+    if (current === previous && current === targetPath) {
+      router();
+    }
+  }).catch(() => {
+    // Fallback to original behavior on error
+    router();
+  });
 }
 
 /**
@@ -369,6 +426,7 @@ function handleJoinGroupRoute() {
  */
 export function initRouter() {
   initCardRefs();
+  bindHashLinkNavigation();
   
   // Listen for hash changes - only bind once
   if (!window._routerHashChangeBind) {

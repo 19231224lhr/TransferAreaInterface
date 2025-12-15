@@ -14,6 +14,7 @@ import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnap
 import { clearTransferDraft } from './transferDraft';
 import { getCoinName } from '../config/constants';
 import { COIN_TO_PGC_RATES } from '../config/constants';
+import { showLoading, hideLoading } from '../utils/loading';
 
 // ========================================
 // Type Definitions
@@ -146,6 +147,8 @@ export function initTransferSubmit(): void {
     if (!transferSubmitGuard.start()) {
       return;
     }
+
+    const loadingId = showLoading(t('common.processing') || '处理中...');
     
     // Add loading state to button (only modify span text to preserve SVG)
     const btnSpan = tfBtn.querySelector('span');
@@ -500,6 +503,7 @@ export function initTransferSubmit(): void {
         tfBtn.textContent = originalText;
       }
       transferSubmitGuard.end();
+      hideLoading(loadingId);
     }
   });
   
@@ -520,10 +524,9 @@ export function initBuildTransaction(): void {
     const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
     const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
     const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
+    const loadingId = showLoading(t('toast.buildingTx'));
 
     try {
-      showModalTip(t('transfer.generateTxStruct'), t('toast.buildingTx'), false);
-
       const buildInfoStr = (buildTxBtn as any).dataset.buildInfo || '{}';
       const buildInfo: BuildTXInfo = JSON.parse(buildInfoStr);
       const user = loadUser();
@@ -553,6 +556,8 @@ export function initBuildTransaction(): void {
       try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
       try { restoreCheckpoint(checkpointId); } catch (_) { }
       showModalTip(t('toast.buildTxFailed'), errMsg, true);
+    } finally {
+      hideLoading(loadingId);
     }
   });
   

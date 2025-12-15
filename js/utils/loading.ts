@@ -204,7 +204,16 @@ class LoadingManager {
    */
   private hideUI(): void {
     if (this.overlay) {
-      this.overlay.classList.add('hidden');
+      // IMPORTANT: #actionOverlay is also used by modal tips/success states.
+      // Avoid hiding the overlay if the unified success/tip content is currently shown,
+      // otherwise unrelated loading completions can accidentally dismiss user feedback.
+      const successContent = document.getElementById('unifiedSuccess');
+      const isInTipMode = !!successContent && !successContent.classList.contains('hidden');
+
+      if (!isInTipMode) {
+        this.overlay.classList.add('hidden');
+      }
+
       setAriaBusy(this.overlay, false);
     }
     

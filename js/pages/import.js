@@ -13,6 +13,7 @@ import { wait } from '../utils/helpers.js';
 import { updateWalletBrief } from './entry.js';
 import { updateHeaderUser } from '../ui/header.js';
 import { addInlineValidation, quickValidate } from '../utils/formValidator.ts';
+import { showLoading, hideLoading, showElementLoading, hideElementLoading } from '../utils/loading';
 
 /**
  * Reset import page state
@@ -96,6 +97,8 @@ async function handleImport() {
   const normalized = priv.replace(/^0x/i, '');
   
   if (importBtn) importBtn.disabled = true;
+  if (importBtn) showElementLoading(importBtn, t('common.processing') || '处理中...');
+  const loadingId = showLoading(t('modal.importing', '正在导入...'));
   
   try {
     const loader = document.getElementById('importLoader');
@@ -279,6 +282,8 @@ async function handleImport() {
     console.error(err);
   } finally {
     if (importBtn) importBtn.disabled = false;
+    if (importBtn) hideElementLoading(importBtn);
+    hideLoading(loadingId);
     const loader = document.getElementById('importLoader');
     if (loader) loader.classList.add('hidden');
   }

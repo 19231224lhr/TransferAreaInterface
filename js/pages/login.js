@@ -10,6 +10,8 @@ import { loadUser } from '../utils/storage';
 import { updateHeaderUser } from '../ui/header.js';
 import { encryptPrivateKey, saveEncryptedKey } from '../utils/keyEncryption';
 import { t } from '../i18n/index.js';
+import { showLoading, hideLoading, showElementLoading, hideElementLoading } from '../utils/loading';
+import { addInlineValidation, quickValidate } from '../utils/formValidator.ts';
 
 /**
  * Calculate password strength
@@ -214,6 +216,22 @@ export function resetLoginPageState() {
  */
 export function initLoginPage() {
   resetLoginPageState();
+
+  // Inline validation for private key/password fields
+  addInlineValidation('#loginPrivHex', [
+    { validator: 'required', message: t('modal.pleaseEnterPrivateKeyHex', '请输入私钥') },
+    { validator: 'privateKey', message: t('modal.privateKeyFormat64', '私钥格式错误，需要64位十六进制') }
+  ], { showOnInput: true, debounceMs: 150 });
+
+  addInlineValidation('#loginPassword', [
+    { validator: 'required', message: t('login.passwordRequired', '请输入钱包密码') },
+    { validator: 'minLength', value: 6, message: t('login.passwordTooShort', '密码至少需要6位') }
+  ], { showOnInput: true, debounceMs: 150 });
+
+  addInlineValidation('#loginConfirmPassword', [
+    { validator: 'required', message: t('login.confirmPasswordRequired', '请再次输入密码') },
+    { validator: 'match', field: 'loginPassword', message: t('login.passwordMismatch', '两次输入的密码不一致') }
+  ], { showOnInput: true, debounceMs: 150 });
   
   // Bind visibility toggle event for private key
   const loginToggleVisibility = document.getElementById('loginToggleVisibility');
@@ -372,59 +390,40 @@ async function handleLoginClick() {
   const password = passwordEl ? passwordEl.value.trim() : '';
   const confirmPassword = confirmEl ? confirmEl.value.trim() : '';
   
-  // Validation - Private key
-  if (!priv) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('modal.pleaseEnterPrivateKeyHex', '请输入私钥'), t('modal.inputIncomplete', '输入不完整'));
-    }
-    if (inputEl) inputEl.focus();
+  const privError = quickValidate(priv, ['required', 'privateKey']);
+  if (privError) {
+    window.showErrorToast?.(privError, t('modal.inputIncomplete', '输入不完整'));
+    inputEl?.focus();
     return;
   }
   
-  const normalized = priv.replace(/^0x/i, '');
-  if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('modal.privateKeyFormat64', '私钥格式错误，需要64位十六进制'), t('modal.formatError', '格式错误'));
-    }
-    if (inputEl) inputEl.focus();
+  const pwdError = quickValidate(password, [
+    { validator: 'required' },
+    { validator: 'minLength', value: 6 }
+  ]);
+  if (pwdError) {
+    window.showErrorToast?.(pwdError, t('modal.inputIncomplete', '输入不完整'));
+    passwordEl?.focus();
     return;
   }
   
-  // Validation - Password
-  if (!password) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('login.passwordRequired', '请输入钱包密码'), t('modal.inputIncomplete', '输入不完整'));
-    }
-    if (passwordEl) passwordEl.focus();
-    return;
-  }
-  
-  if (password.length < 6) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('login.passwordTooShort', '密码至少需要6位'), t('modal.formatError', '格式错误'));
-    }
-    if (passwordEl) passwordEl.focus();
-    return;
-  }
-  
-  // Validation - Confirm Password
   if (!confirmPassword) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('login.confirmPasswordRequired', '请再次输入密码'), t('modal.inputIncomplete', '输入不完整'));
-    }
-    if (confirmEl) confirmEl.focus();
+    window.showErrorToast?.(t('login.confirmPasswordRequired', '请再次输入密码'), t('modal.inputIncomplete', '输入不完整'));
+    confirmEl?.focus();
     return;
   }
   
   if (password !== confirmPassword) {
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(t('login.passwordMismatch', '两次输入的密码不一致'), t('modal.formatError', '格式错误'));
-    }
-    if (confirmEl) confirmEl.focus();
+    window.showErrorToast?.(t('login.passwordMismatch', '两次输入的密码不一致'), t('modal.formatError', '格式错误'));
+    confirmEl?.focus();
     return;
   }
   
+  const normalized = priv.replace(/^0x/i, '');
+  
   if (loginBtn) loginBtn.disabled = true;
+  if (loginBtn) showElementLoading(loginBtn, t('common.processing') || '处理中...');
+  const loadingId = showLoading(t('common.processing') || '处理中...');
   
   try {
     const formCard = document.querySelector('.login-form-card');
@@ -573,5 +572,7 @@ async function handleLoginClick() {
     console.error(e);
   } finally {
     if (loginBtn) loginBtn.disabled = false;
+    if (loginBtn) hideElementLoading(loginBtn);
+    hideLoading(loadingId);
   }
 }
