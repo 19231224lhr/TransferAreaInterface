@@ -1,0 +1,174 @@
+<!-- Entry Page Template - 钱包管理页面 -->
+<section class="hidden" id="entryCard">
+  <div class="entry-page">
+    <!-- 左侧：品牌展示区 -->
+    <aside class="entry-sidebar">
+      <div class="entry-sidebar-content">
+        <!-- Logo 区域 -->
+        <div class="entry-brand">
+          <div class="entry-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <rect x="2" y="6" width="20" height="12" rx="2" />
+              <circle cx="12" cy="12" r="2" />
+              <path d="M6 12h.01M18 12h.01" />
+            </svg>
+          </div>
+          <h1 class="entry-brand-title" data-i18n="entry.title">钱包管理</h1>
+          <p class="entry-brand-desc" data-i18n="entry.description">安全管理您的数字资产，支持多地址统一管理</p>
+        </div>
+
+        <!-- 特性列表 -->
+        <div class="entry-benefits">
+          <div class="entry-benefit">
+            <div class="entry-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="entry-benefit-text">
+              <h4 data-i18n="entry.benefit1.title">安全加密存储</h4>
+              <p data-i18n="entry.benefit1.desc">采用高强度加密算法，确保私钥安全</p>
+            </div>
+          </div>
+          <div class="entry-benefit">
+            <div class="entry-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="9" cy="7" r="4" />
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              </svg>
+            </div>
+            <div class="entry-benefit-text">
+              <h4 data-i18n="entry.benefit2.title">多地址管理</h4>
+              <p data-i18n="entry.benefit2.desc">同时管理多个钱包地址，便捷切换</p>
+            </div>
+          </div>
+          <div class="entry-benefit">
+            <div class="entry-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <div class="entry-benefit-text">
+              <h4 data-i18n="entry.benefit3.title">一键导入</h4>
+              <p data-i18n="entry.benefit3.desc">支持通过私钥快速导入现有钱包</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部统计 -->
+        <div class="entry-sidebar-footer">
+          <div class="entry-stats">
+            <div class="entry-stat">
+              <span class="entry-stat-value" id="sidebarWalletCount">0</span>
+              <span class="entry-stat-label" data-i18n="entry.walletsAdded">已添加钱包</span>
+            </div>
+            <div class="entry-stat">
+              <span class="entry-stat-value">P-256</span>
+              <span class="entry-stat-label" data-i18n="entry.encryptionAlgo">加密算法</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧：主操作区 -->
+    <main class="entry-main">
+      <!-- 返回按钮 -->
+      <button class="entry-back-btn" id="entryBackBtn" title="返回" data-i18n-title="common.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="entry-main-content">
+        <!-- 页面标题 -->
+        <div class="entry-header">
+          <h2 class="entry-header-title" data-i18n="entry.selectAction">选择操作方式</h2>
+          <p class="entry-header-desc" id="entryImportSuggest" data-i18n="entry.selectActionDesc">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
+        </div>
+
+        <!-- 操作按钮区 -->
+        <div class="entry-action-cards">
+          <button id="createWalletBtn" class="entry-action-card entry-action-card--create">
+            <div class="entry-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v8M8 12h8" />
+              </svg>
+            </div>
+            <div class="entry-action-info">
+              <h4 data-i18n="entry.createWallet">新建钱包</h4>
+              <p data-i18n="entry.createWalletDesc">生成全新的密钥对</p>
+            </div>
+            <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+
+          <button id="importWalletBtn" class="entry-action-card entry-action-card--import">
+            <div class="entry-action-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+            </div>
+            <div class="entry-action-info">
+              <h4 data-i18n="entry.importWallet">导入钱包</h4>
+              <p data-i18n="entry.importWalletDesc">使用已有私钥导入</p>
+            </div>
+            <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- 钱包列表区 -->
+        <div class="entry-wallet-block">
+          <div class="entry-wallet-header">
+            <div class="entry-wallet-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+            </div>
+            <div class="entry-wallet-info">
+              <span class="entry-wallet-label" data-i18n="entry.walletsAdded">已添加钱包</span>
+              <span class="entry-wallet-count" id="walletCount">0</span>
+            </div>
+          </div>
+          <ol id="walletBriefList" class="entry-wallet-list hidden"></ol>
+          <button id="briefToggleBtn" class="entry-toggle-btn hidden">
+            <span data-i18n="common.expandMore">展开更多</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+          <div id="walletEmptyTip" class="entry-empty-tip hidden">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              <path d="M12 8v6" />
+              <circle cx="12" cy="17" r="0.5" fill="currentColor" />
+            </svg>
+            <span data-i18n="entry.addWalletFirst">请先添加至少一个钱包地址</span>
+          </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="entry-page-actions">
+          <button id="entryNextBtn" class="entry-next-btn" disabled>
+            <span data-i18n="common.next">继续下一步</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>

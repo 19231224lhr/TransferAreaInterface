@@ -1,0 +1,92 @@
+<section class="hidden" id="inquiryCard">
+  <div class="inquiry-page" id="inquiryPage">
+    <div class="inquiry-loader">
+      <!-- 行星环绕系统 -->
+      <div class="inquiry-orbit-system" id="inquiryOrbitSystem">
+        <!-- 轨道环 -->
+        <div class="inquiry-orbit"></div>
+        <div class="inquiry-orbit"></div>
+
+        <!-- 行星1 - 网络 -->
+        <div class="inquiry-planet-track">
+          <div class="inquiry-planet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path
+                d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- 行星2 - 安全 -->
+        <div class="inquiry-planet-track">
+          <div class="inquiry-planet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- 行星3 - 验证 -->
+        <div class="inquiry-planet-track">
+          <div class="inquiry-planet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+              <polyline points="22 4 12 14.01 9 11.01" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- 中心图标 - Logo -->
+        <div class="inquiry-icon" id="inquiryIcon">
+          <img src="assets/logo.png" alt="Logo" class="loader-logo-img icon-pulse" width="48" height="48" />
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="icon-check"
+            style="display:none">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- 文字区域 -->
+      <div class="inquiry-text">
+        <h2 class="inquiry-title" id="inquiryTitle" data-i18n="login.connectingNetwork">正在连接到网络</h2>
+        <p class="inquiry-desc" id="inquiryDesc" data-i18n="login.establishingConnection">正在建立安全连接，验证账户信息</p>
+      </div>
+
+      <!-- 进度指示器 -->
+      <div class="inquiry-progress">
+        <div class="inquiry-progress-bar">
+          <div class="inquiry-progress-fill" id="inquiryProgressFill"></div>
+        </div>
+        <div class="inquiry-steps" id="inquirySteps">
+          <div class="inquiry-step active" data-step="1">
+            <span class="inquiry-step-dot"></span>
+            <span data-i18n="login.stepInitialize">初始化</span>
+          </div>
+          <div class="inquiry-step-divider" data-line="1"></div>
+          <div class="inquiry-step waiting" data-step="2">
+            <span class="inquiry-step-dot"></span>
+            <span data-i18n="login.stepConnecting">连接网络</span>
+          </div>
+          <div class="inquiry-step-divider" data-line="2"></div>
+          <div class="inquiry-step waiting" data-step="3">
+            <span class="inquiry-step-dot"></span>
+            <span data-i18n="login.stepVerifying">验证账户</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部提示 -->
+    <div class="inquiry-tip" id="inquiryTip">
+      <p>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" />
+          <path d="M12 16v-4M12 8h.01" />
+        </svg>
+        <span id="inquiryTipText" data-i18n="login.inquiringNetwork">正在发起网络问询以确定账户所属关系，请稍候</span>
+      </p>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,223 @@
+<!-- Welcome Page Template -->
+<section class="welcome-hero" id="welcomeCard">
+  <!-- 动态背景 -->
+  <div class="welcome-bg">
+    <div class="welcome-gradient-orb orb-1"></div>
+    <div class="welcome-gradient-orb orb-2"></div>
+    <div class="welcome-gradient-orb orb-3"></div>
+    <div class="welcome-gradient-orb orb-4"></div>
+    <div class="welcome-grid-pattern"></div>
+  </div>
+
+  <!-- 浮动粒子 -->
+  <div class="welcome-particles">
+    <div class="particle p1"></div>
+    <div class="particle p2"></div>
+    <div class="particle p3"></div>
+    <div class="particle p4"></div>
+    <div class="particle p5"></div>
+    <div class="particle p6"></div>
+  </div>
+
+  <!-- 主内容区 -->
+  <div class="welcome-content">
+    <!-- 徽章 -->
+    <div class="welcome-badge">
+      <span class="badge-dot"></span>
+      <span data-i18n="welcome.badge">安全 · 快速 · 去中心化</span>
+    </div>
+
+    <!-- 标题区 -->
+    <h1 class="welcome-title">
+      <span class="title-line" data-i18n="welcome.titleLine1">开启您的</span>
+      <span class="title-highlight" data-i18n="welcome.titleLine2">数字资产之旅</span>
+    </h1>
+
+    <p class="welcome-subtitle" data-i18n="welcome.subtitle">
+      基于 UTXO 模型的新一代区块链钱包，为您提供安全可靠的资产管理体验
+    </p>
+
+    <!-- 操作按钮 -->
+    <div class="welcome-actions">
+      <button id="registerAccountBtn" class="welcome-btn welcome-btn-primary">
+        <span data-i18n="welcome.getStarted">立即开始</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </button>
+      
+      <!-- 分割登录按钮 - 已登录时显示 -->
+      <div id="splitLoginContainer" class="split-login-container hidden">
+        <button id="splitLoginBtn" class="split-btn-login">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+            <polyline points="10 17 15 12 10 7" />
+            <line x1="15" y1="12" x2="3" y2="12" />
+          </svg>
+          <span data-i18n="welcome.login">登录</span>
+        </button>
+        <button id="splitHomeBtn" class="split-btn-home">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+            <polyline points="9 22 9 12 15 12 15 22" />
+          </svg>
+          <span data-i18n="welcome.goToMain">进入主页</span>
+        </button>
+      </div>
+      
+      <!-- 单个登录按钮 - 未登录时显示 -->
+      <button id="loginAccountBtn" class="welcome-btn welcome-btn-secondary">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+        </svg>
+        <span data-i18n="welcome.hasAccount">已有账户？登录</span>
+      </button>
+    </div>
+
+    <!-- 底部装饰 -->
+    <div class="welcome-footer-info">
+      <div class="info-item">
+        <span class="info-number">100K+</span>
+        <span class="info-label" data-i18n="welcome.activeUsers">活跃用户</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-number">$2.5B</span>
+        <span class="info-label" data-i18n="welcome.totalVolume">交易总额</span>
+      </div>
+      <div class="info-divider"></div>
+      <div class="info-item">
+        <span class="info-number">99.9%</span>
+        <span class="info-label" data-i18n="welcome.security">安全保障</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 右侧3D卡片装饰 -->
+  <div class="welcome-visual">
+    <div class="visual-card">
+      <div class="card-shine"></div>
+      <div class="card-content">
+        <div class="card-logo">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="url(#cardGradient)" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <defs>
+              <linearGradient id="cardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#0ea5e9" />
+                <stop offset="100%" style="stop-color:#8b5cf6" />
+              </linearGradient>
+            </defs>
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+            <line x1="1" y1="10" x2="23" y2="10" />
+          </svg>
+        </div>
+        <div class="card-number">•••• •••• •••• 4242</div>
+        <div class="card-info">
+          <div class="card-holder">
+            <span class="label" data-i18n="welcome.cardHolder">持卡人</span>
+            <span class="value">PANGUPAY</span>
+          </div>
+          <div class="card-expiry">
+            <span class="label" data-i18n="welcome.expiry">有效期</span>
+            <span class="value">∞</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 装饰性浮动元素 -->
+    <div class="floating-decorations">
+      <!-- 迷你钱包卡片 -->
+      <div class="deco-item deco-wallet">
+        <div class="wallet-inner">
+          <div class="wallet-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 4H3a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h18a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z" />
+              <path d="M1 10h22" />
+              <circle cx="18" cy="15" r="2" />
+            </svg>
+          </div>
+          <div class="wallet-amount">+128.5</div>
+        </div>
+      </div>
+
+      <!-- NFT艺术卡片 -->
+      <div class="deco-item deco-nft">
+        <div class="nft-inner">
+          <div class="nft-image">
+            <div class="nft-gradient"></div>
+            <div class="nft-pattern"></div>
+          </div>
+          <div class="nft-info">
+            <span class="nft-name">CryptoArt</span>
+            <span class="nft-price">2.5 ETH</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 加密币圆形 -->
+      <div class="deco-item deco-coin">
+        <div class="coin-inner">
+          <div class="coin-symbol">₿</div>
+          <div class="coin-shine"></div>
+        </div>
+      </div>
+
+      <!-- 数据图表卡 -->
+      <div class="deco-item deco-chart">
+        <div class="chart-inner">
+          <div class="chart-bars">
+            <span style="height: 40%"></span>
+            <span style="height: 65%"></span>
+            <span style="height: 45%"></span>
+            <span style="height: 80%"></span>
+            <span style="height: 55%"></span>
+          </div>
+          <div class="chart-trend">↗ 12.5%</div>
+        </div>
+      </div>
+
+      <!-- 区块链立方体 -->
+      <div class="deco-item deco-cube">
+        <div class="cube-container">
+          <div class="cube-3d">
+            <div class="cube-face front"></div>
+            <div class="cube-face back"></div>
+            <div class="cube-face right"></div>
+            <div class="cube-face left"></div>
+            <div class="cube-face top"></div>
+            <div class="cube-face bottom"></div>
+          </div>
+          <div class="cube-shadow"></div>
+        </div>
+      </div>
+
+      <!-- 以太坊标志 -->
+      <div class="deco-item deco-eth">
+        <div class="eth-inner">
+          <svg viewBox="0 0 32 32" fill="none">
+            <path d="M16 2L6 16.5L16 22L26 16.5L16 2Z" fill="url(#ethGrad1)" />
+            <path d="M16 2L6 16.5L16 12.5V2Z" fill="url(#ethGrad2)" opacity="0.6" />
+            <path d="M16 24L6 18L16 30L26 18L16 24Z" fill="url(#ethGrad1)" />
+            <defs>
+              <linearGradient id="ethGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#627eea" />
+                <stop offset="100%" style="stop-color:#8b5cf6" />
+              </linearGradient>
+              <linearGradient id="ethGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#627eea" />
+                <stop offset="100%" style="stop-color:#4f46e5" />
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

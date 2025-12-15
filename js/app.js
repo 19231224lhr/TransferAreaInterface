@@ -23,7 +23,7 @@ import { loadUser, saveUser, toAccount, clearAccountStorage, loadUserProfile, sa
 import { showToast, showSuccessToast, showErrorToast, showWarningToast, showInfoToast, showMiniToast } from './utils/toast.js';
 import { wait, copyToClipboard } from './utils/helpers.js';
 import { debounce, throttle, delegate, EventListenerManager, globalEventManager, createEventManager, cleanupPageListeners } from './utils/eventUtils.js';
-import store, { 
+import store, {
   selectUser, selectRoute, selectTheme, selectLanguage,
   setUser, setRoute, setThemeState, setLanguageState, setLoading, setModalOpen
 } from './utils/store.js';
@@ -39,18 +39,18 @@ import {
   hasEncryptedKey,
   hasLegacyKey
 } from './utils/keyEncryption';
-import { 
+import {
   showPasswordPrompt,
   encryptAndSavePrivateKey,
   getDecryptedPrivateKey,
   checkAndPromptMigration,
   saveUserWithEncryption
 } from './utils/keyEncryptionUI';
-import { 
-  escapeHtml, 
-  createElement, 
-  validateTransferAmount, 
-  validateAddress, 
+import {
+  escapeHtml,
+  createElement,
+  validateTransferAmount,
+  validateAddress,
   validatePrivateKey,
   validateOrgId,
   createSubmissionGuard,
@@ -63,56 +63,56 @@ import {
   withErrorBoundary,
   reportError
 } from './utils/security';
-import performanceModeManager, { 
-  scheduleBatchUpdate, 
-  flushBatchUpdates, 
+import performanceModeManager, {
+  scheduleBatchUpdate,
+  flushBatchUpdates,
   clearBatchUpdates,
   rafDebounce,
-  rafThrottle 
+  rafThrottle
 } from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
 
 // P2 Improvements - Accessibility, Loading, Service Worker, etc.
-import { 
-  initAccessibility, 
+import {
+  initAccessibility,
   announce,
   setAriaLabel,
-  makeAccessibleButton 
+  makeAccessibleButton
 } from './utils/accessibility';
-import { 
-  loadingManager, 
-  showLoading, 
-  hideLoading, 
+import {
+  loadingManager,
+  showLoading,
+  hideLoading,
   withLoading,
   showElementLoading,
-  hideElementLoading 
+  hideElementLoading
 } from './utils/loading';
-import { 
-  registerServiceWorker, 
-  isOnline, 
+import {
+  registerServiceWorker,
+  isOnline,
   onOnlineStatusChange,
   onUpdateAvailable,
   skipWaiting,
   checkForUpdates
 } from './utils/serviceWorker';
-import { 
-  FormValidator, 
+import {
+  FormValidator,
   validators,
-  addInlineValidation 
+  addInlineValidation
 } from './utils/formValidator';
-import { 
-  withTransaction, 
-  createCheckpoint, 
+import {
+  withTransaction,
+  createCheckpoint,
   restoreCheckpoint,
   enableFormAutoSave,
   recoverPendingLocalStorageTransactions
 } from './utils/transaction';
 import { lazyLoader, initLazyLoader } from './utils/lazyLoader';
-import { 
-  addRouteGuard, 
+import {
+  addRouteGuard,
   initAuthGuard,
   configureTransition,
-  navigateTo as enhancedNavigateTo 
+  navigateTo as enhancedNavigateTo
 } from './utils/enhancedRouter';
 import {
   initScreenLock,
@@ -140,6 +140,11 @@ import { updateWalletStruct } from './services/walletStruct.js';
 
 // Router
 import { router, routeTo, showCard, initRouter } from './router.js';
+
+// Template Loading System (for future page modularization)
+import { templateLoader } from './utils/templateLoader';
+import { pageManager } from './utils/pageManager';
+import { PAGE_TEMPLATES, getPageConfig, getAllContainerIds } from './config/pageTemplates';
 
 // Lazy page loaders (avoid pulling all page code on first screen)
 const pageLazyLoaders = {
@@ -445,6 +450,12 @@ window.lockScreen = lockScreen;
 window.unlockScreen = unlockScreen;
 window.isScreenLocked = isScreenLocked;
 
+// Template Loading System (for dynamic page loading)
+window.templateLoader = templateLoader;
+window.pageManager = pageManager;
+window.getPageConfig = getPageConfig;
+window.getAllContainerIds = getAllContainerIds;
+
 // P2 Improvements - Online Status
 window.isOnline = isOnline;
 window.onOnlineStatusChange = onOnlineStatusChange;
@@ -476,7 +487,7 @@ function setupOnlineIndicator() {
     `;
     document.body.appendChild(indicator);
   }
-  
+
   // Update indicator based on online status
   /**
    * @param {boolean} online - Whether the app is online
@@ -490,10 +501,10 @@ function setupOnlineIndicator() {
       announce(t('offline.message', '网络已断开，部分功能不可用'), 'assertive');
     }
   }
-  
+
   // Initial check
   updateIndicator(isOnline());
-  
+
   // Listen for online/offline changes
   onOnlineStatusChange(updateIndicator);
 }
@@ -533,14 +544,14 @@ function setupServiceWorkerUpdates() {
     `;
     document.body.appendChild(banner);
   }
-  
+
   const updateButton = banner.querySelector('[data-action="update"]');
   const dismissButton = banner.querySelector('[data-action="dismiss"]');
   let reloadBound = false;
-  
+
   const hideBanner = () => banner.classList.remove('visible');
   const showBanner = () => banner.classList.add('visible');
-  
+
   // Reload once the new service worker takes control
   const bindReloadOnControllerChange = () => {
     if (reloadBound) return;
@@ -549,7 +560,7 @@ function setupServiceWorkerUpdates() {
       window.location.reload();
     });
   };
-  
+
   if (updateButton && !updateButton.dataset._bind) {
     updateButton.addEventListener('click', () => {
       try {
@@ -562,14 +573,14 @@ function setupServiceWorkerUpdates() {
     });
     updateButton.dataset._bind = '1';
   }
-  
+
   if (dismissButton && !dismissButton.dataset._bind) {
     dismissButton.addEventListener('click', () => {
       hideBanner();
     });
     dismissButton.dataset._bind = '1';
   }
-  
+
   // Listen for update availability
   onUpdateAvailable(() => {
     showBanner();
@@ -582,7 +593,7 @@ function setupServiceWorkerUpdates() {
 
 function init() {
   // PanguPay initialization - silent mode
-  
+
   // Initialize error boundary first (before any other code that might throw)
   initErrorBoundary({
     showError: (title, message) => {
@@ -591,25 +602,25 @@ function init() {
     },
     logToConsole: true
   });
-  
+
   // Initialize language
   loadLanguageSetting();
-  
+
   // Initialize theme
   loadThemeSetting();
   initThemeSelector();
-  
+
   // Initialize performance mode
   performanceModeManager.loadMode();
   performanceModeManager.applyMode();
   // Export to window for global access
   window.performanceModeManager = performanceModeManager;
-  
+
   // Start performance monitoring only when explicitly enabled
   if ((location.hostname === 'localhost' || location.hostname === '127.0.0.1') && (window).__PERF_DEBUG === true) {
     performanceMonitor.start(10000); // Monitor every 10 seconds
   }
-  
+
   // ========================================
   // P2 Improvements Initialization
   // ========================================
@@ -620,21 +631,37 @@ function init() {
   } catch (_) {
     // Silently fail - recovery is best-effort
   }
-  
+
   // Initialize accessibility features (skip links, ARIA live regions)
   try {
     initAccessibility();
   } catch (error) {
     // Silently fail - accessibility is optional
   }
-  
+
+  // Initialize template loading system (for future page modularization)
+  try {
+    templateLoader.init();
+    pageManager.init('#main');
+    // Register all pages from config
+    PAGE_TEMPLATES.forEach(config => {
+      pageManager.register(config.id, {
+        templatePath: config.templatePath || '',
+        containerId: config.containerId,
+        preload: config.preload
+      });
+    });
+  } catch (error) {
+    // Silently fail - template system is optional for now (pages are still in index.html)
+  }
+
   // Initialize lazy loader for code splitting
   try {
     initLazyLoader();
   } catch (error) {
     // Silently fail - lazy loading is optional
   }
-  
+
   // Configure route transition animations
   try {
     configureTransition({
@@ -643,7 +670,7 @@ function init() {
   } catch (error) {
     // Silently fail - transitions are optional
   }
-  
+
   // Setup route guards for authentication
   try {
     const removeAuthGuard = initAuthGuard();
@@ -652,7 +679,7 @@ function init() {
   } catch (error) {
     // Silently fail - guards are optional
   }
-  
+
   // Register Service Worker for offline support
   setupServiceWorkerUpdates();
   registerServiceWorker()
@@ -660,32 +687,32 @@ function init() {
     .catch(() => {
       // Silently fail - SW is optional
     });
-  
+
   // Setup online/offline indicator
   setupOnlineIndicator();
-  
+
   // ========================================
   // End P2 Improvements
   // ========================================
-  
+
   // Initialize user menu
   initUserMenu();
-  
+
   // Initialize header scroll behavior
   initHeaderScroll();
-  
+
   // Initialize router
   initRouter();
-  
+
   // Update page translations
   updatePageTranslations();
-  
+
   // Update header with current user (after router init to ensure DOM is ready)
   requestAnimationFrame(() => {
     const user = loadUser();
     updateHeaderUser(user);
   });
-  
+
   // Initialize screen lock for security
   // Fixed 10 minutes inactivity timeout, lock on start if user has encrypted key
   requestAnimationFrame(() => {
@@ -702,19 +729,19 @@ function init() {
       });
     }
   });
-  
+
   // Initialize network chart
   try {
     initNetworkChart();
   } catch (_) { }
-  
+
   // Initialize footer animations
   try {
     initFooter();
   } catch (_) { }
-  
+
   // App initialized successfully (no console output)
-  
+
   // Initialize confirmSkipModal event listeners
   const confirmSkipModal = document.getElementById('confirmSkipModal');
   const confirmSkipOk = document.getElementById('confirmSkipOk');
@@ -745,16 +772,16 @@ function init() {
 function globalCleanup() {
   // Cleanup chart resources
   try { cleanupWalletChart(); } catch (_) { }
-  
+
   // Cleanup network chart resources
   try { cleanupNetworkChart(); } catch (_) { }
-  
+
   // Cleanup footer resources
   try { cleanupFooter(); } catch (_) { }
-  
+
   // Cleanup screen lock
   try { cleanupScreenLock(); } catch (_) { }
-  
+
   // Clear global flags
   window._headerScrollBind = false;
   window._headerHashChangeBind = false;

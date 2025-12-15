@@ -1,0 +1,245 @@
+<!-- Import Page Template - 导入钱包页面 -->
+<section class="hidden" id="importCard">
+  <div class="import-page">
+    <!-- 左侧：品牌展示区 -->
+    <aside class="import-sidebar">
+      <div class="import-sidebar-content">
+        <!-- Logo 区域 -->
+        <div class="import-brand">
+          <div class="import-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+          </div>
+          <h1 class="import-brand-title" data-i18n="import.title">导入钱包</h1>
+          <p class="import-brand-desc" data-i18n="import.description">通过私钥恢复您的钱包地址，安全快捷</p>
+        </div>
+
+        <!-- 特性列表 -->
+        <div class="import-benefits">
+          <div class="import-benefit">
+            <div class="import-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+            </div>
+            <div class="import-benefit-text">
+              <h4 data-i18n="import.benefit1.title">本地安全</h4>
+              <p data-i18n="import.benefit1.desc">私钥仅在本地存储，不会上传服务器</p>
+            </div>
+          </div>
+          <div class="import-benefit">
+            <div class="import-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="6" width="20" height="12" rx="2" />
+                <circle cx="12" cy="12" r="2" />
+                <path d="M6 12h.01M18 12h.01" />
+              </svg>
+            </div>
+            <div class="import-benefit-text">
+              <h4 data-i18n="import.benefit2.title">钱包恢复</h4>
+              <p data-i18n="import.benefit2.desc">使用私钥快速恢复您的钱包</p>
+            </div>
+          </div>
+          <div class="import-benefit">
+            <div class="import-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+              </svg>
+            </div>
+            <div class="import-benefit-text">
+              <h4 data-i18n="import.benefit3.title">密钥兼容</h4>
+              <p data-i18n="import.benefit3.desc">支持多种格式的私钥导入</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部统计 -->
+        <div class="import-sidebar-footer">
+          <div class="import-stats">
+            <div class="import-stat">
+              <span class="import-stat-value">P-256</span>
+              <span class="import-stat-label" data-i18n="entry.encryptionAlgo">加密算法</span>
+            </div>
+            <div class="import-stat">
+              <span class="import-stat-value">64</span>
+              <span class="import-stat-label" data-i18n="import.keyLength">密钥长度</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧：主操作区 -->
+    <main class="import-main">
+      <!-- 返回按钮 -->
+      <button class="import-back-btn" id="importBackBtn" title="返回" data-i18n-title="common.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <div class="import-main-content">
+        <!-- 页面标题 -->
+        <div class="import-header">
+          <h2 class="import-header-title" data-i18n="import.importWallet">导入钱包</h2>
+          <p class="import-header-desc" data-i18n="import.importWalletDesc">输入您的私钥以恢复钱包地址并管理资产</p>
+        </div>
+
+        <!-- 导入表单卡片 -->
+        <div class="import-form-card">
+          <div class="import-input-group">
+            <label class="import-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path
+                  d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+              </svg>
+              <span data-i18n="login.privateKeyHex">私钥（Hex）</span>
+            </label>
+            <div class="import-input-wrapper">
+              <input id="importPrivHex" class="import-input" type="password" data-i18n-placeholder="import.enterPrivateKey" placeholder="请输入 64 位十六进制私钥"
+                autocomplete="off" spellcheck="false" />
+              <button type="button" class="import-toggle-visibility" id="importToggleVisibility" title="切换显示/隐藏">
+                <svg class="eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg class="eye-closed hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24" />
+                  <line x1="1" y1="1" x2="23" y2="23" />
+                </svg>
+              </button>
+            </div>
+            <p class="import-input-hint">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 12v4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <span data-i18n="import.formatHint">支持带 0x 前缀或纯 64 位十六进制格式</span>
+            </p>
+          </div>
+
+          <button id="importBtn" class="import-submit-btn" data-mode="wallet">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            <span data-i18n="import.importWallet">导入钱包</span>
+          </button>
+        </div>
+
+        <!-- 安全提示 -->
+        <div class="import-tip-block">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span data-i18n="import.securityTip">请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中</span>
+        </div>
+
+        <!-- 加载动画 - 使用系统 Logo -->
+        <div id="importLoader" class="import-loader hidden">
+          <div class="import-loader-logo">
+            <img src="/assets/logo.png" alt="Loading" class="import-loader-logo-img" />
+            <div class="import-loader-glow"></div>
+          </div>
+          <div class="import-loader-text">
+            <span data-i18n="import.verifying">正在验证并导入</span>
+            <span class="loader-dots"><i></i><i></i><i></i></span>
+          </div>
+        </div>
+
+        <!-- 导入结果展示 -->
+        <div id="importResult" class="import-result hidden">
+          <!-- 成功标识 -->
+          <div class="import-success-header">
+            <div class="import-success-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3 data-i18n="import.success">钱包导入成功</h3>
+          </div>
+
+          <!-- 账户信息网格 -->
+          <div class="import-result-grid">
+            <div class="import-result-item">
+              <div class="import-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <span>Account ID</span>
+              </div>
+              <code id="importAccountId" class="import-result-value"></code>
+            </div>
+            <div class="import-result-item">
+              <div class="import-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span data-i18n="new.mainAddress">主地址</span>
+              </div>
+              <code id="importAddress" class="import-result-value"></code>
+            </div>
+          </div>
+
+          <!-- 密钥信息 -->
+          <div class="import-result-keys">
+            <div class="import-result-item import-result-item--private collapsed" id="importPrivateKeyItem">
+              <div class="import-result-label import-result-label--clickable" id="importPrivateKeyToggle">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
+                </svg>
+                <span data-i18n="new.privateKey">私钥（Hex）</span>
+                <span class="import-warning-badge" data-i18n="new.doNotShare">请勿泄露</span>
+                <svg class="import-toggle-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <code id="importPrivHexOut" class="import-result-value import-result-value--secret"></code>
+            </div>
+            <div class="import-result-item">
+              <div class="import-result-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 5 5" />
+                </svg>
+                <span data-i18n="new.publicKey">公钥（X / Y Hex）</span>
+              </div>
+              <code id="importPubX" class="import-result-value"></code>
+              <code id="importPubY" class="import-result-value"></code>
+            </div>
+          </div>
+
+          <!-- 操作按钮 -->
+          <div class="import-actions">
+            <button id="importCancelBtn" class="import-cancel-btn hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              </svg>
+              <span data-i18n="import.reImport">重新导入</span>
+            </button>
+            <button id="importNextBtn" class="import-next-btn hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                <polyline points="7 10 12 15 17 10" />
+                <line x1="12" y1="15" x2="12" y2="3" />
+              </svg>
+              <span data-i18n="import.confirmImport">导入该地址</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</section>

@@ -1,0 +1,303 @@
+<!-- 个人信息页面 - 左右布局设计 -->
+<section class="card hidden" id="profileCard">
+  <div class="profile-page">
+    <!-- 左侧：品牌展示区 -->
+    <aside class="profile-sidebar">
+      <div class="profile-sidebar-content">
+        <!-- 品牌区域 -->
+        <div class="profile-brand">
+          <div class="profile-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <h1 class="profile-brand-title" data-i18n="profile.title">个人信息</h1>
+          <p class="profile-brand-desc" data-i18n="profile.description">管理您的账户头像与昵称，打造专属个人形象</p>
+        </div>
+
+        <!-- 头像预览区 -->
+        <div class="profile-avatar-preview">
+          <div class="profile-avatar-container">
+            <div class="profile-avatar-ring"></div>
+            <div class="profile-avatar-large" id="profileAvatarLarge">
+              <svg class="avatar-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <img class="avatar-image hidden" id="profileAvatarPreview" src="" alt="头像预览">
+            </div>
+          </div>
+          <h3 class="profile-avatar-name" id="profileDisplayName">Amiya</h3>
+          <code class="profile-avatar-id" id="profileAccountId">Account ID</code>
+        </div>
+
+        <!-- 侧边栏底部 -->
+        <div class="profile-sidebar-footer">
+          <div class="profile-tips">
+            <div class="profile-tip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              </svg>
+              <span data-i18n="profile.tip.localStorage">头像仅存储在本地浏览器</span>
+            </div>
+            <div class="profile-tip">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 12v4" />
+                <path d="M12 8h.01" />
+              </svg>
+              <span data-i18n="profile.tip.squareImage">建议使用正方形图片</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 右侧：设置区域 -->
+    <main class="profile-main">
+      <!-- 返回按钮 -->
+      <button id="profileBackBtn" class="profile-back-btn" title="返回" data-i18n-title="common.back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12" />
+          <polyline points="12 19 5 12 12 5" />
+        </svg>
+      </button>
+
+      <!-- 页面头部 -->
+      <div class="profile-header">
+        <h2 class="profile-header-title" data-i18n="profile.settings.title">个人信息设置</h2>
+        <p class="profile-header-desc" data-i18n="profile.settings.description">自定义您的头像、昵称和个性签名，让您的账户更具个性</p>
+      </div>
+
+      <!-- 设置区域 -->
+      <div class="profile-settings">
+        <!-- 头像设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" />
+                <polyline points="21 15 16 10 5 21" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.avatar.title">头像设置</h3>
+          </div>
+          <div class="avatar-upload-area">
+            <div class="avatar-upload-preview" id="avatarUploadPreview">
+              <svg class="preview-placeholder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              <img class="preview-image hidden" id="avatarPreviewImg" src="" alt="头像预览">
+            </div>
+            <div class="avatar-upload-actions">
+              <p class="avatar-upload-hint" data-i18n="profile.avatar.hint">支持 JPG、PNG、GIF、WebP 格式，建议尺寸 200x200 像素</p>
+              <div class="avatar-upload-buttons">
+                <button id="avatarUploadBtn" class="avatar-upload-btn avatar-upload-btn--primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                    <polyline points="17 8 12 3 7 8" />
+                    <line x1="12" y1="3" x2="12" y2="15" />
+                  </svg>
+                  <span data-i18n="profile.avatar.upload">选择图片</span>
+                </button>
+                <button id="avatarRemoveBtn" class="avatar-upload-btn avatar-upload-btn--secondary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                  </svg>
+                  <span data-i18n="profile.avatar.remove">移除头像</span>
+                </button>
+              </div>
+            </div>
+            <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/gif,image/webp" />
+          </div>
+        </div>
+
+        <!-- 昵称设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.nickname.title">昵称设置</h3>
+          </div>
+          <div class="nickname-edit-area">
+            <div class="nickname-input-wrap">
+              <input type="text" id="nicknameInput" class="nickname-input" data-i18n-placeholder="profile.nickname.placeholder" placeholder="请输入昵称" maxlength="20" />
+              <span class="nickname-char-count" id="nicknameCharCount">0/20</span>
+            </div>
+            <p class="nickname-hint" data-i18n="profile.nickname.hint">昵称将显示在界面各处，支持中英文字符，最多20个字符</p>
+          </div>
+        </div>
+
+        <!-- 个性签名设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon profile-setting-icon--purple">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.signature.title">个性签名</h3>
+          </div>
+          <div class="signature-edit-area">
+            <div class="signature-input-wrap">
+              <textarea id="signatureInput" class="signature-input" data-i18n-placeholder="profile.signature.placeholder" placeholder="这个人很懒，还没有修改这里。" maxlength="50"></textarea>
+              <span class="signature-char-count" id="signatureCharCount">0/50</span>
+            </div>
+            <p class="signature-hint" data-i18n="profile.signature.hint">个性签名将显示在个人信息栏下方，最多50个字符</p>
+          </div>
+        </div>
+
+        <!-- 语言设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon profile-setting-icon--green">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.language.title">语言设置</h3>
+          </div>
+          <div class="language-selector-area">
+            <div class="language-selector" id="languageSelector">
+              <button class="language-option active" data-lang="zh-CN">
+                <span class="language-flag">🇨🇳</span>
+                <span class="language-name">简体中文</span>
+                <svg class="language-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+              <button class="language-option" data-lang="en">
+                <span class="language-flag">🇺🇸</span>
+                <span class="language-name">English</span>
+                <svg class="language-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+            <p class="language-hint" data-i18n="profile.language.hint">选择您偏好的界面语言</p>
+          </div>
+        </div>
+
+        <!-- 主题设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon profile-setting-icon--indigo">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.theme.title">主题模式</h3>
+          </div>
+          <div class="theme-selector-area">
+            <div class="theme-selector" id="themeSelector">
+              <button class="theme-option active" data-theme="light">
+                <div class="theme-option-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5" />
+                    <line x1="12" y1="1" x2="12" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="23" />
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                    <line x1="1" y1="12" x2="3" y2="12" />
+                    <line x1="21" y1="12" x2="23" y2="12" />
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+                  </svg>
+                </div>
+                <span class="theme-option-label" data-i18n="profile.theme.light">浅色</span>
+                <svg class="theme-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+              <button class="theme-option" data-theme="dark">
+                <div class="theme-option-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                  </svg>
+                </div>
+                <span class="theme-option-label" data-i18n="profile.theme.dark">深色</span>
+                <svg class="theme-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+            <p class="theme-hint" data-i18n="profile.theme.hint">选择您偏好的界面主题</p>
+          </div>
+        </div>
+
+        <!-- 性能模式设置 -->
+        <div class="profile-setting-group">
+          <div class="profile-setting-title">
+            <div class="profile-setting-icon profile-setting-icon--orange">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+            </div>
+            <h3 data-i18n="profile.performance.title">性能模式</h3>
+          </div>
+          <div class="performance-selector-area">
+            <div class="performance-selector" id="performanceSelector">
+              <button class="performance-option active" data-mode="premium">
+                <div class="performance-option-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                  </svg>
+                </div>
+                <div class="performance-option-content">
+                  <span class="performance-option-label" data-i18n="profile.performance.premium">顶级模式</span>
+                  <span class="performance-option-desc" data-i18n="profile.performance.premiumDesc">完整视觉效果</span>
+                </div>
+                <svg class="performance-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+              <button class="performance-option" data-mode="energy-saving">
+                <div class="performance-option-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                  </svg>
+                </div>
+                <div class="performance-option-content">
+                  <span class="performance-option-label" data-i18n="profile.performance.energySaving">节能模式</span>
+                  <span class="performance-option-desc" data-i18n="profile.performance.energySavingDesc">简化视觉效果，提升流畅度</span>
+                </div>
+                <svg class="performance-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </button>
+            </div>
+            <p class="performance-hint" data-i18n="profile.performance.hint">节能模式将禁用毛玻璃效果、简化动画以提升性能</p>
+          </div>
+        </div>
+
+
+      </div>
+
+      <!-- 底部操作按钮 -->
+      <div class="profile-actions">
+        <button id="profileCancelBtn" class="profile-action-btn profile-action-btn--secondary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          <span data-i18n="common.back">返回</span>
+        </button>
+        <button id="profileSaveBtn" class="profile-action-btn profile-action-btn--primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span data-i18n="profile.action.save">保存设置</span>
+        </button>
+      </div>
+    </main>
+  </div>
+</section>

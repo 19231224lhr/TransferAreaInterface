@@ -1,0 +1,128 @@
+<!-- 历史交易记录页面 - 左右布局设计 -->
+<section class="hidden" id="historyCard">
+  <div class="history-page">
+    <!-- 左侧边栏 - 品牌展示区 -->
+    <div class="history-sidebar">
+      <div class="history-sidebar-content">
+        <!-- 品牌信息 -->
+        <div class="history-brand">
+          <div class="history-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <h1 class="history-brand-title" data-i18n="history.title">历史交易记录</h1>
+          <p class="history-brand-desc" data-i18n="history.description">查看您的所有交易历史，追踪资产流动</p>
+        </div>
+
+        <!-- 特性列表 -->
+        <div class="history-benefits">
+          <div class="history-benefit">
+            <div class="history-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <div class="history-benefit-text">
+              <h4 data-i18n="history.benefit1.title">完整记录</h4>
+              <p data-i18n="history.benefit1.desc">所有交易记录永久保存，随时查询</p>
+            </div>
+          </div>
+
+          <div class="history-benefit">
+            <div class="history-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="history-benefit-text">
+              <h4 data-i18n="history.benefit2.title">时间筛选</h4>
+              <p data-i18n="history.benefit2.desc">按时间段快速筛选交易记录</p>
+            </div>
+          </div>
+
+          <div class="history-benefit">
+            <div class="history-benefit-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </div>
+            <div class="history-benefit-text">
+              <h4 data-i18n="history.benefit3.title">详细信息</h4>
+              <p data-i18n="history.benefit3.desc">查看每笔交易的完整详情</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部统计 -->
+        <div class="history-sidebar-footer">
+          <div class="history-stats">
+            <div class="history-stat">
+              <div class="history-stat-value" id="historyTotalCount">0</div>
+              <div class="history-stat-label" data-i18n="history.totalTransactions">总交易数</div>
+            </div>
+            <div class="history-stat">
+              <div class="history-stat-value" id="historyTotalVolume">0</div>
+              <div class="history-stat-label" data-i18n="history.totalVolume">总交易额</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧主区域 -->
+    <div class="history-main">
+      <!-- 返回按钮 -->
+      <button id="historyBackBtn" class="history-back-btn" aria-label="返回">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+      </button>
+
+      <div class="history-main-content">
+        <!-- 页面标题 -->
+        <div class="history-header">
+          <span class="history-header-badge" data-i18n="history.badge">交易追踪</span>
+          <h2 class="history-header-title" data-i18n="history.pageTitle">交易历史</h2>
+          <p class="history-header-desc" data-i18n="history.pageDesc">查看和管理您的所有交易记录</p>
+        </div>
+
+        <!-- 时间筛选器 -->
+        <div class="history-filter-card">
+          <div class="history-filter-label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+            <span data-i18n="history.filterByTime">按时间筛选</span>
+          </div>
+          <div class="history-filter-buttons">
+            <button class="history-filter-btn active" data-period="all" data-i18n="history.filterAll">全部</button>
+            <button class="history-filter-btn" data-period="today" data-i18n="history.filterToday">今天</button>
+            <button class="history-filter-btn" data-period="week" data-i18n="history.filterWeek">本周</button>
+            <button class="history-filter-btn" data-period="month" data-i18n="history.filterMonth">本月</button>
+          </div>
+        </div>
+
+        <!-- 交易列表 -->
+        <div class="history-list-container">
+          <div id="historyList" class="history-list">
+            <!-- 交易记录将通过 JavaScript 动态生成 -->
+            <!-- 每个交易项内部包含可展开的详情区域 -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

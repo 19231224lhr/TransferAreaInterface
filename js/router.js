@@ -1,7 +1,7 @@
 /**
  * Router Module
  * 
- * Provides hash-based routing for the SPA.
+ * Provides hash-based routing for the SPA with dynamic page loading support.
  */
 
 import { t, updatePageTranslations } from './i18n/index.js';
@@ -12,6 +12,8 @@ import { cleanupPageListeners } from './utils/eventUtils.js';
 import { store, setRoute } from './utils/store.js';
 import { withLoading } from './utils/loading';
 import { navigateTo as enhancedNavigateTo } from './utils/enhancedRouter';
+import { pageManager } from './utils/pageManager';
+import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 
 // Lazy page loaders (registered on demand)
 const pageLoaders = {
@@ -31,10 +33,23 @@ const pageLoaders = {
   '/history': () => import('./pages/history.js')
 };
 
-// ========================================
-// Card References (will be populated on init)
-// ========================================
-let welcomeCard, entryCard, newUserCard, loginCard, importCard;
+// Route to page config mapping
+const routeToPageId = {
+  '/welcome': 'welcome',
+  '/entry': 'entry',
+  '/new': 'new',
+  '/set-password': 'set-password',
+  '/login': 'login',
+  '/import': 'import',
+  '/wallet-import': 'import',
+  '/main': 'main',
+  '/join-group': 'join-group',
+  '/inquiry': 'inquiry',
+  '/inquiry-main': 'inquiry',
+  '/group-detail': 'group-detail',
+  '/profile': 'profile',
+  '/history': 'history'
+};
 
 /**
  * Dynamically load a page module for the given route
@@ -70,14 +85,31 @@ async function callPageFn(route, fnName, fallbackFnName) {
 }
 
 /**
- * Initialize card references
+ * Ensure a page is loaded (using pageManager for dynamic loading)
+ * @param {string} pageId - Page identifier
+ * @returns {Promise<HTMLElement|null>}
  */
-function initCardRefs() {
-  welcomeCard = document.getElementById('welcomeCard');
-  entryCard = document.getElementById('entryCard');
-  newUserCard = document.getElementById('newUserCard');
-  loginCard = document.getElementById('loginCard');
-  importCard = document.getElementById('importCard');
+async function ensurePageLoaded(pageId) {
+  // Try to get existing element first
+  const config = getPageConfig(pageId);
+  if (!config) {
+    console.warn(`[router] No config for page: ${pageId}`);
+    return null;
+  }
+
+  // Check if already in DOM
+  let element = document.getElementById(config.containerId);
+  if (element) {
+    return element;
+  }
+
+  // Use pageManager to load dynamically
+  if (pageManager.isInitialized()) {
+    element = await pageManager.ensureLoaded(pageId);
+    return element;
+  }
+
+  return null;
 }
 
 /**
@@ -125,30 +157,26 @@ function bindHashLinkNavigation() {
  */
 export function showCard(card) {
   if (!card) return;
-  
-  // Hide all cards
-  const allCardIds = [
-    'welcomeCard', 'entryCard', 'newUserCard', 'setPasswordCard', 'loginCard', 'importCard',
-    'nextCard', 'walletCard', 'inquiryCard',
-    'profileCard', 'groupDetailCard', 'historyCard'
-  ];
-  
+
+  // Hide all cards - use dynamic list from config
+  const allCardIds = getAllContainerIds();
+
   allCardIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
-  
+
   // Hide overlays and modals
   const overlayIds = [
     'newLoader', 'importLoader', 'groupSuggest', 'joinOverlay',
     'confirmSkipModal', 'actionOverlay', 'actionModal'
   ];
-  
+
   overlayIds.forEach(id => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
-  
+
   // Reset search state
   const joinSearchBtn = document.getElementById('joinSearchBtn');
   if (joinSearchBtn) joinSearchBtn.disabled = true;
@@ -158,14 +186,14 @@ export function showCard(card) {
   if (recPane) recPane.classList.remove('collapsed');
   const groupSearch = document.getElementById('groupSearch');
   if (groupSearch) groupSearch.value = '';
-  
+
   // Show the specified card
   card.classList.remove('hidden');
-  
+
   // Ensure inner page container is also visible
-  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page, .profile-page');
+  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page, .profile-page, .setpwd-page, .group-page, .history-page, .join-page, .inquiry-page, .wallet-main');
   if (innerPage) innerPage.classList.remove('hidden');
-  
+
   // Control footer visibility (hide on welcome page, show on others)
   const pageFooter = document.getElementById('pageFooter');
   if (pageFooter) {
@@ -175,14 +203,14 @@ export function showCard(card) {
       pageFooter.classList.remove('hidden');
     }
   }
-  
+
   // Scroll to top
   requestAnimationFrame(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
     document.documentElement.scrollTop = 0;
     document.body.scrollTop = 0;
   });
-  
+
   // Add fade-in animation
   card.classList.remove('fade-in');
   requestAnimationFrame(() => card.classList.add('fade-in'));
@@ -214,70 +242,74 @@ export function routeTo(hash) {
 }
 
 /**
- * Main router function - handles hash changes
+ * Main router function - handles hash changes with dynamic page loading
  */
-export function router() {
+export async function router() {
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
-  
+
   // Reinitialize header user menu after cleanup
   initUserMenu();
-  
-  initCardRefs();
-  
+
   const h = (location.hash || '#/welcome').replace(/^#/, '');
   const u = loadUser();
   const allowNoUser = ['/welcome', '/login', '/new', '/set-password', '/profile'];
-  
+
   // Update route state in store for centralized state management
   setRoute(h);
-  
+
   // Redirect to welcome if not logged in and route requires login
   if (!u && allowNoUser.indexOf(h) === -1) {
     routeTo('#/welcome');
     return;
   }
-  
+
+  // Get page ID for the route
+  const pageId = routeToPageId[h] || 'welcome';
+
+  // Ensure page is loaded
+  const pageElement = await ensurePageLoaded(pageId);
+
   switch (h) {
     case '/welcome':
-      showCard(welcomeCard);
+      showCard(pageElement || document.getElementById('welcomeCard'));
       void callPageFn('/welcome', 'initWelcomePage', 'updateWelcomeButtons');
       break;
-      
+
     case '/main':
-      showCard(document.getElementById('walletCard'));
+      showCard(pageElement || document.getElementById('walletCard'));
       void callPageFn('/main', 'initMainPage', 'handleMainRoute');
       break;
-      
+
     case '/entry':
-      showCard(entryCard);
+      showCard(pageElement || document.getElementById('entryCard'));
       void callPageFn('/entry', 'initEntryPage', 'updateWalletBrief');
       break;
-      
+
     case '/login':
-      showCard(loginCard);
+      showCard(pageElement || document.getElementById('loginCard'));
       void callPageFn('/login', 'initLoginPage', 'resetLoginPageState');
       break;
-      
+
     case '/new':
       resetOrgSelectionForNewUser();
-      showCard(newUserCard);
+      showCard(pageElement || document.getElementById('newUserCard'));
       void callPageFn('/new', 'initNewUserPage');
       handleNewUserRoute();
       break;
-      
+
     case '/set-password':
-      showCard(document.getElementById('setPasswordCard'));
+      showCard(pageElement || document.getElementById('setPasswordCard'));
       void callPageFn('/set-password', 'initSetPasswordPage');
       break;
-      
+
     case '/import':
-      showCard(importCard);
+      showCard(pageElement || document.getElementById('importCard'));
       void callPageFn('/import', 'initImportPage', 'resetImportState');
       break;
-      
+
     case '/wallet-import':
-      showCard(importCard);
+      showCard(pageElement || document.getElementById('importCard'));
       void loadPageModule('/wallet-import').then((mod) => {
         const resetFn = (mod && typeof mod.resetImportState === 'function') ? mod.resetImportState : (typeof window.resetImportState === 'function' ? window.resetImportState : null);
         if (resetFn) resetFn('wallet');
@@ -285,19 +317,19 @@ export function router() {
         if (initFn) initFn();
       });
       break;
-      
+
     case '/join-group':
-      handleJoinGroupRoute();
+      await handleJoinGroupRoute(pageElement);
       void callPageFn('/join-group', 'initJoinGroupPage');
       break;
-      
+
     case '/group-detail':
-      showCard(document.getElementById('groupDetailCard'));
+      showCard(pageElement || document.getElementById('groupDetailCard'));
       void callPageFn('/group-detail', 'initGroupDetailPage', 'updateGroupDetailDisplay');
       break;
-      
+
     case '/inquiry':
-      showCard(document.getElementById('inquiryCard'));
+      showCard(pageElement || document.getElementById('inquiryCard'));
       void loadPageModule('/inquiry').then((mod) => {
         const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
         if (!fn) return;
@@ -311,9 +343,9 @@ export function router() {
         });
       });
       break;
-      
+
     case '/inquiry-main':
-      showCard(document.getElementById('inquiryCard'));
+      showCard(pageElement || document.getElementById('inquiryCard'));
       void loadPageModule('/inquiry-main').then((mod) => {
         const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
         if (!fn) return;
@@ -322,25 +354,26 @@ export function router() {
         });
       });
       break;
-      
+
     case '/profile':
-      showCard(document.getElementById('profileCard'));
+      showCard(pageElement || document.getElementById('profileCard'));
       void callPageFn('/profile', 'initProfilePage');
       break;
-      
+
     case '/history':
-      showCard(document.getElementById('historyCard'));
+      showCard(pageElement || document.getElementById('historyCard'));
       void callPageFn('/history', 'initHistoryPage', 'resetHistoryPageState');
       break;
-      
+
     default:
-      showCard(welcomeCard);
+      const defaultPage = await ensurePageLoaded('welcome');
+      showCard(defaultPage || document.getElementById('welcomeCard'));
       void callPageFn('/welcome', 'updateWelcomeButtons');
   }
-  
+
   // Update translations after route change
   updatePageTranslations();
-  
+
   // Update header user display
   const currentUser = loadUser();
   updateHeaderUser(currentUser);
@@ -367,17 +400,17 @@ function handleNewUserRoute() {
     if (fn) fn();
   };
   void doReset();
-  
+
   const resultEl = document.getElementById('result');
   const createBtn = document.getElementById('createBtn');
   const newNextBtn = document.getElementById('newNextBtn');
   const newLoader = document.getElementById('newLoader');
-  
+
   if (newLoader) newLoader.classList.add('hidden');
-  
+
   const accountIdEl = document.getElementById('accountId');
   const hasData = accountIdEl && accountIdEl.textContent.trim() !== '';
-  
+
   if (hasData) {
     if (resultEl) resultEl.classList.remove('hidden');
     if (createBtn) createBtn.classList.remove('hidden');
@@ -398,23 +431,25 @@ function handleNewUserRoute() {
 /**
  * Handle /join-group route
  */
-function handleJoinGroupRoute() {
+async function handleJoinGroupRoute(preloadedElement) {
   const g0 = getJoinedGroup();
   const joined = !!(g0 && g0.groupID);
-  
+
   if (joined) {
     routeTo('#/inquiry-main');
     return;
   }
-  
-  showCard(document.getElementById('nextCard'));
-  
+
+  // Ensure join-group page is loaded
+  const pageElement = preloadedElement || await ensurePageLoaded('join-group');
+  showCard(pageElement || document.getElementById('nextCard'));
+
   // Set default group info
   const recGroupID = document.getElementById('recGroupID');
   const recAggre = document.getElementById('recAggre');
   const recAssign = document.getElementById('recAssign');
   const recPledge = document.getElementById('recPledge');
-  
+
   if (recGroupID) recGroupID.textContent = DEFAULT_GROUP.groupID;
   if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;
   if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
@@ -425,15 +460,16 @@ function handleJoinGroupRoute() {
  * Initialize router
  */
 export function initRouter() {
-  initCardRefs();
   bindHashLinkNavigation();
-  
+
   // Listen for hash changes - only bind once
   if (!window._routerHashChangeBind) {
-    window.addEventListener('hashchange', router);
+    window.addEventListener('hashchange', () => {
+      router();
+    });
     window._routerHashChangeBind = true;
   }
-  
+
   // Initial route
   router();
 }

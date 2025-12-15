@@ -431,12 +431,18 @@ export function initTransferSubmit(): void {
       }
       
       if (removedAddrs.length) {
-        const tipHtml = `检测到本次转账中有 <strong>${removedAddrs.length}</strong> 个来源地址在本次转账中未被实际使用，已自动为你保留余额更高且能够覆盖本次转账的地址集合。`;
+        const tipHtml = t('transfer.optimizedAddresses', { count: String(removedAddrs.length) }).replace('{count}', `<strong>${removedAddrs.length}</strong>`);
         showModalTip(t('toast.addressOptimized'), tipHtml, false);
       }
       
       if (extraPGC > 0) {
-        const confirmed = await showConfirmModal('确认兑换 Gas', `将使用 <strong>${extraPGC}</strong> PGC 兑换 <strong>${extraPGC}</strong> Gas，用于本次交易。确认继续？`, '确认兑换', '取消');
+        const exchangeDesc = t('transfer.exchangeGasDesc', { amount: String(extraPGC) }).replace(/\{amount\}/g, `<strong>${extraPGC}</strong>`);
+        const confirmed = await showConfirmModal(
+          t('transfer.confirmExchangeGas'),
+          exchangeDesc,
+          t('transfer.confirmExchange'),
+          t('common.cancel')
+        );
         if (!confirmed) return;
       }
       
@@ -460,11 +466,11 @@ export function initTransferSubmit(): void {
       };
       
       if (isCross && finalSel.length !== 1) {
-        showTxValidationError('跨链交易只能有一个来源地址', null, '跨链交易限制');
+        showTxValidationError(t('transfer.crossChainSingleInput'), null, t('transfer.crossChainLimit'));
         return;
       }
       if (isCross && !changeMap[0]) {
-        showTxValidationError('请为跨链交易选择主货币找零地址', null, '找零地址缺失');
+        showTxValidationError(t('transfer.selectChangeAddress'), null, t('transfer.changeAddressMissing'));
         return;
       }
       
