@@ -8,7 +8,7 @@
  * - Uses rafDebounce for filter button debouncing
  */
 
-import { t } from '../i18n/index.js';
+import { t, formatDate } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 
@@ -94,24 +94,6 @@ const MOCK_TRANSACTIONS = [
 
 let currentFilter = 'all';
 let selectedTransaction = null;
-
-/**
- * Format timestamp to readable date
- */
-function formatDate(timestamp) {
-  const date = new Date(timestamp);
-  
-  // Format as specific date and time
-  return date.toLocaleString('zh-CN', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
-  });
-}
 
 /**
  * Format address (show first 6 and last 4 characters)

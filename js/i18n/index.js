@@ -19,6 +19,43 @@ const translations = {
 let currentLanguage = 'zh-CN';
 
 /**
+ * Format number with current locale
+ * @param {number} value
+ * @param {Intl.NumberFormatOptions} [options]
+ * @returns {string}
+ */
+export function formatNumber(value, options = {}) {
+  try {
+    return new Intl.NumberFormat(currentLanguage, options).format(value);
+  } catch (_) {
+    return String(value);
+  }
+}
+
+/**
+ * Format date with current locale
+ * @param {number|Date|string} value
+ * @param {Intl.DateTimeFormatOptions} [options]
+ * @returns {string}
+ */
+export function formatDate(value, options = {
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hour12: false
+}) {
+  try {
+    const date = value instanceof Date ? value : new Date(value);
+    return new Intl.DateTimeFormat(currentLanguage, options).format(date);
+  } catch (_) {
+    return String(value);
+  }
+}
+
+/**
  * Get the current language code
  * @returns {string} Current language code (e.g., 'zh-CN', 'en')
  */

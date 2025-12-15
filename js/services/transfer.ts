@@ -12,6 +12,8 @@ import { buildNewTX, BuildTXInfo } from './transaction';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
 import { clearTransferDraft } from './transferDraft';
+import { getCoinName } from '../config/constants';
+import { COIN_TO_PGC_RATES } from '../config/constants';
 
 // ========================================
 // Type Definitions
@@ -131,9 +133,6 @@ export function initTransferSubmit(): void {
   const txErr = document.getElementById('txError');
   
   if (!tfBtn || (tfBtn as any).dataset._bind) return;
-  
-  const currencyLabels: Record<number, string> = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
-  const rates: Record<number, number> = { 0: 1, 1: 1000000, 2: 1000 };
   
   // Create submission guard to prevent double-submit
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
@@ -337,7 +336,8 @@ export function initTransferSubmit(): void {
         if (need <= 0) return true;
         const addr = changeMap[typeId];
         if (!addr) {
-          showTxValidationError(`${currencyLabels[typeId]} ${t('transfer.pgcReceiveAddress')}`, null, t('tx.changeAddressMissing'));
+          const coinName = getCoinName(typeId);
+          showTxValidationError(`${coinName} ${t('transfer.pgcReceiveAddress')}`, null, t('tx.changeAddressMissing'));
           return false;
         }
         const meta = getAddrMeta(addr);
@@ -346,7 +346,8 @@ export function initTransferSubmit(): void {
           return false;
         }
         if (Number(meta.type || 0) !== Number(typeId)) {
-          showTxValidationError(`${currencyLabels[typeId]} ${t('transfer.currency')}`, null, t('tx.changeAddressError'));
+          const coinName = getCoinName(typeId);
+          showTxValidationError(`${coinName} ${t('transfer.currency')}`, null, t('tx.changeAddressError'));
           return false;
         }
         return true;
@@ -354,7 +355,8 @@ export function initTransferSubmit(): void {
       
       if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
         const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
-        showTxValidationError(`${currencyLabels[lackType]} ${t('tx.insufficientBalance')}`, null, t('tx.insufficientBalance'));
+        const coinName = getCoinName(lackType);
+        showTxValidationError(`${coinName} ${t('tx.insufficientBalance')}`, null, t('tx.insufficientBalance'));
         return;
       }
       
@@ -384,7 +386,7 @@ export function initTransferSubmit(): void {
           const bal: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
           if (bal[type] !== undefined) bal[type] = val;
 
-          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * rates[t], 0);
+          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * (COIN_TO_PGC_RATES[t] || 1), 0);
           return { addr, bal, totalRel };
         });
         
@@ -438,7 +440,7 @@ export function initTransferSubmit(): void {
       const backAssign: Record<string, number> = {};
       finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
       
-      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * rates[Number(k)], 0);
+      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k)] || 1), 0);
       
       const build: BuildTXInfo = {
         Value: valueTotal,
