@@ -119,9 +119,7 @@ import {
   lockScreen,
   unlockScreen,
   isScreenLocked,
-  cleanupScreenLock,
-  setLockTimeout,
-  getLockTimeout
+  cleanupScreenLock
 } from './utils/screenLock';
 
 // UI
@@ -446,8 +444,6 @@ window.initScreenLock = initScreenLock;
 window.lockScreen = lockScreen;
 window.unlockScreen = unlockScreen;
 window.isScreenLocked = isScreenLocked;
-window.setLockTimeout = setLockTimeout;
-window.getLockTimeout = getLockTimeout;
 
 // P2 Improvements - Online Status
 window.isOnline = isOnline;
@@ -691,27 +687,11 @@ function init() {
   });
   
   // Initialize screen lock for security
-  // Initialize screen lock with saved timeout from localStorage
-  // Default: 10 minutes inactivity timeout, lock on start if user has encrypted key
+  // Fixed 10 minutes inactivity timeout, lock on start if user has encrypted key
   requestAnimationFrame(() => {
     const user = loadUser();
     if (user && user.accountId) {
-      // Load saved timeout from localStorage, default to 10 minutes
-      let timeoutMs = 10 * 60 * 1000;
-      try {
-        const savedTimeout = localStorage.getItem('lockTimeoutMinutes');
-        if (savedTimeout) {
-          const minutes = parseInt(savedTimeout, 10);
-          if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
-            timeoutMs = minutes * 60 * 1000;
-          }
-        }
-      } catch {
-        // Ignore localStorage errors
-      }
-      
       initScreenLock({
-        timeout: timeoutMs,
         lockOnStart: true,
         onLock: () => {
           // Optional: pause any background operations

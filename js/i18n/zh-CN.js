@@ -155,6 +155,8 @@ export default {
   'setpwd.passwordPlaceholder': '请输入密码（至少6位）',
   'setpwd.confirmPassword': '确认密码',
   'setpwd.confirmPlaceholder': '请再次输入密码',
+  'setpwd.passwordMatch': '密码一致',
+  'setpwd.passwordMismatchHint': '密码不一致',
   'setpwd.strength': '强度',
   'setpwd.strengthWeak': '弱',
   'setpwd.strengthMedium': '中',

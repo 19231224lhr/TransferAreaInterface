@@ -82,12 +82,15 @@ function updatePasswordMatch() {
   // Hide if confirm is empty
   if (!confirm) {
     if (matchIcon) matchIcon.classList.add('hidden');
-    if (matchText) matchText.classList.add('hidden');
+    if (matchText) {
+      matchText.textContent = '';
+    }
     return;
   }
   
   const isMatch = password === confirm;
   
+  // Update icon
   if (matchIcon) {
     matchIcon.classList.remove('hidden');
     const successIcon = matchIcon.querySelector('.match-success');
@@ -102,12 +105,18 @@ function updatePasswordMatch() {
     }
   }
   
+  // Update text - display inside the icon container
   if (matchText) {
-    matchText.classList.remove('hidden');
     matchText.className = 'login-match-text ' + (isMatch ? 'match' : 'mismatch');
     matchText.textContent = isMatch 
       ? t('login.passwordMatch', '密码一致') 
       : t('login.passwordMismatch', '密码不一致');
+  }
+  
+  // Update input border color
+  if (confirmInput) {
+    confirmInput.classList.toggle('match', isMatch);
+    confirmInput.classList.toggle('mismatch', !isMatch);
   }
 }
 
@@ -189,8 +198,7 @@ export function resetLoginPageState() {
     if (errorIcon) errorIcon.classList.add('hidden');
   }
   if (matchText) {
-    matchText.classList.add('hidden');
-    matchText.className = 'login-match-text hidden';
+    matchText.className = 'login-match-text';
     matchText.textContent = '';
   }
   

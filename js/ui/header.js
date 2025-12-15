@@ -42,10 +42,14 @@ export function updateHeaderUser(user) {
     const profile = loadUserProfile();
     labelEl.textContent = profile.nickname || 'Amiya';
     
-    // Update menu header title
+    // Update menu header title and subtitle
     const menuHeaderTitleEl = document.getElementById('menuHeaderTitle');
+    const menuHeaderSubEl = document.getElementById('menuHeaderSub');
     if (menuHeaderTitleEl) {
       menuHeaderTitleEl.textContent = profile.nickname || 'Amiya';
+    }
+    if (menuHeaderSubEl) {
+      menuHeaderSubEl.textContent = profile.bio || t('profile.signature.placeholder');
     }
     
     // Show custom avatar after login

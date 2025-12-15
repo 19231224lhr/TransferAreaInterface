@@ -101,6 +101,65 @@ function updatePasswordStrength() {
     };
     strengthText.textContent = labels[strength];
   }
+
+  // Also update match status when password changes
+  updatePasswordMatch();
+}
+
+/**
+ * Update password match indicator
+ */
+function updatePasswordMatch() {
+  const passwordInput = document.getElementById('setpwdPassword');
+  const confirmInput = document.getElementById('setpwdConfirm');
+  const matchIcon = document.getElementById('setpwdPasswordMatchIcon');
+  const matchText = document.getElementById('setpwdPasswordMatchText');
+
+  const password = passwordInput?.value || '';
+  const confirm = confirmInput?.value || '';
+
+  // Hide if confirm is empty
+  if (!confirm) {
+    if (matchIcon) matchIcon.classList.add('hidden');
+    if (matchText) {
+      matchText.classList.add('hidden');
+      matchText.textContent = '';
+    }
+    if (confirmInput) confirmInput.classList.remove('match', 'mismatch');
+    return;
+  }
+
+  const isMatch = password === confirm;
+
+  // Update icon
+  if (matchIcon) {
+    matchIcon.classList.remove('hidden');
+    const successIcon = matchIcon.querySelector('.match-success');
+    const errorIcon = matchIcon.querySelector('.match-error');
+
+    if (isMatch) {
+      successIcon?.classList.remove('hidden');
+      errorIcon?.classList.add('hidden');
+    } else {
+      successIcon?.classList.add('hidden');
+      errorIcon?.classList.remove('hidden');
+    }
+  }
+
+  // Update text - display inside the icon container
+  if (matchText) {
+    matchText.classList.remove('hidden');
+    matchText.className = 'setpwd-match-text ' + (isMatch ? 'match' : 'mismatch');
+    matchText.textContent = isMatch
+      ? t('setpwd.passwordMatch', '密码一致')
+      : t('setpwd.passwordMismatchHint', '密码不一致');
+  }
+
+  // Update input border color
+  if (confirmInput) {
+    confirmInput.classList.toggle('match', isMatch);
+    confirmInput.classList.toggle('mismatch', !isMatch);
+  }
 }
 
 /**
@@ -202,15 +261,34 @@ function resetPageState() {
   const confirmInput = document.getElementById('setpwdConfirm');
   const strengthFill = document.getElementById('setpwdStrengthFill');
   const strengthText = document.getElementById('setpwdStrengthText');
+  const matchIcon = document.getElementById('setpwdPasswordMatchIcon');
+  const matchText = document.getElementById('setpwdPasswordMatchText');
   const btn = document.getElementById('setpwdSubmitBtn');
   
   if (passwordInput) passwordInput.value = '';
-  if (confirmInput) confirmInput.value = '';
+  if (confirmInput) {
+    confirmInput.value = '';
+    confirmInput.classList.remove('match', 'mismatch');
+  }
   if (strengthFill) strengthFill.className = 'setpwd-strength-fill';
   if (strengthText) {
     strengthText.className = 'setpwd-strength-text';
     strengthText.textContent = t('setpwd.strength', '强度');
   }
+
+  // Reset password match indicator
+  if (matchIcon) {
+    matchIcon.classList.add('hidden');
+    const successIcon = matchIcon.querySelector('.match-success');
+    const errorIcon = matchIcon.querySelector('.match-error');
+    if (successIcon) successIcon.classList.add('hidden');
+    if (errorIcon) errorIcon.classList.add('hidden');
+  }
+  if (matchText) {
+    matchText.className = 'setpwd-match-text';
+    matchText.textContent = '';
+  }
+
   if (btn) {
     btn.disabled = false;
     const span = btn.querySelector('span');
@@ -247,6 +325,13 @@ export function initSetPasswordPage() {
   // Bind password toggle
   const toggleBtn = document.getElementById('setpwdToggle');
   const confirmInput = document.getElementById('setpwdConfirm');
+
+  // Bind confirm password input for match indicator
+  if (confirmInput && !confirmInput.dataset._setpwdMatchBind) {
+    confirmInput.dataset._setpwdMatchBind = 'true';
+    confirmInput.addEventListener('input', updatePasswordMatch);
+  }
+
   if (toggleBtn && !toggleBtn.dataset._setpwdBind) {
     toggleBtn.dataset._setpwdBind = 'true';
     toggleBtn.addEventListener('click', () => {

@@ -217,13 +217,36 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
   
   // Logout button - switch account
   logoutBtn?.addEventListener('click', () => {
-    // Clear user data and redirect to welcome
-    localStorage.removeItem('user');
-    localStorage.removeItem(STORAGE_KEY);
-    unlockScreen();
-    if (typeof window.routeTo === 'function') {
-      window.routeTo('#/welcome');
-    }
+    // Import clearAccountStorage from storage module
+    import('./storage').then(({ clearAccountStorage }) => {
+      // Clear all user data properly
+      clearAccountStorage();
+      
+      // Clear screen lock state
+      localStorage.removeItem(STORAGE_KEY);
+      
+      // Update header to show logged out state
+      if (typeof (window as any).updateHeaderUser === 'function') {
+        (window as any).updateHeaderUser(null);
+      }
+      
+      // Unlock screen
+      unlockScreen();
+      
+      // Redirect to welcome page
+      if (typeof window.routeTo === 'function') {
+        window.routeTo('#/welcome');
+      }
+    }).catch((error) => {
+      console.error('Failed to import storage module:', error);
+      // Fallback: clear basic data
+      localStorage.removeItem('user');
+      localStorage.removeItem(STORAGE_KEY);
+      unlockScreen();
+      if (typeof window.routeTo === 'function') {
+        window.routeTo('#/welcome');
+      }
+    });
   });
 }
 
@@ -456,29 +479,13 @@ export function isScreenLocked(): boolean {
  * Initialize screen lock module
  */
 export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
-  // Load saved timeout from localStorage FIRST (takes precedence)
-  let savedTimeoutMs: number | null = null;
-  try {
-    const savedTimeout = localStorage.getItem('lockTimeoutMinutes');
-    if (savedTimeout) {
-      const minutes = parseInt(savedTimeout, 10);
-      if (!isNaN(minutes) && minutes >= 1 && minutes <= 60) {
-        savedTimeoutMs = minutes * 60 * 1000;
-      }
-    }
-  } catch {
-    // Ignore localStorage errors
-  }
-  
-  // Merge config
+  // Merge config - always use default 10 minutes timeout
   if (config) {
     state.config = { ...state.config, ...config };
   }
   
-  // Apply saved timeout (overrides config if present)
-  if (savedTimeoutMs !== null) {
-    state.config.timeout = savedTimeoutMs;
-  }
+  // Force timeout to 10 minutes (not configurable)
+  state.config.timeout = DEFAULT_TIMEOUT;
   
   // Add activity listeners
   ACTIVITY_EVENTS.forEach(event => {
@@ -544,28 +551,11 @@ export function cleanupScreenLock(): void {
   document.body.classList.remove('screen-locked');
 }
 
-/**
- * Update lock timeout
- */
-export function setLockTimeout(timeout: number): void {
-  state.config.timeout = timeout;
-  resetActivityTimer();
-}
-
-/**
- * Get current lock timeout
- */
-export function getLockTimeout(): number {
-  return state.config.timeout;
-}
-
 // Export for window access
 export default {
   initScreenLock,
   cleanupScreenLock,
   lockScreen,
   unlockScreen,
-  isScreenLocked,
-  setLockTimeout,
-  getLockTimeout
+  isScreenLocked
 };

@@ -155,6 +155,8 @@ export default {
   'setpwd.passwordPlaceholder': 'Enter password (min 6 characters)',
   'setpwd.confirmPassword': 'Confirm Password',
   'setpwd.confirmPlaceholder': 'Re-enter your password',
+  'setpwd.passwordMatch': 'Passwords match',
+  'setpwd.passwordMismatchHint': 'Passwords do not match',
   'setpwd.strength': 'Strength',
   'setpwd.strengthWeak': 'Weak',
   'setpwd.strengthMedium': 'Medium',

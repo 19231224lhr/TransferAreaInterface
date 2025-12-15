@@ -948,24 +948,49 @@
 }
 
 /* ========================================
-   密码匹配指示器
+   密码匹配指示器 - 图标和文本组合
    ======================================== */
 
+/* 确认密码输入框需要更多右侧空间（容纳匹配图标 + 文本） */
+#loginConfirmPassword {
+  padding-right: 140px;
+}
+
+/* 密码匹配图标容器 - 包含图标和文本 */
 .login-match-icon {
   position: absolute;
-  right: 12px;
+  right: 56px; /* 避免与眼睛图标重叠 */
   top: 50%;
   transform: translateY(-50%);
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.login-match-icon:not(.hidden) {
+  opacity: 1;
+  animation: matchIndicatorSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes matchIndicatorSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
 }
 
 .login-match-icon svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
@@ -981,10 +1006,13 @@
   display: none;
 }
 
+/* 匹配文本 - 在图标容器内部 */
 .login-match-text {
   font-size: 12px;
-  margin-top: 6px;
+  font-weight: 500;
+  white-space: nowrap;
   transition: color 0.2s ease;
+  line-height: 1;
 }
 
 .login-match-text.match {
@@ -993,6 +1021,11 @@
 
 .login-match-text.mismatch {
   color: #ef4444;
+}
+
+/* 当文本为空时隐藏 */
+.login-match-text:empty {
+  display: none;
 }
 
 /* ========================================
@@ -1230,6 +1263,43 @@
 
 [data-theme="dark"] .login-match-text.mismatch {
   color: #f87171;
+}
+
+/* 确认密码输入框边框颜色 */
+#loginConfirmPassword.match {
+  border-color: #10b981;
+}
+
+#loginConfirmPassword.match:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+#loginConfirmPassword.mismatch {
+  border-color: #ef4444;
+}
+
+#loginConfirmPassword.mismatch:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+[data-theme="dark"] #loginConfirmPassword.match {
+  border-color: #10b981;
+}
+
+[data-theme="dark"] #loginConfirmPassword.match:focus {
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+[data-theme="dark"] #loginConfirmPassword.mismatch {
+  border-color: #ef4444;
+}
+
+[data-theme="dark"] #loginConfirmPassword.mismatch:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
 }
 
 [data-theme="dark"] .login-strength-text.weak {
