@@ -9,6 +9,7 @@ import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, ha
 import { initTransferSubmit, initBuildTransaction } from '../services/transfer.ts';
 import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
+import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 
 // Re-export for convenience
@@ -40,6 +41,9 @@ export function handleMainRoute() {
   if (typeof window.initWalletChart === 'function') {
     window.initWalletChart();
   }
+  
+  // Initialize network chart for transfer panel
+  initNetworkChart();
   
   // Initialize address modal buttons
   initAddressModal();

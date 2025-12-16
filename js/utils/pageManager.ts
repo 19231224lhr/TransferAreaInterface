@@ -303,6 +303,27 @@ class PageContainerManager {
 
         element.classList.add('hidden');
 
+        // Special cleanup for wallet page (main)
+        if (pageId === 'main' || pageId === 'wallet') {
+            // Cleanup network chart resources
+            if (typeof (window as any).cleanupNetworkChart === 'function') {
+                try {
+                    (window as any).cleanupNetworkChart();
+                } catch (err) {
+                    console.error('[PageManager] Failed to cleanup network chart:', err);
+                }
+            }
+            
+            // Cleanup wallet chart resources
+            if (typeof (window as any).cleanupWalletChart === 'function') {
+                try {
+                    (window as any).cleanupWalletChart();
+                } catch (err) {
+                    console.error('[PageManager] Failed to cleanup wallet chart:', err);
+                }
+            }
+        }
+
         // Call onHide callback
         const config = this.registry[pageId];
         if (config?.onHide) {

@@ -17,6 +17,11 @@ export function initProfilePage() {
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
   
+  // Update header display first to show correct username
+  if (typeof window.updateHeaderUser === 'function') {
+    window.updateHeaderUser(user);
+  }
+  
   // Fill current data
   const nicknameInput = document.getElementById('nicknameInput');
   const profileDisplayName = document.getElementById('profileDisplayName');
@@ -81,12 +86,20 @@ export function initProfilePage() {
     }
   }
   
-  // Bind events (only once)
-  bindProfileEvents();
-  
-  // Initialize language selector state
-  updateLanguageSelectorUI();
-  
+  // Bind events (only once) - check if already bound to avoid performance issues
+  if (!window._profileEventsBound) {
+    bindProfileEvents();
+    window._profileEventsBound = true;
+  }
+
+  // Initialize language/theme/performance selectors after first paint to avoid blocking UI
+  requestAnimationFrame(() => {
+    updateLanguageSelectorUI();
+    updateThemeSelectorUI();
+    updatePerformanceSelectorUI();
+    updatePageTranslations();
+  });
+
   // Control functionality based on login status
   updateProfilePageAccess();
 }

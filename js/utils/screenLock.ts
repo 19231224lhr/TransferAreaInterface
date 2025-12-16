@@ -53,10 +53,14 @@ const ACTIVITY_LISTENERS: Array<{
 }> = [
   { target: window, event: 'mousedown', options: { passive: true } },
   { target: window, event: 'mousemove', options: { passive: true } },
-  { target: window, event: 'click', options: { passive: true } }
+  { target: window, event: 'click', options: { passive: true } },
+  { target: window, event: 'keydown', options: { passive: true } },
+  { target: window, event: 'touchstart', options: { passive: true } },
+  { target: window, event: 'wheel', options: { passive: true } }
 ];
 const LOCK_SCREEN_ID = 'screenLockOverlay';
 const STORAGE_KEY = 'screenLockState';
+let isVerifying = false;
 
 // ========================================
 // State
@@ -68,7 +72,7 @@ const state: ScreenLockState = {
   timerId: null,
   config: {
     timeout: DEFAULT_TIMEOUT,
-    lockOnStart: true
+    lockOnStart: false
   }
 };
 
@@ -266,6 +270,8 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
  * Handle unlock attempt
  */
 async function handleUnlockAttempt(): Promise<void> {
+  if (isVerifying) return;
+
   const overlay = document.getElementById(LOCK_SCREEN_ID);
   const passwordInput = overlay?.querySelector('#screenLockPassword') as HTMLInputElement;
   const errorEl = overlay?.querySelector('#screenLockError') as HTMLElement;
@@ -284,6 +290,7 @@ async function handleUnlockAttempt(): Promise<void> {
     unlockBtn.disabled = true;
     unlockBtn.classList.add('loading');
   }
+  isVerifying = true;
   
   try {
     const user = loadUser();
@@ -297,12 +304,6 @@ async function handleUnlockAttempt(): Promise<void> {
       // Success - unlock screen
       hideLockError(errorEl);
       unlockScreen();
-      
-      // Store unlock time
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        lastUnlock: Date.now(),
-        accountId: user.accountId
-      }));
       
       state.config.onUnlock?.();
     } else {
@@ -321,6 +322,7 @@ async function handleUnlockAttempt(): Promise<void> {
     showLockError(errorEl, t('lock.verifyFailed', '验证失败，请重试'));
     console.error('Unlock verification failed:', error);
   } finally {
+    isVerifying = false;
     if (unlockBtn) {
       unlockBtn.disabled = false;
       unlockBtn.classList.remove('loading');
@@ -446,9 +448,11 @@ export function lockScreen(): void {
   document.body.classList.add('screen-locked');
   
   // Focus password input after animation
-  setTimeout(() => {
-    passwordInput?.focus();
-  }, 300);
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      passwordInput?.focus({ preventScroll: true });
+    });
+  });
   
   // Update translations
   if (typeof window.updatePageTranslations === 'function') {
@@ -497,57 +501,27 @@ export function isScreenLocked(): boolean {
  * Initialize screen lock module
  */
 export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
-  // Merge config - always use default 10 minutes timeout
+  // Merge config - always use default 10 minutes timeout and disable lock-on-start
   if (config) {
     state.config = { ...state.config, ...config };
   }
   
-  // Force timeout to 10 minutes (not configurable)
+  // Force timeout to 10 minutes (not configurable) and disable lock on page load
   state.config.timeout = DEFAULT_TIMEOUT;
+  state.config.lockOnStart = false;
+  
+  // Clear any stale persisted lock state to avoid unexpected auto-lock after refresh
+  localStorage.removeItem(STORAGE_KEY);
 
   // Add activity listeners
   ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
     target.addEventListener(event, handleActivity, options as any);
   });
   
-  // Check if should lock on start
   const user = loadUser();
-  if (user?.accountId && hasEncryptedKey(user.accountId)) {
-    // Check stored state
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const data = JSON.parse(stored);
-        const storedAccountId = typeof data?.accountId === 'string' ? data.accountId : null;
-        const lastUnlock = typeof data?.lastUnlock === 'number' && Number.isFinite(data.lastUnlock)
-          ? data.lastUnlock
-          : null;
 
-        // If the stored state is for another account or malformed, fall back to lockOnStart behavior.
-        if (!lastUnlock || (storedAccountId && storedAccountId !== user.accountId)) {
-          if (state.config.lockOnStart) {
-            lockScreen();
-          }
-        } else {
-          const elapsed = Date.now() - lastUnlock;
-          if (elapsed > state.config.timeout) {
-            lockScreen();
-          }
-        }
-      } else if (state.config.lockOnStart) {
-        // No stored state, lock on start
-        lockScreen();
-      }
-    } catch {
-      // Error parsing stored state, lock on start
-      if (state.config.lockOnStart) {
-        lockScreen();
-      }
-    }
-  }
-
-  // Start idle timer only when not locked
-  if (!state.isLocked) {
+  // Start idle timer only when user is logged in and we are not locked yet
+  if (user?.accountId && hasEncryptedKey(user.accountId) && !state.isLocked) {
     resetActivityTimer();
   }
 }

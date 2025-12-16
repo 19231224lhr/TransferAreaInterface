@@ -298,11 +298,10 @@ function renderTransactionDetail(tx) {
  */
 function toggleTransactionDetail(itemEl, tx) {
   const isExpanded = itemEl.classList.contains('expanded');
-  
-  // Save current scroll position
-  const scrollContainer = document.querySelector('.history-list-container');
-  const currentScrollTop = scrollContainer ? scrollContainer.scrollTop : 0;
-  
+  const startTop = itemEl.getBoundingClientRect().top;
+  const startScroll = window.pageYOffset || document.documentElement.scrollTop;
+  const anchorY = startTop + startScroll;
+
   // Collapse all other items
   document.querySelectorAll('.history-item.expanded').forEach(el => {
     if (el !== itemEl) {
@@ -318,13 +317,17 @@ function toggleTransactionDetail(itemEl, tx) {
     itemEl.classList.add('expanded');
     selectedTransaction = tx;
   }
-  
-  // Restore scroll position after a short delay to allow DOM update
-  if (scrollContainer) {
+
+  // After layout settles (including any transitions), keep the clicked card anchored
+  requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      scrollContainer.scrollTop = currentScrollTop;
+      const newTop = itemEl.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
+      const diff = newTop - anchorY;
+      if (Math.abs(diff) > 1) {
+        window.scrollTo({ top: (window.pageYOffset || document.documentElement.scrollTop) - diff, behavior: 'auto' });
+      }
     });
-  }
+  });
 }
 
 /**

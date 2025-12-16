@@ -177,7 +177,8 @@ export function updateHeaderUser(user) {
  */
 function bindAddressPopupEvent() {
   const menuAddressItem = document.getElementById('menuAddressItem');
-  if (menuAddressItem) {
+  if (menuAddressItem && !menuAddressItem.dataset._addressPopupBind) {
+    menuAddressItem.dataset._addressPopupBind = '1';
     globalEventManager.add(menuAddressItem, 'click', (e) => {
       e.stopPropagation();
       // Close balance popup
@@ -220,7 +221,8 @@ function bindAddressPopupEvent() {
  */
 function bindBalancePopupEvent() {
   const menuBalanceItem = document.getElementById('menuBalanceItem');
-  if (menuBalanceItem) {
+  if (menuBalanceItem && !menuBalanceItem.dataset._balancePopupBind) {
+    menuBalanceItem.dataset._balancePopupBind = '1';
     globalEventManager.add(menuBalanceItem, 'click', (e) => {
       e.stopPropagation();
       // Close address popup

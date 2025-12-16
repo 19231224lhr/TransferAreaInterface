@@ -730,10 +730,8 @@ function init() {
     }
   });
 
-  // Initialize network chart
-  try {
-    initNetworkChart();
-  } catch (_) { }
+  // Note: Network chart is now initialized by wallet page (main.js)
+  // when the page is actually loaded, not globally
 
   // Initialize footer animations
   try {
