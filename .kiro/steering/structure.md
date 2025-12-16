@@ -81,9 +81,10 @@ TransferAreaInterface/
 │   │   ├── zh-CN.js        # Chinese translations
 │   │   └── en.js           # English translations
 │   │
-│   ├── pages/              # Page components (all JavaScript)
+│   ├── pages/              # Page components (JS → TS migration)
 │   │   ├── welcome.js      # Welcome page
-│   │   ├── login.js        # Login page
+│   │   ├── login.ts        # Login page (✅ 已迁移到响应式绑定)
+│   │   ├── login.js.backup # Login page (原始 JS 版本)
 │   │   ├── newUser.js      # Registration page
 │   │   ├── entry.js        # Wallet entry page
 │   │   ├── import.js       # Import wallet page
@@ -128,6 +129,7 @@ TransferAreaInterface/
 │       ├── lazyLoader.ts   # Lazy loading (TS)
 │       ├── serviceWorker.ts # SW management (TS)
 │       ├── transaction.ts  # Transaction helpers & auto-save (TS)
+│       ├── reactive.ts     # 🆕 响应式 UI 绑定系统 (TS)
 │       ├── store.js        # State management
 │       ├── toast.js        # Toast helpers
 │       ├── helpers.js      # General helpers
@@ -243,6 +245,12 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - Metrics tracking and reporting
 - Optimization suggestions
 
+**Reactive UI Binding (2025):**
+- `js/utils/reactive.ts` - 轻量级响应式绑定系统
+- 声明式 UI 绑定，状态变化自动同步 DOM
+- 动画序列支持，简化复杂动画逻辑
+- 已迁移页面：`js/pages/login.ts`
+
 ## Architecture Notes
 
 ### Frontend (SPA)
@@ -291,6 +299,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `js/utils/keyEncryption.ts` | Private key encryption core logic |
 | `js/utils/keyEncryptionUI.ts` | Private key encryption UI integration |
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
+| **`js/utils/reactive.ts`** | **🆕 响应式 UI 绑定系统 (NEW)** |
 | `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
 | `js/services/transferDraft.ts` | Transfer form state persistence |
@@ -325,6 +334,9 @@ Files with `.backup` extension are original JavaScript versions before TypeScrip
 
 **Config:**
 - `js/config/constants.js.backup`
+
+**Pages:**
+- `js/pages/login.js.backup`
 
 ### New Features & Modules
 

@@ -158,7 +158,7 @@ import { PAGE_TEMPLATES, getPageConfig, getAllContainerIds } from './config/page
 const pageLazyLoaders = {
   welcome: () => import('./pages/welcome.js'),
   entry: () => import('./pages/entry.js'),
-  login: () => import('./pages/login.js'),
+  login: () => import('./pages/login.ts'),
   newUser: () => import('./pages/newUser.js'),
   setPassword: () => import('./pages/setPassword.js'),
   import: () => import('./pages/import.js'),

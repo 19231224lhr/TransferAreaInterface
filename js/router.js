@@ -19,7 +19,7 @@ import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 const pageLoaders = {
   '/welcome': () => import('./pages/welcome.js'),
   '/entry': () => import('./pages/entry.js'),
-  '/login': () => import('./pages/login.js'),
+  '/login': () => import('./pages/login.ts'),
   '/new': () => import('./pages/newUser.js'),
   '/set-password': () => import('./pages/setPassword.js'),
   '/import': () => import('./pages/import.js'),

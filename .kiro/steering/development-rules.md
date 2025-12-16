@@ -440,9 +440,148 @@ export async function processTransfer(userId, amount) {
 
 ---
 
+## 🔄 响应式 UI 绑定规范 (Reactive UI Binding)
+
+### 背景
+
+项目中存在大量命令式 DOM 操作，导致：
+- 状态与 UI 同步容易遗漏
+- 代码冗长，充斥 `if (el) el.xxx` 的防御性代码
+- 状态和 UI 的对应关系分散在各处，难以追踪
+
+### 解决方案
+
+使用 `js/utils/reactive.ts` 提供的轻量级响应式绑定系统，让 **View 成为 State 的纯函数**。
+
+### 核心 API
+
+```typescript
+import { createReactiveState } from '../utils/reactive';
+
+// 1. 定义状态类型
+interface PageState {
+  isLoading: boolean;
+  showResult: boolean;
+  username: string;
+}
+
+// 2. 定义初始状态
+const initialState: PageState = {
+  isLoading: false,
+  showResult: false,
+  username: ''
+};
+
+// 3. 定义状态到 DOM 的绑定
+const bindings = {
+  isLoading: [
+    { selector: '#loader', type: 'visible' },
+    { selector: '#submitBtn', type: 'prop', name: 'disabled' }
+  ],
+  showResult: [
+    { selector: '#result', type: 'visible' }
+  ],
+  username: [
+    { selector: '#usernameDisplay', type: 'text' }
+  ]
+};
+
+// 4. 创建响应式状态
+const state = createReactiveState(initialState, bindings);
+
+// 5. 更新状态，UI 自动同步
+state.set({ isLoading: true });
+state.set({ isLoading: false, showResult: true, username: 'John' });
+```
+
+### 绑定类型
+
+| 类型 | 说明 | 示例 |
+|------|------|------|
+| `text` | 设置 textContent | `{ selector: '#name', type: 'text' }` |
+| `html` | 设置 innerHTML (需确保安全) | `{ selector: '#content', type: 'html' }` |
+| `visible` | 控制 hidden class | `{ selector: '#loader', type: 'visible' }` |
+| `class` | 切换指定 class | `{ selector: '#card', type: 'class', name: 'active' }` |
+| `attr` | 设置/移除属性 | `{ selector: '#input', type: 'attr', name: 'disabled' }` |
+| `prop` | 设置 DOM 属性 | `{ selector: '#btn', type: 'prop', name: 'disabled' }` |
+| `value` | 设置表单元素值 | `{ selector: '#input', type: 'value' }` |
+
+### 动画序列
+
+```typescript
+import { runAnimationSequence, runParallelAnimations } from '../utils/reactive';
+
+// 单个动画序列
+await runAnimationSequence({
+  selector: '.card',
+  phases: [
+    { addClass: 'collapsing', duration: 250 },
+    { removeClass: 'collapsing', addClass: 'collapsed', duration: 0 }
+  ]
+});
+
+// 并行动画
+await runParallelAnimations([
+  { selector: '.form', phases: [...] },
+  { selector: '.tip', phases: [...] }
+]);
+```
+
+### 迁移指南
+
+**改造前 (命令式):**
+```javascript
+// ❌ 大量重复的 DOM 操作
+const loader = document.getElementById('loader');
+const result = document.getElementById('result');
+const username = document.getElementById('username');
+
+if (loader) loader.classList.add('hidden');
+if (result) result.classList.remove('hidden');
+if (username) username.textContent = data.name;
+```
+
+**改造后 (声明式):**
+```typescript
+// ✅ 状态驱动，自动同步
+state.set({
+  isLoading: false,
+  showResult: true,
+  username: data.name
+});
+```
+
+### 迁移优先级
+
+按 DOM 操作密度排序，建议迁移顺序：
+
+1. **高优先级** (100+ DOM 操作):
+   - `js/services/wallet.js` → `wallet.ts`
+   - `js/ui/header.js` → `header.ts`
+   - `js/pages/login.js` → `login.ts` ✅ 已完成
+   - `js/pages/joinGroup.js` → `joinGroup.ts`
+
+2. **中优先级** (50-100 DOM 操作):
+   - `js/pages/import.js` → `import.ts`
+   - `js/ui/modal.js` → `modal.ts`
+   - `js/ui/profile.js` → `profile.ts`
+
+3. **低优先级** (<50 DOM 操作):
+   - 其他页面和组件
+
+### 规则
+
+- ✅ **新页面必须使用响应式绑定**
+- ✅ **重构现有页面时，优先迁移到响应式模式**
+- ✅ **状态变化必须通过 `state.set()` 而非直接操作 DOM**
+- ✅ **动画序列使用 `runAnimationSequence` 而非手动 setTimeout**
+- ❌ **禁止在新代码中使用 `document.getElementById().classList.xxx` 模式**
+
+---
+
 ## ✅ 总结
 
-**记住这三个核心原则：**
+**记住这四个核心原则：**
 
 1. 🎯 **新代码 = TypeScript**
    - 所有新文件必须是 `.ts`
@@ -452,10 +591,14 @@ export async function processTransfer(userId, amount) {
    - 创建 `js/api/` 模块
    - 使用 `secureFetch`
 
-3. 🔍 **提交前 = 类型检查**
+3. 🔄 **UI 更新 = 响应式绑定**
+   - 使用 `createReactiveState`
+   - 状态驱动 UI，禁止命令式 DOM 操作
+
+4. 🔍 **提交前 = 类型检查**
    - 运行 `npm run typecheck`
    - 修复所有错误
 
 ---
 
-*最后更新: 2025年1月*
+*最后更新: 2025年12月*
