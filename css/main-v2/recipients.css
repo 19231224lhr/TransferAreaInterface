@@ -1,0 +1,588 @@
+/* =====================================================
+   Main V2 - Recipients (收款方模块)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   收款方模块 - 现代化重构
+   ======================================== */
+
+.recipients-section {
+  margin-top: 6px;
+}
+
+/* 头部区域 - 与从(transfer-from)一致 */
+.recipients-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding: 0;
+}
+
+/* TO 标签 - 与 FROM 样式统一 */
+.recipients-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.recipients-title svg {
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
+}
+
+/* 隐藏图标和计数，保持简洁 */
+.recipients-icon,
+.recipients-count {
+  display: none;
+}
+
+/* 添加按钮 - 轻量级虚线风格 */
+.add-recipient-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px dashed var(--neutral-300);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.add-recipient-btn svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.add-recipient-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-secondary);
+  background: var(--neutral-50);
+}
+
+.add-recipient-btn:hover svg {
+  transform: scale(1.1);
+}
+
+.add-recipient-btn:active {
+  transform: scale(0.98);
+}
+
+/* 隐藏header中的添加按钮 */
+.recipients-header .add-recipient-btn {
+  display: none;
+}
+
+/* 添加按钮简约样式 - 放在删除按钮旁边 */
+.add-recipient-btn-inline {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 6px;
+  color: var(--transfer-primary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+}
+
+.add-recipient-btn-inline svg {
+  width: 12px;
+  height: 12px;
+}
+
+.add-recipient-btn-inline:hover {
+  border-color: var(--transfer-primary);
+  background: rgba(59, 130, 246, 0.05);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.add-recipient-btn-inline:active {
+  transform: translateY(0);
+}
+
+/* 收款方列表 - 与tx-addr-list一致的容器样式 */
+.recipients-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 50px;
+  padding: 10px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-md);
+  border: none;
+}
+
+/* 收款方卡片 - 简洁灰色背景 */
+.recipient-card {
+  position: relative;
+  background: var(--bg-card-solid);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: recipientCardEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+/* 当下拉菜单打开时允许溢出 */
+.recipient-card.has-dropdown-open {
+  overflow: visible;
+}
+
+.recipient-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.recipient-card:focus-within {
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+}
+
+/* 卡片内容 - 移除左侧序号空间 */
+.recipient-content {
+  padding: 12px 14px;
+  --field-label-width: 96px;
+}
+
+/* 主要输入区 - 地址行 */
+.recipient-main {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recipient-addr-field {
+  flex: 1;
+  display: grid;
+  grid-template-columns: var(--field-label-width) 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.recipient-addr-field .recipient-field-label {
+  grid-column: 1;
+}
+
+.recipient-addr-field .recipient-addr-input-wrap {
+  grid-column: 2;
+}
+
+.recipient-field-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: 0.2px;
+}
+
+.recipient-addr-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+
+.recipient-addr-input-wrap .input {
+  flex: 1;
+}
+
+/* 地址查询按钮 */
+.recipient-lookup-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(59, 130, 246, 0.12);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 8px;
+  color: #1d4ed8;
+  appearance: none;
+  -webkit-appearance: none;
+  background-clip: padding-box;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
+  position: relative;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.recipient-lookup-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* 加载状态的spinner */
+.recipient-lookup-btn .lookup-spinner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--neutral-200);
+  border-top-color: var(--transfer-primary);
+  border-radius: 50%;
+  opacity: 0;
+  animation: none;
+}
+
+.recipient-lookup-btn.is-loading .lookup-spinner {
+  opacity: 1;
+  animation: spin 0.8s linear infinite;
+}
+
+.recipient-lookup-btn.is-loading svg {
+  opacity: 0;
+}
+
+.recipient-lookup-btn:hover:not(.is-loading) {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(59, 130, 246, 0.35);
+  color: #1d4ed8;
+}
+
+.recipient-lookup-btn:active:not(.is-loading) {
+  transform: scale(0.95);
+  color: #1d4ed8;
+}
+
+/* 深色模式下的查询按钮样式 */
+[data-theme="dark"] .recipient-lookup-btn {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:hover:not(.is-loading) {
+  background: rgba(56, 189, 248, 0.22);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:active:not(.is-loading) {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.45);
+  color: #7dd3fc;
+}
+
+[data-theme="dark"] .recipient-lookup-btn:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.4);
+  outline-offset: 2px;
+}
+
+[data-theme="dark"] .recipient-lookup-btn .lookup-spinner {
+  border-color: rgba(148, 163, 184, 0.3);
+  border-top-color: #38bdf8;
+}
+
+.recipient-lookup-btn.is-loading {
+  pointer-events: none;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+/* 金额和币种行 */
+.recipient-amount-row {
+  display: grid;
+  grid-template-columns: 1fr 130px;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.recipient-amount-row .recipient-field:nth-child(2) {
+  --field-label-width: 35px;
+  display: grid;
+  grid-template-columns: var(--field-label-width) 1fr;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.recipient-field {
+  display: grid;
+  grid-template-columns: var(--field-label-width) 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 自定义输入框样式覆盖 */
+.recipient-card .input {
+  height: 36px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.recipient-card .input:hover {
+  border-color: var(--neutral-300);
+}
+
+.recipient-card .input:focus {
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  background: var(--bg-card-solid);
+}
+
+.recipient-card .input::placeholder {
+  color: var(--text-muted);
+}
+
+/* 币种选择器 */
+.recipient-coin-select {
+  position: relative;
+  height: 36px;
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 10;
+  flex-shrink: 0;
+}
+
+.recipient-coin-select:hover {
+  border-color: var(--neutral-300);
+}
+
+.recipient-coin-select.open {
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+  z-index: 100;
+}
+
+.recipient-coin-value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 100%;
+  padding: 0 12px;
+}
+
+.recipient-coin-value .coin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+}
+
+.recipient-coin-value .coin-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+.recipient-coin-arrow {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 10px;
+  transition: transform 0.2s ease;
+}
+
+.recipient-coin-select.open .recipient-coin-arrow {
+  transform: rotate(180deg);
+}
+
+.recipient-coin-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: auto;
+  right: 0;
+  min-width: 95px;
+  background: var(--bg-card-solid);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recipient-coin-select.open .recipient-coin-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.recipient-coin-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.recipient-coin-item:first-child {
+  border-radius: 7px 7px 0 0;
+}
+
+.recipient-coin-item:last-child {
+  border-radius: 0 0 7px 7px;
+}
+
+.recipient-coin-item:hover {
+  background: var(--neutral-50);
+}
+
+.recipient-coin-item .coin-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+}
+
+.recipient-coin-item .coin-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+
+/* 折叠详情区 */
+.recipient-details {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.recipient-card.expanded .recipient-details {
+  grid-template-rows: 1fr;
+}
+
+.recipient-details-inner {
+  overflow: hidden;
+}
+
+.recipient-details-content {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--neutral-200);
+}
+
+.recipient-details-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+/* 卡片底部操作栏 */
+.recipient-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--neutral-100);
+}
+
+.recipient-expand-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--neutral-200);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.recipient-expand-btn svg {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s ease;
+}
+
+.recipient-card.expanded .recipient-expand-btn svg {
+  transform: rotate(180deg);
+}
+
+.recipient-expand-btn:hover {
+  border-color: var(--neutral-300);
+  color: var(--text-secondary);
+  background: var(--neutral-50);
+}
+
+.recipient-remove-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 6px;
+  color: var(--fresh-red);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  margin-left: auto;
+}
+
+.recipient-remove-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.recipient-remove-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.05);
+  border-color: var(--fresh-red);
+  opacity: 1;
+  transform: translateY(-1px);
+}
+
+.recipient-remove-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* 响应式 */
+@media (max-width: 640px) {
+  .recipient-content {
+    padding: 10px 12px;
+  }
+
+  .recipient-amount-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .recipient-details-row {
+    grid-template-columns: 1fr;
+  }
+
+  .recipient-actions {
+    flex-direction: row;
+    gap: 6px;
+  }
+}

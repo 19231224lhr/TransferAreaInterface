@@ -11,14 +11,13 @@ TransferAreaInterface/
 ├── go.mod                  # Go module definition
 ├── IMPROVEMENT_REPORT.md   # Detailed optimization report
 │
-├── css/                    # Modular CSS files
+├── css/                    # Modular CSS files (通过 js/app.js 导入)
+│   ├── index.css           # 🆕 CSS 入口文件 (统一管理所有样式导入)
 │   ├── base.css            # Reset, variables, layout
 │   ├── animations.css      # Keyframe animations
 │   ├── components.css      # Reusable UI components
 │   ├── utilities.css       # Utility classes
 │   ├── p2-improvements.css # P2 optimizations (A11y, Loading, etc.)
-│   ├── main-v2.css         # Main wallet v2 styles
-│   ├── main-v2-fixes.css   # Main wallet v2 fixes
 │   ├── header.css          # Top navigation bar
 │   ├── footer.css          # Footer styles
 │   ├── welcome.css         # Landing page
@@ -35,7 +34,30 @@ TransferAreaInterface/
 │   ├── history.css         # Transaction history
 │   ├── inquiry.css         # Inquiry/search page
 │   ├── profile.css         # User profile
-│   └── energy-saving.css   # Energy saving mode
+│   ├── energy-saving.css   # Energy saving mode
+│   │
+│   └── main-v2/            # 🆕 Main V2 模块化拆分 (从 main-v2.css 拆分)
+│       ├── index.css       # Main V2 入口文件
+│       ├── variables.css   # 设计变量 (颜色、阴影、圆角等)
+│       ├── animations.css  # 动画定义
+│       ├── layout.css      # 布局样式
+│       ├── wallet-panel.css    # 钱包面板
+│       ├── balance-chart.css   # 余额曲线图
+│       ├── address-list.css    # 地址列表
+│       ├── address-card.css    # 地址卡片
+│       ├── transfer-panel.css  # 转账面板
+│       ├── transfer-flow.css   # 转账流程
+│       ├── recipients.css      # 收款方模块
+│       ├── advanced-options.css # 高级选项
+│       ├── toggle-switch.css   # 开关组件
+│       ├── custom-select.css   # 自定义选择器
+│       ├── org-panel.css       # 担保组织面板
+│       ├── struct-section.css  # 结构体区域
+│       ├── no-org-warning.css  # 未加入组织警告
+│       ├── tx-detail.css       # 交易详情
+│       ├── utilities.css       # 工具类
+│       ├── responsive.css      # 响应式适配
+│       └── dark-mode.css       # 深色模式
 │
 ├── js/                     # Frontend code (JS/TS mixed)
 │   ├── app.js              # Application entry point

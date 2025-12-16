@@ -1,0 +1,176 @@
+/* =====================================================
+   Main V2 - Custom Select (自定义选择器)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   Premium Custom Select (地址选择器)
+   ======================================== */
+.option-input-wrapper.custom-select .custom-select__value {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.option-input-wrapper.custom-select .custom-select__value .addr-val {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+}
+
+.option-input-wrapper.custom-select .custom-select__arrow {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  pointer-events: none;
+  transition: transform 0.3s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+}
+
+.option-input-wrapper.custom-select .custom-select__arrow svg {
+  width: 10px;
+  height: 6px;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.option-input-wrapper.custom-select.open .custom-select__arrow {
+  color: var(--transfer-primary);
+}
+
+.option-input-wrapper.custom-select.open .custom-select__arrow svg {
+  transform: rotate(180deg);
+}
+
+/* 下拉菜单 - 独立浮动设计 */
+.option-input-wrapper.custom-select .custom-select__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--bg-card-solid);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 12px;
+  z-index: 200;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow:
+    0 10px 40px -5px rgba(0, 0, 0, 0.12),
+    0 4px 16px -2px rgba(59, 130, 246, 0.08);
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px;
+}
+
+.option-input-wrapper.custom-select.open .custom-select__menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar {
+  width: 5px;
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.option-input-wrapper.custom-select .custom-select__menu::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 3px;
+}
+
+/* 下拉选项 - 清爽无边框设计 */
+.option-input-wrapper.custom-select .custom-select__item {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 13px;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  border-radius: 8px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  margin: 2px 0;
+}
+
+.option-input-wrapper.custom-select .custom-select__item:hover {
+  background: rgba(59, 130, 246, 0.06) !important;
+  color: var(--transfer-primary);
+}
+
+.option-input-wrapper.custom-select .custom-select__item.selected {
+  background: rgba(59, 130, 246, 0.08) !important;
+  color: var(--transfer-primary);
+  font-weight: 600;
+}
+
+/* 移除下拉选项中code标签的灰色背景框 */
+.option-input-wrapper.custom-select .custom-select__item code,
+.option-input-wrapper.custom-select .custom-select__item code.break {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  color: inherit;
+  border-radius: 0 !important;
+}
+
+.option-input-wrapper.custom-select .custom-select__item.selected {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--transfer-primary);
+  font-weight: 600;
+}
+
+/* 币种图标在选择器中 */
+.option-input-wrapper.custom-select .coin-icon {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 700;
+  flex-shrink: 0;
+  color: white;
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--pgc,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--pgc {
+  background: linear-gradient(135deg, #34d399, #10b981);
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--btc,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--btc {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+}
+
+.option-input-wrapper.custom-select .coin-icon.coin--eth,
+.option-input-wrapper.custom-select .coin-icon.coin-icon--eth {
+  background: linear-gradient(135deg, #818cf8, #6366f1);
+}

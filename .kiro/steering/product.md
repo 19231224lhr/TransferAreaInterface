@@ -79,7 +79,7 @@ Developers and users interacting with a UTXO-based blockchain system requiring g
 ### Developer Experience
 - TypeScript for type safety (gradual migration from JS)
 - Comprehensive JSDoc documentation
-- Modular CSS architecture (25+ CSS files)
+- Modular CSS architecture (JS-imported, Vite-bundled, 25+ CSS files with main-v2 split into 20+ modules)
 - Centralized state management
 - `.backup` files for safe refactoring
 - Kiro IDE specs for feature development

@@ -1,0 +1,136 @@
+/* =====================================================
+   Main V2 - Transfer Flow (转账流程)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* 转账流程区域 */
+.transfer-flow {
+  flex: 1;
+  padding: 6px 20px 12px;
+  overflow: visible;
+  --field-label-width: 96px;
+}
+
+/* FROM/TO 标签 - 与高级选项风格统一 */
+.transfer-section-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  position: relative;
+}
+
+.transfer-section-label svg {
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
+}
+
+.transfer-from {
+  margin-bottom: 0;
+}
+
+.transfer-from .transfer-section-label {
+  margin-bottom: 6px;
+}
+
+/* 来源地址列表 */
+.tx-addr-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 50px;
+  padding: 10px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-md);
+  border: none;
+  margin-top: 0;
+}
+
+.tx-addr-list:empty::before {
+  content: '点击左侧地址添加来源';
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 10px;
+}
+
+/* 流程连接器 */
+.transfer-connector {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+
+.connector-icon {
+  width: 30px;
+  height: 30px;
+  background: var(--transfer-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-blue);
+}
+
+.connector-icon svg {
+  width: 14px;
+  height: 14px;
+  color: white;
+}
+
+/* 提交区域 */
+.transfer-submit {
+  padding: 16px 24px 20px;
+  flex-shrink: 0;
+}
+
+.submit-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.submit-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.submit-btn--primary {
+  background: var(--transfer-gradient);
+  color: white;
+  box-shadow: var(--shadow-blue);
+}
+
+.submit-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(59, 130, 246, 0.3);
+}
+
+.submit-btn--primary:active {
+  transform: translateY(0);
+}
+
+.submit-btn--secondary {
+  background: var(--neutral-100);
+  color: var(--text-secondary);
+}

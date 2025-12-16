@@ -1,0 +1,126 @@
+/* =====================================================
+   Main V2 - Design Variables (设计变量)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   设计变量
+   ======================================== */
+:root {
+  /* 绿色主题 - 钱包 */
+  --wallet-primary: #10b981;
+  --wallet-primary-light: #34d399;
+  --wallet-primary-dark: #059669;
+  --wallet-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+
+  /* 深蓝主题 - 转账 */
+  --transfer-primary: #3b82f6;
+  --transfer-primary-light: #60a5fa;
+  --transfer-primary-dark: #2563eb;
+  --transfer-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+
+  /* 紫色主题 - 组织 */
+  --org-primary: #8b5cf6;
+  --org-primary-light: #a78bfa;
+  --org-gradient: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+
+  /* 辅助色 */
+  --fresh-orange: #f59e0b;
+  --fresh-red: #ef4444;
+
+  /* 币种色彩 */
+  --coin-pgc: linear-gradient(135deg, #34d399, #10b981);
+  --coin-btc: linear-gradient(135deg, #fbbf24, #f59e0b);
+  --coin-eth: linear-gradient(135deg, #818cf8, #6366f1);
+
+  /* 中性色 */
+  --neutral-50: #fafafa;
+  --neutral-100: #f4f4f5;
+  --neutral-200: #e4e4e7;
+  --neutral-300: #d4d4d8;
+  --neutral-400: #a1a1aa;
+  --neutral-500: #71717a;
+  --neutral-600: #52525b;
+  --neutral-700: #3f3f46;
+  --neutral-800: #27272a;
+  --neutral-900: #18181b;
+
+  /* 背景 */
+  --bg-page: linear-gradient(160deg, #f8fafc 0%, #f1f5f9 50%, #e2e8f0 100%);
+  --bg-card: rgba(255, 255, 255, 0.98);
+  --bg-card-solid: #ffffff;
+
+  /* 文字 */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --text-light: #ffffff;
+  --text-light-secondary: rgba(255, 255, 255, 0.75);
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.12);
+  --shadow-green: 0 8px 30px rgba(16, 185, 129, 0.2);
+  --shadow-blue: 0 8px 30px rgba(59, 130, 246, 0.2);
+  --shadow-purple: 0 8px 30px rgba(139, 92, 246, 0.2);
+
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+
+  /* 动画 */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --duration-fast: 0.15s;
+  --duration-normal: 0.3s;
+}
+
+/* ========================================
+   深色主题覆盖
+   ======================================== */
+[data-theme="dark"] {
+  /* 中性色 - 深色模式反转 */
+  --neutral-50: #1e293b;
+  --neutral-100: #334155;
+  --neutral-200: #475569;
+  --neutral-300: #64748b;
+  --neutral-400: #94a3b8;
+  --neutral-500: #cbd5e1;
+  --neutral-600: #e2e8f0;
+  --neutral-700: #f1f5f9;
+  --neutral-800: #f8fafc;
+  --neutral-900: #ffffff;
+
+  /* 背景 */
+  --bg-page: linear-gradient(160deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+  --bg-card: rgba(30, 41, 59, 0.95);
+  --bg-card-solid: #1e293b;
+
+  /* 文字 */
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+
+  /* 主题色 - 深色模式下调暗 */
+  --wallet-primary: #059669;
+  --wallet-primary-light: #10b981;
+  --wallet-primary-dark: #047857;
+  --wallet-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+
+  --transfer-primary: #2563eb;
+  --transfer-primary-light: #3b82f6;
+  --transfer-primary-dark: #1d4ed8;
+  --transfer-gradient: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+
+  /* 阴影 - 深色模式使用更深的阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.5);
+  --shadow-green: 0 8px 30px rgba(5, 150, 105, 0.3);
+  --shadow-blue: 0 8px 30px rgba(37, 99, 235, 0.3);
+  --shadow-purple: 0 8px 30px rgba(139, 92, 246, 0.3);
+}

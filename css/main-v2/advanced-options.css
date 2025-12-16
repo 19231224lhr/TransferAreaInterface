@@ -1,0 +1,447 @@
+/* =====================================================
+   Main V2 - Advanced Options (高级选项)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   高级选项 - Premium Form Design
+   现代玻璃拟态风格，流畅动画
+   ======================================== */
+
+.transfer-options {
+  border-top: none;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* 折叠按钮 */
+.options-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 0;
+  cursor: pointer;
+  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  user-select: none;
+  background: transparent !important;
+  border: none;
+}
+
+.options-toggle::before {
+  content: none;
+  display: none;
+}
+
+.options-toggle:hover::before {
+  opacity: 0;
+}
+
+.options-toggle:hover {
+  background: transparent !important;
+}
+
+.options-toggle-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  position: relative;
+  z-index: 1;
+}
+
+.options-toggle-left svg {
+  width: 16px;
+  height: 16px;
+  color: var(--transfer-primary);
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.options-toggle:hover .options-toggle-left svg {
+  opacity: 1;
+  transform: rotate(30deg);
+}
+
+.options-toggle.active .options-toggle-left svg {
+  opacity: 1;
+  color: var(--transfer-primary);
+}
+
+.options-toggle-arrow {
+  position: relative;
+  z-index: 1;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: rgba(59, 130, 246, 0.06);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.options-toggle:hover .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.options-toggle-arrow svg {
+  width: 14px;
+  height: 14px;
+  color: var(--transfer-primary);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.options-toggle.active .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.12);
+}
+
+.options-toggle.active .options-toggle-arrow svg {
+  transform: rotate(180deg);
+}
+
+/* 深色模式下高级选项折叠按钮 */
+[data-theme="dark"] .options-toggle {
+  background: transparent !important;
+  border: none;
+}
+
+[data-theme="dark"] .options-toggle:hover {
+  background: transparent !important;
+}
+
+[data-theme="dark"] .options-toggle-left {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .options-toggle-left svg {
+  color: var(--transfer-primary-light);
+}
+
+[data-theme="dark"] .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="dark"] .options-toggle:hover .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="dark"] .options-toggle.active .options-toggle-arrow {
+  background: rgba(59, 130, 246, 0.25);
+}
+
+[data-theme="dark"] .options-toggle-arrow svg {
+  color: var(--transfer-primary-light);
+}
+
+/* 内容区域 - 流畅展开动画 */
+.options-content {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease,
+    padding 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+
+.options-content.show {
+  max-height: 600px;
+  opacity: 1;
+  padding: 0 0 16px;
+  overflow: visible;
+}
+
+/* 外层灰色容器 - 与recipients-list一致 */
+.options-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 50px;
+  padding: 10px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-md);
+  border: none;
+  box-shadow: none;
+  animation: optionsReveal 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  width: 100%;
+}
+
+/* 深色模式下的高级选项容器 - 整片灰色背景 */
+[data-theme="dark"] .options-grid {
+  /* 与上方 TO 区域一致的外圈灰色 */
+  background: var(--neutral-100);
+  border: none;
+  box-shadow: none;
+}
+
+/* 内层白色卡片 - 与recipient-card一致 */
+.options-card {
+  position: relative;
+  background: var(--bg-card-solid);
+  border-radius: 10px;
+  overflow: visible;
+  padding: 12px 14px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 第一行:两列并排布局 */
+.options-split-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: 0.05s;
+}
+
+.options-split-group {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.options-split-group .option-field-label {
+  white-space: nowrap;
+}
+
+.options-split-group .option-input-wrapper {
+  min-width: 0;
+}
+
+/* Toggle 开关容器 */
+.option-toggle-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 8px 0;
+}
+
+/* 表单行布局 */
+.option-field {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  align-items: center;
+  gap: 6px;
+  animation: fieldFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 错开动画 */
+.option-field:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.option-field:nth-child(2) {
+  animation-delay: 0.08s;
+}
+
+.option-field:nth-child(3) {
+  animation-delay: 0.11s;
+}
+
+.option-field:nth-child(4) {
+  animation-delay: 0.14s;
+}
+
+.option-field:nth-child(5) {
+  animation-delay: 0.17s;
+}
+
+.option-field:nth-child(6) {
+  animation-delay: 0.20s;
+}
+
+.option-field>div:not(.option-input-wrapper):not(.custom-select) {
+  display: flex;
+  align-items: center;
+  gap: 12px !important;
+  padding: 0 !important;
+}
+
+/* 标签样式 - 黑色字体 */
+.option-field-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: 0px;
+}
+
+/* 输入框容器 - 简洁灰色背景 */
+.option-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.2s ease;
+  min-height: 36px;
+  box-shadow: none;
+}
+
+.option-input-wrapper:hover {
+  border-color: var(--neutral-300);
+}
+
+.option-input-wrapper:focus-within {
+  background: var(--bg-card-solid);
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* 自定义选择器需要允许下拉菜单溢出显示 */
+.option-input-wrapper.custom-select {
+  position: relative;
+  overflow: visible;
+  cursor: pointer;
+}
+
+.option-input-wrapper.custom-select:hover {
+  border-color: var(--neutral-300);
+}
+
+.option-input-wrapper.custom-select.open {
+  background: var(--bg-card-solid);
+  border-color: var(--transfer-primary);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-radius: 8px;
+  z-index: 101;
+}
+
+/* 输入框 */
+.option-input {
+  flex: 1;
+  min-width: 0;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  background: transparent;
+  border: none;
+  outline: none;
+  height: 36px;
+  transition: color 0.2s ease;
+}
+
+/* 隐藏 number 输入框的上下箭头 */
+.option-input[type="number"]::-webkit-inner-spin-button,
+.option-input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.option-input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+.option-input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.option-input[readonly] {
+  color: var(--text-secondary);
+  cursor: default;
+  background: var(--neutral-50);
+}
+
+/* 后缀标签 - 精致胶囊设计 */
+.option-suffix {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #475569;
+  background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  margin: 4px 6px 4px 0;
+  min-width: 40px;
+  flex-shrink: 0;
+}
+
+/* PGC 后缀 - 浅绿色 */
+.option-suffix--pgc {
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #047857;
+}
+
+/* GAS 后缀 - 蓝色 */
+.option-suffix--gas {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1d4ed8;
+}
+
+/* ========================================
+   响应式：移动端适配
+   ======================================== */
+@media (max-width: 768px) {
+  .options-split-row {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .options-split-group {
+    grid-template-columns: 100px 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .options-grid {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .options-split-row {
+    gap: 14px;
+  }
+
+  .options-split-group {
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+  }
+
+  .option-field {
+    grid-template-columns: 90px 1fr;
+    gap: 12px;
+  }
+
+  .option-field-label {
+    font-size: 13px;
+  }
+
+  .option-input-wrapper {
+    min-height: 40px;
+  }
+
+  .option-input {
+    height: 40px;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .toggle-switch {
+    width: 44px;
+    height: 24px;
+  }
+
+  .toggle-slider::before {
+    width: 18px;
+    height: 18px;
+  }
+
+  .toggle-switch input:checked+.toggle-slider::before {
+    transform: translateX(20px);
+  }
+}

@@ -1,0 +1,217 @@
+/* =====================================================
+   Main V2 - Organization Panel (担保组织面板)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   底部担保组织面板
+   ======================================== */
+.org-panel {
+  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: fadeUp 0.5s var(--ease-out) 0.16s backwards;
+  margin-top: 0;
+}
+
+.org-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(124, 58, 237, 0.04));
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+}
+
+.org-panel-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.org-panel-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--org-gradient);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-purple);
+}
+
+.org-panel-icon svg {
+  width: 18px;
+  height: 18px;
+  color: white;
+}
+
+.org-panel-title h3 {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.org-panel-title span {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 1px;
+}
+
+.org-status-badge {
+  padding: 5px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: 14px;
+}
+
+.org-status-badge--active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(5, 150, 105, 0.08));
+  color: var(--wallet-primary-dark);
+}
+
+.org-status-badge--inactive {
+  background: var(--neutral-100);
+  color: var(--text-muted);
+}
+
+/* 组织信息 */
+.org-panel-content {
+  padding: 16px 24px;
+}
+
+.org-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.org-info-item {
+  padding: 12px;
+  background: var(--neutral-50);
+  border-radius: var(--radius-md);
+}
+
+.org-info-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.org-info-value {
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  color: var(--text-primary);
+  word-break: break-all;
+  background: transparent;
+  padding: 0;
+}
+
+/* 组织操作 */
+.org-panel-actions {
+  padding: 12px 24px 20px;
+}
+
+.org-action-btn {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.org-action-btn--exit {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.org-action-btn--exit:hover {
+  background: rgba(239, 68, 68, 0.06);
+  border-color: #ef4444;
+}
+
+.org-action-btn--detail {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(168, 85, 247, 0.08));
+  color: #8b5cf6;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  text-decoration: none;
+}
+
+.org-action-btn--detail svg {
+  width: 14px;
+  height: 14px;
+}
+
+.org-action-btn--detail:hover {
+  background: linear-gradient(135deg, #8b5cf6, #a855f7);
+  color: white;
+  border-color: transparent;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.25);
+}
+
+.org-action-btn--join {
+  background: var(--org-gradient);
+  color: white;
+  border: none;
+  box-shadow: var(--shadow-purple);
+}
+
+.org-action-btn--join:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.3);
+}
+
+/* 空状态 */
+.org-empty-state {
+  padding: 28px 24px;
+  text-align: center;
+}
+
+.org-empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.06));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.org-empty-icon svg {
+  width: 24px;
+  height: 24px;
+  color: var(--org-primary);
+  opacity: 0.7;
+}
+
+.org-empty-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.org-empty-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 16px;
+  max-width: 280px;
+  margin-left: auto;
+  margin-right: auto;
+}

@@ -1,0 +1,70 @@
+/* =====================================================
+   Main V2 - Struct Section (结构体区域)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   结构体区域
+   ======================================== */
+.struct-section {
+  grid-column: 1 / -1;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  animation: fadeUp 0.5s var(--ease-out) 0.2s backwards;
+  margin-top: 0;
+}
+
+.struct-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.struct-toggle-btn svg {
+  width: 14px;
+  height: 14px;
+  color: var(--text-muted);
+  transition: transform var(--duration-fast) ease;
+}
+
+.struct-toggle-btn:hover {
+  background: var(--neutral-50);
+  color: var(--text-primary);
+}
+
+.struct-section.expanded .struct-toggle-btn svg {
+  transform: rotate(180deg);
+}
+
+.struct-content {
+  display: none;
+  padding: 0 20px 20px;
+}
+
+.struct-section.expanded .struct-content {
+  display: block;
+}
+
+.struct-code {
+  padding: 14px;
+  background: var(--neutral-50);
+  border-radius: var(--radius-md);
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  color: var(--text-primary);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

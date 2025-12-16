@@ -1,0 +1,129 @@
+/* =====================================================
+   Main V2 - Utilities (工具类)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   工具提示
+   ======================================== */
+.tooltip {
+  position: relative;
+}
+
+.tooltip[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 5px 8px;
+  font-size: 10px;
+  font-weight: 500;
+  color: white;
+  background: var(--neutral-800);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all var(--duration-fast) ease;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.tooltip[data-tooltip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ========================================
+   涟漪效果
+   ======================================== */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple::before {
+  content: none;
+}
+
+.ripple:active::before {
+  width: 0;
+  height: 0;
+}
+
+/* ========================================
+   币种颜色类
+   ======================================== */
+.coin--pgc {
+  background: var(--coin-pgc);
+}
+
+.coin--btc {
+  background: var(--coin-btc);
+}
+
+.coin--eth {
+  background: var(--coin-eth);
+}
+
+/* ========================================
+   错误提示 - 隐藏页面底部错误
+   ======================================== */
+.tip--error {
+  display: none !important;
+}
+
+.result {
+  margin: 12px 24px 20px;
+}
+
+/* ========================================
+   Mini Toast 提示
+   ======================================== */
+.mini-toast {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-20px);
+  background: rgba(24, 24, 27, 0.9);
+  backdrop-filter: blur(8px);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 10000;
+  opacity: 0;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.mini-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.mini-toast--success {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(5, 150, 105, 0.95));
+}
+
+.mini-toast--error {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.95), rgba(220, 38, 38, 0.95));
+}
+
+.mini-toast--info {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.95), rgba(37, 99, 235, 0.95));
+}
+
+.mini-toast-icon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.mini-toast-text {
+  white-space: nowrap;
+}

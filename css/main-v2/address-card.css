@@ -1,0 +1,332 @@
+/* =====================================================
+   Main V2 - Address Card (地址卡片)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   地址卡片样式 - 优化悬停动画
+   使用GPU加速和流畅的过渡效果
+   ======================================== */
+.main-v2 .addr-card {
+  background: var(--neutral-100) !important;
+  border-radius: var(--radius-md) !important;
+  overflow: hidden !important;
+  /* 收起时裁剪内容 */
+  cursor: pointer !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  display: block !important;
+  backdrop-filter: none !important;
+  position: relative !important;
+  z-index: 1;
+  /* 使用GPU加速的transform进行流畅动画 */
+  transform: translateY(0) translateZ(0);
+  will-change: transform, background-color, box-shadow;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s ease,
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.main-v2 .addr-card.expanded {
+  overflow: visible !important;
+  /* 展开时允许溢出 */
+  z-index: 100 !important;
+}
+
+/* 确保操作菜单容器也能溢出 */
+.main-v2 .addr-card.expanded .addr-card-detail,
+.main-v2 .addr-card.expanded .addr-card-detail-inner,
+.main-v2 .addr-card.expanded .addr-card-actions {
+  overflow: visible !important;
+}
+
+/* 悬停效果 - 柔和的上浮动画 */
+.main-v2 .addr-card:hover {
+  background: var(--neutral-200) !important;
+  z-index: 10 !important;
+  /* 悬浮时提升层级，防止菜单被下方卡片遮挡 */
+  transform: translateY(-3px) translateZ(0) !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06),
+    0 2px 6px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* 点击反馈 */
+.main-v2 .addr-card:active {
+  transform: translateY(-1px) translateZ(0) !important;
+  transition-duration: 0.1s !important;
+}
+
+/* 展开状态保持稳定 */
+.main-v2 .addr-card.expanded:hover {
+  transform: translateY(0) translateZ(0) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.08) !important;
+}
+
+.main-v2 .addr-card.active {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(5, 150, 105, 0.04)) !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.2) !important;
+}
+
+/* 地址简略行 */
+.main-v2 .addr-card-summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+
+.main-v2 .addr-card-avatar {
+  width: 38px;
+  height: 38px;
+  background: var(--wallet-gradient);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.main-v2 .addr-card-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.main-v2 .addr-card-hash {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.main-v2 .addr-card-balance {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--wallet-primary);
+  white-space: nowrap;
+  padding: 4px 10px;
+  background: rgba(16, 185, 129, 0.1);
+  border-radius: var(--radius-sm);
+}
+
+.main-v2 .addr-card-arrow {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.main-v2 .addr-card-arrow svg {
+  width: 14px;
+  height: 14px;
+}
+
+.main-v2 .addr-card.expanded .addr-card-arrow {
+  transform: rotate(180deg);
+}
+
+/* 地址详情 - 平滑展开动画 */
+.main-v2 .addr-card-detail {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
+}
+
+.main-v2 .addr-card-detail-inner {
+  overflow: hidden;
+  padding: 0 12px;
+  transition: padding 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.main-v2 .addr-card.expanded .addr-card-detail {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.main-v2 .addr-card.expanded .addr-card-detail-inner {
+  padding: 0 12px 12px;
+}
+
+.main-v2 .addr-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-top: 1px dashed var(--neutral-200);
+}
+
+.main-v2 .addr-detail-row:first-child {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.main-v2 .addr-detail-label {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.main-v2 .addr-detail-value {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-primary);
+  font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+}
+
+.main-v2 .addr-detail-value.gas {
+  color: var(--fresh-orange);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+/* 地址操作按钮 - 高优先级覆盖 */
+.main-v2 .addr-card-actions {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 6px !important;
+  margin-top: 8px !important;
+  padding-top: 8px !important;
+  border-top: 1px solid var(--neutral-200) !important;
+  align-items: center !important;
+}
+
+.main-v2 .addr-action-btn {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 10px 14px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  cursor: pointer !important;
+  transition: all var(--duration-fast) ease !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.main-v2 .addr-action-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.main-v2 .addr-action-btn--primary {
+  background: var(--wallet-gradient) !important;
+  color: white !important;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+}
+
+.main-v2 .addr-action-btn--primary:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+.main-v2 .addr-action-btn--primary:active {
+  transform: translateY(0) !important;
+}
+
+.main-v2 .addr-action-btn--secondary {
+  background: var(--neutral-100) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.main-v2 .addr-action-btn--secondary:hover {
+  background: var(--neutral-200) !important;
+}
+
+/* 操作菜单 */
+.main-v2 .addr-ops-container {
+  position: relative;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.main-v2 .addr-ops {
+  position: relative;
+}
+
+.main-v2 .ops-toggle {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all var(--duration-fast) ease;
+}
+
+.main-v2 .ops-toggle:hover {
+  background: var(--neutral-100);
+  color: var(--text-secondary);
+}
+
+.main-v2 .ops-menu,
+.main-v2 #walletCard .ops-menu,
+#walletCard .main-v2 .ops-menu {
+  position: absolute !important;
+  right: 0 !important;
+  bottom: 100% !important;
+  top: auto !important;
+  margin-bottom: 8px !important;
+  margin-top: 0 !important;
+  background: var(--bg-card-solid) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15), 0 -2px 10px rgba(0, 0, 0, 0.1) !important;
+  min-width: 140px !important;
+  z-index: 9999 !important;
+  overflow: visible !important;
+  padding: 8px !important;
+  border: 1px solid var(--neutral-200) !important;
+}
+
+.main-v2 .ops-menu.hidden {
+  display: none;
+}
+
+.main-v2 .ops-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 11px;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast) ease;
+  color: var(--text-secondary);
+}
+
+.main-v2 .ops-item:hover {
+  background: var(--neutral-50);
+}
+
+.main-v2 .ops-item.danger {
+  color: var(--fresh-red);
+}
+
+.main-v2 .ops-item.danger:hover {
+  background: rgba(239, 68, 68, 0.06);
+}

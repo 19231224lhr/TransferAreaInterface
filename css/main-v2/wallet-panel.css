@@ -1,0 +1,235 @@
+/* =====================================================
+   Main V2 - Wallet Panel (钱包面板)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   左栏 - 钱包面板
+   ======================================== */
+.wallet-panel {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-md);
+  overflow: visible;
+  animation: fadeUp 0.5s var(--ease-out);
+  /* 高度变化时的平滑过渡 */
+  transition: box-shadow 0.3s var(--ease-out);
+}
+
+.wallet-panel:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* === 资产概览 === */
+.asset-overview {
+  flex-shrink: 0;
+}
+
+.asset-overview-content {
+  display: flex;
+  flex-direction: column;
+}
+
+/* 资产头部 - 绿色主题 */
+.asset-header {
+  background: var(--wallet-gradient);
+  padding: 24px;
+  position: relative;
+  overflow: visible;
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.asset-header::before {
+  content: '';
+  position: absolute;
+  top: -80px;
+  right: -80px;
+  width: 200px;
+  height: 200px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+/* 头部顶行 */
+.asset-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.asset-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.asset-logo {
+  width: 40px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+}
+
+.asset-logo svg {
+  width: 20px;
+  height: 20px;
+  color: white;
+}
+
+.asset-title-group h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-light);
+  margin: 0;
+}
+
+.asset-title-group span {
+  font-size: 13px;
+  color: var(--text-light-secondary);
+  display: block;
+  margin-top: 2px;
+}
+
+/* 操作按钮 */
+.asset-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.asset-action-btn {
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.asset-action-btn svg {
+  width: 15px;
+  height: 15px;
+  color: white;
+}
+
+.asset-action-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.08);
+}
+
+.asset-action-btn:active {
+  transform: scale(0.95);
+}
+
+/* 总资产 */
+.total-balance {
+  position: relative;
+  z-index: 1;
+}
+
+.total-balance-label {
+  font-size: 14px;
+  color: var(--text-light-secondary);
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.total-balance-value {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.total-balance-amount {
+  font-size: 40px;
+  font-weight: 700;
+  color: var(--text-light);
+  letter-spacing: -0.02em;
+}
+
+.total-balance-unit {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-light-secondary);
+}
+
+/* 币种分布 */
+.coin-distribution {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+  margin-top: 10px;
+  background: var(--bg-card-solid);
+  position: relative;
+  z-index: 1;
+}
+
+.coin-card {
+  padding: 16px 12px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  transition: all var(--duration-fast) ease;
+}
+
+.coin-card:hover {
+  background: var(--neutral-200);
+  transform: translateY(-2px);
+}
+
+.coin-icon {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto 10px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 700;
+  color: white;
+}
+
+.coin-icon--pgc {
+  background: var(--coin-pgc);
+}
+
+.coin-icon--btc {
+  background: var(--coin-btc);
+}
+
+.coin-icon--eth {
+  background: var(--coin-eth);
+}
+
+.coin-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.coin-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+}

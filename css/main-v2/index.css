@@ -1,0 +1,64 @@
+/* =====================================================
+   Main V2 - Index (入口文件)
+   将原 main-v2.css 拆分为多个模块化文件
+   ===================================================== */
+
+/* 设计变量 - 必须最先加载 */
+@import './variables.css';
+
+/* 动画定义 */
+@import './animations.css';
+
+/* 布局 */
+@import './layout.css';
+
+/* 钱包面板 */
+@import './wallet-panel.css';
+
+/* 余额曲线图 */
+@import './balance-chart.css';
+
+/* 地址列表 */
+@import './address-list.css';
+
+/* 地址卡片 */
+@import './address-card.css';
+
+/* 转账面板 */
+@import './transfer-panel.css';
+
+/* 转账流程 */
+@import './transfer-flow.css';
+
+/* 收款方模块 */
+@import './recipients.css';
+
+/* 高级选项 */
+@import './advanced-options.css';
+
+/* 开关组件 */
+@import './toggle-switch.css';
+
+/* 自定义选择器 */
+@import './custom-select.css';
+
+/* 担保组织面板 */
+@import './org-panel.css';
+
+/* 结构体区域 */
+@import './struct-section.css';
+
+/* 未加入担保组织警告 */
+@import './no-org-warning.css';
+
+/* 交易详情 */
+@import './tx-detail.css';
+
+/* 工具类 */
+@import './utilities.css';
+
+/* 响应式适配 - 必须在最后加载 */
+@import './responsive.css';
+
+/* 深色模式 - 必须在最后加载 */
+@import './dark-mode.css';

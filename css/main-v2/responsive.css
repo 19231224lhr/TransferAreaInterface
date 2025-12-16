@@ -1,0 +1,252 @@
+/* =====================================================
+   Main V2 - Responsive (响应式适配)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   响应式适配
+   ======================================== */
+@media (max-width: 1100px) {
+  .main-v2 {
+    padding: 16px;
+  }
+
+  .main-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+@media (max-width: 860px) {
+  /* 在竖屏/窄屏时，使用单选下拉模式，不显示三个并排按钮 */
+  .transfer-mode-tabs:not(.no-org-mode) {
+    /* 保持flex布局用于compact模式 */
+  }
+
+  .transfer-mode-tab {
+    flex: none;
+    width: 100%;
+    padding: 10px 12px;
+  }
+
+  /* 响应式适配 - no-org-warning */
+  .no-org-warning {
+    flex-direction: row;
+  }
+
+  .no-org-tab {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .no-org-warn-btn {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+}
+
+/* 紧凑模式（单选下拉）- 适用于竖屏或窄屏 */
+.transfer-mode-tabs.compact {
+  position: relative;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* 紧凑模式下的背景指示器需要覆盖整个按钮 */
+.transfer-mode-tabs.compact::before {
+  width: calc(100% - 6px);
+  height: auto;
+  bottom: 3px;
+  transform: translateX(0) !important;
+}
+
+.transfer-mode-tabs.compact .transfer-mode-tab {
+  display: none;
+}
+
+.transfer-mode-tabs.compact .transfer-mode-tab.active {
+  display: block;
+  width: 100%;
+  flex: none;
+}
+
+.mode-dropdown {
+  display: none;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: auto;
+  bottom: calc(100% + 6px);
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: var(--radius-lg);
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  z-index: 5;
+  pointer-events: auto;
+}
+
+.transfer-mode-tabs.compact.open .mode-dropdown {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.mode-item {
+  width: 100%;
+  padding: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.mode-item:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 640px) {
+  .main-v2 {
+    padding: 12px;
+  }
+
+  .main-grid {
+    gap: 12px;
+  }
+
+  .asset-header {
+    padding: 16px;
+  }
+
+  .total-balance-amount {
+    font-size: 26px;
+  }
+
+  .balance-chart {
+    height: 76px;
+  }
+
+  .coin-distribution {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .transfer-header {
+    padding: 16px;
+    min-height: 280px;
+    overflow: visible;
+  }
+
+  .transfer-flow {
+    padding: 12px;
+  }
+
+  .transfer-mode-tabs {
+    flex-direction: column;
+  }
+
+  .options-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .org-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 网络图表响应式 */
+  .network-chart-area {
+    margin-top: 10px;
+    margin-bottom: 10px;
+  }
+
+  .network-chart-container {
+    min-height: 50px;
+  }
+
+  .network-status-widget {
+    gap: 6px;
+    padding: 4px 8px;
+  }
+
+  .ns-label {
+    font-size: 8px;
+  }
+
+  .ns-value {
+    font-size: 10px;
+  }
+
+  /* no-org-warning 响应式 */
+  .no-org-warn-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .no-org-warn-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .no-org-dialog {
+    width: calc(100vw - 32px);
+    max-width: 340px;
+  }
+
+  .no-org-dialog-list li {
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  /* tx-result 响应式 */
+  .tx-result-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .tx-view-btn {
+    padding: 12px 16px;
+  }
+
+  .tx-detail-dialog {
+    width: 95vw !important;
+    max-width: 1100px !important;
+    max-height: 90vh;
+  }
+
+  .tx-detail-header {
+    padding: 16px 20px;
+  }
+
+  .tx-detail-content {
+    padding: 16px 20px;
+  }
+
+  .tx-detail-code {
+    font-size: 12px;
+    padding: 16px;
+  }
+
+  .tx-detail-footer {
+    padding: 14px 20px;
+  }
+}
+
+/* ========================================
+   减少动画模式支持（无障碍）
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

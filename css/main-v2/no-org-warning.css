@@ -1,0 +1,212 @@
+/* =====================================================
+   Main V2 - No Org Warning (未加入担保组织警告)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   未加入担保组织警告样式
+   ======================================== */
+
+/* 未加入组织时隐藏原有标签 */
+.transfer-mode-tabs.no-org-mode>.transfer-mode-tab {
+  display: none !important;
+}
+
+/* 未加入组织时显示警告模块 */
+.transfer-mode-tabs.no-org-mode>.no-org-warning {
+  display: flex !important;
+}
+
+/* 警告模块容器 */
+.no-org-warning {
+  display: none;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  animation: noOrgFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes noOrgFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 普通转账标签按钮 */
+.no-org-tab {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--transfer-primary);
+  background: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: default;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--duration-fast) ease;
+  margin-right: 10px;
+}
+
+.no-org-tab-text {
+  letter-spacing: 0.3px;
+}
+
+/* 警告图标按钮 */
+.no-org-warn-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  padding: 0;
+  background: rgba(251, 191, 36, 0.2);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+}
+
+.no-org-warn-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: calc(var(--radius-md) + 2px);
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.3));
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  z-index: -1;
+}
+
+.no-org-warn-btn:hover {
+  background: rgba(251, 191, 36, 0.35);
+  border-color: rgba(251, 191, 36, 0.6);
+  transform: scale(1.05);
+}
+
+.no-org-warn-btn:hover::before {
+  opacity: 1;
+}
+
+.no-org-warn-btn:active {
+  transform: scale(0.98);
+}
+
+.no-org-warn-icon {
+  width: 22px;
+  height: 22px;
+  color: #f59e0b;
+}
+
+/* 悬停时才有轻微动效 */
+.no-org-warn-btn:hover .no-org-warn-icon {
+  animation: warnShake 0.5s ease;
+}
+
+@keyframes warnShake {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  25% {
+    transform: rotate(-8deg);
+  }
+
+  75% {
+    transform: rotate(8deg);
+  }
+}
+
+/* ========================================
+   未加入担保组织弹窗样式
+   ======================================== */
+
+/* 弹窗对话框样式 */
+.no-org-dialog {
+  width: 380px;
+  max-width: calc(100vw - 32px);
+}
+
+.no-org-dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.no-org-dialog-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1.2;
+}
+
+.no-org-dialog-icon-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.no-org-dialog-icon {
+  width: 22px;
+  height: 22px;
+  color: #f59e0b;
+}
+
+.no-org-dialog-list {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 20px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.no-org-dialog-list li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #475569;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.08), rgba(245, 158, 11, 0.04));
+  border-radius: 10px;
+  border-left: 3px solid #f59e0b;
+  transition: all 0.2s ease;
+}
+
+.no-org-dialog-list li:hover {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.12), rgba(245, 158, 11, 0.08));
+}
+
+.no-org-dialog-list li svg {
+  width: 18px;
+  height: 18px;
+  color: #f59e0b;
+  flex-shrink: 0;
+}
+
+.no-org-dialog-list li span {
+  flex: 1;
+  line-height: 1.4;
+}

@@ -319,7 +319,7 @@ export default {
   'transfer.recipientAddress': 'Recipient Address',
   'transfer.enterRecipientAddress': 'Enter recipient address',
   'transfer.amount': 'Amount',
-  'transfer.currency': 'Currency',
+  'transfer.currency': 'Coin',
   'transfer.publicKey': 'Public Key',
   'transfer.guarantorOrgId': 'Guarantor Org ID',
   'transfer.optional': 'Optional',

@@ -1,0 +1,62 @@
+/* =====================================================
+   PanguPay - CSS Entry Point (CSS 入口文件)
+   
+   所有 CSS 通过此文件统一管理，由 Vite 打包处理
+   优势：
+   - 自动合并、压缩、tree-shaking
+   - 开发时支持 HMR（热更新）
+   - 按需加载，优化首屏性能
+   ===================================================== */
+
+/* ========================================
+   基础样式 (Foundation)
+   ======================================== */
+@import './base.css';
+@import './animations.css';
+@import './utilities.css';
+@import './components.css';
+
+/* ========================================
+   布局组件 (Layout)
+   ======================================== */
+@import './header.css';
+@import './footer.css';
+
+/* ========================================
+   页面样式 (Pages)
+   ======================================== */
+@import './welcome.css';
+@import './entry.css';
+@import './new-user.css';
+@import './set-password.css';
+@import './login.css';
+@import './import-wallet.css';
+@import './join-group.css';
+@import './group.css';
+@import './inquiry.css';
+@import './profile.css';
+@import './history.css';
+
+/* ========================================
+   功能模块 (Features)
+   ======================================== */
+@import './wallet.css';
+@import './transaction.css';
+@import './toast.css';
+@import './screen-lock.css';
+
+/* ========================================
+   主页面 V2 (Main Page V2 - 模块化)
+   ======================================== */
+@import './main-v2/index.css';
+
+/* ========================================
+   修复和增强 (Fixes & Enhancements)
+   ======================================== */
+@import './p2-improvements.css';
+@import './energy-saving.css';
+
+/* ========================================
+   其他样式 (Others)
+   ======================================== */
+@import './wallet_struct_styles.css';

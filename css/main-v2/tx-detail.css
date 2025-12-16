@@ -1,0 +1,231 @@
+/* =====================================================
+   Main V2 - Transaction Detail (交易详情)
+   从 main-v2.css 拆分
+   ===================================================== */
+
+/* ========================================
+   交易结果操作按钮
+   ======================================== */
+.tx-result-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.6) 100%);
+  border-radius: 16px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.tx-view-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid transparent;
+}
+
+.tx-view-btn-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+/* 查看交易结构体按钮 */
+.tx-view-btn--struct {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%);
+  color: #3b82f6;
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.tx-view-btn--struct:hover {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(99, 102, 241, 0.15) 100%);
+  border-color: rgba(59, 130, 246, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* 查看交易信息按钮 */
+.tx-view-btn--tx {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.08) 100%);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.2);
+}
+
+.tx-view-btn--tx:hover {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, rgba(52, 211, 153, 0.15) 100%);
+  border-color: rgba(16, 185, 129, 0.35);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.15);
+}
+
+/* ========================================
+   交易详情弹窗
+   ======================================== */
+.tx-detail-dialog {
+  width: 95vw !important;
+  max-width: 1100px !important;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow:
+    0 25px 80px rgba(0, 0, 0, 0.15),
+    0 10px 30px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* 确保覆盖通用 .modal .dialog 的宽度限制 */
+.modal .tx-detail-dialog {
+  width: 95vw !important;
+  max-width: 1100px !important;
+}
+
+.tx-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-bottom: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.tx-detail-header h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tx-detail-close {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: rgba(100, 116, 139, 0.1);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #64748b;
+}
+
+.tx-detail-close:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+}
+
+.tx-detail-close svg {
+  width: 18px;
+  height: 18px;
+}
+
+#txDetailModal .tx-detail-content {
+  flex: 1;
+  overflow: hidden;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+  background: #ffffff;
+}
+
+#txDetailModal .tx-detail-code {
+  margin: 0;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  border-radius: 12px;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #e2e8f0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: auto;
+  max-height: calc(90vh - 140px);
+  width: calc(100% - 40px);
+  max-width: 1000px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* 代码高亮 - JSON keys */
+.tx-detail-code .json-key {
+  color: #7dd3fc;
+}
+
+.tx-detail-code .json-string {
+  color: #86efac;
+}
+
+.tx-detail-code .json-number {
+  color: #fcd34d;
+}
+
+.tx-detail-code .json-boolean {
+  color: #f472b6;
+}
+
+.tx-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.tx-detail-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.tx-detail-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tx-detail-btn--copy {
+  background: rgba(100, 116, 139, 0.1);
+  color: #475569;
+}
+
+.tx-detail-btn--copy:hover {
+  background: rgba(100, 116, 139, 0.2);
+}
+
+.tx-detail-btn--ok {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.tx-detail-btn--ok:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
