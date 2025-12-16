@@ -131,7 +131,7 @@ import {
 } from './utils/screenLock';
 
 // UI
-import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header.js';
+import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal.js';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
 import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
@@ -161,9 +161,9 @@ const pageLazyLoaders = {
   login: () => import('./pages/login.ts'),
   newUser: () => import('./pages/newUser.js'),
   setPassword: () => import('./pages/setPassword.js'),
-  import: () => import('./pages/import.js'),
+  import: () => import('./pages/import'),
   main: () => import('./pages/main.js'),
-  joinGroup: () => import('./pages/joinGroup.js'),
+  joinGroup: () => import('./pages/joinGroup'),
   profile: () => import('./ui/profile.js'),
   groupDetail: () => import('./pages/groupDetail.js'),
   history: () => import('./pages/history.js')

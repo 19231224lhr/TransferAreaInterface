@@ -7,7 +7,7 @@
 import { t, updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
 import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
-import { updateHeaderUser, initUserMenu } from './ui/header.js';
+import { updateHeaderUser, initUserMenu } from './ui/header';
 import { cleanupPageListeners } from './utils/eventUtils.js';
 import { store, setRoute } from './utils/store.js';
 import { withLoading } from './utils/loading';
@@ -22,12 +22,12 @@ const pageLoaders = {
   '/login': () => import('./pages/login.ts'),
   '/new': () => import('./pages/newUser.js'),
   '/set-password': () => import('./pages/setPassword.js'),
-  '/import': () => import('./pages/import.js'),
-  '/wallet-import': () => import('./pages/import.js'),
+  '/import': () => import('./pages/import'),
+  '/wallet-import': () => import('./pages/import'),
   '/main': () => import('./pages/main.js'),
-  '/join-group': () => import('./pages/joinGroup.js'),
-  '/inquiry': () => import('./pages/joinGroup.js'),
-  '/inquiry-main': () => import('./pages/joinGroup.js'),
+  '/join-group': () => import('./pages/joinGroup'),
+  '/inquiry': () => import('./pages/joinGroup'),
+  '/inquiry-main': () => import('./pages/joinGroup'),
   '/group-detail': () => import('./pages/groupDetail.js'),
   '/profile': () => import('./ui/profile.js'),
   '/history': () => import('./pages/history.js')

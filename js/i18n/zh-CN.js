@@ -347,6 +347,7 @@ export default {
   'modal.cancel': '取消',
   'modal.confirm': '确认',
   'modal.addingWalletAddress': '正在新增钱包地址...',
+  'modal.importing': '正在导入...',
   'modal.walletAddSuccess': '新增钱包成功',
   'modal.walletAddSuccessDesc': '已新增一个钱包地址',
   'modal.ok': '好的',

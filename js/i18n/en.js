@@ -347,6 +347,7 @@ export default {
   'modal.cancel': 'Cancel',
   'modal.confirm': 'Confirm',
   'modal.addingWalletAddress': 'Adding wallet address...',
+  'modal.importing': 'Importing...',
   'modal.walletAddSuccess': 'Wallet Added Successfully',
   'modal.walletAddSuccessDesc': 'A new wallet address has been added',
   'modal.ok': 'OK',

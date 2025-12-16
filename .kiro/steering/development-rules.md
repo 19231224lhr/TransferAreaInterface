@@ -557,12 +557,12 @@ state.set({
 
 1. **高优先级** (100+ DOM 操作):
    - `js/services/wallet.js` → `wallet.ts`
-   - `js/ui/header.js` → `header.ts`
+   - `js/ui/header.js` → `header.ts` ✅ 已完成
    - `js/pages/login.js` → `login.ts` ✅ 已完成
-   - `js/pages/joinGroup.js` → `joinGroup.ts`
+   - `js/pages/joinGroup.js` → `joinGroup.ts` ✅ 已完成
 
 2. **中优先级** (50-100 DOM 操作):
-   - `js/pages/import.js` → `import.ts`
+   - `js/pages/import.js` → `import.ts` ✅ 已完成
    - `js/ui/modal.js` → `modal.ts`
    - `js/ui/profile.js` → `profile.ts`
 

@@ -87,10 +87,12 @@ TransferAreaInterface/
 │   │   ├── login.js.backup # Login page (原始 JS 版本)
 │   │   ├── newUser.js      # Registration page
 │   │   ├── entry.js        # Wallet entry page
-│   │   ├── import.js       # Import wallet page
+│   │   ├── import.ts       # Import wallet page (✅ 已迁移到响应式绑定)
+│   │   ├── import.js.backup # Import wallet page (原始 JS 版本)
 │   │   ├── main.js         # Main wallet page
 │   │   ├── history.js      # Transaction history
-│   │   ├── joinGroup.js    # Join organization
+│   │   ├── joinGroup.ts    # Join organization (✅ 已迁移到响应式绑定)
+│   │   ├── joinGroup.js.backup # Join organization (原始 JS 版本)
 │   │   └── groupDetail.js  # Organization details
 │   │
 │   ├── services/           # Business logic services (TS + JS)
@@ -105,8 +107,9 @@ TransferAreaInterface/
 │   │   ├── transaction.js.backup
 │   │   └── transfer.js.backup
 │   │
-│   ├── ui/                 # UI components (all JavaScript)
-│   │   ├── header.js       # Header component
+│   ├── ui/                 # UI components (JS → TS migration)
+│   │   ├── header.ts       # Header component (✅ 已迁移到响应式绑定)
+│   │   ├── header.js.backup # Header component (原始 JS 版本)
 │   │   ├── footer.js       # Footer component
 │   │   ├── modal.js        # Modal dialogs
 │   │   ├── toast.js        # Toast notifications
@@ -249,7 +252,11 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - `js/utils/reactive.ts` - 轻量级响应式绑定系统
 - 声明式 UI 绑定，状态变化自动同步 DOM
 - 动画序列支持，简化复杂动画逻辑
-- 已迁移页面：`js/pages/login.ts`
+- 已迁移文件：
+  - `js/pages/login.ts` - 登录页面
+  - `js/pages/import.ts` - 导入钱包页面
+  - `js/pages/joinGroup.ts` - 加入组织页面
+  - `js/ui/header.ts` - 头部组件
 
 ## Architecture Notes
 
@@ -337,6 +344,11 @@ Files with `.backup` extension are original JavaScript versions before TypeScrip
 
 **Pages:**
 - `js/pages/login.js.backup`
+- `js/pages/import.js.backup`
+- `js/pages/joinGroup.js.backup`
+
+**UI:**
+- `js/ui/header.js.backup`
 
 ### New Features & Modules
 

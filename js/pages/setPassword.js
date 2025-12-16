@@ -8,7 +8,7 @@
 import { saveUser, loadUser } from '../utils/storage';
 import { showSuccessToast, showErrorToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
-import { updateHeaderUser } from '../ui/header.js';
+import { updateHeaderUser } from '../ui/header';
 import { encryptPrivateKey, saveEncryptedKey } from '../utils/keyEncryption';
 
 // Flag to prevent duplicate submission

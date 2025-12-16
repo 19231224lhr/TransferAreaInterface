@@ -17,11 +17,11 @@ export function initProfilePage() {
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
   
-  // Update header display directly - import updateHeaderUser from header.js
+  // Update header display directly - import updateHeaderUser from header.ts
   // Use setTimeout to ensure this runs AFTER router's updateHeaderUser call completes
   // The router calls updateHeaderUser synchronously at the end, so we need to run after that
   setTimeout(() => {
-    import('./header.js').then(({ updateHeaderUser }) => {
+    import('./header').then(({ updateHeaderUser }) => {
       // Re-load user to ensure we have the latest data
       const currentUser = loadUser();
       updateHeaderUser(currentUser);
