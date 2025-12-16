@@ -31,6 +31,7 @@ class TemplateLoader {
     private initialized: boolean = false;
 
     constructor(options: TemplateLoaderOptions = {}) {
+        // Note: assets/ is Vite's publicDir, so /assets/templates/ becomes /templates/ at runtime
         this.basePath = options.basePath ?? '/templates';
         this.cacheEnabled = options.cacheEnabled ?? true;
     }

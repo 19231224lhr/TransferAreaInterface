@@ -69,13 +69,13 @@ export function updateHeaderUser(user) {
         menuAvatarImg.classList.remove('hidden');
       }
     } else {
-      // Use default avatar
+      // Use default avatar (Vite serves assets/ at root)
       if (avatarImg) {
-        avatarImg.src = '/assets/avatar.png';
+        avatarImg.src = '/avatar.png';
         avatarImg.classList.remove('hidden');
       }
       if (menuAvatarImg) {
-        menuAvatarImg.src = '/assets/avatar.png';
+        menuAvatarImg.src = '/avatar.png';
         menuAvatarImg.classList.remove('hidden');
       }
     }

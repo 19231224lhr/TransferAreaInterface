@@ -17,10 +17,16 @@ export function initProfilePage() {
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
   
-  // Update header display first to show correct username
-  if (typeof window.updateHeaderUser === 'function') {
-    window.updateHeaderUser(user);
-  }
+  // Update header display directly - import updateHeaderUser from header.js
+  // Use setTimeout to ensure this runs AFTER router's updateHeaderUser call completes
+  // The router calls updateHeaderUser synchronously at the end, so we need to run after that
+  setTimeout(() => {
+    import('./header.js').then(({ updateHeaderUser }) => {
+      // Re-load user to ensure we have the latest data
+      const currentUser = loadUser();
+      updateHeaderUser(currentUser);
+    });
+  }, 50);
   
   // Fill current data
   const nicknameInput = document.getElementById('nicknameInput');
@@ -56,8 +62,8 @@ export function initProfilePage() {
   
   // Set avatar preview - show person icon when not logged in
   if (isLoggedIn) {
-    // Logged in: show custom avatar or default avatar
-    const avatarSrc = profile.avatar || '/assets/avatar.png';
+    // Logged in: show custom avatar or default avatar (Vite serves assets/ at root)
+    const avatarSrc = profile.avatar || '/avatar.png';
     if (avatarPreviewImg) {
       avatarPreviewImg.src = avatarSrc;
       avatarPreviewImg.classList.remove('hidden');

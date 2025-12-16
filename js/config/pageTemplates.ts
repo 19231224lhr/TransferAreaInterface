@@ -12,7 +12,7 @@ export interface PageTemplateConfig {
     id: string;
     /** DOM element ID for this page's container */
     containerId: string;
-    /** Template file path (relative to /templates/) */
+    /** Template file path (relative to /templates/ - Vite serves assets/ as root) */
     templatePath: string;
     /** Whether this page should be loaded dynamically */
     isDynamic: boolean;
@@ -25,6 +25,7 @@ export interface PageTemplateConfig {
 /**
  * All page template configurations
  * All pages are dynamically loaded from /templates/pages/
+ * (Source files are in assets/templates/pages/, served at /templates/pages/ by Vite)
  */
 export const PAGE_TEMPLATES: PageTemplateConfig[] = [
     {

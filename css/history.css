@@ -750,6 +750,29 @@
 }
 
 /* ========================================
+   防止展开/收起时页面滚动跳动
+   ======================================== */
+
+/* Disable scroll anchoring to prevent page jump when expanding items */
+.history-list-container {
+  overflow-anchor: none;
+}
+
+.history-list {
+  overflow-anchor: none;
+}
+
+.history-item {
+  overflow-anchor: none;
+}
+
+/* Ensure smooth expansion without layout shift */
+.history-item-detail {
+  overflow-anchor: none;
+  will-change: max-height, opacity;
+}
+
+/* ========================================
    深色模式适配
    ======================================== */
 

@@ -585,8 +585,8 @@ export default {
   'validation.privateKeyRequired': 'Please enter private key',
   'validation.privateKeyLength': 'Private key must be 64 hexadecimal characters',
   'validation.privateKeyFormat': 'Invalid private key format, must be hexadecimal',
-  'validation.orgIdRequired': 'Please enter guarantor organization ID',
-  'validation.orgIdFormat': 'Guarantor organization ID must be 8 digits',
+  'validation.orgIdRequired': 'Enter org ID',
+  'validation.orgIdFormat': '8 digits required',
 
   // Error messages
   'error.unexpected': 'An unexpected error occurred',

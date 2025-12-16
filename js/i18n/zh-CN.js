@@ -585,8 +585,8 @@ export default {
   'validation.privateKeyRequired': '请输入私钥',
   'validation.privateKeyLength': '私钥长度必须为64位十六进制字符',
   'validation.privateKeyFormat': '私钥格式错误，必须为十六进制字符',
-  'validation.orgIdRequired': '请输入担保组织ID',
-  'validation.orgIdFormat': '担保组织ID必须为8位数字',
+  'validation.orgIdRequired': '请输入组织ID',
+  'validation.orgIdFormat': '需8位数字',
 
   // 错误消息
   'error.unexpected': '发生意外错误',

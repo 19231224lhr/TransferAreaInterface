@@ -399,8 +399,8 @@ function initGroupSearch() {
   const groupSuggest = document.getElementById('groupSuggest');
   const joinSearchBtn = document.getElementById('joinSearchBtn');
   addInlineValidation('#groupSearch', [
-    { validator: 'required', message: t('join.enterOrgNumber') || '请输入组织编号' },
-    { validator: 'orgId', message: t('validation.orgIdFormat') || '担保组织ID必须为8位数字' }
+    { validator: 'required', message: t('validation.orgIdRequired') || '请输入组织ID' },
+    { validator: 'orgId', message: t('validation.orgIdFormat') || '需8位数字' }
   ], { showOnInput: true, debounceMs: 150 });
   
   if (!groupSearch) return;

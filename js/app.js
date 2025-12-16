@@ -639,7 +639,7 @@ function init() {
     // Silently fail - accessibility is optional
   }
 
-  // Initialize template loading system (for future page modularization)
+  // Initialize template loading system (REQUIRED - pages are loaded from /assets/templates/pages/)
   try {
     templateLoader.init();
     pageManager.init('#main');
@@ -651,8 +651,20 @@ function init() {
         preload: config.preload
       });
     });
+    console.log('[App] Template system initialized, pages will be loaded from /assets/templates/pages/');
   } catch (error) {
-    // Silently fail - template system is optional for now (pages are still in index.html)
+    console.error('[App] CRITICAL: Failed to initialize template system:', error);
+    // Show error to user since this is now required
+    document.body.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:white;text-align:center;padding:20px;">
+        <div>
+          <h1 style="color:#ef4444;margin-bottom:16px;">初始化失败</h1>
+          <p style="color:#94a3b8;margin-bottom:24px;">模板系统加载失败，请刷新页面重试</p>
+          <button onclick="location.reload()" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;">刷新页面</button>
+        </div>
+      </div>
+    `;
+    return; // Stop initialization
   }
 
   // Initialize lazy loader for code splitting

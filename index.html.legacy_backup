@@ -5,9 +5,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- Favicon / App Icons -->
-  <link rel="icon" type="image/png" href="/logo.png" />
-  <link rel="shortcut icon" type="image/png" href="/logo.png" />
-  <link rel="apple-touch-icon" href="/logo.png" />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="shortcut icon" type="image/png" href="/assets/logo.png" />
+  <link rel="apple-touch-icon" href="/assets/logo.png" />
   <title>PanguPay</title>
   
   <!-- Elliptic Curve Cryptography Library (for P-256 key derivation) -->
@@ -106,7 +106,7 @@
       <!-- Logo 区域 -->
       <div class="header-logo">
         <div class="logo-icon">
-          <img src="/logo.png" alt="PanguPay Logo" class="logo-image" />
+          <img src="/assets/logo.png" alt="PanguPay Logo" class="logo-image" />
           <div class="logo-glow"></div>
         </div>
         <span class="logo-text">PanguPay</span>
@@ -292,7 +292,7 @@
     <!-- ================================================================== -->
     <!-- 页面内容由模板系统动态加载                                          -->
     <!-- Page templates are loaded dynamically by templateLoader.ts         -->
-    <!-- Source: assets/templates/pages/ → Served at: /templates/pages/     -->
+    <!-- Templates location: /public/templates/pages/                       -->
     <!-- ================================================================== -->
 
     <!-- 自定义 Toast 提示组件 -->

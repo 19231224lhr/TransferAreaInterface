@@ -86,30 +86,39 @@ async function callPageFn(route, fnName, fallbackFnName) {
 
 /**
  * Ensure a page is loaded (using pageManager for dynamic loading)
+ * Templates are loaded from /assets/templates/pages/
  * @param {string} pageId - Page identifier
  * @returns {Promise<HTMLElement|null>}
  */
 async function ensurePageLoaded(pageId) {
-  // Try to get existing element first
   const config = getPageConfig(pageId);
   if (!config) {
     console.warn(`[router] No config for page: ${pageId}`);
     return null;
   }
 
-  // Check if already in DOM
+  // Check if already loaded in DOM (from previous navigation)
   let element = document.getElementById(config.containerId);
   if (element) {
     return element;
   }
 
-  // Use pageManager to load dynamically
-  if (pageManager.isInitialized()) {
-    element = await pageManager.ensureLoaded(pageId);
-    return element;
+  // Use pageManager to load dynamically from template files
+  if (!pageManager.isInitialized()) {
+    console.error('[router] pageManager not initialized, cannot load page:', pageId);
+    return null;
   }
 
-  return null;
+  try {
+    element = await pageManager.ensureLoaded(pageId);
+    if (!element) {
+      console.error(`[router] Failed to load page template: ${pageId}`);
+    }
+    return element;
+  } catch (err) {
+    console.error(`[router] Error loading page ${pageId}:`, err);
+    return null;
+  }
 }
 
 /**
@@ -270,46 +279,71 @@ export async function router() {
   // Ensure page is loaded
   const pageElement = await ensurePageLoaded(pageId);
 
+  // If page failed to load, show error and return
+  if (!pageElement) {
+    console.error(`[router] Page not loaded for route: ${h}`);
+    // Try to show a fallback error message
+    const main = document.getElementById('main');
+    if (main && !document.getElementById('pageLoadError')) {
+      const errorDiv = document.createElement('div');
+      errorDiv.id = 'pageLoadError';
+      errorDiv.className = 'page-load-error';
+      errorDiv.innerHTML = `
+        <div style="text-align:center;padding:60px 20px;">
+          <h2 style="color:#ef4444;margin-bottom:16px;">页面加载失败</h2>
+          <p style="color:#64748b;margin-bottom:24px;">无法加载页面模板，请刷新重试</p>
+          <button onclick="location.reload()" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;">刷新页面</button>
+        </div>
+      `;
+      main.appendChild(errorDiv);
+    }
+    return;
+  }
+
+  // Remove any previous error message
+  const errorEl = document.getElementById('pageLoadError');
+  if (errorEl) errorEl.remove();
+
   switch (h) {
     case '/welcome':
-      showCard(pageElement || document.getElementById('welcomeCard'));
+      showCard(pageElement);
       void callPageFn('/welcome', 'initWelcomePage', 'updateWelcomeButtons');
       break;
 
     case '/main':
-      showCard(pageElement || document.getElementById('walletCard'));
+      showCard(pageElement);
       void callPageFn('/main', 'initMainPage', 'handleMainRoute');
       break;
 
     case '/entry':
-      showCard(pageElement || document.getElementById('entryCard'));
+      showCard(pageElement);
       void callPageFn('/entry', 'initEntryPage', 'updateWalletBrief');
       break;
 
     case '/login':
-      showCard(pageElement || document.getElementById('loginCard'));
+      showCard(pageElement);
       void callPageFn('/login', 'initLoginPage', 'resetLoginPageState');
       break;
 
     case '/new':
       resetOrgSelectionForNewUser();
-      showCard(pageElement || document.getElementById('newUserCard'));
+      showCard(pageElement);
       void callPageFn('/new', 'initNewUserPage');
       handleNewUserRoute();
       break;
 
     case '/set-password':
-      showCard(pageElement || document.getElementById('setPasswordCard'));
+      showCard(pageElement);
       void callPageFn('/set-password', 'initSetPasswordPage');
       break;
 
     case '/import':
-      showCard(pageElement || document.getElementById('importCard'));
+      showCard(pageElement);
       void callPageFn('/import', 'initImportPage', 'resetImportState');
       break;
 
     case '/wallet-import':
-      showCard(pageElement || document.getElementById('importCard'));
+      showCard(pageElement);
       void loadPageModule('/wallet-import').then((mod) => {
         const resetFn = (mod && typeof mod.resetImportState === 'function') ? mod.resetImportState : (typeof window.resetImportState === 'function' ? window.resetImportState : null);
         if (resetFn) resetFn('wallet');
@@ -324,12 +358,12 @@ export async function router() {
       break;
 
     case '/group-detail':
-      showCard(pageElement || document.getElementById('groupDetailCard'));
+      showCard(pageElement);
       void callPageFn('/group-detail', 'initGroupDetailPage', 'updateGroupDetailDisplay');
       break;
 
     case '/inquiry':
-      showCard(pageElement || document.getElementById('inquiryCard'));
+      showCard(pageElement);
       void loadPageModule('/inquiry').then((mod) => {
         const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
         if (!fn) return;
@@ -345,7 +379,7 @@ export async function router() {
       break;
 
     case '/inquiry-main':
-      showCard(pageElement || document.getElementById('inquiryCard'));
+      showCard(pageElement);
       void loadPageModule('/inquiry-main').then((mod) => {
         const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
         if (!fn) return;
@@ -356,18 +390,17 @@ export async function router() {
       break;
 
     case '/profile':
-      showCard(pageElement || document.getElementById('profileCard'));
+      showCard(pageElement);
       void callPageFn('/profile', 'initProfilePage');
       break;
 
     case '/history':
-      showCard(pageElement || document.getElementById('historyCard'));
+      showCard(pageElement);
       void callPageFn('/history', 'initHistoryPage', 'resetHistoryPageState');
       break;
 
     default:
-      const defaultPage = await ensurePageLoaded('welcome');
-      showCard(defaultPage || document.getElementById('welcomeCard'));
+      showCard(pageElement);
       void callPageFn('/welcome', 'updateWelcomeButtons');
   }
 
@@ -440,20 +473,21 @@ async function handleJoinGroupRoute(preloadedElement) {
     return;
   }
 
-  // Ensure join-group page is loaded
-  const pageElement = preloadedElement || await ensurePageLoaded('join-group');
-  showCard(pageElement || document.getElementById('nextCard'));
+  // Use preloaded element (already loaded by router)
+  if (preloadedElement) {
+    showCard(preloadedElement);
 
-  // Set default group info
-  const recGroupID = document.getElementById('recGroupID');
-  const recAggre = document.getElementById('recAggre');
-  const recAssign = document.getElementById('recAssign');
-  const recPledge = document.getElementById('recPledge');
+    // Set default group info (elements are now in the loaded template)
+    const recGroupID = document.getElementById('recGroupID');
+    const recAggre = document.getElementById('recAggre');
+    const recAssign = document.getElementById('recAssign');
+    const recPledge = document.getElementById('recPledge');
 
-  if (recGroupID) recGroupID.textContent = DEFAULT_GROUP.groupID;
-  if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;
-  if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
-  if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
+    if (recGroupID) recGroupID.textContent = DEFAULT_GROUP.groupID;
+    if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;
+    if (recAssign) recAssign.textContent = DEFAULT_GROUP.assignNode;
+    if (recPledge) recPledge.textContent = DEFAULT_GROUP.pledgeAddress;
+  }
 }
 
 /**

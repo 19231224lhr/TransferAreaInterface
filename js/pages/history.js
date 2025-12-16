@@ -295,14 +295,13 @@ function renderTransactionDetail(tx) {
 
 /**
  * Toggle transaction detail (accordion style)
+ * Note: We intentionally do NOT adjust scroll position here.
+ * The page should stay where it is when expanding/collapsing items.
  */
 function toggleTransactionDetail(itemEl, tx) {
   const isExpanded = itemEl.classList.contains('expanded');
-  const startTop = itemEl.getBoundingClientRect().top;
-  const startScroll = window.pageYOffset || document.documentElement.scrollTop;
-  const anchorY = startTop + startScroll;
 
-  // Collapse all other items
+  // Collapse all other items first
   document.querySelectorAll('.history-item.expanded').forEach(el => {
     if (el !== itemEl) {
       el.classList.remove('expanded');
@@ -317,17 +316,8 @@ function toggleTransactionDetail(itemEl, tx) {
     itemEl.classList.add('expanded');
     selectedTransaction = tx;
   }
-
-  // After layout settles (including any transitions), keep the clicked card anchored
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      const newTop = itemEl.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop);
-      const diff = newTop - anchorY;
-      if (Math.abs(diff) > 1) {
-        window.scrollTo({ top: (window.pageYOffset || document.documentElement.scrollTop) - diff, behavior: 'auto' });
-      }
-    });
-  });
+  
+  // Do NOT scroll - let the page stay where it is
 }
 
 /**
