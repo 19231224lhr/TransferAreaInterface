@@ -141,7 +141,7 @@ import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, addNewSubWallet } from './services/account';
-import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet.js';
+import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit, initBuildTransaction } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
@@ -157,7 +157,7 @@ import { PAGE_TEMPLATES, getPageConfig, getAllContainerIds } from './config/page
 // Lazy page loaders (avoid pulling all page code on first screen)
 const pageLazyLoaders = {
   welcome: () => import('./pages/welcome.js'),
-  entry: () => import('./pages/entry.js'),
+  entry: () => import('./pages/entry'),
   login: () => import('./pages/login.ts'),
   newUser: () => import('./pages/newUser.js'),
   setPassword: () => import('./pages/setPassword'),

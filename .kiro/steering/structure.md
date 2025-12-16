@@ -88,7 +88,8 @@ TransferAreaInterface/
 │   │   ├── newUser.js      # Registration page
 │   │   ├── setPassword.ts  # Set password page (✅ 已迁移到响应式绑定)
 │   │   ├── setPassword.js.backup # Set password page (原始 JS 版本)
-│   │   ├── entry.js        # Wallet entry page
+│   │   ├── entry.ts        # Wallet entry page (✅ 已迁移到响应式绑定)
+│   │   ├── entry.js.backup # Wallet entry page (原始 JS 版本)
 │   │   ├── import.ts       # Import wallet page (✅ 已迁移到响应式绑定)
 │   │   ├── import.js.backup # Import wallet page (原始 JS 版本)
 │   │   ├── main.js         # Main wallet page
@@ -102,7 +103,8 @@ TransferAreaInterface/
 │   │   ├── transaction.ts  # Transaction building (TS)
 │   │   ├── transfer.ts     # Transfer form logic (TS)
 │   │   ├── transferDraft.ts # Transfer draft persistence (TS)
-│   │   ├── wallet.js       # Wallet operations
+│   │   ├── wallet.ts       # Wallet operations (✅ 已迁移到响应式绑定)
+│   │   ├── wallet.js.backup # Wallet operations (原始 JS 版本)
 │   │   ├── walletStruct.js # Wallet structure display
 │   │   ├── recipient.js    # Recipient management
 │   │   ├── account.js.backup # Original JS versions
@@ -222,9 +224,9 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - ✅ Configuration (`js/config/constants.ts`)
 
 **In Progress (JavaScript):**
-- 🔄 Page components (`js/pages/*.js`)
-- 🔄 UI components (`js/ui/*.js`)
-- 🔄 Remaining services (`wallet.js`, `walletStruct.js`, `recipient.js`)
+- 🔄 Page components (`js/pages/welcome.js`, `newUser.js`, `main.js`, `history.js`, `groupDetail.js`)
+- 🔄 UI components (`js/ui/footer.js`, `toast.js`, `charts.js`, `networkChart.js`, `theme.js`, `walletStruct.js`)
+- 🔄 Remaining services (`walletStruct.js`, `recipient.js`)
 - 🔄 i18n system (`js/i18n/*.js`)
 
 **Migration Strategy:**
@@ -260,7 +262,12 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
   - `js/pages/login.ts` - 登录页面
   - `js/pages/import.ts` - 导入钱包页面
   - `js/pages/joinGroup.ts` - 加入组织页面
+  - `js/pages/setPassword.ts` - 设置密码页面
+  - `js/pages/entry.ts` - 钱包入口页面
   - `js/ui/header.ts` - 头部组件
+  - `js/ui/modal.ts` - 模态对话框
+  - `js/ui/profile.ts` - 用户资料页面
+  - `js/services/wallet.ts` - 钱包服务模块
 
 ## Architecture Notes
 
@@ -350,9 +357,16 @@ Files with `.backup` extension are original JavaScript versions before TypeScrip
 - `js/pages/login.js.backup`
 - `js/pages/import.js.backup`
 - `js/pages/joinGroup.js.backup`
+- `js/pages/setPassword.js.backup`
+- `js/pages/entry.js.backup`
 
 **UI:**
 - `js/ui/header.js.backup`
+- `js/ui/modal.js.backup`
+- `js/ui/profile.js.backup`
+
+**Services:**
+- `js/services/wallet.js.backup`
 
 ### New Features & Modules
 

@@ -555,20 +555,30 @@ state.set({
 
 按 DOM 操作密度排序，建议迁移顺序：
 
-1. **高优先级** (100+ DOM 操作):
-   - `js/services/wallet.js` → `wallet.ts`
+1. **高优先级** (100+ DOM 操作): ✅ 全部完成
+   - `js/services/wallet.js` → `wallet.ts` ✅ 已完成
    - `js/ui/header.js` → `header.ts` ✅ 已完成
    - `js/pages/login.js` → `login.ts` ✅ 已完成
    - `js/pages/joinGroup.js` → `joinGroup.ts` ✅ 已完成
 
-2. **中优先级** (50-100 DOM 操作):
+2. **中优先级** (50-100 DOM 操作): ✅ 全部完成
    - `js/pages/import.js` → `import.ts` ✅ 已完成
    - `js/pages/setPassword.js` → `setPassword.ts` ✅ 已完成
+   - `js/pages/entry.js` → `entry.ts` ✅ 已完成
    - `js/ui/modal.js` → `modal.ts` ✅ 已完成
    - `js/ui/profile.js` → `profile.ts` ✅ 已完成
 
 3. **低优先级** (<50 DOM 操作):
-   - 其他页面和组件
+   - `js/pages/welcome.js` - 欢迎页面
+   - `js/pages/newUser.js` - 新用户注册
+   - `js/pages/main.js` - 主钱包页面
+   - `js/pages/history.js` - 交易历史
+   - `js/pages/groupDetail.js` - 组织详情
+   - `js/ui/footer.js` - 页脚组件
+   - `js/ui/toast.js` - Toast 提示
+   - `js/ui/charts.js` - 图表组件
+   - `js/services/walletStruct.js` - 钱包结构
+   - `js/services/recipient.js` - 收款人管理
 
 ### 规则
 

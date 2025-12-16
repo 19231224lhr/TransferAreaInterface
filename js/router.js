@@ -18,7 +18,7 @@ import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 // Lazy page loaders (registered on demand)
 const pageLoaders = {
   '/welcome': () => import('./pages/welcome.js'),
-  '/entry': () => import('./pages/entry.js'),
+  '/entry': () => import('./pages/entry'),
   '/login': () => import('./pages/login.ts'),
   '/new': () => import('./pages/newUser.js'),
   '/set-password': () => import('./pages/setPassword'),

@@ -5,7 +5,7 @@
  */
 
 import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.ts';
-import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, handleZeroAddress, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from '../services/wallet.js';
+import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, handleZeroAddress, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from '../services/wallet';
 import { initTransferSubmit, initBuildTransaction } from '../services/transfer.ts';
 import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
