@@ -7,7 +7,7 @@
 import { t } from '../i18n/index.js';
 import { loadUser, User } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
-import { showModalTip, showConfirmModal } from '../ui/modal.js';
+import { showModalTip, showConfirmModal } from '../ui/modal';
 import { buildNewTX, BuildTXInfo } from './transaction';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';

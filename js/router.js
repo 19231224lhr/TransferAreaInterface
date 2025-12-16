@@ -21,7 +21,7 @@ const pageLoaders = {
   '/entry': () => import('./pages/entry.js'),
   '/login': () => import('./pages/login.ts'),
   '/new': () => import('./pages/newUser.js'),
-  '/set-password': () => import('./pages/setPassword.js'),
+  '/set-password': () => import('./pages/setPassword'),
   '/import': () => import('./pages/import'),
   '/wallet-import': () => import('./pages/import'),
   '/main': () => import('./pages/main.js'),
@@ -29,7 +29,7 @@ const pageLoaders = {
   '/inquiry': () => import('./pages/joinGroup'),
   '/inquiry-main': () => import('./pages/joinGroup'),
   '/group-detail': () => import('./pages/groupDetail.js'),
-  '/profile': () => import('./ui/profile.js'),
+  '/profile': () => import('./ui/profile'),
   '/history': () => import('./pages/history.js')
 };
 

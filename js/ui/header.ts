@@ -57,8 +57,8 @@ interface AddressInfo {
  */
 interface UserProfile {
   nickname?: string;
-  bio?: string;
-  avatar?: string;
+  signature?: string;
+  avatar?: string | null;
 }
 
 /**
@@ -478,7 +478,7 @@ export function updateHeaderUser(user: UserInfo | null): void {
     // 显示用户昵称
     const profile = loadUserProfile() as UserProfile;
     const nickname = profile.nickname || 'Amiya';
-    const bio = profile.bio || t('profile.signature.placeholder');
+    const bio = profile.signature || t('profile.signature.placeholder') || '';
     const avatar = profile.avatar || '';
     
     // 计算地址数量

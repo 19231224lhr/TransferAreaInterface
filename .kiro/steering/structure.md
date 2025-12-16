@@ -86,6 +86,8 @@ TransferAreaInterface/
 │   │   ├── login.ts        # Login page (✅ 已迁移到响应式绑定)
 │   │   ├── login.js.backup # Login page (原始 JS 版本)
 │   │   ├── newUser.js      # Registration page
+│   │   ├── setPassword.ts  # Set password page (✅ 已迁移到响应式绑定)
+│   │   ├── setPassword.js.backup # Set password page (原始 JS 版本)
 │   │   ├── entry.js        # Wallet entry page
 │   │   ├── import.ts       # Import wallet page (✅ 已迁移到响应式绑定)
 │   │   ├── import.js.backup # Import wallet page (原始 JS 版本)
@@ -111,11 +113,13 @@ TransferAreaInterface/
 │   │   ├── header.ts       # Header component (✅ 已迁移到响应式绑定)
 │   │   ├── header.js.backup # Header component (原始 JS 版本)
 │   │   ├── footer.js       # Footer component
-│   │   ├── modal.js        # Modal dialogs
+│   │   ├── modal.ts        # Modal dialogs (✅ 已迁移到响应式绑定)
+│   │   ├── modal.js.backup # Modal dialogs (原始 JS 版本)
 │   │   ├── toast.js        # Toast notifications
 │   │   ├── charts.js       # Balance charts
 │   │   ├── networkChart.js # Network visualization
-│   │   ├── profile.js      # Profile component
+│   │   ├── profile.ts      # Profile component (✅ 已迁移到响应式绑定)
+│   │   ├── profile.js.backup # Profile component (原始 JS 版本)
 │   │   ├── theme.js        # Theme management
 │   │   └── walletStruct.js # Wallet structure UI
 │   │

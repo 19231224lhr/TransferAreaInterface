@@ -6,7 +6,7 @@
 
 import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/storage';
 import { t } from '../i18n/index.js';
-import { showModalTip, showConfirmModal } from '../ui/modal.js';
+import { showModalTip, showConfirmModal } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
 import { showMiniToast } from '../utils/toast.js';
 import { routeTo } from '../router.js';

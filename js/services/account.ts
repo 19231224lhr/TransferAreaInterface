@@ -7,7 +7,7 @@
 import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto';
 import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { t } from '../i18n/index.js';
-import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';
+import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { showSuccessToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';

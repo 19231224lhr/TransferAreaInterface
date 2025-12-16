@@ -13,7 +13,7 @@
 import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { importFromPrivHex } from '../services/account';
 import { showErrorToast } from '../utils/toast.js';
-import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal.js';
+import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
 import { updateWalletBrief } from './entry.js';

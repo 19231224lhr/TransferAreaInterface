@@ -132,7 +132,7 @@ import {
 
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header';
-import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal.js';
+import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
 import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
 import { initNetworkChart, cleanupNetworkChart } from './ui/networkChart.js';
@@ -160,11 +160,11 @@ const pageLazyLoaders = {
   entry: () => import('./pages/entry.js'),
   login: () => import('./pages/login.ts'),
   newUser: () => import('./pages/newUser.js'),
-  setPassword: () => import('./pages/setPassword.js'),
+  setPassword: () => import('./pages/setPassword'),
   import: () => import('./pages/import'),
   main: () => import('./pages/main.js'),
   joinGroup: () => import('./pages/joinGroup'),
-  profile: () => import('./ui/profile.js'),
+  profile: () => import('./ui/profile'),
   groupDetail: () => import('./pages/groupDetail.js'),
   history: () => import('./pages/history.js')
 };

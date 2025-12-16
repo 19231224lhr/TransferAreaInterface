@@ -563,8 +563,9 @@ state.set({
 
 2. **中优先级** (50-100 DOM 操作):
    - `js/pages/import.js` → `import.ts` ✅ 已完成
-   - `js/ui/modal.js` → `modal.ts`
-   - `js/ui/profile.js` → `profile.ts`
+   - `js/pages/setPassword.js` → `setPassword.ts` ✅ 已完成
+   - `js/ui/modal.js` → `modal.ts` ✅ 已完成
+   - `js/ui/profile.js` → `profile.ts` ✅ 已完成
 
 3. **低优先级** (<50 DOM 操作):
    - 其他页面和组件
