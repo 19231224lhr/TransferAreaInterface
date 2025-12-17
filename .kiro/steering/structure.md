@@ -83,19 +83,14 @@ TransferAreaInterface/
 │   │
 │   ├── pages/              # Page components (JS → TS migration)
 │   │   ├── welcome.js      # Welcome page
-│   │   ├── login.ts        # Login page (✅ 已迁移到响应式绑定)
-│   │   ├── login.js.backup # Login page (原始 JS 版本)
+│   │   ├── login.ts        # Login page (✅ 响应式绑定)
 │   │   ├── newUser.js      # Registration page
-│   │   ├── setPassword.ts  # Set password page (✅ 已迁移到响应式绑定)
-│   │   ├── setPassword.js.backup # Set password page (原始 JS 版本)
-│   │   ├── entry.ts        # Wallet entry page (✅ 已迁移到响应式绑定)
-│   │   ├── entry.js.backup # Wallet entry page (原始 JS 版本)
-│   │   ├── import.ts       # Import wallet page (✅ 已迁移到响应式绑定)
-│   │   ├── import.js.backup # Import wallet page (原始 JS 版本)
+│   │   ├── setPassword.ts  # Set password page (✅ 响应式绑定)
+│   │   ├── entry.ts        # Wallet entry page (✅ 响应式绑定)
+│   │   ├── import.ts       # Import wallet page (✅ 响应式绑定)
 │   │   ├── main.js         # Main wallet page
 │   │   ├── history.js      # Transaction history
-│   │   ├── joinGroup.ts    # Join organization (✅ 已迁移到响应式绑定)
-│   │   ├── joinGroup.js.backup # Join organization (原始 JS 版本)
+│   │   ├── joinGroup.ts    # Join organization (✅ 响应式绑定)
 │   │   └── groupDetail.js  # Organization details
 │   │
 │   ├── services/           # Business logic services (TS + JS)
@@ -103,8 +98,7 @@ TransferAreaInterface/
 │   │   ├── transaction.ts  # Transaction building (TS)
 │   │   ├── transfer.ts     # Transfer form logic (TS)
 │   │   ├── transferDraft.ts # Transfer draft persistence (TS)
-│   │   ├── wallet.ts       # Wallet operations (✅ 已迁移到响应式绑定)
-│   │   ├── wallet.js.backup # Wallet operations (原始 JS 版本)
+│   │   ├── wallet.ts       # Wallet operations (✅ 响应式绑定)
 │   │   ├── walletStruct.js # Wallet structure display
 │   │   ├── recipient.js    # Recipient management
 │   │   ├── account.js.backup # Original JS versions
@@ -112,16 +106,13 @@ TransferAreaInterface/
 │   │   └── transfer.js.backup
 │   │
 │   ├── ui/                 # UI components (JS → TS migration)
-│   │   ├── header.ts       # Header component (✅ 已迁移到响应式绑定)
-│   │   ├── header.js.backup # Header component (原始 JS 版本)
+│   │   ├── header.ts       # Header component (✅ 响应式绑定)
 │   │   ├── footer.js       # Footer component
-│   │   ├── modal.ts        # Modal dialogs (✅ 已迁移到响应式绑定)
-│   │   ├── modal.js.backup # Modal dialogs (原始 JS 版本)
+│   │   ├── modal.ts        # Modal dialogs (✅ 响应式绑定)
 │   │   ├── toast.js        # Toast notifications
 │   │   ├── charts.js       # Balance charts
 │   │   ├── networkChart.js # Network visualization
-│   │   ├── profile.ts      # Profile component (✅ 已迁移到响应式绑定)
-│   │   ├── profile.js.backup # Profile component (原始 JS 版本)
+│   │   ├── profile.ts      # Profile component (✅ 响应式绑定)
 │   │   ├── theme.js        # Theme management
 │   │   └── walletStruct.js # Wallet structure UI
 │   │
@@ -254,20 +245,39 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - Metrics tracking and reporting
 - Optimization suggestions
 
-**Reactive UI Binding (2025):**
-- `js/utils/reactive.ts` - 轻量级响应式绑定系统
+**Reactive UI Binding (2025):** ✅ 已完成
+- `js/utils/reactive.ts` - 轻量级响应式绑定系统 (456 行)
 - 声明式 UI 绑定，状态变化自动同步 DOM
 - 动画序列支持，简化复杂动画逻辑
-- 已迁移文件：
-  - `js/pages/login.ts` - 登录页面
-  - `js/pages/import.ts` - 导入钱包页面
-  - `js/pages/joinGroup.ts` - 加入组织页面
-  - `js/pages/setPassword.ts` - 设置密码页面
-  - `js/pages/entry.ts` - 钱包入口页面
-  - `js/ui/header.ts` - 头部组件
-  - `js/ui/modal.ts` - 模态对话框
-  - `js/ui/profile.ts` - 用户资料页面
-  - `js/services/wallet.ts` - 钱包服务模块
+- 事件绑定重置机制，解决路由切换后事件失效问题
+- 已迁移文件（共 6,553 行 TypeScript）：
+
+| 文件 | 原 JS 行数 | 新 TS 行数 | 说明 |
+|------|-----------|-----------|------|
+| `js/utils/reactive.ts` | - | 456 | 核心响应式绑定系统 |
+| `js/pages/login.ts` | 568 | 770 | 登录页面 |
+| `js/pages/import.ts` | 397 | 649 | 导入钱包页面 |
+| `js/pages/joinGroup.ts` | 513 | 811 | 加入组织页面 |
+| `js/pages/setPassword.ts` | 357 | 496 | 设置密码页面 |
+| `js/pages/entry.ts` | 184 | 358 | 钱包入口页面 |
+| `js/ui/header.ts` | 473 | 678 | 头部组件 |
+| `js/ui/modal.ts` | 249 | 382 | 模态对话框 |
+| `js/ui/profile.ts` | 622 | 702 | 用户资料页面 |
+| `js/services/wallet.ts` | 1,273 | 1,251 | 钱包服务模块 |
+
+**不需要迁移的文件（保持 JavaScript）：**
+- `js/pages/welcome.js` - 简单欢迎页，无复杂状态
+- `js/pages/main.js` - 主要调用其他模块，本身逻辑简单
+- `js/pages/newUser.js` - 注册页面，使用频率低
+- `js/pages/history.js` - 历史记录，主要是列表渲染
+- `js/pages/groupDetail.js` - 简单详情展示
+- `js/ui/charts.js` - Canvas 图表，不适合响应式绑定
+- `js/ui/networkChart.js` - Canvas 绑定，不适合响应式绑定
+- `js/ui/footer.js` - 几乎是静态内容
+- `js/ui/theme.js` - 简单主题切换
+- `js/services/recipient.js` - 收款人管理，逻辑独立
+- `js/services/walletStruct.js` - 钱包结构可视化
+- `js/i18n/*.js` - 纯数据文件
 
 ## Architecture Notes
 
@@ -353,20 +363,7 @@ Files with `.backup` extension are original JavaScript versions before TypeScrip
 **Config:**
 - `js/config/constants.js.backup`
 
-**Pages:**
-- `js/pages/login.js.backup`
-- `js/pages/import.js.backup`
-- `js/pages/joinGroup.js.backup`
-- `js/pages/setPassword.js.backup`
-- `js/pages/entry.js.backup`
-
-**UI:**
-- `js/ui/header.js.backup`
-- `js/ui/modal.js.backup`
-- `js/ui/profile.js.backup`
-
-**Services:**
-- `js/services/wallet.js.backup`
+> **Note:** 响应式绑定重构相关的 backup 文件已在 2025 年 12 月删除（重构完成并测试通过后）。
 
 ### New Features & Modules
 

@@ -127,27 +127,49 @@ go run ./backend/verify_tx
 - `js/utils/lazyLoader.ts` - 懒加载管理
 - `js/utils/serviceWorker.ts` - Service Worker 管理
 - `js/utils/transaction.ts` - 事务操作和自动保存
+- `js/utils/reactive.ts` - 🆕 响应式 UI 绑定系统
 
 **Services:**
 - `js/services/account.ts` - 账户服务
 - `js/services/transaction.ts` - 交易构建服务
 - `js/services/transfer.ts` - 转账表单逻辑
 - `js/services/transferDraft.ts` - 转账草稿持久化
+- `js/services/wallet.ts` - 🆕 钱包操作 (响应式绑定)
 
-### JavaScript Modules (未迁移)
+**Pages (响应式绑定):**
+- `js/pages/login.ts` - 🆕 登录页面
+- `js/pages/import.ts` - 🆕 导入钱包页面
+- `js/pages/joinGroup.ts` - 🆕 加入组织页面
+- `js/pages/setPassword.ts` - 🆕 设置密码页面
+- `js/pages/entry.ts` - 🆕 钱包入口页面
 
-**Pages:** (all JavaScript)
-- `js/pages/*.js` - 所有页面组件
+**UI Components (响应式绑定):**
+- `js/ui/header.ts` - 🆕 头部组件
+- `js/ui/modal.ts` - 🆕 模态对话框
+- `js/ui/profile.ts` - 🆕 用户资料页面
 
-**UI Components:** (all JavaScript)
-- `js/ui/*.js` - 所有 UI 组件
+### JavaScript Modules (保持现状)
 
-**Services:** (partial)
-- `js/services/wallet.js` - 钱包操作
+**Pages:** (不需要迁移)
+- `js/pages/welcome.js` - 欢迎页面 (简单展示)
+- `js/pages/newUser.js` - 新用户注册
+- `js/pages/main.js` - 主钱包页面 (调用其他模块)
+- `js/pages/history.js` - 交易历史
+- `js/pages/groupDetail.js` - 组织详情
+
+**UI Components:** (不需要迁移)
+- `js/ui/footer.js` - 页脚组件 (静态内容)
+- `js/ui/charts.js` - 图表组件 (Canvas 操作)
+- `js/ui/networkChart.js` - 网络图表 (Canvas 操作)
+- `js/ui/theme.js` - 主题管理
+- `js/ui/walletStruct.js` - 钱包结构 UI
+- `js/ui/toast.js` - Toast 提示
+
+**Services:** (不需要迁移)
 - `js/services/walletStruct.js` - 钱包结构显示
 - `js/services/recipient.js` - 收款人管理
 
-**Utils:** (partial)
+**Utils:** (不需要迁移)
 - `js/utils/store.js` - 状态管理
 - `js/utils/toast.js` - Toast 提示
 - `js/utils/helpers.js` - 通用辅助函数
@@ -155,8 +177,74 @@ go run ./backend/verify_tx
 - `js/utils/performanceMode.js` - 性能优化模式
 - `js/utils/performanceMonitor.js` - 性能监控
 
-**i18n:**
+**i18n:** (纯数据文件)
 - `js/i18n/*.js` - 国际化系统
+
+## Reactive UI Binding System (响应式 UI 绑定系统)
+
+### Overview
+
+项目使用自研的轻量级响应式绑定系统 (`js/utils/reactive.ts`)，实现声明式 UI 更新。
+
+### Core Features
+
+- **状态驱动**: UI 是状态的纯函数，状态变化自动同步 DOM
+- **声明式绑定**: 通过配置定义状态与 DOM 的映射关系
+- **动画支持**: 内置动画序列和并行动画 API
+- **类型安全**: 完整的 TypeScript 类型定义
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `createReactiveState(initial, bindings)` | 创建响应式状态对象 |
+| `state.set(partial)` | 更新状态，自动同步 UI |
+| `state.get()` | 获取当前状态 |
+| `runAnimationSequence(config)` | 执行动画序列 |
+| `runParallelAnimations(configs)` | 并行执行多个动画 |
+| `resetWalletBindings()` | 重置钱包模块绑定标记 |
+
+### Binding Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `text` | 设置 textContent | `{ selector: '#name', type: 'text' }` |
+| `html` | 设置 innerHTML | `{ selector: '#content', type: 'html' }` |
+| `visible` | 控制 hidden class | `{ selector: '#loader', type: 'visible' }` |
+| `class` | 切换指定 class | `{ selector: '#card', type: 'class', name: 'active' }` |
+| `attr` | 设置/移除属性 | `{ selector: '#input', type: 'attr', name: 'disabled' }` |
+| `prop` | 设置 DOM 属性 | `{ selector: '#btn', type: 'prop', name: 'disabled' }` |
+| `value` | 设置表单元素值 | `{ selector: '#input', type: 'value' }` |
+
+### Usage Example
+
+```typescript
+import { createReactiveState } from '../utils/reactive';
+
+interface PageState {
+  isLoading: boolean;
+  errorMessage: string;
+}
+
+const bindings = {
+  isLoading: [
+    { selector: '#loader', type: 'visible' },
+    { selector: '#submitBtn', type: 'prop', name: 'disabled' }
+  ],
+  errorMessage: [
+    { selector: '#error', type: 'text' }
+  ]
+};
+
+const state = createReactiveState<PageState>(
+  { isLoading: false, errorMessage: '' },
+  bindings
+);
+
+// 更新状态，UI 自动同步
+state.set({ isLoading: true });
+state.set({ isLoading: false, errorMessage: '操作失败' });
+```
 
 ## Internationalization (i18n)
 
