@@ -236,6 +236,7 @@ declare global {
     _headerHashChangeBind?: boolean;
     _footerScrollBind?: boolean;
     _routerHashChangeBind?: boolean;
+    _hashLinkNavBind?: boolean;
     _userMenuClickBind?: boolean;
     
     // Chart-related flags

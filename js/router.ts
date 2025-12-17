@@ -1,26 +1,46 @@
 /**
- * Router Module
- * 
+ * Router Module (TypeScript)
+ *
  * Provides hash-based routing for the SPA with dynamic page loading support.
+ *
+ * Note: This is the single source of truth for routing.
  */
 
 import { t, updatePageTranslations } from './i18n/index.js';
 import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
-import { DEFAULT_GROUP, GROUP_LIST } from './config/constants.ts';
+import { DEFAULT_GROUP } from './config/constants';
 import { updateHeaderUser, initUserMenu } from './ui/header';
 import { cleanupPageListeners } from './utils/eventUtils.js';
-import { store, setRoute } from './utils/store.js';
+import { setRoute } from './utils/store.js';
 import { withLoading } from './utils/loading';
 import { navigateTo as enhancedNavigateTo } from './utils/enhancedRouter';
 import { pageManager } from './utils/pageManager';
 import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 import { resetWalletBindings } from './services/wallet';
 
+type PageModule = Record<string, unknown>;
+
+type RoutePath =
+  | '/welcome'
+  | '/entry'
+  | '/login'
+  | '/new'
+  | '/set-password'
+  | '/import'
+  | '/wallet-import'
+  | '/main'
+  | '/join-group'
+  | '/inquiry'
+  | '/inquiry-main'
+  | '/group-detail'
+  | '/profile'
+  | '/history';
+
 // Lazy page loaders (registered on demand)
-const pageLoaders = {
+const pageLoaders: Record<RoutePath, () => Promise<PageModule>> = {
   '/welcome': () => import('./pages/welcome.js'),
   '/entry': () => import('./pages/entry'),
-  '/login': () => import('./pages/login.ts'),
+  '/login': () => import('./pages/login'),
   '/new': () => import('./pages/newUser.js'),
   '/set-password': () => import('./pages/setPassword'),
   '/import': () => import('./pages/import'),
@@ -35,7 +55,7 @@ const pageLoaders = {
 };
 
 // Route to page config mapping
-const routeToPageId = {
+const routeToPageId: Record<RoutePath, string> = {
   '/welcome': 'welcome',
   '/entry': 'entry',
   '/new': 'new',
@@ -52,19 +72,21 @@ const routeToPageId = {
   '/history': 'history'
 };
 
+function getWindowFn(name: string): (() => void) | null {
+  const w = window as unknown as Record<string, unknown>;
+  const candidate = w[name];
+  return typeof candidate === 'function' ? (candidate as () => void) : null;
+}
+
 /**
  * Dynamically load a page module for the given route
- * @param {string} route
- * @returns {Promise<any|null>}
  */
-async function loadPageModule(route) {
+async function loadPageModule(route: RoutePath): Promise<PageModule | null> {
   const loader = pageLoaders[route];
   if (!loader) return null;
+
   try {
-    return await withLoading(
-      loader(),
-      t('common.loading') || '加载中...'
-    );
+    return await withLoading(loader(), t('common.loading') || '加载中...');
   } catch (err) {
     console.warn(`[router] failed to load page '${route}'`, err);
     return null;
@@ -74,24 +96,29 @@ async function loadPageModule(route) {
 /**
  * Best-effort helper to call a function exposed either on window or on the lazy-loaded module
  */
-async function callPageFn(route, fnName, fallbackFnName) {
+async function callPageFn(
+  route: RoutePath,
+  fnName: string,
+  fallbackFnName?: string
+): Promise<void> {
   const mod = await loadPageModule(route);
-  const fn = (typeof window[fnName] === 'function') ? window[fnName] : (mod && typeof mod[fnName] === 'function' ? mod[fnName] : null);
-  const fb = fallbackFnName ? ((typeof window[fallbackFnName] === 'function') ? window[fallbackFnName] : (mod && typeof mod[fallbackFnName] === 'function' ? mod[fallbackFnName] : null)) : null;
-  if (fn) {
-    fn();
-  } else if (fb) {
-    fb();
-  }
+
+  const fn = getWindowFn(fnName) || (mod && typeof mod[fnName] === 'function' ? (mod[fnName] as () => void) : null);
+  const fb =
+    fallbackFnName
+      ? getWindowFn(fallbackFnName) ||
+        (mod && typeof mod[fallbackFnName] === 'function' ? (mod[fallbackFnName] as () => void) : null)
+      : null;
+
+  if (fn) fn();
+  else if (fb) fb();
 }
 
 /**
  * Ensure a page is loaded (using pageManager for dynamic loading)
  * Templates are loaded from /assets/templates/pages/
- * @param {string} pageId - Page identifier
- * @returns {Promise<HTMLElement|null>}
  */
-async function ensurePageLoaded(pageId) {
+async function ensurePageLoaded(pageId: string): Promise<HTMLElement | null> {
   const config = getPageConfig(pageId);
   if (!config) {
     console.warn(`[router] No config for page: ${pageId}`);
@@ -125,16 +152,16 @@ async function ensurePageLoaded(pageId) {
 /**
  * Intercept hash anchor clicks so navigation goes through enhanced router/guards
  */
-function bindHashLinkNavigation() {
+function bindHashLinkNavigation(): void {
   if (window._hashLinkNavBind) return;
   window._hashLinkNavBind = true;
 
-  document.addEventListener('click', (event) => {
+  document.addEventListener('click', (event: MouseEvent) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
 
     const anchor = target.closest('a[href^="#"]');
-    if (!anchor) return;
+    if (!(anchor instanceof HTMLAnchorElement)) return;
 
     // Allow opting out
     if (anchor.dataset.routerBypass === 'true') return;
@@ -145,63 +172,71 @@ function bindHashLinkNavigation() {
 
     event.preventDefault();
 
-    void enhancedNavigateTo(hash).then((result) => {
-      // If navigation was blocked, keep current view
-      if (result === false) return;
+    void enhancedNavigateTo(hash)
+      .then((result) => {
+        // If navigation was blocked, keep current view
+        if (result === false) return;
 
-      // If hash didn't actually change, force UI refresh
-      const current = (location.hash || '#').replace(/^#/, '');
-      if (current === hash) {
-        router();
-      }
-    }).catch(() => {
-      // Fallback to legacy routing on error
-      router();
-    });
+        // If hash didn't actually change, force UI refresh
+        const current = (location.hash || '#').replace(/^#/, '');
+        if (current === hash) {
+          void router();
+        }
+      })
+      .catch(() => {
+        // Fallback to legacy routing on error
+        void router();
+      });
   });
 }
 
 /**
  * Show a specific card and hide all others
- * @param {HTMLElement} card - Card element to show
  */
-export function showCard(card) {
+export function showCard(card: HTMLElement): void {
   if (!card) return;
 
   // Hide all cards - use dynamic list from config
   const allCardIds = getAllContainerIds();
 
-  allCardIds.forEach(id => {
+  allCardIds.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
 
   // Hide overlays and modals
   const overlayIds = [
-    'newLoader', 'importLoader', 'groupSuggest', 'joinOverlay',
-    'confirmSkipModal', 'actionOverlay', 'actionModal'
+    'newLoader',
+    'importLoader',
+    'groupSuggest',
+    'joinOverlay',
+    'confirmSkipModal',
+    'actionOverlay',
+    'actionModal'
   ];
 
-  overlayIds.forEach(id => {
+  overlayIds.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.classList.add('hidden');
   });
 
   // Reset search state
-  const joinSearchBtn = document.getElementById('joinSearchBtn');
+  const joinSearchBtn = document.getElementById('joinSearchBtn') as HTMLButtonElement | null;
   if (joinSearchBtn) joinSearchBtn.disabled = true;
   const searchResult = document.getElementById('searchResult');
   if (searchResult) searchResult.classList.add('hidden');
   const recPane = document.getElementById('recPane');
   if (recPane) recPane.classList.remove('collapsed');
-  const groupSearch = document.getElementById('groupSearch');
+  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
   if (groupSearch) groupSearch.value = '';
 
   // Show the specified card
   card.classList.remove('hidden');
 
   // Ensure inner page container is also visible
-  const innerPage = card.querySelector('.entry-page, .login-page, .import-page, .new-page, .profile-page, .setpwd-page, .group-page, .history-page, .join-page, .inquiry-page, .wallet-main');
+  const innerPage = card.querySelector(
+    '.entry-page, .login-page, .import-page, .new-page, .profile-page, .setpwd-page, .group-page, .history-page, .join-page, .inquiry-page, .wallet-main'
+  );
   if (innerPage) innerPage.classList.remove('hidden');
 
   // Control footer visibility (hide on welcome page, show on others)
@@ -228,45 +263,46 @@ export function showCard(card) {
 
 /**
  * Navigate to a hash route
- * @param {string} hash - Hash route (e.g., '#/welcome')
  */
-export function routeTo(hash) {
+export function routeTo(hash: string): void {
   const targetPath = (hash || '#/welcome').replace(/^#/, '');
   const previous = (location.hash || '#').replace(/^#/, '');
 
-  void enhancedNavigateTo(targetPath).then((result) => {
-    // If navigation was blocked, do nothing
-    if (result === false) {
-      return;
-    }
+  void enhancedNavigateTo(targetPath)
+    .then((result) => {
+      // If navigation was blocked, do nothing
+      if (result === false) {
+        return;
+      }
 
-    // If hash did not change (same route), manually run router to refresh UI
-    const current = (location.hash || '#').replace(/^#/, '');
-    if (current === previous && current === targetPath) {
-      router();
-    }
-  }).catch(() => {
-    // Fallback to original behavior on error
-    router();
-  });
+      // If hash did not change (same route), manually run router to refresh UI
+      const current = (location.hash || '#').replace(/^#/, '');
+      if (current === previous && current === targetPath) {
+        void router();
+      }
+    })
+    .catch(() => {
+      // Fallback to original behavior on error
+      void router();
+    });
 }
 
 /**
  * Main router function - handles hash changes with dynamic page loading
  */
-export async function router() {
+export async function router(): Promise<void> {
   // Reset wallet binding flags before cleanup so events can be re-bound
   resetWalletBindings();
-  
+
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
 
   // Reinitialize header user menu after cleanup
   initUserMenu();
 
-  const h = (location.hash || '#/welcome').replace(/^#/, '');
+  const h = (location.hash || '#/welcome').replace(/^#/, '') as RoutePath | string;
   const u = loadUser();
-  const allowNoUser = ['/welcome', '/login', '/new', '/set-password', '/profile'];
+  const allowNoUser: string[] = ['/welcome', '/login', '/new', '/set-password', '/profile'];
 
   // Update route state in store for centralized state management
   setRoute(h);
@@ -277,8 +313,10 @@ export async function router() {
     return;
   }
 
+  const route = (Object.prototype.hasOwnProperty.call(pageLoaders, h) ? (h as RoutePath) : '/welcome');
+
   // Get page ID for the route
-  const pageId = routeToPageId[h] || 'welcome';
+  const pageId = routeToPageId[route] || 'welcome';
 
   // Ensure page is loaded
   const pageElement = await ensurePageLoaded(pageId);
@@ -286,6 +324,7 @@ export async function router() {
   // If page failed to load, show error and return
   if (!pageElement) {
     console.error(`[router] Page not loaded for route: ${h}`);
+
     // Try to show a fallback error message
     const main = document.getElementById('main');
     if (main && !document.getElementById('pageLoadError')) {
@@ -308,7 +347,7 @@ export async function router() {
   const errorEl = document.getElementById('pageLoadError');
   if (errorEl) errorEl.remove();
 
-  switch (h) {
+  switch (route) {
     case '/welcome':
       showCard(pageElement);
       void callPageFn('/welcome', 'initWelcomePage', 'updateWelcomeButtons');
@@ -349,9 +388,20 @@ export async function router() {
     case '/wallet-import':
       showCard(pageElement);
       void loadPageModule('/wallet-import').then((mod) => {
-        const resetFn = (mod && typeof mod.resetImportState === 'function') ? mod.resetImportState : (typeof window.resetImportState === 'function' ? window.resetImportState : null);
-        if (resetFn) resetFn('wallet');
-        const initFn = (mod && typeof mod.initImportPage === 'function') ? mod.initImportPage : (typeof window.initImportPage === 'function' ? window.initImportPage : null);
+        const resetFn =
+          (mod && typeof mod.resetImportState === 'function'
+            ? (mod.resetImportState as (mode?: string) => void)
+            : null) ||
+          ((window as unknown as Record<string, unknown>).resetImportState as
+            | ((mode?: string) => void)
+            | undefined);
+
+        if (typeof resetFn === 'function') resetFn('wallet');
+
+        const initFn =
+          (mod && typeof mod.initImportPage === 'function' ? (mod.initImportPage as () => void) : null) ||
+          getWindowFn('initImportPage');
+
         if (initFn) initFn();
       });
       break;
@@ -369,9 +419,17 @@ export async function router() {
     case '/inquiry':
       showCard(pageElement);
       void loadPageModule('/inquiry').then((mod) => {
-        const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
-        if (!fn) return;
-        fn(() => {
+        const candidate =
+          (mod && typeof mod.startInquiryAnimation === 'function'
+            ? (mod.startInquiryAnimation as (cb: () => void) => void)
+            : null) ||
+          ((window as unknown as Record<string, unknown>).startInquiryAnimation as
+            | ((cb: () => void) => void)
+            | undefined);
+
+        if (typeof candidate !== 'function') return;
+
+        candidate(() => {
           const u3 = loadUser();
           if (u3) {
             u3.orgNumber = '10000000';
@@ -385,9 +443,17 @@ export async function router() {
     case '/inquiry-main':
       showCard(pageElement);
       void loadPageModule('/inquiry-main').then((mod) => {
-        const fn = (mod && typeof mod.startInquiryAnimation === 'function') ? mod.startInquiryAnimation : (typeof window.startInquiryAnimation === 'function' ? window.startInquiryAnimation : null);
-        if (!fn) return;
-        fn(() => {
+        const candidate =
+          (mod && typeof mod.startInquiryAnimation === 'function'
+            ? (mod.startInquiryAnimation as (cb: () => void) => void)
+            : null) ||
+          ((window as unknown as Record<string, unknown>).startInquiryAnimation as
+            | ((cb: () => void) => void)
+            | undefined);
+
+        if (typeof candidate !== 'function') return;
+
+        candidate(() => {
           routeTo('#/main');
         });
       });
@@ -419,21 +485,23 @@ export async function router() {
 /**
  * Reset organization selection for new user
  */
-function resetOrgSelectionForNewUser() {
+function resetOrgSelectionForNewUser(): void {
   try {
     localStorage.removeItem('guarChoice');
-  } catch (_) { }
+  } catch {
+    // ignore
+  }
 }
-
-
 
 /**
  * Handle /new route
  */
-function handleNewUserRoute() {
+function handleNewUserRoute(): void {
   const doReset = async () => {
     const mod = await loadPageModule('/new');
-    const fn = (mod && typeof mod.resetCreatingFlag === 'function') ? mod.resetCreatingFlag : (typeof window.resetCreatingFlag === 'function' ? window.resetCreatingFlag : null);
+    const fn =
+      (mod && typeof mod.resetCreatingFlag === 'function' ? (mod.resetCreatingFlag as () => void) : null) ||
+      getWindowFn('resetCreatingFlag');
     if (fn) fn();
   };
   void doReset();
@@ -446,7 +514,7 @@ function handleNewUserRoute() {
   if (newLoader) newLoader.classList.add('hidden');
 
   const accountIdEl = document.getElementById('accountId');
-  const hasData = accountIdEl && accountIdEl.textContent.trim() !== '';
+  const hasData = !!(accountIdEl && (accountIdEl.textContent || '').trim() !== '');
 
   if (hasData) {
     if (resultEl) resultEl.classList.remove('hidden');
@@ -456,9 +524,21 @@ function handleNewUserRoute() {
     if (resultEl) resultEl.classList.add('hidden');
     const startCreate = async () => {
       const mod = await loadPageModule('/new');
-      const fn = (mod && typeof mod.handleCreate === 'function') ? mod.handleCreate : (typeof window.handleCreate === 'function' ? window.handleCreate : null);
+      const fn =
+        (mod && typeof mod.handleCreate === 'function'
+          ? (mod.handleCreate as (isRetry?: boolean) => Promise<void>)
+          : null) ||
+        (((window as unknown as Record<string, unknown>).handleCreate as
+          | ((isRetry?: boolean) => Promise<void>)
+          | undefined) ??
+          null);
+
       if (fn) {
-        try { await fn(false); } catch (_) { }
+        try {
+          await fn(false);
+        } catch {
+          // ignore
+        }
       }
     };
     void startCreate();
@@ -468,7 +548,7 @@ function handleNewUserRoute() {
 /**
  * Handle /join-group route
  */
-async function handleJoinGroupRoute(preloadedElement) {
+async function handleJoinGroupRoute(preloadedElement: HTMLElement): Promise<void> {
   const g0 = getJoinedGroup();
   const joined = !!(g0 && g0.groupID);
 
@@ -497,17 +577,17 @@ async function handleJoinGroupRoute(preloadedElement) {
 /**
  * Initialize router
  */
-export function initRouter() {
+export function initRouter(): void {
   bindHashLinkNavigation();
 
   // Listen for hash changes - only bind once
   if (!window._routerHashChangeBind) {
     window.addEventListener('hashchange', () => {
-      router();
+      void router();
     });
     window._routerHashChangeBind = true;
   }
 
   // Initial route
-  router();
+  void router();
 }

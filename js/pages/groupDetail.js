@@ -9,7 +9,7 @@ import { t } from '../i18n/index.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
 import { showMiniToast } from '../utils/toast.js';
-import { routeTo } from '../router.js';
+import { routeTo } from '../router';
 
 /**
  * Update group detail page display
