@@ -14,7 +14,11 @@ import { escapeHtml } from '../utils/security';
 export function updateWalletStruct() {
   const box = document.getElementById('walletStructBox');
   const u = loadUser();
-  if (!box || !u || !u.wallet) return;
+  if (!box) return;
+  if (!u || !u.wallet) {
+    box.innerHTML = `<div style="padding:12px 4px;color:#94a3b8;font-size:13px;">${escapeHtml(t('common.notLoggedIn') || '未登录')} / ${escapeHtml(t('wallet.noWalletData') || '暂无账户结构体数据')}</div>`;
+    return;
+  }
   const w = u.wallet || {};
   const addr = w.addressMsg || {};
   const sums = { 0: 0, 1: 0, 2: 0 };

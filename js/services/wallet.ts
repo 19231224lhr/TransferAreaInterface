@@ -13,7 +13,8 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
+import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
+import { store, selectUser } from '../utils/store.js';
 import { readAddressInterest } from '../utils/helpers.js';
 import { getActionModalElements } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
@@ -59,6 +60,14 @@ let walletMap: Record<string, AddressMetadata> = {};
 let srcAddrs: string[] = [];
 let __addrMode: 'create' | 'import' = 'create';
 
+function getCurrentUser(): User | null {
+  return (selectUser(store.getState()) as User | null) || null;
+}
+
+function deepClone<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj)) as T;
+}
+
 // ============================================================================
 // Binding Reset Function
 // ============================================================================
@@ -99,7 +108,7 @@ export function resetWalletBindings(): void {
  * Update wallet brief display (count and list)
  */
 export function updateWalletBrief(): void {
-  const u = loadUser();
+  const u = getCurrentUser();
   const countEl = document.getElementById('walletCount');
   const brief = document.getElementById('walletBriefList');
   const tip = document.getElementById('walletEmptyTip');
@@ -235,7 +244,7 @@ export function refreshOrgPanel(): void {
  * Render wallet address list
  */
 export function renderWallet(): void {
-  const u = loadUser();
+  const u = getCurrentUser();
   const aid = document.getElementById('walletAccountId');
   const org = document.getElementById('walletOrg');
   const addr = document.getElementById('walletMainAddr');
@@ -413,8 +422,9 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
   
   const doDel = () => {
     if (modal) modal.classList.add('hidden');
-    const u = loadUser();
-    if (!u) return;
+    const current = getCurrentUser();
+    if (!current) return;
+    const u = deepClone(current);
     
     const key = String(address).toLowerCase();
     const isMain = (u.address && u.address.toLowerCase() === key);
@@ -463,7 +473,7 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
  * Handle private key export
  */
 function handleExportPrivateKey(address: string, menu: HTMLElement): void {
-  const u = loadUser();
+  const u = getCurrentUser();
   const key = String(address).toLowerCase();
   let priv = '';
   
@@ -527,8 +537,9 @@ export function updateTotalGasBadge(u: User | null): void {
  * Handle add balance to address
  */
 export function handleAddToAddress(address: string): void {
-  const u = loadUser();
-  if (!u?.wallet?.addressMsg) return;
+  const current = getCurrentUser();
+  if (!current?.wallet?.addressMsg) return;
+  const u = deepClone(current);
   
   const key = String(address).toLowerCase();
   const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
@@ -588,8 +599,9 @@ export function handleAddToAddress(address: string): void {
  * Handle clear address balance
  */
 export function handleZeroAddress(address: string): void {
-  const u = loadUser();
-  if (!u?.wallet?.addressMsg) return;
+  const current = getCurrentUser();
+  if (!current?.wallet?.addressMsg) return;
+  const u = deepClone(current);
   
   const key = String(address).toLowerCase();
   const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
@@ -790,7 +802,7 @@ function setAddrError(msg: string): void {
  * Import address in place (from modal)
  */
 async function importAddressInPlace(priv: string): Promise<void> {
-  const u2 = loadUser();
+  const u2 = getCurrentUser();
   if (!u2?.accountId) { 
     showErrorToast(t('modal.pleaseLoginFirst'), t('common.notLoggedIn')); 
     return; 
@@ -952,7 +964,7 @@ export function initAddressModal(): void {
  * Refresh wallet snapshot from localStorage
  */
 function refreshWalletSnapshot(): Record<string, AddressMetadata> {
-  const latest = loadUser();
+  const latest = getCurrentUser();
   walletMap = (latest?.wallet?.addressMsg) || {};
   srcAddrs = Object.keys(walletMap);
   return walletMap;

@@ -7,7 +7,7 @@
  */
 
 import { t, updatePageTranslations } from './i18n/index.js';
-import { loadUser, saveUser, getJoinedGroup } from './utils/storage';
+import { loadUser, saveUser, getJoinedGroup, resetOrgSelectionForNewUser } from './utils/storage';
 import { DEFAULT_GROUP } from './config/constants';
 import { updateHeaderUser, initUserMenu } from './ui/header';
 import { cleanupPageListeners } from './utils/eventUtils.js';
@@ -431,9 +431,8 @@ export async function router(): Promise<void> {
 
         candidate(() => {
           const u3 = loadUser();
-          if (u3) {
-            u3.orgNumber = '10000000';
-            saveUser(u3);
+          if (u3 && (u3 as any).accountId) {
+            saveUser({ accountId: (u3 as any).accountId, orgNumber: '10000000' } as any);
           }
           routeTo('#/main');
         });
@@ -480,17 +479,6 @@ export async function router(): Promise<void> {
   // Update header user display
   const currentUser = loadUser();
   updateHeaderUser(currentUser);
-}
-
-/**
- * Reset organization selection for new user
- */
-function resetOrgSelectionForNewUser(): void {
-  try {
-    localStorage.removeItem('guarChoice');
-  } catch {
-    // ignore
-  }
 }
 
 /**

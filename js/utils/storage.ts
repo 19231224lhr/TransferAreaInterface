@@ -14,7 +14,7 @@ import {
   GROUP_LIST,
   GuarantorGroup
 } from '../config/constants';
-import { store, setUser } from './store.js';
+import { store, setUser, selectUser } from './store.js';
 
 // ========================================
 // Type Definitions
@@ -110,8 +110,12 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   const acc: any = isSame ? (prev ? JSON.parse(JSON.stringify(prev)) : {}) : {};
   
   acc.accountId = basic.accountId || acc.accountId || '';
-  acc.orgNumber = acc.orgNumber || '';
+  acc.orgNumber = (basic.orgNumber !== undefined ? basic.orgNumber : (acc.orgNumber || ''));
   acc.flowOrigin = basic.flowOrigin || acc.flowOrigin || '';
+
+  if (basic.guarGroup !== undefined) {
+    acc.guarGroup = basic.guarGroup;
+  }
   
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };
   acc.keys.privHex = basic.privHex || acc.keys.privHex || '';
@@ -133,6 +137,11 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
     acc.address = mainAddr;
     delete acc.wallet.addressMsg[mainAddr];
   }
+
+  // Backward-compat: allow legacy top-level key fields to be merged
+  if (basic.privHex !== undefined && basic.privHex) acc.privHex = basic.privHex;
+  if (basic.pubXHex !== undefined && basic.pubXHex) acc.pubXHex = basic.pubXHex;
+  if (basic.pubYHex !== undefined && basic.pubYHex) acc.pubYHex = basic.pubYHex;
   
   if (basic.wallet) {
     if (basic.wallet.addressMsg !== undefined) {
@@ -155,40 +164,83 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   return acc as User;
 }
 
-/**
- * Load user account from localStorage
- * @returns User account data or null if not found
- */
-export function loadUser(): User | null {
+// ========================================
+// Internal: Pure localStorage IO (no Store side effects)
+// ========================================
+
+function readUserFromStorage(): User | null {
   try {
     const rawAcc = localStorage.getItem(STORAGE_KEY);
     if (rawAcc) {
-      const user = JSON.parse(rawAcc) as User;
-      // Sync to centralized store for state management
-      setUser(user);
-      return user;
+      return JSON.parse(rawAcc) as User;
     }
-    
+
     // Try legacy storage key
     const legacy = localStorage.getItem('walletUser');
     if (legacy) {
       const basic = JSON.parse(legacy);
       const acc = toAccount(basic, null);
-      try { 
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(acc)); 
-      } catch { }
-      // Sync to centralized store for state management
-      setUser(acc);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
+      } catch {
+        // ignore
+      }
       return acc;
     }
-    
-    // No user found, sync null to store
-    setUser(null);
-    return null;
   } catch (e) {
-    console.warn('Failed to load user data', e);
-    return null;
+    console.warn('Failed to read user data from storage', e);
   }
+
+  return null;
+}
+
+function writeUserToStorage(user: User | null): void {
+  try {
+    if (!user) {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('walletUser');
+      return;
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    // Remove legacy to avoid split-brain
+    try {
+      localStorage.removeItem('walletUser');
+    } catch {
+      // ignore
+    }
+  } catch (e) {
+    console.warn('Failed to write user data to storage', e);
+  }
+}
+
+// ========================================
+// Store-first Public API
+// ========================================
+
+/**
+ * Initialize in-memory state from localStorage once at app startup.
+ * After this, Store becomes the single source of truth.
+ */
+export function initUserStateFromStorage(): User | null {
+  const user = readUserFromStorage();
+  setUser(user);
+  return user;
+}
+
+/**
+ * Persist the given user snapshot to localStorage.
+ * This is intended to be called as a Store change side effect.
+ */
+export function persistUserToStorage(user: User | null): void {
+  writeUserToStorage(user);
+}
+
+/**
+ * Load user account from localStorage
+ * @returns User account data or null if not found
+ */
+export function loadUser(): User | null {
+  return (selectUser(store.getState()) as User | null) || null;
 }
 
 /**
@@ -199,21 +251,21 @@ export function saveUser(user: Partial<User>): void {
   try {
     const prev = loadUser();
     const acc = toAccount(user, prev);
-    
+
     // Initialize wallet history if needed
     if (!acc.wallet) (acc as any).wallet = {};
     if (!acc.wallet.history) acc.wallet.history = [];
-    
+
     // Calculate current total assets (USDT)
     const vd = acc.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
     const pgc = Number(vd[0] || 0);
     const btc = Number(vd[1] || 0);
     const eth = Number(vd[2] || 0);
     const totalUsdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
-    
+
     const now = Date.now();
     const last = acc.wallet.history[acc.wallet.history.length - 1];
-    
+
     // Add new record if value changed or time > 1 minute, or if it's the first record
     if (!last || last.v !== totalUsdt || (now - last.t > 60000)) {
       acc.wallet.history.push({ t: now, v: totalUsdt });
@@ -222,20 +274,9 @@ export function saveUser(user: Partial<User>): void {
         acc.wallet.history = acc.wallet.history.slice(-100);
       }
     }
-    
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
-    
-    // Sync to centralized store for state management
-    setUser(acc);
 
-    // Namespace-only UI updates (no legacy window.* globals)
-    const pp = (window as any).PanguPay;
-    if (pp?.ui?.updateHeaderUser) {
-      pp.ui.updateHeaderUser(acc);
-    }
-    if (pp?.charts?.updateWalletChart) {
-      pp.charts.updateWalletChart(acc);
-    }
+    // Store is the single source of truth; persistence is handled by a Store subscription side effect.
+    setUser(acc);
   } catch (e) {
     console.warn('Failed to save user data', e);
   }
@@ -355,11 +396,8 @@ export function resetOrgSelectionForNewUser(): boolean {
   
   const current = loadUser();
   if (current && (current.orgNumber || current.guarGroup)) {
-    current.orgNumber = '';
-    current.guarGroup = null;
-    try { 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(current)); 
-    } catch (_) { }
+    const next = { ...current, orgNumber: '', guarGroup: null } as User;
+    setUser(next);
     changed = true;
   }
   

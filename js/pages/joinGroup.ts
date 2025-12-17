@@ -589,15 +589,17 @@ async function handleJoinSearchClick(): Promise<void> {
   
   // 保存到用户账户
   const u = loadUser();
-  if (u) {
-    u.guarGroup = {
-      groupID: g.groupID,
-      aggreNode: g.aggreNode,
-      assignNode: g.assignNode,
-      pledgeAddress: g.pledgeAddress
-    };
-    u.orgNumber = g.groupID;
-    saveUser(u);
+  if (u?.accountId) {
+    saveUser({
+      accountId: u.accountId,
+      orgNumber: g.groupID,
+      guarGroup: {
+        groupID: g.groupID,
+        aggreNode: g.aggreNode,
+        assignNode: g.assignNode,
+        pledgeAddress: g.pledgeAddress
+      }
+    });
   }
   
   // 导航到询问页面
@@ -699,10 +701,8 @@ export function handleJoinGroup(group: GroupInfo): void {
   
   // 更新用户
   const u = loadUser();
-  if (u) {
-    u.orgNumber = group.groupID;
-    u.guarGroup = group;
-    saveUser(u);
+  if (u?.accountId) {
+    saveUser({ accountId: u.accountId, orgNumber: group.groupID, guarGroup: group });
   }
   
   // 导航到询问页面

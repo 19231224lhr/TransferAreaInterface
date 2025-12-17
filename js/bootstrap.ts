@@ -6,11 +6,14 @@
  */
 
 import { t, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
-import { loadUser } from './utils/storage';
+import { initUserStateFromStorage } from './utils/storage';
 import { showErrorToast } from './utils/toast.js';
 import { initErrorBoundary } from './utils/security';
 import performanceModeManager from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
+
+import { store, selectUser } from './utils/store.js';
+import { initUserPersistence } from './utils/statePersistence';
 
 import { initAccessibility, announce } from './utils/accessibility';
 import { recoverPendingLocalStorageTransactions } from './utils/transaction';
@@ -302,18 +305,63 @@ function init(): void {
 
   initUserMenu();
   initHeaderScroll();
+
+  // Hydrate Store once. After this, Store is the single source of truth.
+  const hydratedUser = initUserStateFromStorage();
+  initUserPersistence();
+
+  // Reactive UI bindings driven by Store updates.
+  // Keep this binding idempotent across hot reload / re-entry.
+  if (!(window as any).__USER_STATE_BINDINGS__) {
+    (window as any).__USER_STATE_BINDINGS__ = true;
+
+    let scheduled = false;
+    const flushUi = () => {
+      scheduled = false;
+      const u = selectUser(store.getState());
+      try {
+        updateHeaderUser(u as any);
+      } catch {
+        // ignore
+      }
+
+      // Wallet/Org panels: safe no-op on pages where elements are absent.
+      const pp = (window as any).PanguPay;
+      try { pp?.wallet?.refreshOrgPanel?.(); } catch { }
+      try { pp?.wallet?.renderWallet?.(); } catch { }
+      try { pp?.wallet?.refreshSrcAddrList?.(); } catch { }
+      try { pp?.wallet?.updateWalletBrief?.(); } catch { }
+
+      // Charts
+      try { pp?.charts?.updateWalletChart?.(u); } catch { }
+    };
+
+    store.subscribe((state, prev) => {
+      const nextUser = (state as any).user;
+      const prevUser = (prev as any).user;
+      if (nextUser === prevUser) return;
+      if (scheduled) return;
+      scheduled = true;
+      requestAnimationFrame(flushUi);
+    });
+  }
   initRouter();
 
   updatePageTranslations();
 
+  // Initial paint from hydrated user
   requestAnimationFrame(() => {
-    const user = loadUser();
-    updateHeaderUser(user);
+    try {
+      updateHeaderUser(hydratedUser as any);
+    } catch {
+      // ignore
+    }
   });
 
+  // Screen lock init (best-effort)
   requestAnimationFrame(() => {
-    const user = loadUser();
-    if (user && (user as { accountId?: string }).accountId) {
+    const u = selectUser(store.getState()) as any;
+    if (u && u.accountId) {
       initScreenLock({
         lockOnStart: true,
         onLock: () => {},

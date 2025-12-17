@@ -1,0 +1,123 @@
+/**
+ * Store Persistence (Single Source of Truth)
+ *
+ * Persists selected Store slices to localStorage as a side effect.
+ *
+ * Design:
+ * - Store is the single source of truth
+ * - localStorage is only used for startup hydration + persistence
+ */
+
+import { store, selectUser } from './store.js';
+import { persistUserToStorage } from './storage';
+
+type Unsubscribe = () => void;
+
+function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  return ((...args: any[]) => {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => {
+      timer = null;
+      fn(...args);
+    }, ms);
+  }) as T;
+}
+
+let unsubscribe: Unsubscribe | null = null;
+let lastUserJson: string | null = null;
+let pendingUserJson: string | null = null;
+
+function computeUserJson(): string | null {
+  const user = selectUser(store.getState());
+  if (!user) return null;
+  try {
+    return JSON.stringify(user);
+  } catch {
+    return null;
+  }
+}
+
+function persistNow(): void {
+  const user = selectUser(store.getState());
+
+  // If user is null, remove from storage.
+  if (!user) {
+    if (lastUserJson !== null) {
+      persistUserToStorage(null);
+      lastUserJson = null;
+    }
+    pendingUserJson = null;
+    return;
+  }
+
+  const json = pendingUserJson ?? computeUserJson();
+  pendingUserJson = null;
+
+  if (!json) {
+    // Best-effort: if serialization fails, skip persisting.
+    return;
+  }
+
+  if (json === lastUserJson) {
+    return;
+  }
+
+  // Persist the exact snapshot (avoid re-serializing with possible non-determinism).
+  try {
+    persistUserToStorage(JSON.parse(json));
+    lastUserJson = json;
+  } catch {
+    // ignore
+  }
+}
+
+const persistDebounced = debounce(persistNow, 200);
+
+/**
+ * Start persisting Store.user into localStorage.
+ * Safe to call multiple times (idempotent).
+ */
+export function initUserPersistence(): void {
+  if (unsubscribe) return;
+
+  // Seed last json from current Store to avoid immediate redundant write.
+  lastUserJson = computeUserJson();
+
+  unsubscribe = store.subscribe((state, prev) => {
+    const nextUser = (state as any).user;
+    const prevUser = (prev as any).user;
+
+    // Fast path: if reference didn't change, skip.
+    if (nextUser === prevUser) return;
+
+    pendingUserJson = null;
+    try {
+      pendingUserJson = nextUser ? JSON.stringify(nextUser) : null;
+    } catch {
+      pendingUserJson = null;
+    }
+
+    persistDebounced();
+  });
+
+  // Flush on lifecycle events.
+  window.addEventListener('beforeunload', flushUserPersistence);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      flushUserPersistence();
+    }
+  });
+}
+
+export function flushUserPersistence(): void {
+  persistNow();
+}
+
+export function stopUserPersistence(): void {
+  if (unsubscribe) {
+    unsubscribe();
+    unsubscribe = null;
+  }
+  window.removeEventListener('beforeunload', flushUserPersistence);
+}

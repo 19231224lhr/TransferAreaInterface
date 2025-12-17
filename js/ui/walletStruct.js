@@ -22,8 +22,17 @@ export function initWalletStructToggle() {
 
     if (!isExpanded) {
       // Update wallet struct content
-      if (typeof window.updateWalletStruct === 'function') {
-        window.updateWalletStruct();
+      const pp = window.PanguPay;
+      const updateFn =
+        (typeof window.updateWalletStruct === 'function' ? window.updateWalletStruct : null) ||
+        (pp?.charts && typeof pp.charts.updateWalletStruct === 'function' ? pp.charts.updateWalletStruct : null);
+
+      if (typeof updateFn === 'function') {
+        try {
+          updateFn();
+        } catch {
+          // ignore
+        }
       }
       
       wsBox.classList.remove('hidden');

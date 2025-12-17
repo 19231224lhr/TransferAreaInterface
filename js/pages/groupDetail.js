@@ -45,10 +45,8 @@ export function updateGroupDetailDisplay() {
  */
 export function handleLeaveOrg() {
   const u = loadUser();
-  if (u) {
-    u.orgNumber = '';
-    u.guarGroup = null;
-    saveUser(u);
+  if (u && u.accountId) {
+    saveUser({ accountId: u.accountId, orgNumber: '', guarGroup: null });
   }
   
   clearGuarChoice();
@@ -187,13 +185,11 @@ function initGroupDetailButtons() {
       if (ov) ov.classList.add('hidden');
       
       const latest = loadUser();
-      if (latest) {
+      if (latest && latest.accountId) {
         try {
           localStorage.removeItem('guarChoice');
         } catch { }
-        latest.guarGroup = null;
-        latest.orgNumber = '';
-        saveUser(latest);
+        saveUser({ accountId: latest.accountId, orgNumber: '', guarGroup: null });
       }
       
       if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {

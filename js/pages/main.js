@@ -25,11 +25,13 @@ export function handleMainRoute() {
     const choice = raw ? JSON.parse(raw) : null;
     if (choice && choice.type === 'join') {
       const u2 = loadUser();
-      if (u2) {
-        u2.orgNumber = choice.groupID;
+      if (u2 && u2.accountId) {
         const g = Array.isArray(GROUP_LIST) ? GROUP_LIST.find(x => x.groupID === choice.groupID) : null;
-        u2.guarGroup = g || DEFAULT_GROUP;
-        saveUser(u2);
+        saveUser({
+          accountId: u2.accountId,
+          orgNumber: choice.groupID,
+          guarGroup: g || DEFAULT_GROUP
+        });
       }
     }
   } catch (_) { }
