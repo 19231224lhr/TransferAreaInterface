@@ -12,6 +12,7 @@ import {
   createReactiveState,
   type ReactiveState
 } from '../utils/reactive';
+import { html, nothing, renderInto, type TemplateResult } from '../utils/view';
 
 // ============================================================================
 // Types
@@ -293,7 +294,7 @@ export function getActionModalElements(): {
  * @param html - 模态框内容（HTML）
  * @param isError - 是否为错误
  */
-export function showModalTip(title: string, html: string, isError?: boolean): void {
+export function showModalTip(title: string, content?: string | TemplateResult, isError?: boolean): void {
   const loading = document.getElementById('unifiedLoading');
   const success = document.getElementById('unifiedSuccess');
   const iconWrap = document.getElementById('unifiedIconWrap');
@@ -328,7 +329,13 @@ export function showModalTip(title: string, html: string, isError?: boolean): vo
   if (textEl) {
     if (isError) textEl.classList.add('tip--error');
     else textEl.classList.remove('tip--error');
-    textEl.innerHTML = html || '';
+    if (typeof content === 'string' || content === undefined) {
+      const text = typeof content === 'string' ? content.trim() : '';
+      // Render as plain text by default (escaped). For rich content, callers should pass a TemplateResult.
+      renderInto(textEl, text ? html`${text}` : nothing);
+    } else {
+      renderInto(textEl, content);
+    }
   }
   if (modal) modal.classList.remove('hidden');
   
@@ -351,7 +358,7 @@ export function showModalTip(title: string, html: string, isError?: boolean): vo
  */
 export function showConfirmModal(
   title?: string, 
-  html?: string, 
+  content?: string | TemplateResult,
   okText?: string, 
   cancelText?: string
 ): Promise<boolean> {
@@ -369,8 +376,13 @@ export function showConfirmModal(
     
     if (titleEl) titleEl.textContent = title || t('modal.confirm') || '确认';
     if (textEl) {
-      textEl.innerHTML = html || '';
       textEl.classList.remove('tip--error');
+      if (typeof content === 'string' || content === undefined) {
+        const text = typeof content === 'string' ? content.trim() : '';
+        renderInto(textEl, text ? html`${text}` : nothing);
+      } else {
+        renderInto(textEl, content);
+      }
     }
     if (okText) okEl.textContent = okText;
     if (cancelText) cancelEl.textContent = cancelText;

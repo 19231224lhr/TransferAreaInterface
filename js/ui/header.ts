@@ -331,8 +331,16 @@ function handleAddressPopupClick(e: MouseEvent): void {
   if (!popup || !list) return;
   
   const map = (u?.wallet?.addressMsg) || {};
-  let html = `<div class="tip" style="margin:2px 0 6px;color:#667085;">${t('wallet.addressListTip')}</div>`;
-  
+
+  list.replaceChildren();
+
+  const tip = document.createElement('div');
+  tip.className = 'tip';
+  tip.style.margin = '2px 0 6px';
+  tip.style.color = '#667085';
+  tip.textContent = t('wallet.addressListTip');
+  list.appendChild(tip);
+
   Object.keys(map).forEach((k) => {
     if (u?.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
     const m = map[k];
@@ -340,14 +348,42 @@ function handleAddressPopupClick(e: MouseEvent): void {
     const val = Number(m.value?.totalValue || m.value?.TotalValue || 0);
     const rate = type === 1 ? 100 : (type === 2 ? 10 : 1);
     const v = Math.round(val * rate);
-    html += `<div class="addr-row" style="display:flex;justify-content:space-between;gap:6px;align-items:center;margin:4px 0;">
-      <code class="break" style="max-width:150px;background:#f6f8fe;padding:4px 6px;border-radius:8px;">${k}</code>
-      <span style="color:#667085;font-weight:600;min-width:64px;text-align:right;white-space:nowrap;">${v} USDT</span>
-    </div>`;
+
+    const row = document.createElement('div');
+    row.className = 'addr-row';
+    row.style.display = 'flex';
+    row.style.justifyContent = 'space-between';
+    row.style.gap = '6px';
+    row.style.alignItems = 'center';
+    row.style.margin = '4px 0';
+
+    const code = document.createElement('code');
+    code.className = 'break';
+    code.style.maxWidth = '150px';
+    code.style.background = '#f6f8fe';
+    code.style.padding = '4px 6px';
+    code.style.borderRadius = '8px';
+    code.textContent = k;
+
+    const amt = document.createElement('span');
+    amt.style.color = '#667085';
+    amt.style.fontWeight = '600';
+    amt.style.minWidth = '64px';
+    amt.style.textAlign = 'right';
+    amt.style.whiteSpace = 'nowrap';
+    amt.textContent = `${v} USDT`;
+
+    row.appendChild(code);
+    row.appendChild(amt);
+    list.appendChild(row);
   });
-  
-  if (Object.keys(map).length === 0) html += `<div class="tip">${t('wallet.noAddress')}</div>`;
-  list.innerHTML = html;
+
+  if (Object.keys(map).length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'tip';
+    empty.textContent = t('wallet.noAddress');
+    list.appendChild(empty);
+  }
   
   // 切换弹出框
   const currentShow = headerState?.getValue('showAddressPopup') || false;
@@ -544,7 +580,7 @@ export function updateHeaderUser(user: UserInfo | null): void {
     
     // 清空地址列表
     const menuAddrList = document.getElementById('menuAddressList');
-    if (menuAddrList) menuAddrList.innerHTML = '';
+    if (menuAddrList) menuAddrList.replaceChildren();
   }
   
   // 绑定事件

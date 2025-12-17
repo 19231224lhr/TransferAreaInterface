@@ -5,16 +5,17 @@
  */
 
 import { t } from '../i18n/index.js';
+import { html as viewHtml, renderInto } from './view';
 
 // ========================================
 // Toast Icons
 // ========================================
 
 const TOAST_ICONS = {
-  error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>',
-  success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>',
-  warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 8v6"/><path d="M12 17h.01"/></svg>',
-  info: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 12v4"/><path d="M12 8h.01"/></svg>'
+  error: viewHtml`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  success: viewHtml`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`,
+  warning: viewHtml`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 8v6"/><path d="M12 17h.01"/></svg>`,
+  info: viewHtml`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 12v4"/><path d="M12 8h.01"/></svg>`
 };
 
 // ========================================
@@ -43,7 +44,7 @@ export function showToast(message, type = 'info', title = '', duration = 3500) {
 
   const toast = document.createElement('div');
   toast.className = `toast toast--${type}`;
-  toast.innerHTML = `
+  renderInto(toast, viewHtml`
     <div class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</div>
     <div class="toast-content">
       <p class="toast-title">${title || defaultTitles[type] || t('common.info')}</p>
@@ -54,7 +55,7 @@ export function showToast(message, type = 'info', title = '', duration = 3500) {
         <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
       </svg>
     </button>
-  `;
+  `);
 
   // Close button event
   const closeBtn = toast.querySelector('.toast-close');
@@ -138,10 +139,10 @@ export function showMiniToast(message, type = 'info') {
   
   const toast = document.createElement('div');
   toast.className = `mini-toast mini-toast--${type}`;
-  toast.innerHTML = `
+  renderInto(toast, viewHtml`
     <span class="mini-toast-icon">${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
     <span class="mini-toast-text">${message}</span>
-  `;
+  `);
   document.body.appendChild(toast);
   
   // Trigger animation

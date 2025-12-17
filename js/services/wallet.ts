@@ -120,17 +120,29 @@ export function updateWalletBrief(): void {
   
   if (brief) {
     if (addrs.length === 0) {
-      brief.innerHTML = '';
+      brief.replaceChildren();
       if (tip) tip.classList.remove('hidden');
     } else {
       if (tip) tip.classList.add('hidden');
-      brief.innerHTML = addrs.slice(0, 3).map(addr => {
+      brief.replaceChildren();
+      addrs.slice(0, 3).forEach(addr => {
         const meta = (u?.wallet?.addressMsg?.[addr] || {}) as AddressMetadata;
         const typeId = Number(meta.type || 0);
         const coinType = getCoinName(typeId);
         const shortAddr = addr.length > 12 ? addr.slice(0, 6) + '...' + addr.slice(-4) : addr;
-        return `<div class="wallet-brief-item"><span class="wallet-brief-addr">${escapeHtml(shortAddr)}</span><span class="wallet-brief-coin">${escapeHtml(coinType)}</span></div>`;
-      }).join('');
+
+        const item = document.createElement('div');
+        item.className = 'wallet-brief-item';
+        const addrEl = document.createElement('span');
+        addrEl.className = 'wallet-brief-addr';
+        addrEl.textContent = shortAddr;
+        const coinEl = document.createElement('span');
+        coinEl.className = 'wallet-brief-coin';
+        coinEl.textContent = coinType;
+        item.appendChild(addrEl);
+        item.appendChild(coinEl);
+        brief.appendChild(item);
+      });
     }
   }
 }
@@ -281,7 +293,7 @@ export function renderWallet(): void {
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
 
-    item.innerHTML = `
+    const itemHtml = `
       <div class="addr-card-summary">
         <div class="addr-card-avatar coin--${coinClass}">${escapeHtml(coinType)}</div>
         <div class="addr-card-main">
@@ -320,6 +332,9 @@ export function renderWallet(): void {
         </div>
       </div>
     `;
+
+    const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
+    item.replaceChildren(...Array.from(doc.body.childNodes));
     
     // Add click to expand/collapse using globalEventManager
     const summaryEl = item.querySelector('.addr-card-summary');
@@ -341,7 +356,7 @@ export function renderWallet(): void {
   });
   
   // Single DOM update
-  list.innerHTML = '';
+  list.replaceChildren();
   list.appendChild(fragment);
   
   // Update wallet chart after rendering
@@ -362,7 +377,29 @@ function addAddressOperationsMenu(container: HTMLElement, address: string, cardI
   
   const toggle = document.createElement('button');
   toggle.className = 'ops-toggle';
-  toggle.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="1"></circle><circle cx="12" cy="5" r="1"></circle><circle cx="12" cy="19" r="1"></circle></svg>';
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('width', '16');
+  svg.setAttribute('height', '16');
+  svg.setAttribute('stroke', 'currentColor');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('fill', 'none');
+  const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c1.setAttribute('cx', '12');
+  c1.setAttribute('cy', '12');
+  c1.setAttribute('r', '1');
+  const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c2.setAttribute('cx', '12');
+  c2.setAttribute('cy', '5');
+  c2.setAttribute('r', '1');
+  const c3 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c3.setAttribute('cx', '12');
+  c3.setAttribute('cy', '19');
+  c3.setAttribute('r', '1');
+  svg.appendChild(c1);
+  svg.appendChild(c2);
+  svg.appendChild(c3);
+  toggle.appendChild(svg);
   
   const menu = document.createElement('div');
   menu.className = 'ops-menu hidden';
@@ -501,7 +538,13 @@ function handleExportPrivateKey(address: string, menu: HTMLElement): void {
   
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
-    if (text) { text.classList.remove('tip--error'); text.innerHTML = `<code class="break">${escapeHtml(priv)}</code>`; }
+    if (text) {
+      text.classList.remove('tip--error');
+      const code = document.createElement('code');
+      code.className = 'break';
+      code.textContent = priv;
+      text.replaceChildren(code);
+    }
   } else {
     if (title) title.textContent = t('wallet.exportFailed');
     if (text) { text.classList.add('tip--error'); text.textContent = t('wallet.noPrivateKey'); }
@@ -524,7 +567,13 @@ export function updateTotalGasBadge(u: User | null): void {
       const m = u.wallet.addressMsg[k];
       return s + readAddressInterest(m);
     }, 0);
-    gasBadge.innerHTML = `<span class="amt">${sumGas.toLocaleString()}</span><span class="unit">GAS</span>`;
+    const amt = document.createElement('span');
+    amt.className = 'amt';
+    amt.textContent = sumGas.toLocaleString();
+    const unit = document.createElement('span');
+    unit.className = 'unit';
+    unit.textContent = 'GAS';
+    gasBadge.replaceChildren(amt, unit);
   }
 }
 
@@ -1007,11 +1056,19 @@ function fillChange(): void {
   const optsBTC = getAddrsByType(1);
   const optsETH = getAddrsByType(2);
 
-  const buildOptions = (opts: string[]): string => opts.map(a => `<option value="${escapeHtml(a)}">${escapeHtml(a)}</option>`).join('');
+  const fillSelect = (selEl: HTMLSelectElement | null, opts: string[]): void => {
+    if (!selEl) return;
+    selEl.replaceChildren(...opts.map(a => {
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      return opt;
+    }));
+  };
 
-  if (chPGC) chPGC.innerHTML = buildOptions(optsPGC);
-  if (chBTC) chBTC.innerHTML = buildOptions(optsBTC);
-  if (chETH) chETH.innerHTML = buildOptions(optsETH);
+  fillSelect(chPGC, optsPGC);
+  fillSelect(chBTC, optsBTC);
+  fillSelect(chETH, optsETH);
 
   const buildMenu = (box: HTMLElement | null, optsArr: string[], hidden: HTMLSelectElement | null): void => {
     if (!box) return;
@@ -1019,7 +1076,12 @@ function fillChange(): void {
     const valEl = box.querySelector('.addr-val');
 
     if (optsArr.length === 0) {
-      if (menu) menu.innerHTML = `<div class="custom-select__item disabled">${t('transfer.noAddressAvailable')}</div>`;
+      if (menu) {
+        const item = document.createElement('div');
+        item.className = 'custom-select__item disabled';
+        item.textContent = t('transfer.noAddressAvailable');
+        (menu as HTMLElement).replaceChildren(item);
+      }
       if (valEl) valEl.textContent = t('transfer.noAddressAvailable');
       if (hidden) hidden.value = '';
       const ico0 = box.querySelector('.coin-icon');
@@ -1027,7 +1089,19 @@ function fillChange(): void {
       return;
     }
 
-    if (menu) menu.innerHTML = optsArr.map(a => `<div class="custom-select__item" data-val="${escapeHtml(a)}"><code class="break">${escapeHtml(a)}</code></div>`).join('');
+    if (menu) {
+      const items = optsArr.map(a => {
+        const div = document.createElement('div');
+        div.className = 'custom-select__item';
+        div.setAttribute('data-val', a);
+        const code = document.createElement('code');
+        code.className = 'break';
+        code.textContent = a;
+        div.appendChild(code);
+        return div;
+      });
+      (menu as HTMLElement).replaceChildren(...items);
+    }
 
     const currentVal = hidden?.value || '';
     const isValid = optsArr.includes(currentVal);
@@ -1071,7 +1145,8 @@ export function rebuildAddrList(): void {
     const label = document.createElement('label');
     label.className = `src-addr-item item-type-${color}`;
     label.dataset.addr = a;
-    label.innerHTML = `
+
+    const labelHtml = `
       <input type="checkbox" name="srcAddr" value="${escapeHtml(a)}">
       <div class="item-backdrop"></div>
       <div class="item-content">
@@ -1091,11 +1166,14 @@ export function rebuildAddrList(): void {
       </div>
       <div class="selection-outline"></div>
     `;
+
+    const doc = new DOMParser().parseFromString(labelHtml, 'text/html');
+    label.replaceChildren(...Array.from(doc.body.childNodes));
     
     fragment.appendChild(label);
   });
   
-  addrList.innerHTML = '';
+  addrList.replaceChildren();
   addrList.appendChild(fragment);
   
   autoSelectFromAddress(addrList);
@@ -1174,13 +1252,16 @@ export function initTransferModeTabs(): void {
   
   const rebuildDropdown = (): void => {
     const dd = ensureDropdown();
-    const items: string[] = [];
+    const btns: HTMLButtonElement[] = [];
     modeTabsContainer.querySelectorAll('.transfer-mode-tab').forEach(b => {
-      if (!b.classList.contains('active')) {
-        items.push(`<button class="mode-item" data-mode="${(b as HTMLElement).dataset.mode}">${b.textContent}</button>`);
-      }
+      if (b.classList.contains('active')) return;
+      const btn = document.createElement('button');
+      btn.className = 'mode-item';
+      btn.setAttribute('data-mode', (b as HTMLElement).dataset.mode || '');
+      btn.textContent = b.textContent || '';
+      btns.push(btn);
     });
-    dd.innerHTML = items.join('');
+    dd.replaceChildren(...btns);
   };
   
   const applyMode = (mode: string): void => {

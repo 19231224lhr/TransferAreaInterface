@@ -15,8 +15,14 @@ export function updateWalletStruct() {
   const box = document.getElementById('walletStructBox');
   const u = loadUser();
   if (!box) return;
+
+  const setBoxHtml = (html) => {
+    const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
+    box.replaceChildren(...Array.from(doc.body.childNodes));
+  };
+
   if (!u || !u.wallet) {
-    box.innerHTML = `<div style="padding:12px 4px;color:#94a3b8;font-size:13px;">${escapeHtml(t('common.notLoggedIn') || '未登录')} / ${escapeHtml(t('wallet.noWalletData') || '暂无账户结构体数据')}</div>`;
+    setBoxHtml(`<div style="padding:12px 4px;color:#94a3b8;font-size:13px;">${escapeHtml(t('common.notLoggedIn') || '未登录')} / ${escapeHtml(t('wallet.noWalletData') || '暂无账户结构体数据')}</div>`);
     return;
   }
   const w = u.wallet || {};
@@ -201,6 +207,6 @@ export function updateWalletStruct() {
   }
 
   html += '</div>'; // End of wb-inner-wrapper
-  
-  box.innerHTML = html;
+
+  setBoxHtml(html);
 }

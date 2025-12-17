@@ -102,7 +102,8 @@ export function initTxDetailModal() {
         .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
         .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
         .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
-      contentEl.innerHTML = highlighted;
+      const doc = new DOMParser().parseFromString(highlighted, 'text/html');
+      contentEl.replaceChildren(...Array.from(doc.body.childNodes));
     }
     modal.classList.remove('hidden');
   };

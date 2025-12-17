@@ -90,8 +90,8 @@ function createLockScreenElement(): HTMLElement {
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', 'lockScreenTitle');
-  
-  overlay.innerHTML = `
+
+  const doc = new DOMParser().parseFromString(`
     <div class="screen-lock-backdrop"></div>
     <div class="screen-lock-container">
       <div class="screen-lock-card">
@@ -171,7 +171,9 @@ function createLockScreenElement(): HTMLElement {
         </div>
       </div>
     </div>
-  `;
+
+  `, 'text/html');
+  overlay.replaceChildren(...Array.from(doc.body.childNodes));
   
   return overlay;
 }

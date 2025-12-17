@@ -251,6 +251,36 @@ export async function preCacheUrls(urls: string[]): Promise<boolean> {
 /** Online status callbacks */
 const onlineCallbacks: ((isOnline: boolean) => void)[] = [];
 
+let lastKnownOnline = typeof navigator !== 'undefined' ? navigator.onLine : true;
+
+const DEFAULT_PROBE_URL = 'https://www.baidu.com/favicon.ico';
+
+async function probeInternetReachability(timeoutMs: number = 2500): Promise<boolean> {
+  // Some setups keep `navigator.onLine=true` even when the Internet is unreachable (e.g., connected to LAN/localhost).
+  // We probe a tiny external resource; `no-cors` avoids CORS blocking and still rejects on network failure.
+  // Allow overrides for restricted networks.
+  const probeUrl =
+    (globalThis as any).__CONNECTIVITY_PROBE_URL__ ||
+    (typeof localStorage !== 'undefined' ? localStorage.getItem('connectivityProbeUrl') : null) ||
+    DEFAULT_PROBE_URL;
+
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    await fetch(`${probeUrl}${String(probeUrl).includes('?') ? '&' : '?'}_=${Date.now()}`, {
+      method: 'GET',
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: controller.signal
+    });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 /**
  * Check if currently online
  */
@@ -263,6 +293,13 @@ export function isOnline(): boolean {
  */
 export function onOnlineStatusChange(callback: (isOnline: boolean) => void): () => void {
   onlineCallbacks.push(callback);
+
+  // Immediately notify so callers don't depend on a future event.
+  try {
+    callback(isOnline());
+  } catch {
+    // best-effort
+  }
   
   return () => {
     const index = onlineCallbacks.indexOf(callback);
@@ -277,6 +314,7 @@ export function onOnlineStatusChange(callback: (isOnline: boolean) => void): () 
  */
 function initOnlineDetection(): void {
   const notifyOnlineStatus = (isOnline: boolean) => {
+    lastKnownOnline = isOnline;
     for (const callback of onlineCallbacks) {
       try {
         callback(isOnline);
@@ -293,6 +331,37 @@ function initOnlineDetection(): void {
   window.addEventListener('offline', () => {
     notifyOnlineStatus(false);
   });
+
+  // Heartbeat: combines browser signal + external probe.
+  // Goal: show offline indicator when the Internet is actually unreachable (common expectation for “断网”),
+  // even if localhost remains reachable.
+  let intervalId: number | null = null;
+  const schedule = (ms: number) => {
+    if (intervalId !== null) window.clearInterval(intervalId);
+    intervalId = window.setInterval(() => {
+      tick().catch(() => {});
+    }, ms);
+  };
+
+  const tick = async () => {
+    // Fast path: if the browser reports offline, trust it.
+    if (!navigator.onLine) {
+      if (lastKnownOnline !== false) notifyOnlineStatus(false);
+      schedule(5000);
+      return;
+    }
+
+    const reachable = await probeInternetReachability();
+    if (reachable !== lastKnownOnline) {
+      notifyOnlineStatus(reachable);
+    }
+    // Probe less often when stable online to reduce traffic.
+    schedule(reachable ? 15000 : 5000);
+  };
+
+  // Run once soon after init.
+  tick().catch(() => {});
+  schedule(15000);
 }
 
 // ========================================

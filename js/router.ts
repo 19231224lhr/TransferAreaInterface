@@ -17,6 +17,7 @@ import { navigateTo as enhancedNavigateTo } from './utils/enhancedRouter';
 import { pageManager } from './utils/pageManager';
 import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 import { resetWalletBindings } from './services/wallet';
+import { html as viewHtml, renderInto } from './utils/view';
 
 type PageModule = Record<string, unknown>;
 
@@ -331,13 +332,13 @@ export async function router(): Promise<void> {
       const errorDiv = document.createElement('div');
       errorDiv.id = 'pageLoadError';
       errorDiv.className = 'page-load-error';
-      errorDiv.innerHTML = `
-        <div style="text-align:center;padding:60px 20px;">
-          <h2 style="color:#ef4444;margin-bottom:16px;">页面加载失败</h2>
-          <p style="color:#64748b;margin-bottom:24px;">无法加载页面模板，请刷新重试</p>
-          <button data-action="reload" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;">刷新页面</button>
-        </div>
-      `;
+        renderInto(errorDiv, viewHtml`
+          <div style="text-align:center;padding:60px 20px;">
+            <h2 style="color:#ef4444;margin-bottom:16px;">页面加载失败</h2>
+            <p style="color:#64748b;margin-bottom:24px;">无法加载页面模板，请刷新重试</p>
+            <button data-action="reload" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;">刷新页面</button>
+          </div>
+        `);
       main.appendChild(errorDiv);
     }
     return;

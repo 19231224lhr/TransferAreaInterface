@@ -562,7 +562,7 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   const toggleBtn = document.getElementById('briefToggleBtn');
   if (brief) {
     brief.classList.add('hidden');
-    brief.innerHTML = '';
+    brief.replaceChildren();
   }
   if (toggleBtn) toggleBtn.classList.add('hidden');
   

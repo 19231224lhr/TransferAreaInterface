@@ -102,8 +102,8 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   const idBase = `bill_${Date.now()}_${billSeq++}`;
   const cardIndex = billList.querySelectorAll('.recipient-card').length + 1;
   card.setAttribute('data-index', cardIndex);
-  
-  card.innerHTML = `
+
+  const cardHtml = `
     <div class="recipient-content">
       <!-- Main area: Address -->
       <div class="recipient-main">
@@ -192,6 +192,9 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       </div>
     </div>
   `;
+
+  const doc = new DOMParser().parseFromString(cardHtml, 'text/html');
+  card.replaceChildren(...Array.from(doc.body.childNodes));
   
   const addrInputEl = card.querySelector('[data-name="to"]');
   const gidInputEl = card.querySelector('[data-name="gid"]');

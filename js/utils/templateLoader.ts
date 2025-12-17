@@ -139,28 +139,28 @@ class TemplateLoader {
         try {
             const content = await this.load(templatePath);
 
-            // Create a temporary container to parse the HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content.trim();
+            // Parse HTML without using innerHTML
+            const doc = new DOMParser().parseFromString(content, 'text/html');
 
-            // Get the first element
-            const templateEl = tempDiv.firstElementChild as HTMLElement;
+            if (options.replace) {
+                const nodes = Array.from(doc.body.childNodes);
+                containerEl.replaceChildren(...nodes);
+                return containerEl.firstElementChild as HTMLElement;
+            }
 
+            const templateEl = doc.body.firstElementChild as HTMLElement | null;
             if (!templateEl) {
                 console.error(`[TemplateLoader] Template is empty:`, templatePath);
                 return null;
             }
 
-            if (options.replace) {
-                containerEl.innerHTML = content;
-                return containerEl.firstElementChild as HTMLElement;
-            } else if (options.prepend) {
+            if (options.prepend) {
                 containerEl.insertBefore(templateEl, containerEl.firstChild);
                 return templateEl;
-            } else {
-                containerEl.appendChild(templateEl);
-                return templateEl;
             }
+
+            containerEl.appendChild(templateEl);
+            return templateEl;
         } catch (error) {
             console.error(`[TemplateLoader] Failed to load template into container:`, error);
             return null;

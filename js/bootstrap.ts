@@ -39,6 +39,8 @@ import { cleanupWalletChart } from './ui/charts.js';
 import { cleanupNetworkChart } from './ui/networkChart.js';
 import { initFooter, cleanupFooter } from './ui/footer.js';
 
+import { html as viewHtml, renderInto } from './utils/view';
+
 import {
   initScreenLock,
   cleanupScreenLock
@@ -59,12 +61,12 @@ function setupOnlineIndicator(): void {
     indicator.className = 'offline-indicator';
     indicator.setAttribute('role', 'alert');
     indicator.setAttribute('aria-live', 'assertive');
-    indicator.innerHTML = `
+    renderInto(indicator, viewHtml`
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M1 1l22 22M16.72 11.06A10.94 10.94 0 0119 12.55M5 12.55a10.94 10.94 0 015.17-2.39M10.71 5.05A16 16 0 0122.58 9M1.42 9a15.91 15.91 0 014.7-2.88M8.53 16.11a6 6 0 016.95 0M12 20h.01"/>
       </svg>
-      <span class="offline-indicator__text">${t('offline.message', '网络已断开，部分功能不可用')}</span>
-    `;
+      <span class="offline-indicator__text">${t('offline', '网络已断开，部分功能不可用')}</span>
+    `);
     document.body.appendChild(indicator);
   }
 
@@ -73,7 +75,7 @@ function setupOnlineIndicator(): void {
       indicator.classList.remove('visible');
     } else {
       indicator.classList.add('visible');
-      announce(t('offline.message', '网络已断开，部分功能不可用'), 'assertive');
+      announce(t('offline', '网络已断开，部分功能不可用'), 'assertive');
     }
   };
 
@@ -93,7 +95,7 @@ function setupServiceWorkerUpdates(): void {
     banner.className = 'update-banner';
     banner.setAttribute('role', 'status');
     banner.setAttribute('aria-live', 'polite');
-    banner.innerHTML = `
+    renderInto(banner, viewHtml`
       <div class="update-banner__icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 2v6h-6" />
@@ -110,7 +112,7 @@ function setupServiceWorkerUpdates(): void {
         <button class="update-banner__btn update-banner__btn--secondary" data-action="dismiss">${t('update.later', '稍后')}</button>
         <button class="update-banner__btn update-banner__btn--primary" data-action="update">${t('update.apply', '立即更新')}</button>
       </div>
-    `;
+    `);
     document.body.appendChild(banner);
   }
 
@@ -263,7 +265,8 @@ function init(): void {
     console.log('[App] Template system initialized, pages will be loaded from /assets/templates/pages/');
   } catch (error) {
     console.error('[App] CRITICAL: Failed to initialize template system:', error);
-    document.body.innerHTML = `
+    const fatal = document.createElement('div');
+    renderInto(fatal, viewHtml`
       <div style="display:flex;align-items:center;justify-content:center;min-height:100vh;background:#0f172a;color:white;text-align:center;padding:20px;">
         <div>
           <h1 style="color:#ef4444;margin-bottom:16px;">初始化失败</h1>
@@ -271,7 +274,8 @@ function init(): void {
           <button data-action="reload" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;">刷新页面</button>
         </div>
       </div>
-    `;
+    `);
+    document.body.replaceChildren(fatal);
     return;
   }
 

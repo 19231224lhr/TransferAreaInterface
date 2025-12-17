@@ -135,6 +135,7 @@ import {
 // UI
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay, showModalTip } from './ui/modal';
+import { html as viewHtml } from './utils/view';
 import { getCurrentTheme, setTheme, toggleTheme, loadThemeSetting, initThemeSelector } from './ui/theme.js';
 import { updateWalletChart, initWalletChart, cleanupWalletChart } from './ui/charts.js';
 import { initNetworkChart, cleanupNetworkChart } from './ui/networkChart.js';
@@ -200,28 +201,31 @@ const showUtxoDetail = (addrKey, utxoKey) => {
   const utxo = addrMsg.utxos[utxoKey];
   if (!utxo) return;
 
-  let html = '';
-  html += `<div class="detail-row"><div class="detail-label">UTXO Key</div><div class="detail-val">${utxoKey}</div></div>`;
-  html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${utxo.Value || 0}</div></div>`;
-  html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${utxo.Time || 0}</div></div>`;
+  const positionText = utxo.Position
+    ? `Block: ${utxo.Position.Blocknum}, IdxX: ${utxo.Position.IndexX}, IdxY: ${utxo.Position.IndexY}, IdxZ: ${utxo.Position.IndexZ}`
+    : '';
 
-  if (utxo.Position) {
-    html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">`;
-    html += `Block: ${utxo.Position.Blocknum}, IdxX: ${utxo.Position.IndexX}, IdxY: ${utxo.Position.IndexY}, IdxZ: ${utxo.Position.IndexZ}`;
-    html += `</div></div>`;
-  }
-
-  html += `<div class="detail-row"><div class="detail-label">Is TXCer</div><div class="detail-val">${utxo.IsTXCerUTXO ? 'Yes' : 'No'}</div></div>`;
-
-  if (utxo.UTXO) {
-    html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">`;
-    html += `<div class="detail-sub">`;
-    html += `<div style="margin-bottom:4px">TXID: ${utxo.UTXO.TXID || 'N/A'}</div>`;
-    html += `<div>VOut: ${utxo.UTXO.VOut}</div>`;
-    html += `</div></div></div>`;
-  }
-
-  showModalTip('UTXO 详情', html, false);
+  showModalTip(
+    'UTXO 详情',
+    viewHtml`
+      <div class="detail-row"><div class="detail-label">UTXO Key</div><div class="detail-val">${utxoKey}</div></div>
+      <div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${utxo.Value || 0}</div></div>
+      <div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${utxo.Time || 0}</div></div>
+      ${utxo.Position
+        ? viewHtml`<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">${positionText}</div></div>`
+        : null}
+      <div class="detail-row"><div class="detail-label">Is TXCer</div><div class="detail-val">${utxo.IsTXCerUTXO ? 'Yes' : 'No'}</div></div>
+      ${utxo.UTXO
+        ? viewHtml`<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">
+            <div class="detail-sub">
+              <div style="margin-bottom:4px">TXID: ${utxo.UTXO.TXID || 'N/A'}</div>
+              <div>VOut: ${utxo.UTXO.VOut}</div>
+            </div>
+          </div></div>`
+        : null}
+    `,
+    false
+  );
 };
 
 const showTxCerDetail = (addrKey, cerKey) => {
@@ -232,26 +236,30 @@ const showTxCerDetail = (addrKey, cerKey) => {
   const cer = addrMsg.txCers[cerKey];
   if (!cer) return;
 
-  let html = '';
-  html += `<div class="detail-row"><div class="detail-label">TXCer Key</div><div class="detail-val">${cerKey}</div></div>`;
-  html += `<div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${cer.Value || 0}</div></div>`;
-  html += `<div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${cer.Time || 0}</div></div>`;
+  const positionText = cer.Position
+    ? `Block: ${cer.Position.Blocknum}, IdxX: ${cer.Position.IndexX}, IdxY: ${cer.Position.IndexY}, IdxZ: ${cer.Position.IndexZ}`
+    : '';
 
-  if (cer.Position) {
-    html += `<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">`;
-    html += `Block: ${cer.Position.Blocknum}, IdxX: ${cer.Position.IndexX}, IdxY: ${cer.Position.IndexY}, IdxZ: ${cer.Position.IndexZ}`;
-    html += `</div></div>`;
-  }
-
-  if (cer.UTXO) {
-    html += `<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">`;
-    html += `<div class="detail-sub">`;
-    html += `<div style="margin-bottom:4px">TXID: ${cer.UTXO.TXID || 'N/A'}</div>`;
-    html += `<div>VOut: ${cer.UTXO.VOut}</div>`;
-    html += `</div></div></div>`;
-  }
-
-  showModalTip('TXCer 详情', html, false);
+  showModalTip(
+    'TXCer 详情',
+    viewHtml`
+      <div class="detail-row"><div class="detail-label">TXCer Key</div><div class="detail-val">${cerKey}</div></div>
+      <div class="detail-row"><div class="detail-label">Value</div><div class="detail-val">${cer.Value || 0}</div></div>
+      <div class="detail-row"><div class="detail-label">Time</div><div class="detail-val">${cer.Time || 0}</div></div>
+      ${cer.Position
+        ? viewHtml`<div class="detail-row"><div class="detail-label">Position</div><div class="detail-val">${positionText}</div></div>`
+        : null}
+      ${cer.UTXO
+        ? viewHtml`<div class="detail-row"><div class="detail-label">Source TX</div><div class="detail-val">
+            <div class="detail-sub">
+              <div style="margin-bottom:4px">TXID: ${cer.UTXO.TXID || 'N/A'}</div>
+              <div>VOut: ${cer.UTXO.VOut}</div>
+            </div>
+          </div></div>`
+        : null}
+    `,
+    false
+  );
 };
 
 // ========================================

@@ -371,18 +371,24 @@ function handleProfileSave(): void {
   
   // 显示保存成功动画
   if (profileSaveBtn) {
-    const originalHtml = profileSaveBtn.innerHTML;
+    const originalNodes = Array.from(profileSaveBtn.childNodes).map(n => n.cloneNode(true));
     profileSaveBtn.classList.add('profile-action-btn--success');
-    profileSaveBtn.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="20 6 9 17 4 12" />
-      </svg>
-      ${t('profile.action.saved') || '已保存'}
-    `;
+
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2');
+    const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+    polyline.setAttribute('points', '20 6 9 17 4 12');
+    svg.appendChild(polyline);
+
+    const text = document.createTextNode(` ${t('profile.action.saved') || '已保存'}`);
+    profileSaveBtn.replaceChildren(svg, text);
     
     setTimeout(() => {
       profileSaveBtn.classList.remove('profile-action-btn--success');
-      profileSaveBtn.innerHTML = originalHtml;
+      profileSaveBtn.replaceChildren(...originalNodes);
     }, 1500);
   }
   

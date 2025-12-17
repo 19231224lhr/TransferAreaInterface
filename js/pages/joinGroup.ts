@@ -493,7 +493,7 @@ function handleGroupSearchInput(): void {
   }
   
   if (groupSuggest) {
-    groupSuggest.innerHTML = list.map(g => 
+    const html = list.map(g => 
       `<div class="item" data-id="${escapeHtml(g.groupID)}">
         <span class="suggest-id">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -511,6 +511,9 @@ function handleGroupSearchInput(): void {
         <span class="suggest-arrow">→</span>
       </div>`
     ).join('');
+
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    groupSuggest.replaceChildren(...Array.from(doc.body.childNodes));
     
     if (pageState) {
       pageState.set({ showSuggest: true });

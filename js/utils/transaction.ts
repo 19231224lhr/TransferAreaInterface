@@ -330,9 +330,13 @@ interface DOMSnapshot {
   element: HTMLElement;
   parent: HTMLElement | null;
   nextSibling: Node | null;
-  innerHTML: string;
+  childNodes: Node[];
   className: string;
   attributes: Record<string, string>;
+}
+
+function cloneChildNodes(element: HTMLElement): Node[] {
+  return Array.from(element.childNodes).map((n) => n.cloneNode(true));
 }
 
 /**
@@ -348,7 +352,7 @@ export function createDOMSnapshot(element: HTMLElement): DOMSnapshot {
     element,
     parent: element.parentElement,
     nextSibling: element.nextSibling,
-    innerHTML: element.innerHTML,
+    childNodes: cloneChildNodes(element),
     className: element.className,
     attributes
   };
@@ -358,7 +362,7 @@ export function createDOMSnapshot(element: HTMLElement): DOMSnapshot {
  * Restore DOM from snapshot
  */
 export function restoreFromSnapshot(snapshot: DOMSnapshot): void {
-  const { element, parent, nextSibling, innerHTML, className, attributes } = snapshot;
+  const { element, parent, nextSibling, childNodes, className, attributes } = snapshot;
   
   // Restore attributes
   // First, remove all current attributes
@@ -372,7 +376,7 @@ export function restoreFromSnapshot(snapshot: DOMSnapshot): void {
   }
   
   // Restore content
-  element.innerHTML = innerHTML;
+  element.replaceChildren(...childNodes.map((n) => n.cloneNode(true)));
   element.className = className;
   
   // Restore position if removed

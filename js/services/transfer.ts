@@ -8,6 +8,7 @@ import { t } from '../i18n/index.js';
 import { loadUser, User } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
+import { html as viewHtml } from '../utils/view';
 import { buildNewTX, BuildTXInfo } from './transaction';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
@@ -431,12 +432,24 @@ export function initTransferSubmit(): void {
       }
       
       if (removedAddrs.length) {
-        const tipHtml = t('transfer.optimizedAddresses', { count: String(removedAddrs.length) }).replace('{count}', `<strong>${removedAddrs.length}</strong>`);
-        showModalTip(t('toast.addressOptimized'), tipHtml, false);
+        const raw = t('transfer.optimizedAddresses', { count: String(removedAddrs.length) });
+        const marker = '__COUNT__MARKER__';
+        const withMarker = raw.replace('{count}', marker);
+        const parts = withMarker.split(marker);
+        const tipContent = parts.length === 2
+          ? viewHtml`${parts[0]}<strong>${removedAddrs.length}</strong>${parts[1]}`
+          : viewHtml`${raw} <strong>${removedAddrs.length}</strong>`;
+        showModalTip(t('toast.addressOptimized'), tipContent, false);
       }
       
       if (extraPGC > 0) {
-        const exchangeDesc = t('transfer.exchangeGasDesc', { amount: String(extraPGC) }).replace(/\{amount\}/g, `<strong>${extraPGC}</strong>`);
+        const raw = t('transfer.exchangeGasDesc', { amount: String(extraPGC) });
+        const marker = '__AMOUNT__MARKER__';
+        const withMarker = raw.replace(/\{amount\}/g, marker);
+        const parts = withMarker.split(marker);
+        const exchangeDesc = parts.length === 2
+          ? viewHtml`${parts[0]}<strong>${extraPGC}</strong>${parts[1]}`
+          : viewHtml`${raw} <strong>${extraPGC}</strong>`;
         const confirmed = await showConfirmModal(
           t('transfer.confirmExchangeGas'),
           exchangeDesc,

@@ -98,7 +98,7 @@ function captureRecipients(): RecipientDraft[] {
 function clearRecipients(): void {
   const billList = document.getElementById('billList');
   if (!billList) return;
-  billList.innerHTML = '';
+  billList.replaceChildren();
   delete (billList as any).dataset._recipientBind;
 }
 

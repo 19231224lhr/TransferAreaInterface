@@ -136,7 +136,7 @@ function renderTransactionList(transactions) {
   if (!listEl) return;
   
   if (transactions.length === 0) {
-    listEl.innerHTML = `
+    const emptyHtml = `
       <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;">
           <circle cx="12" cy="12" r="10"></circle>
@@ -146,6 +146,9 @@ function renderTransactionList(transactions) {
         <p style="font-size: 15px; font-weight: 600; margin: 0;">${t('history.noTransactions')}</p>
       </div>
     `;
+
+    const doc = new DOMParser().parseFromString(emptyHtml, 'text/html');
+    listEl.replaceChildren(...Array.from(doc.body.childNodes));
     return;
   }
   
@@ -157,7 +160,7 @@ function renderTransactionList(transactions) {
     item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
     item.dataset.txId = tx.id;
     
-    item.innerHTML = `
+    const itemHtml = `
       <div class="history-item-header">
         <div class="history-item-type">
           <div class="history-item-icon ${escapeHtml(tx.type)}">
@@ -196,6 +199,9 @@ function renderTransactionList(transactions) {
         ${renderTransactionDetail(tx)}
       </div>
     `;
+
+    const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
+    item.replaceChildren(...Array.from(doc.body.childNodes));
     
     // Bind click event
     item.addEventListener('click', (e) => {
@@ -212,7 +218,7 @@ function renderTransactionList(transactions) {
   });
   
   // Single DOM update
-  listEl.innerHTML = '';
+  listEl.replaceChildren();
   listEl.appendChild(fragment);
 }
 

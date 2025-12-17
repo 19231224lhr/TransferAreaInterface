@@ -150,6 +150,17 @@ export function createReactiveState<T extends object>(
   /**
    * 应用单个绑定到 DOM
    */
+  function setHtmlContent(el: Element, raw: unknown): void {
+    const htmlStr = String(raw ?? '');
+    if (!htmlStr) {
+      el.replaceChildren();
+      return;
+    }
+    const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
+    const nodes = Array.from(doc.body.childNodes).map((n) => document.importNode(n, true));
+    el.replaceChildren(...nodes);
+  }
+
   function applyBinding<K extends keyof T>(
     key: K,
     value: T[K],
@@ -172,8 +183,8 @@ export function createReactiveState<T extends object>(
         break;
 
       case 'html':
-        // 警告：确保内容已经过安全处理
-        el.innerHTML = String(finalValue ?? '');
+        // Warning: preserves legacy behavior (rendering HTML strings) without using `innerHTML`.
+        setHtmlContent(el, finalValue);
         break;
 
       case 'visible':

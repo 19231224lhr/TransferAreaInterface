@@ -124,16 +124,28 @@ function renderWalletList(addrs: string[]): void {
   if (!brief) return;
   
   if (addrs.length === 0) {
-    brief.innerHTML = '';
+    brief.replaceChildren();
     return;
   }
-  
-  const items = addrs.map(a => {
+
+  brief.replaceChildren();
+  addrs.forEach(a => {
     const o = getAddressOrigin(a);
-    return `<li data-addr="${escapeHtml(a)}"><span class="wallet-addr">${escapeHtml(a)}</span><span class="origin-badge ${o.cls}">${o.label}</span></li>`;
-  }).join('');
-  
-  brief.innerHTML = items;
+    const li = document.createElement('li');
+    li.dataset.addr = a;
+
+    const addr = document.createElement('span');
+    addr.className = 'wallet-addr';
+    addr.textContent = a;
+
+    const badge = document.createElement('span');
+    badge.className = `origin-badge ${o.cls}`;
+    badge.textContent = o.label;
+
+    li.appendChild(addr);
+    li.appendChild(badge);
+    brief.appendChild(li);
+  });
 }
 
 /**

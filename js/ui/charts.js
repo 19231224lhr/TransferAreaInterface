@@ -195,18 +195,20 @@ export function updateWalletChart(user) {
   fillEl.setAttribute('d', fillD);
 
   // Generate data points - use fixed size circles (won't deform with SVG stretch)
-  dotsEl.innerHTML = points.map((p, i) => {
-    const isLast = i === points.length - 1;
-    const baseR = isLast ? 4 : 3;
-    return `<circle 
-      cx="${p.x.toFixed(1)}" 
-      cy="${p.y.toFixed(1)}" 
-      r="${baseR}" 
-      class="${isLast ? 'chart-dot-current' : 'chart-dot'}"
-      data-value="${p.v}"
-      data-time="${p.t}"
-    />`;
-  }).join('');
+  dotsEl.replaceChildren(
+    ...points.map((p, i) => {
+      const isLast = i === points.length - 1;
+      const baseR = isLast ? 4 : 3;
+      const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      c.setAttribute('cx', p.x.toFixed(1));
+      c.setAttribute('cy', p.y.toFixed(1));
+      c.setAttribute('r', String(baseR));
+      c.setAttribute('class', isLast ? 'chart-dot-current' : 'chart-dot');
+      c.setAttribute('data-value', String(p.v));
+      c.setAttribute('data-time', String(p.t));
+      return c;
+    })
+  );
 
   // Update time labels
   if (timeLabelsEl && displayHistory.length > 0) {
@@ -217,11 +219,17 @@ export function updateWalletChart(user) {
     
     const formatTime = (d) => `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
     
-    timeLabelsEl.innerHTML = `
-      <span class="chart-time-label">${formatTime(firstTime)}</span>
-      <span class="chart-time-label">${formatTime(midTime)}</span>
-      <span class="chart-time-label">${formatTime(lastTime)}</span>
-    `;
+    const mk = (txt) => {
+      const s = document.createElement('span');
+      s.className = 'chart-time-label';
+      s.textContent = txt;
+      return s;
+    };
+    timeLabelsEl.replaceChildren(
+      mk(formatTime(firstTime)),
+      mk(formatTime(midTime)),
+      mk(formatTime(lastTime))
+    );
   }
 
   // Save points globally for tooltip

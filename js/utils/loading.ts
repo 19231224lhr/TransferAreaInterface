@@ -290,7 +290,9 @@ export function createLoadingFunction<T, Args extends any[]>(
 // ========================================
 
 /** Active element loading states */
-const elementLoadingStates: WeakMap<HTMLElement, { originalContent: string; originalDisabled: boolean }> = new WeakMap();
+const elementLoadingStates: WeakMap<HTMLElement, { originalNodes: Node[]; originalDisabled: boolean }> = new WeakMap();
+
+const skeletonOriginalNodes: WeakMap<HTMLElement, Node[]> = new WeakMap();
 
 /**
  * Show loading state on a specific element (e.g., button)
@@ -304,7 +306,7 @@ export function showElementLoading(
   // Save original state
   const isButton = element.tagName === 'BUTTON' || element.tagName === 'INPUT';
   elementLoadingStates.set(element, {
-    originalContent: element.innerHTML,
+    originalNodes: Array.from(element.childNodes).map((n) => n.cloneNode(true)),
     originalDisabled: isButton ? (element as HTMLButtonElement).disabled : false
   });
   
@@ -317,10 +319,12 @@ export function showElementLoading(
   }
   
   if (loadingText) {
-    element.innerHTML = `
-      <span class="loading-spinner"></span>
-      <span class="loading-text">${loadingText}</span>
-    `;
+    const spinner = document.createElement('span');
+    spinner.className = 'loading-spinner';
+    const text = document.createElement('span');
+    text.className = 'loading-text';
+    text.textContent = loadingText;
+    element.replaceChildren(spinner, text);
   } else {
     // Just add spinner
     const spinner = document.createElement('span');
@@ -341,7 +345,7 @@ export function hideElementLoading(element: HTMLElement | null): void {
   // Restore original state
   element.classList.remove('is-loading');
   setAriaBusy(element, false);
-  element.innerHTML = state.originalContent;
+  element.replaceChildren(...state.originalNodes);
   
   const isButton = element.tagName === 'BUTTON' || element.tagName === 'INPUT';
   if (isButton) {
@@ -414,14 +418,13 @@ export function showSkeletonLoading(
   const { type = 'text', lines = 3 } = options;
   
   // Save original content
-  if (!element.dataset._originalContent) {
-    element.dataset._originalContent = element.innerHTML;
+  if (!skeletonOriginalNodes.has(element)) {
+    skeletonOriginalNodes.set(element, Array.from(element.childNodes).map((n) => n.cloneNode(true)));
   }
   
   // Create skeleton
   const skeleton = createSkeleton(type, { lines });
-  element.innerHTML = '';
-  element.appendChild(skeleton);
+  element.replaceChildren(skeleton);
   element.classList.add('skeleton-loading');
 }
 
@@ -431,10 +434,10 @@ export function showSkeletonLoading(
 export function hideSkeletonLoading(element: HTMLElement | null): void {
   if (!element) return;
   
-  const originalContent = element.dataset._originalContent;
-  if (originalContent !== undefined) {
-    element.innerHTML = originalContent;
-    delete element.dataset._originalContent;
+  const originalNodes = skeletonOriginalNodes.get(element);
+  if (originalNodes) {
+    element.replaceChildren(...originalNodes);
+    skeletonOriginalNodes.delete(element);
   }
   
   element.classList.remove('skeleton-loading');

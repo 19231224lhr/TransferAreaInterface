@@ -20,6 +20,7 @@ import {
   checkEncryptionStatus
 } from './keyEncryption';
 import { loadUser, saveUser, User } from './storage';
+import { html as viewHtml, nothing, renderInto } from './view';
 
 // ========================================
 // Password Prompt Functions
@@ -49,15 +50,19 @@ export function showPasswordPrompt(options: {
     const modal = document.createElement('div');
     modal.id = 'passwordPromptModal';
     modal.className = 'modal';
-    modal.innerHTML = `
+    renderInto(modal, viewHtml`
       <div class="modal-overlay"></div>
       <div class="modal-content password-prompt-modal">
         <h3 class="modal-title">${title}</h3>
         <p class="modal-desc">${description}</p>
         <div class="password-input-group">
-          <input type="password" id="pwdPromptInput" class="modal-input" 
-            placeholder="${placeholder || t('encryption.enterPassword')}" 
-            autocomplete="off" />
+          <input
+            type="password"
+            id="pwdPromptInput"
+            class="modal-input"
+            placeholder=${placeholder || t('encryption.enterPassword')}
+            autocomplete="off"
+          />
           <button type="button" class="pwd-toggle-btn" id="pwdToggleBtn">
             <svg class="eye-open hidden" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -69,20 +74,28 @@ export function showPasswordPrompt(options: {
             </svg>
           </button>
         </div>
-        ${confirmMode ? `
-          <div class="password-input-group" style="margin-top: 12px;">
-            <input type="password" id="pwdConfirmInput" class="modal-input" 
-              placeholder="${t('encryption.confirmPassword')}" 
-              autocomplete="off" />
-          </div>
-        ` : ''}
+
+        ${confirmMode
+          ? viewHtml`
+              <div class="password-input-group" style="margin-top: 12px;">
+                <input
+                  type="password"
+                  id="pwdConfirmInput"
+                  class="modal-input"
+                  placeholder=${t('encryption.confirmPassword')}
+                  autocomplete="off"
+                />
+              </div>
+            `
+          : nothing}
+
         <div class="modal-error hidden" id="pwdPromptError"></div>
         <div class="modal-actions">
           <button class="modal-btn modal-btn--secondary" id="pwdCancelBtn">${t('common.cancel')}</button>
           <button class="modal-btn modal-btn--primary" id="pwdConfirmBtn">${t('common.confirm')}</button>
         </div>
       </div>
-    `;
+    `);
     
     document.body.appendChild(modal);
     

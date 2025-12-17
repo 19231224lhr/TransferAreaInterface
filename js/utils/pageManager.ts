@@ -203,16 +203,15 @@ class PageContainerManager {
             // Load template content
             const content = await templateLoader.load(config.templatePath);
 
-            // Create temp container to parse HTML
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content.trim();
+            // Parse HTML without using innerHTML
+            const doc = new DOMParser().parseFromString(content, 'text/html');
 
             // Find the section element
-            const templateEl = tempDiv.querySelector(`#${config.containerId}`) as HTMLElement;
+            const templateEl = doc.body.querySelector(`#${config.containerId}`) as HTMLElement | null;
 
             if (!templateEl) {
                 // If container ID not found, use first element
-                const firstEl = tempDiv.firstElementChild as HTMLElement;
+                const firstEl = doc.body.firstElementChild as HTMLElement | null;
                 if (firstEl) {
                     this.mainContainer.appendChild(firstEl);
                     state.loadState = 'loaded';
