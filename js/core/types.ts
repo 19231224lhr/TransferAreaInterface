@@ -62,8 +62,9 @@ export interface StorageNamespace {
 /** Wallet namespace */
 export interface WalletNamespace {
   renderWallet: () => void;
-  updateWalletBrief: () => Promise<void>;
+  updateWalletBrief: () => void;
   refreshOrgPanel: () => void;
+  refreshSrcAddrList: () => void;
   handleAddToAddress: (addr: string) => Promise<void>;
   handleZeroAddress: () => void;
   initAddressModal: () => void;
@@ -105,7 +106,7 @@ export interface UINamespace {
 
 /** Charts namespace */
 export interface ChartsNamespace {
-  updateWalletChart: () => void;
+  updateWalletChart: (user?: any) => void;
   initWalletChart: () => void;
   initWalletStructToggle: () => void;
   initTxDetailModal: () => void;

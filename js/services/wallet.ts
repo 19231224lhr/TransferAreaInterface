@@ -360,7 +360,7 @@ export function renderWallet(): void {
   list.appendChild(fragment);
   
   // Update wallet chart after rendering
-  try { (window as any).PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
+  try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
 }
 
 
@@ -479,7 +479,7 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
     saveUser(u);
     
     // Refresh UI
-    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
     
     renderWallet();
     updateWalletBrief();
@@ -638,7 +638,7 @@ export function handleAddToAddress(address: string): void {
   updateCurrencyDisplay(u);
   updateAddressCardDisplay(address, found);
   
-  try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+  try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
 }
@@ -674,7 +674,7 @@ export function handleZeroAddress(address: string): void {
   updateCurrencyDisplay(u);
   updateAddressCardDisplay(address, found);
   
-  try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+  try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
 }
@@ -918,7 +918,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
       console.warn('Imported address key encryption skipped:', encryptErr);
     }
     
-    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
     
     renderWallet();
     try { updateWalletBrief(); } catch { }

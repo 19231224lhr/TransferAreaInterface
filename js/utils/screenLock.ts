@@ -244,8 +244,8 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
       localStorage.removeItem(STORAGE_KEY);
       
       // Update header to show logged out state
-      if (typeof (window as any).PanguPay?.ui?.updateHeaderUser === 'function') {
-        (window as any).PanguPay.ui.updateHeaderUser(null);
+      if (typeof window.PanguPay?.ui?.updateHeaderUser === 'function') {
+        window.PanguPay.ui.updateHeaderUser(null);
       }
       
       // Unlock screen

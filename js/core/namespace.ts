@@ -72,8 +72,9 @@ export function initNamespace(): PanguPayNamespace {
       // Wallet
       wallet: {
         renderWallet: () => {},
-        updateWalletBrief: async () => {},
+        updateWalletBrief: () => {},
         refreshOrgPanel: () => {},
+        refreshSrcAddrList: () => {},
         handleAddToAddress: async () => {},
         handleZeroAddress: () => {},
         initAddressModal: () => {},

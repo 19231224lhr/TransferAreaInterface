@@ -356,10 +356,10 @@ export async function addNewSubWallet(): Promise<void> {
     }
     
     // Refresh UI via namespace (no legacy window.* globals)
-    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-    try { (window as any).PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
+    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
     try {
-      const fn = (window as any).PanguPay?.wallet?.updateWalletBrief;
+      const fn = window.PanguPay?.wallet?.updateWalletBrief;
       if (typeof fn === 'function') {
         fn();
         requestAnimationFrame(() => {
@@ -376,8 +376,8 @@ export async function addNewSubWallet(): Promise<void> {
       t('modal.walletAddSuccess'), 
       t('modal.walletAddSuccessDesc'), 
       () => {
-        try { (window as any).PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
-        try { (window as any).PanguPay?.wallet?.updateWalletBrief?.(); } catch (_) { }
+        try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
+        try { window.PanguPay?.wallet?.updateWalletBrief?.(); } catch (_) { }
       },
       undefined // no cancel callback
     );

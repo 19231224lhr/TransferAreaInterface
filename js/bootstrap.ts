@@ -316,8 +316,8 @@ function init(): void {
 
   // Reactive UI bindings driven by Store updates.
   // Keep this binding idempotent across hot reload / re-entry.
-  if (!(window as any).__USER_STATE_BINDINGS__) {
-    (window as any).__USER_STATE_BINDINGS__ = true;
+  if (!(window as unknown as { __USER_STATE_BINDINGS__?: boolean }).__USER_STATE_BINDINGS__) {
+    (window as unknown as { __USER_STATE_BINDINGS__?: boolean }).__USER_STATE_BINDINGS__ = true;
 
     let scheduled = false;
     const flushUi = () => {
@@ -330,14 +330,14 @@ function init(): void {
       }
 
       // Wallet/Org panels: safe no-op on pages where elements are absent.
-      const pp = (window as any).PanguPay;
+      const pp = window.PanguPay;
       try { pp?.wallet?.refreshOrgPanel?.(); } catch { }
       try { pp?.wallet?.renderWallet?.(); } catch { }
       try { pp?.wallet?.refreshSrcAddrList?.(); } catch { }
       try { pp?.wallet?.updateWalletBrief?.(); } catch { }
 
       // Charts
-      try { pp?.charts?.updateWalletChart?.(u); } catch { }
+      try { pp?.charts?.updateWalletChart?.(); } catch { }
     };
 
     store.subscribe((state, prev) => {
