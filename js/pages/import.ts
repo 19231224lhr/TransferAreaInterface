@@ -245,11 +245,11 @@ function handleVisibilityToggle(): void {
  * 处理返回按钮
  */
 function handleBackClick(): void {
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/entry');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/entry');
   }
-  if (typeof window.updateWalletBrief === 'function') {
-    window.updateWalletBrief();
+  if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+    window.PanguPay.wallet.updateWalletBrief();
   }
 }
 
@@ -257,8 +257,8 @@ function handleBackClick(): void {
  * 处理下一步按钮
  */
 function handleNextClick(): void {
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/entry');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/entry');
   }
 }
 
@@ -397,8 +397,8 @@ async function handleImport(): Promise<void> {
         }
       } else {
         // 无现有用户 - 创建新账户
-        if (typeof window.clearAccountStorage === 'function') {
-          window.clearAccountStorage();
+        if (typeof window.PanguPay?.storage?.clearAccountStorage === 'function') {
+          window.PanguPay.storage.clearAccountStorage();
         }
         
         const accountData = { 
@@ -493,8 +493,8 @@ async function handleImport(): Promise<void> {
       updateWalletBrief();
       
       showUnifiedSuccess(t('toast.importSuccess'), t('toast.importSuccessDesc'), () => {
-        if (typeof window.routeTo === 'function') {
-          window.routeTo('#/entry');
+        if (typeof window.PanguPay?.router?.routeTo === 'function') {
+          window.PanguPay.router.routeTo('#/entry');
         }
       }, null);
     }

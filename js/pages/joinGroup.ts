@@ -601,8 +601,8 @@ async function handleJoinSearchClick(): Promise<void> {
   }
   
   // 导航到询问页面
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/inquiry-main');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/inquiry-main');
   }
 }
 
@@ -706,8 +706,8 @@ export function handleJoinGroup(group: GroupInfo): void {
   }
   
   // 导航到询问页面
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/inquiry');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/inquiry');
   }
 }
 
@@ -811,8 +811,8 @@ export function initJoinGroupPage(): void {
   
   if (joined) {
     // 已加入，重定向到 inquiry-main
-    if (typeof window.routeTo === 'function') {
-      window.routeTo('#/inquiry-main');
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/inquiry-main');
     }
     return;
   }

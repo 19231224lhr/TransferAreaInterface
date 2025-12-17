@@ -275,8 +275,8 @@ function handleVisibilityToggle(): void {
  * 处理返回按钮
  */
 function handleBackClick(): void {
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/new');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/new');
   }
 }
 
@@ -318,8 +318,8 @@ async function handleSubmit(): Promise<void> {
   const data = getPendingAccountData();
   if (!data) {
     showErrorToast(t('setpwd.noAccountData') || '账户数据丢失，请重新创建', t('common.error') || '错误');
-    if (typeof window.routeTo === 'function') {
-      window.routeTo('#/new');
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/new');
     }
     return;
   }
@@ -347,8 +347,8 @@ async function handleSubmit(): Promise<void> {
     // 清除旧账户数据
     const oldUser = loadUser();
     if (!oldUser || oldUser.accountId !== data.accountId) {
-      if (typeof window.clearAccountStorage === 'function') {
-        window.clearAccountStorage();
+      if (typeof window.PanguPay?.storage?.clearAccountStorage === 'function') {
+        window.PanguPay.storage.clearAccountStorage();
       }
     }
     
@@ -381,8 +381,8 @@ async function handleSubmit(): Promise<void> {
     
     setTimeout(() => {
       if (ov) ov.classList.add('hidden');
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/entry');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/entry');
       }
     }, 800);
     
@@ -511,8 +511,8 @@ export function initSetPasswordPage(): void {
   // 检查是否有待处理的账户数据
   const data = getPendingAccountData();
   if (!data) {
-    if (typeof window.routeTo === 'function') {
-      window.routeTo('#/new');
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/new');
     }
     return;
   }

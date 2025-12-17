@@ -242,16 +242,16 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
       localStorage.removeItem(STORAGE_KEY);
       
       // Update header to show logged out state
-      if (typeof (window as any).updateHeaderUser === 'function') {
-        (window as any).updateHeaderUser(null);
+      if (typeof (window as any).PanguPay?.ui?.updateHeaderUser === 'function') {
+        (window as any).PanguPay.ui.updateHeaderUser(null);
       }
       
       // Unlock screen
       unlockScreen();
       
       // Redirect to welcome page
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/welcome');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/welcome');
       }
     }).catch((error) => {
       console.error('Failed to import storage module:', error);
@@ -259,8 +259,8 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
       localStorage.removeItem('user');
       localStorage.removeItem(STORAGE_KEY);
       unlockScreen();
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/welcome');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/welcome');
       }
     });
   });
@@ -455,8 +455,8 @@ export function lockScreen(): void {
   });
   
   // Update translations
-  if (typeof window.updatePageTranslations === 'function') {
-    window.updatePageTranslations();
+  if (typeof window.PanguPay?.i18n?.updatePageTranslations === 'function') {
+    window.PanguPay.i18n.updatePageTranslations();
   }
   
   state.config.onLock?.();

@@ -25,6 +25,9 @@ export interface TXOutput {
   ToPublicKey: PublicKey;
   ToInterest?: number;
   ToCoinType?: number;
+  IsPayForGas?: boolean;
+  IsCrossChain?: boolean;
+  IsGuarMake?: boolean;
   Hash?: string;
 }
 
@@ -401,6 +404,20 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
       Data: buildTXInfo.Data || ''
     };
 
+    const isCrossChain = !!buildTXInfo.IsCrossChainTX;
+
+    const normalizeHex64 = (hex: string | undefined): string => {
+      const v = (hex || '').replace(/^0x/i, '').toLowerCase();
+      return /^[0-9a-f]{64}$/.test(v) ? v : '';
+    };
+
+    const getAddressPublicKey = (address: string): PublicKey => {
+      const meta = addressMsg[address] as AddressData | undefined;
+      const x = normalizeHex64(meta?.pubXHex) || normalizeHex64(userAccount.keys?.pubXHex) || normalizeHex64((userAccount as any).pubXHex);
+      const y = normalizeHex64(meta?.pubYHex) || normalizeHex64(userAccount.keys?.pubYHex) || normalizeHex64((userAccount as any).pubYHex);
+      return { Curve: 'P256', XHex: x, YHex: y };
+    };
+
     // Construct Outputs - transfer outputs
     for (const [address, bill] of Object.entries(buildTXInfo.Bill)) {
       const output: TXOutput = {
@@ -412,8 +429,10 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
           XHex: bill.PublicKey?.XHex || '',
           YHex: bill.PublicKey?.YHex || ''
         },
-        ToInterest: bill.Gas || 0,
-        ToCoinType: bill.MoneyType
+        ToInterest: Number(bill.ToInterest || 0),
+        ToCoinType: bill.MoneyType,
+        IsCrossChain: isCrossChain,
+        IsGuarMake: false
       };
       
       // Calculate output hash
@@ -423,18 +442,125 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
       tx.TXOutputs.push(output);
     }
 
+    // Explicit gas output (matches backend: IsPayForGas output)
+    if (Number(buildTXInfo.HowMuchPayForGas || 0) > 0) {
+      const gasOutput: TXOutput = {
+        ToAddress: '',
+        ToValue: Number(buildTXInfo.HowMuchPayForGas || 0),
+        ToGuarGroupID: '',
+        ToPublicKey: { Curve: 'P256', XHex: '', YHex: '' },
+        ToInterest: 0,
+        ToCoinType: 0,
+        IsPayForGas: true,
+        IsCrossChain: false,
+        IsGuarMake: false
+      };
+      const gasHash = await getTXOutputHash(gasOutput);
+      gasOutput.Hash = bytesToHex(gasHash);
+      tx.TXOutputs.push(gasOutput);
+    }
+
+    // Construct Inputs by selecting UTXOs (TXInputsNormal)
+    const epsilon = 1e-8;
+    for (const [typeIdStr, targetRaw] of Object.entries(buildTXInfo.ValueDivision || {})) {
+      const typeId = Number(typeIdStr);
+      const target = Number(targetRaw || 0);
+      if (!Number.isFinite(target) || target <= 0) continue;
+
+      let collected = 0;
+      let satisfied = false;
+
+      for (const address of buildTXInfo.UserAddress || []) {
+        const addrData = addressMsg[address] as AddressData | undefined;
+        if (!addrData) continue;
+        const addrType = Number(addrData.type || 0);
+        if (addrType !== typeId) continue;
+
+        const utxos = (addrData.utxos || {}) as Record<string, any>;
+        const utxoKeys = Object.keys(utxos).sort(); // stable selection
+        for (const utxoKey of utxoKeys) {
+          const utxo = utxos[utxoKey];
+          if (!utxo) continue;
+
+          const utxoType = Number(utxo.Type ?? addrType);
+          if (utxoType !== typeId) continue;
+
+          const v = Number(utxo.Value || 0);
+          if (!Number.isFinite(v) || v <= 0) continue;
+
+          const txid = String(utxo.UTXO?.TXID || utxo.TXID || '').trim() || String(utxoKey).split('_')[0] || '';
+          const pos = utxo.Position || { Blocknum: 0, IndexX: 0, IndexY: 0, IndexZ: 0 };
+          const indexZFromKey = Number(String(utxoKey).split('_')[1] || 0);
+          const indexZ = (pos.IndexZ ?? indexZFromKey) || 0;
+          const fromPos = {
+            Blocknum: Number(pos.Blocknum || 0),
+            IndexX: Number(pos.IndexX || 0),
+            IndexY: Number(pos.IndexY || 0),
+            IndexZ: Number(indexZ)
+          };
+
+          const input = {
+            FromTXID: txid,
+            FromTxPosition: fromPos,
+            FromAddress: address,
+            IsGuarMake: false,
+            IsCommitteeMake: false,
+            IsCrossChain: isCrossChain,
+            InputSignature: { R: null, S: null },
+            // Frontend wallet snapshot doesn't always include the full referenced output,
+            // so TXOutputHash cannot be reproduced exactly here.
+            TXOutputHash: utxo.TXOutputHash || ''
+          };
+
+          tx.TXInputsNormal.push(input);
+          collected += v;
+
+          if (collected + epsilon >= target) {
+            satisfied = true;
+            break;
+          }
+        }
+
+        if (satisfied) break;
+      }
+
+      if (!satisfied) {
+        throw new Error('insufficient account balance');
+      }
+
+      // Change output if collected > target
+      if (collected > target + epsilon) {
+        const changeAddr = (buildTXInfo.ChangeAddress || {})[typeId];
+        if (!changeAddr) {
+          throw new Error('the change address is incorrect');
+        }
+        const changeOutput: TXOutput = {
+          ToAddress: changeAddr,
+          ToValue: collected - target,
+          ToGuarGroupID: guarGroup,
+          ToPublicKey: getAddressPublicKey(changeAddr),
+          ToInterest: 0,
+          ToCoinType: typeId,
+          IsPayForGas: false,
+          IsCrossChain: false,
+          IsGuarMake: false
+        };
+        const changeHash = await getTXOutputHash(changeOutput);
+        changeOutput.Hash = bytesToHex(changeHash);
+        tx.TXOutputs.push(changeOutput);
+      }
+    }
+
     // Calculate total value
     let totalValue = 0;
-    for (const [typeIdStr, amount] of Object.entries(buildTXInfo.ValueDivision)) {
+    for (const [typeIdStr, amount] of Object.entries(buildTXInfo.ValueDivision || {})) {
       const typeId = Number(typeIdStr);
-      totalValue += amount * exchangeRate(typeId);
+      totalValue += Number(amount || 0) * exchangeRate(typeId);
     }
     tx.Value = totalValue;
 
-    // Calculate TXID
+    // TXID/Size must be computed after inputs/outputs are finalized
     tx.TXID = await getTXID(tx);
-
-    // Calculate Size
     tx.Size = getTXSize(tx);
 
     // Get user's private key for signing

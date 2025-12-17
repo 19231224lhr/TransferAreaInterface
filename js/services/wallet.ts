@@ -336,9 +336,7 @@ export function renderWallet(): void {
   list.appendChild(fragment);
   
   // Update wallet chart after rendering
-  if (typeof window.updateWalletChart === 'function') {
-    window.updateWalletChart(u);
-  }
+  try { (window as any).PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
 }
 
 
@@ -434,9 +432,7 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
     saveUser(u);
     
     // Refresh UI
-    if ((window as any).__refreshSrcAddrList) {
-      try { (window as any).__refreshSrcAddrList(); } catch (_) { }
-    }
+    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
     
     renderWallet();
     updateWalletBrief();
@@ -582,9 +578,7 @@ export function handleAddToAddress(address: string): void {
   updateCurrencyDisplay(u);
   updateAddressCardDisplay(address, found);
   
-  if (typeof (window as any).__refreshSrcAddrList === 'function') {
-    try { (window as any).__refreshSrcAddrList(); } catch (_) { }
-  }
+  try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
 }
@@ -619,9 +613,7 @@ export function handleZeroAddress(address: string): void {
   updateCurrencyDisplay(u);
   updateAddressCardDisplay(address, found);
   
-  if (typeof (window as any).__refreshSrcAddrList === 'function') {
-    try { (window as any).__refreshSrcAddrList(); } catch (_) { }
-  }
+  try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
 }
@@ -865,9 +857,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
       console.warn('Imported address key encryption skipped:', encryptErr);
     }
     
-    if ((window as any).__refreshSrcAddrList) { 
-      try { (window as any).__refreshSrcAddrList(); } catch (_) { } 
-    }
+    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
     
     renderWallet();
     try { updateWalletBrief(); } catch { }
@@ -887,8 +877,8 @@ async function importAddressInPlace(priv: string): Promise<void> {
 export async function handleAddrModalOk(): Promise<void> {
   if (__addrMode === 'create') { 
     hideAddrModal(); 
-    if (typeof window.addNewSubWallet === 'function') {
-      window.addNewSubWallet(0);
+    if (typeof window.PanguPay?.account?.addNewSubWallet === 'function') {
+      await window.PanguPay.account.addNewSubWallet();
     }
   } else {
     const input = document.getElementById('addrPrivHex') as HTMLInputElement | null;
@@ -935,8 +925,8 @@ export function initAddressModal(): void {
   
   if (openHistoryBtn && !openHistoryBtn.dataset._walletBind) {
     openHistoryBtn.onclick = () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/history');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/history');
       }
     };
     openHistoryBtn.dataset._walletBind = '1';
@@ -1041,9 +1031,7 @@ function fillChange(): void {
   buildMenu(csBTC, optsBTC, chBTC);
   buildMenu(csETH, optsETH, chETH);
   
-  if (typeof (window as any).updateSummaryAddr === 'function') {
-    (window as any).updateSummaryAddr();
-  }
+  // summary UI is updated by transfer panel code when present
 }
 
 
@@ -1285,9 +1273,7 @@ function bindCustomSelect(box: HTMLElement | null, hidden: HTMLSelectElement | n
       box.classList.remove('open'); 
       const sec = box.closest('.tx-section'); 
       if (sec) sec.classList.remove('has-open'); 
-      if (typeof (window as any).updateSummaryAddr === 'function') {
-        (window as any).updateSummaryAddr();
-      }
+      // summary UI is updated by transfer panel code when present
     });
   }
   
@@ -1320,13 +1306,19 @@ export function initChangeAddressSelects(): void {
  * Initialize refresh source address list function
  */
 export function initRefreshSrcAddrList(): void {
-  (window as any).__refreshSrcAddrList = () => {
-    try {
-      refreshWalletSnapshot();
-      rebuildAddrList();
-      fillChange();
-    } catch (_) { }
-  };
+  // Kept for compatibility with existing call sites; no longer publishes window globals.
+  // Use window.PanguPay.wallet.refreshSrcAddrList() instead.
+}
+
+/**
+ * Refresh source address list & dependent UI (namespace-safe)
+ */
+export function refreshSrcAddrList(): void {
+  try {
+    refreshWalletSnapshot();
+    rebuildAddrList();
+    fillChange();
+  } catch (_) { }
 }
 
 // Re-export recipient functions

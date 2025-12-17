@@ -355,32 +355,29 @@ export async function addNewSubWallet(): Promise<void> {
       console.warn('Sub-wallet key encryption skipped:', encryptErr);
     }
     
-    // Refresh UI if functions are available
-    if ((window as any).__refreshSrcAddrList) {
-      try { (window as any).__refreshSrcAddrList(); } catch (_) { }
-    }
-    if (typeof (window as any).renderWallet === 'function') {
-      try { (window as any).renderWallet(); } catch { }
-    }
-    if (typeof (window as any).updateWalletBrief === 'function') {
-      try {
-        (window as any).updateWalletBrief();
-        requestAnimationFrame(() => (window as any).updateWalletBrief());
-        setTimeout(() => (window as any).updateWalletBrief(), 0);
-      } catch { }
-    }
+    // Refresh UI via namespace (no legacy window.* globals)
+    try { (window as any).PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    try { (window as any).PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
+    try {
+      const fn = (window as any).PanguPay?.wallet?.updateWalletBrief;
+      if (typeof fn === 'function') {
+        fn();
+        requestAnimationFrame(() => {
+          try { fn(); } catch (_) { }
+        });
+        setTimeout(() => {
+          try { fn(); } catch (_) { }
+        }, 0);
+      }
+    } catch (_) { }
     
     // Show success (smooth transition from loading state)
     showUnifiedSuccess(
       t('modal.walletAddSuccess'), 
       t('modal.walletAddSuccessDesc'), 
       () => {
-        if (typeof (window as any).renderWallet === 'function') {
-          try { (window as any).renderWallet(); } catch { }
-        }
-        if (typeof (window as any).updateWalletBrief === 'function') {
-          try { (window as any).updateWalletBrief(); } catch { }
-        }
+        try { (window as any).PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
+        try { (window as any).PanguPay?.wallet?.updateWalletBrief?.(); } catch (_) { }
       },
       undefined // no cancel callback
     );

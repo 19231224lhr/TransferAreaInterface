@@ -220,8 +220,8 @@ export const authGuard: RouteGuard = (to, from) => {
   // If route requires auth and user is not logged in
   if (isProtected && !user) {
     // Show warning
-    if (typeof window.showWarningToast === 'function') {
-      window.showWarningToast(
+    if (typeof window.PanguPay?.ui?.showWarningToast === 'function') {
+      window.PanguPay.ui.showWarningToast(
         t('auth.loginRequired') || '请先登录',
         t('auth.loginRequiredDesc') || '您需要登录才能访问此页面'
       );

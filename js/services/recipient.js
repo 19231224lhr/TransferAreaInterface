@@ -53,8 +53,8 @@ function showTxValidationError(msg, focusEl, title = '参数校验失败') {
     txErr.textContent = msg;
     txErr.classList.remove('hidden');
   }
-  if (typeof window.showModalTip === 'function') {
-    window.showModalTip(title, msg, true);
+  if (typeof window.PanguPay?.ui?.showModalTip === 'function') {
+    window.PanguPay.ui.showModalTip(title, msg, true);
   }
   if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
 }

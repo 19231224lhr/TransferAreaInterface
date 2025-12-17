@@ -164,7 +164,8 @@ export function updateWalletStruct() {
           html += `<div class="wb-utxo-hash" title="${escapeHtml(utxoKey)}">${escapeHtml(utxoKey)}</div>`;
           html += `<div class="wb-utxo-val">${escapeHtml(String(utxo.Value))} ${getCoinLabel(utxo.Type || 0)}</div>`;
           html += `</div>`;
-          html += `<button class="btn secondary wb-btn-xs" onclick="window.showUtxoDetail('${escapeHtml(key)}', '${escapeHtml(utxoKey)}')">详情</button>`;
+          // Use data-action for event delegation instead of inline onclick
+          html += `<button class="btn secondary wb-btn-xs" data-action="showUtxoDetail" data-addr="${escapeHtml(key)}" data-key="${escapeHtml(utxoKey)}">详情</button>`;
           html += `</div>`;
         });
         html += '</div></div>';
@@ -182,7 +183,8 @@ export function updateWalletStruct() {
           html += `<div class="wb-utxo-hash" title="${escapeHtml(cerKey)}">${escapeHtml(cerKey)}</div>`;
           html += `<div class="wb-utxo-val">${escapeHtml(String(cer.Value))} ${getCoinLabel(cer.Type || 0)}</div>`;
           html += `</div>`;
-          html += `<button class="btn secondary wb-btn-xs" onclick="window.showTxCerDetail('${escapeHtml(key)}', '${escapeHtml(cerKey)}')">详情</button>`;
+          // Use data-action for event delegation instead of inline onclick
+          html += `<button class="btn secondary wb-btn-xs" data-action="showTxCerDetail" data-addr="${escapeHtml(key)}" data-key="${escapeHtml(cerKey)}">详情</button>`;
           html += `</div>`;
         });
         html += '</div></div>';

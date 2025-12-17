@@ -360,8 +360,8 @@ export function initHistoryPage() {
   if (backBtn && !backBtn.dataset._historyBind) {
     backBtn.dataset._historyBind = 'true';
     backBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/main');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/main');
       }
     });
   }

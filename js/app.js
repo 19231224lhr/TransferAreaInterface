@@ -4,23 +4,25 @@
  * This is the main entry file that initializes all modules and sets up the application.
  * All functionality is imported from modular files in the js/ directory.
  * 
+ * Architecture:
+ * - All public APIs are organized under window.PanguPay namespace
+ * - Legacy window.xxx aliases are kept for backward compatibility
+ * - Event delegation system handles dynamic element interactions
+ * 
  * Note: Error suppression is handled centrally by initErrorBoundary() in security.ts
  */
 
 // ========================================
 // CSS Imports (Vite handles bundling)
 // ========================================
-// 所有 CSS 通过入口文件统一管理，由 Vite 自动处理：
-// - 开发时支持 HMR（热更新）
-// - 生产构建时自动合并、压缩、tree-shaking
 import '../css/index.css';
 
 // ========================================
 // Module Imports
 // ========================================
 
-// Config
-// Note: Constants imported in child modules
+// Core - Namespace and Event Delegation
+import { initNamespace, initEventDelegate, registerAction } from './core';
 
 // i18n
 import { t, setLanguage, getCurrentLanguage, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
@@ -80,7 +82,7 @@ import performanceModeManager, {
 } from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
 
-// P2 Improvements - Accessibility, Loading, Service Worker, etc.
+// P2 Improvements
 import {
   initAccessibility,
   announce,
@@ -141,7 +143,7 @@ import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, addNewSubWallet } from './services/account';
-import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet';
+import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, refreshSrcAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit, initBuildTransaction } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
@@ -152,12 +154,14 @@ import { router, routeTo, showCard, initRouter } from './router';
 // App bootstrap (TypeScript)
 import { startApp } from './bootstrap';
 
-// Template Loading System (for future page modularization)
+// Template Loading System
 import { templateLoader } from './utils/templateLoader';
 import { pageManager } from './utils/pageManager';
 import { PAGE_TEMPLATES, getPageConfig, getAllContainerIds } from './config/pageTemplates';
 
-// Lazy page loaders (avoid pulling all page code on first screen)
+// ========================================
+// Lazy Page Loaders
+// ========================================
 const pageLazyLoaders = {
   welcome: () => import('./pages/welcome.js'),
   entry: () => import('./pages/entry'),
@@ -172,7 +176,6 @@ const pageLazyLoaders = {
   history: () => import('./pages/history.js')
 };
 
-/** Lazy helper: call a page fn when first used */
 function createLazyPageFn(routeKey, fnName, argMapper) {
   return async (...args) => {
     const loader = pageLazyLoaders[routeKey];
@@ -187,47 +190,9 @@ function createLazyPageFn(routeKey, fnName, argMapper) {
 }
 
 // ========================================
-// Global Function Exports (for HTML onclick compatibility)
+// UTXO/TXCer Detail Functions
 // ========================================
-
-// Router functions
-window.routeTo = routeTo;
-window.showCard = showCard;
-window.router = router;
-
-// i18n functions
-window.t = t;
-window.setLanguage = setLanguage;
-window.getCurrentLanguage = getCurrentLanguage;
-window.updatePageTranslations = updatePageTranslations;
-
-// Theme functions
-window.setTheme = setTheme;
-window.toggleTheme = toggleTheme;
-window.getCurrentTheme = getCurrentTheme;
-
-// Account functions
-window.handleCreate = createLazyPageFn('newUser', 'handleCreate');
-window.newUser = newUser;
-window.importFromPrivHex = importFromPrivHex;
-window.addNewSubWallet = addNewSubWallet;
-
-// Storage functions
-window.loadUser = loadUser;
-window.saveUser = saveUser;
-window.toAccount = (basic) => toAccount(basic, loadUser()); // Wrapper to match expected signature
-window.clearAccountStorage = clearAccountStorage;
-window.loadUserProfile = loadUserProfile;
-window.saveUserProfile = saveUserProfile;
-window.getJoinedGroup = getJoinedGroup;
-window.resetOrgSelectionForNewUser = resetOrgSelectionForNewUser;
-
-// Wallet functions
-window.renderWallet = renderWallet;
-window.updateWalletBrief = createLazyPageFn('entry', 'updateWalletBrief');
-
-// UTXO/TXCer detail modal functions
-window.showUtxoDetail = (addrKey, utxoKey) => {
+const showUtxoDetail = (addrKey, utxoKey) => {
   const u = loadUser();
   if (!u || !u.wallet || !u.wallet.addressMsg) return;
   const addrMsg = u.wallet.addressMsg[addrKey];
@@ -259,7 +224,7 @@ window.showUtxoDetail = (addrKey, utxoKey) => {
   showModalTip('UTXO 详情', html, false);
 };
 
-window.showTxCerDetail = (addrKey, cerKey) => {
+const showTxCerDetail = (addrKey, cerKey) => {
   const u = loadUser();
   if (!u || !u.wallet || !u.wallet.addressMsg) return;
   const addrMsg = u.wallet.addressMsg[addrKey];
@@ -288,191 +253,278 @@ window.showTxCerDetail = (addrKey, cerKey) => {
 
   showModalTip('TXCer 详情', html, false);
 };
-window.refreshOrgPanel = refreshOrgPanel;
-window.handleAddToAddress = handleAddToAddress;
-window.handleZeroAddress = handleZeroAddress;
-window.initAddressModal = initAddressModal;
-window.showAddrModal = showAddrModal;
-window.hideAddrModal = hideAddrModal;
-window.initTransferModeTabs = initTransferModeTabs;
-window.rebuildAddrList = rebuildAddrList;
-window.initRefreshSrcAddrList = initRefreshSrcAddrList;
-window.initChangeAddressSelects = initChangeAddressSelects;
-window.initRecipientCards = initRecipientCards;
-window.initAdvancedOptions = initAdvancedOptions;
-window.updateWalletBrief = createLazyPageFn('entry', 'updateWalletBrief');
 
-// UI functions
-window.showToast = showToast;
-window.showSuccessToast = showSuccessToast;
-window.showErrorToast = showErrorToast;
-window.showWarningToast = showWarningToast;
-window.showInfoToast = showInfoToast;
-window.showMiniToast = showMiniToast;
-window.showUnifiedLoading = showUnifiedLoading;
-window.showUnifiedSuccess = showUnifiedSuccess;
-window.hideUnifiedOverlay = hideUnifiedOverlay;
-window.showModalTip = showModalTip;
-window.copyToClipboard = copyToClipboard;
-window.updateHeaderUser = updateHeaderUser;
+// ========================================
+// Initialize PanguPay Namespace
+// ========================================
+initNamespace();
 
-// Page init functions
-window.initProfilePage = createLazyPageFn('profile', 'initProfilePage');
-window.initWelcomePage = createLazyPageFn('welcome', 'initWelcomePage');
-window.initEntryPage = createLazyPageFn('entry', 'initEntryPage');
-window.initLoginPage = createLazyPageFn('login', 'initLoginPage');
-window.initNewUserPage = createLazyPageFn('newUser', 'initNewUserPage');
-window.initSetPasswordPage = createLazyPageFn('setPassword', 'initSetPasswordPage');
-window.initImportPage = createLazyPageFn('import', 'initImportPage');
-window.initMainPage = createLazyPageFn('main', 'initMainPage');
-window.initJoinGroupPage = createLazyPageFn('joinGroup', 'initJoinGroupPage');
-window.initGroupDetailPage = createLazyPageFn('groupDetail', 'initGroupDetailPage');
-window.initHistoryPage = createLazyPageFn('history', 'initHistoryPage');
-window.updateWelcomeButtons = createLazyPageFn('welcome', 'updateWelcomeButtons');
-window.resetLoginPageState = createLazyPageFn('login', 'resetLoginPageState');
-window.startInquiryAnimation = createLazyPageFn('joinGroup', 'startInquiryAnimation');
-window.resetInquiryState = createLazyPageFn('joinGroup', 'resetInquiryState');
-window.resetCreatingFlag = createLazyPageFn('newUser', 'resetCreatingFlag');
-window.resetImportState = createLazyPageFn('import', 'resetImportState');
-window.handleMainRoute = createLazyPageFn('main', 'handleMainRoute');
-window.updateGroupDetailDisplay = createLazyPageFn('groupDetail', 'updateGroupDetailDisplay');
+// Populate namespace with actual implementations
+const PP = window.PanguPay;
 
-// Chart functions
-window.updateWalletChart = updateWalletChart;
-window.initWalletChart = initWalletChart;
-window.initWalletStructToggle = initWalletStructToggle;
-window.initTxDetailModal = initTxDetailModal;
-window.updateWalletStruct = updateWalletStruct;
+// Router
+Object.assign(PP.router, {
+  routeTo,
+  showCard,
+  router,
+  navigateTo: enhancedNavigateTo,
+  addRouteGuard,
+  configureTransition,
+});
 
-// Transaction functions
-window.buildNewTX = buildNewTX;
-window.exchangeRate = exchangeRate;
-window.initTransferSubmit = initTransferSubmit;
-window.initBuildTransaction = initBuildTransaction;
+// i18n
+Object.assign(PP.i18n, {
+  t,
+  setLanguage,
+  getCurrentLanguage,
+  updatePageTranslations,
+});
 
-// Crypto functions
-window.bytesToHex = bytesToHex;
-window.hexToBytes = hexToBytes;
-window.sha256 = sha256;
-window.sha256Hex = sha256Hex;
+// Theme
+Object.assign(PP.theme, {
+  setTheme,
+  toggleTheme,
+  getCurrentTheme,
+});
 
-// Helper functions
-window.wait = wait;
+// Account
+Object.assign(PP.account, {
+  newUser,
+  importFromPrivHex,
+  addNewSubWallet,
+  handleCreate: createLazyPageFn('newUser', 'handleCreate'),
+});
 
-// Security functions
-window.escapeHtml = escapeHtml;
-window.createElement = createElement;
-window.validateTransferAmount = validateTransferAmount;
-window.validateAddress = validateAddress;
-window.validatePrivateKey = validatePrivateKey;
-window.validateOrgId = validateOrgId;
-window.createSubmissionGuard = createSubmissionGuard;
-window.withSubmissionGuard = withSubmissionGuard;
-window.fetchWithTimeout = fetchWithTimeout;
-window.fetchWithRetry = fetchWithRetry;
-window.secureFetch = secureFetch;
-window.secureFetchWithRetry = secureFetchWithRetry;
-window.withErrorBoundary = withErrorBoundary;
-window.reportError = reportError;
+// Storage
+Object.assign(PP.storage, {
+  loadUser,
+  saveUser,
+  toAccount: (basic) => toAccount(basic, loadUser()),
+  clearAccountStorage,
+  loadUserProfile,
+  saveUserProfile,
+  getJoinedGroup,
+  resetOrgSelectionForNewUser,
+});
 
-// Performance functions
-window.scheduleBatchUpdate = scheduleBatchUpdate;
-window.flushBatchUpdates = flushBatchUpdates;
-window.clearBatchUpdates = clearBatchUpdates;
-window.rafDebounce = rafDebounce;
-window.rafThrottle = rafThrottle;
+// Wallet
+Object.assign(PP.wallet, {
+  renderWallet,
+  updateWalletBrief: createLazyPageFn('entry', 'updateWalletBrief'),
+  refreshOrgPanel,
+  handleAddToAddress,
+  handleZeroAddress,
+  initAddressModal,
+  showAddrModal,
+  hideAddrModal,
+  initTransferModeTabs,
+  rebuildAddrList,
+  refreshSrcAddrList,
+  initRefreshSrcAddrList,
+  initChangeAddressSelects,
+  initRecipientCards,
+  initAdvancedOptions,
+  showUtxoDetail,
+  showTxCerDetail,
+});
 
-// Event management functions
-window.debounce = debounce;
-window.throttle = throttle;
-window.delegate = delegate;
-window.EventListenerManager = EventListenerManager;
-window.globalEventManager = globalEventManager;
-window.createEventManager = createEventManager;
-window.cleanupPageListeners = cleanupPageListeners;
+// UI
+Object.assign(PP.ui, {
+  showToast,
+  showSuccessToast,
+  showErrorToast,
+  showWarningToast,
+  showInfoToast,
+  showMiniToast,
+  showUnifiedLoading,
+  showUnifiedSuccess,
+  hideUnifiedOverlay,
+  showModalTip,
+  copyToClipboard,
+  updateHeaderUser,
+  announce,
+  setAriaLabel,
+  makeAccessibleButton,
+  showLoading,
+  hideLoading,
+  withLoading,
+  showElementLoading,
+  hideElementLoading,
+});
 
-// State management
-window.store = store;
-window.selectUser = selectUser;
-window.selectRoute = selectRoute;
-window.selectTheme = selectTheme;
-window.selectLanguage = selectLanguage;
-window.setUser = setUser;
-window.setRoute = setRoute;
-window.setThemeState = setThemeState;
-window.setLanguageState = setLanguageState;
-window.setLoading = setLoading;
-window.setModalOpen = setModalOpen;
+// Charts
+Object.assign(PP.charts, {
+  updateWalletChart,
+  initWalletChart,
+  initWalletStructToggle,
+  initTxDetailModal,
+  updateWalletStruct,
+});
 
-// Key encryption functions
-window.encryptPrivateKey = encryptPrivateKey;
-window.decryptPrivateKey = decryptPrivateKey;
-window.migrateToEncrypted = migrateToEncrypted;
-window.clearLegacyKey = clearLegacyKey;
-window.getPrivateKey = getPrivateKey;
-window.verifyPassword = verifyPassword;
-window.changePassword = changePassword;
-window.checkEncryptionStatus = checkEncryptionStatus;
-window.hasEncryptedKey = hasEncryptedKey;
-window.hasLegacyKey = hasLegacyKey;
+// Transaction
+Object.assign(PP.transaction, {
+  buildNewTX,
+  exchangeRate,
+  initTransferSubmit,
+  initBuildTransaction,
+});
 
-// Key encryption UI functions
-window.showPasswordPrompt = showPasswordPrompt;
-window.encryptAndSavePrivateKey = encryptAndSavePrivateKey;
-window.getDecryptedPrivateKey = getDecryptedPrivateKey;
-window.checkAndPromptMigration = checkAndPromptMigration;
-window.saveUserWithEncryption = saveUserWithEncryption;
+// Crypto
+Object.assign(PP.crypto, {
+  bytesToHex,
+  hexToBytes,
+  sha256,
+  sha256Hex,
+  encryptPrivateKey,
+  decryptPrivateKey,
+  migrateToEncrypted,
+  clearLegacyKey,
+  getPrivateKey,
+  verifyPassword,
+  changePassword,
+  checkEncryptionStatus,
+  hasEncryptedKey,
+  hasLegacyKey,
+  showPasswordPrompt,
+  encryptAndSavePrivateKey,
+  getDecryptedPrivateKey,
+  checkAndPromptMigration,
+  saveUserWithEncryption,
+});
 
-// P2 Improvements - Accessibility
-window.announce = announce;
-window.setAriaLabel = setAriaLabel;
-window.makeAccessibleButton = makeAccessibleButton;
+// Utils
+Object.assign(PP.utils, {
+  wait,
+  escapeHtml,
+  createElement,
+  validateTransferAmount,
+  validateAddress,
+  validatePrivateKey,
+  validateOrgId,
+  createSubmissionGuard,
+  withSubmissionGuard,
+  fetchWithTimeout,
+  fetchWithRetry,
+  secureFetch,
+  secureFetchWithRetry,
+  withErrorBoundary,
+  reportError,
+  debounce,
+  throttle,
+  delegate,
+});
 
-// P2 Improvements - Loading Management
-window.loadingManager = loadingManager;
-window.showLoading = showLoading;
-window.hideLoading = hideLoading;
-window.withLoading = withLoading;
-window.showElementLoading = showElementLoading;
-window.hideElementLoading = hideElementLoading;
+// Performance
+Object.assign(PP.performance, {
+  scheduleBatchUpdate,
+  flushBatchUpdates,
+  clearBatchUpdates,
+  rafDebounce,
+  rafThrottle,
+});
 
-// P2 Improvements - Form Validation
-window.FormValidator = FormValidator;
-window.validators = validators;
-window.addInlineValidation = addInlineValidation;
+// Events
+Object.assign(PP.events, {
+  globalEventManager,
+  createEventManager,
+  cleanupPageListeners,
+});
 
-// P2 Improvements - Transaction/Rollback
-window.withTransaction = withTransaction;
-window.createCheckpoint = createCheckpoint;
-window.restoreCheckpoint = restoreCheckpoint;
-window.enableFormAutoSave = enableFormAutoSave;
+// State
+Object.assign(PP.state, {
+  store,
+  selectUser,
+  selectRoute,
+  selectTheme,
+  selectLanguage,
+  setUser,
+  setRoute,
+  setThemeState,
+  setLanguageState,
+  setLoading,
+  setModalOpen,
+});
 
-// P2 Improvements - Lazy Loading
-window.lazyLoader = lazyLoader;
+// Form
+Object.assign(PP.form, {
+  FormValidator,
+  validators,
+  addInlineValidation,
+  withTransaction,
+  createCheckpoint,
+  restoreCheckpoint,
+  enableFormAutoSave,
+});
 
-// P2 Improvements - Enhanced Router
-window.addRouteGuard = addRouteGuard;
-window.enhancedNavigateTo = enhancedNavigateTo;
-window.configureTransition = configureTransition;
+// ScreenLock
+Object.assign(PP.screenLock, {
+  initScreenLock,
+  lockScreen,
+  unlockScreen,
+  isScreenLocked,
+});
 
-// Screen Lock functions
-window.initScreenLock = initScreenLock;
-window.lockScreen = lockScreen;
-window.unlockScreen = unlockScreen;
-window.isScreenLocked = isScreenLocked;
+// Template
+Object.assign(PP.template, {
+  templateLoader,
+  pageManager,
+  getPageConfig,
+  getAllContainerIds,
+  lazyLoader,
+});
 
-// Template Loading System (for dynamic page loading)
-window.templateLoader = templateLoader;
-window.pageManager = pageManager;
-window.getPageConfig = getPageConfig;
-window.getAllContainerIds = getAllContainerIds;
+// Network
+Object.assign(PP.network, {
+  isOnline,
+  onOnlineStatusChange,
+  checkForUpdates,
+});
 
-// P2 Improvements - Online Status
-window.isOnline = isOnline;
-window.onOnlineStatusChange = onOnlineStatusChange;
+// Pages
+Object.assign(PP.pages, {
+  initWelcomePage: createLazyPageFn('welcome', 'initWelcomePage'),
+  initEntryPage: createLazyPageFn('entry', 'initEntryPage'),
+  initLoginPage: createLazyPageFn('login', 'initLoginPage'),
+  initNewUserPage: createLazyPageFn('newUser', 'initNewUserPage'),
+  initSetPasswordPage: createLazyPageFn('setPassword', 'initSetPasswordPage'),
+  initImportPage: createLazyPageFn('import', 'initImportPage'),
+  initMainPage: createLazyPageFn('main', 'initMainPage'),
+  initJoinGroupPage: createLazyPageFn('joinGroup', 'initJoinGroupPage'),
+  initProfilePage: createLazyPageFn('profile', 'initProfilePage'),
+  initGroupDetailPage: createLazyPageFn('groupDetail', 'initGroupDetailPage'),
+  initHistoryPage: createLazyPageFn('history', 'initHistoryPage'),
+  updateWelcomeButtons: createLazyPageFn('welcome', 'updateWelcomeButtons'),
+  resetLoginPageState: createLazyPageFn('login', 'resetLoginPageState'),
+  startInquiryAnimation: createLazyPageFn('joinGroup', 'startInquiryAnimation'),
+  resetInquiryState: createLazyPageFn('joinGroup', 'resetInquiryState'),
+  resetCreatingFlag: createLazyPageFn('newUser', 'resetCreatingFlag'),
+  resetImportState: createLazyPageFn('import', 'resetImportState'),
+  handleMainRoute: createLazyPageFn('main', 'handleMainRoute'),
+  updateGroupDetailDisplay: createLazyPageFn('groupDetail', 'updateGroupDetailDisplay'),
+});
 
-// P2 Improvements - Service Worker Update Hooks
-window.checkForUpdates = checkForUpdates;
+// ========================================
+// Initialize Event Delegation
+// ========================================
+initEventDelegate();
 
-// Delegate startup/lifecycle to TS bootstrap
+// Register actions for dynamic onclick replacements
+registerAction('showUtxoDetail', (el, data) => {
+  showUtxoDetail(data.addr, data.key);
+});
+
+registerAction('showTxCerDetail', (el, data) => {
+  showTxCerDetail(data.addr, data.key);
+});
+
+registerAction('reload', () => {
+  location.reload();
+});
+
+// ========================================
+// Start Application
+// ========================================
+// NOTE: All legacy window.xxx aliases have been removed.
+// All code must use window.PanguPay.xxx namespace pattern.
+// See js/core/types.ts for the full API reference.
 startApp();

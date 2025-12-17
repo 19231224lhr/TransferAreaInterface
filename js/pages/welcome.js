@@ -37,11 +37,11 @@ function bindWelcomeEvents() {
   if (registerAccountBtn && !registerAccountBtn.dataset._welcomeBind) {
     registerAccountBtn.dataset._welcomeBind = 'true';
     registerAccountBtn.addEventListener('click', () => {
-      if (typeof window.resetOrgSelectionForNewUser === 'function') {
-        window.resetOrgSelectionForNewUser();
+      if (typeof window.PanguPay?.storage?.resetOrgSelectionForNewUser === 'function') {
+        window.PanguPay.storage.resetOrgSelectionForNewUser();
       }
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/new');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/new');
       }
     });
   }
@@ -51,8 +51,8 @@ function bindWelcomeEvents() {
   if (loginAccountBtn && !loginAccountBtn.dataset._welcomeBind) {
     loginAccountBtn.dataset._welcomeBind = 'true';
     loginAccountBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/login');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/login');
       }
     });
   }
@@ -62,8 +62,8 @@ function bindWelcomeEvents() {
   if (splitLoginBtn && !splitLoginBtn.dataset._welcomeBind) {
     splitLoginBtn.dataset._welcomeBind = 'true';
     splitLoginBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/login');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/login');
       }
     });
   }
@@ -73,8 +73,8 @@ function bindWelcomeEvents() {
   if (splitHomeBtn && !splitHomeBtn.dataset._welcomeBind) {
     splitHomeBtn.dataset._welcomeBind = 'true';
     splitHomeBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/main');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/main');
       }
     });
   }

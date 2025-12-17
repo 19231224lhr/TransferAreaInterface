@@ -38,8 +38,8 @@ export function handleMainRoute() {
   refreshOrgPanel();
   
   // Initialize wallet chart after rendering
-  if (typeof window.initWalletChart === 'function') {
-    window.initWalletChart();
+  if (typeof window.PanguPay?.charts?.initWalletChart === 'function') {
+    window.PanguPay.charts.initWalletChart();
   }
   
   // Initialize network chart for transfer panel
@@ -94,10 +94,6 @@ export function handleMainRoute() {
  */
 export function initMainPage() {
   handleMainRoute();
-  
-  // Export address handlers to global scope
-  window.handleAddToAddress = handleAddToAddress;
-  window.handleZeroAddress = handleZeroAddress;
   
   // Bind address card events
   const list = document.getElementById('walletAddrList');
@@ -169,8 +165,8 @@ function initNoOrgWarnBtn() {
     if (noOrgModalOk) {
       noOrgModalOk.addEventListener('click', () => {
         hideNoOrgModal();
-        if (typeof window.routeTo === 'function') {
-          window.routeTo('#/join-group');
+        if (typeof window.PanguPay?.router?.routeTo === 'function') {
+          window.PanguPay.router.routeTo('#/join-group');
         } else {
           window.location.hash = '#/join-group';
         }

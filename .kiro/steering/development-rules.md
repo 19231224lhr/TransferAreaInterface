@@ -28,6 +28,56 @@
 - ✅ **必须使用 `secureFetch` 或 `secureFetchWithRetry`**
 - ✅ **必须定义请求和响应的 TypeScript 接口**
 
+### 3. PanguPay Namespace (命名空间规范) ✅ NEW
+
+**所有公共 API 必须通过 `window.PanguPay` 命名空间暴露**
+
+为了减少全局变量污染、提高可维护性：
+
+- ✅ **新代码使用 `window.PanguPay.xxx` 调用公共 API**
+- ✅ **API 按功能分组：`router`, `i18n`, `theme`, `account`, `storage`, `wallet`, `ui`, `crypto` 等**
+- ✅ **旧的 `window.xxx` 别名保留用于兼容，但新代码不应使用**
+- ✅ **命名空间定义在 `js/core/namespace.ts`，类型定义在 `js/core/types.ts`**
+
+```typescript
+// ✅ 正确（新代码）
+window.PanguPay.router.routeTo('#/main');
+window.PanguPay.ui.showToast('Success!');
+window.PanguPay.i18n.t('common.confirm');
+
+// ❌ 避免（仅兼容旧代码）
+window.routeTo('#/main');
+window.showToast('Success!');
+```
+
+### 4. Event Delegation (事件委托规范) ✅ NEW
+
+**动态生成的 HTML 必须使用事件委托，禁止内联 onclick**
+
+为了更好的 CSP 合规性和可维护性：
+
+- ✅ **使用 `data-action` 属性指定动作名**
+- ✅ **使用 `data-*` 属性传递参数**
+- ✅ **在 `js/app.js` 中通过 `registerAction()` 注册处理器**
+- ❌ **禁止在动态生成的 HTML 中使用 `onclick="..."`**
+
+```html
+<!-- ✅ 正确 -->
+<button data-action="showUtxoDetail" data-addr="xxx" data-key="yyy">详情</button>
+
+<!-- ❌ 错误 -->
+<button onclick="window.showUtxoDetail('xxx', 'yyy')">详情</button>
+```
+
+```typescript
+// 在 app.js 中注册 action
+import { registerAction } from './core';
+
+registerAction('showUtxoDetail', (el, data) => {
+  showUtxoDetail(data.addr, data.key);
+});
+```
+
 ---
 
 ## 📁 文件创建规则

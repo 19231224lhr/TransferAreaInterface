@@ -54,11 +54,11 @@ export function handleLeaveOrg() {
   clearGuarChoice();
   
   // Update UI
-  if (typeof window.updateWalletBrief === 'function') {
-    window.updateWalletBrief();
+  if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+    window.PanguPay.wallet.updateWalletBrief();
   }
-  if (typeof window.refreshOrgPanel === 'function') {
-    window.refreshOrgPanel();
+  if (typeof window.PanguPay?.wallet?.refreshOrgPanel === 'function') {
+    window.PanguPay.wallet.refreshOrgPanel();
   }
   if (typeof window.updateOrgDisplay === 'function') {
     window.updateOrgDisplay();
@@ -67,8 +67,8 @@ export function handleLeaveOrg() {
   showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
   
   // Navigate back to main
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/main');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/main');
   }
 }
 
@@ -134,8 +134,8 @@ export function initGroupDetailPage() {
   if (backBtn && !backBtn.dataset._groupBind) {
     backBtn.dataset._groupBind = 'true';
     backBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/main');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/main');
       }
     });
   }
@@ -145,8 +145,8 @@ export function initGroupDetailPage() {
   if (joinNowBtn && !joinNowBtn.dataset._groupBind) {
     joinNowBtn.dataset._groupBind = 'true';
     joinNowBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/join-group');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/join-group');
       }
     });
   }
@@ -196,11 +196,11 @@ function initGroupDetailButtons() {
         saveUser(latest);
       }
       
-      if (typeof window.updateWalletBrief === 'function') {
-        window.updateWalletBrief();
+      if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+        window.PanguPay.wallet.updateWalletBrief();
       }
-      if (typeof window.refreshOrgPanel === 'function') {
-        window.refreshOrgPanel();
+      if (typeof window.PanguPay?.wallet?.refreshOrgPanel === 'function') {
+        window.PanguPay.wallet.refreshOrgPanel();
       }
       if (typeof window.updateOrgDisplay === 'function') {
         window.updateOrgDisplay();

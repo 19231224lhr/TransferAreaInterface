@@ -378,8 +378,8 @@ function handleOrgClick(e: MouseEvent): void {
   headerState?.set({ showUserMenu: false });
   
   // 导航到组织详情页
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/group-detail');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/group-detail');
   } else {
     location.hash = '#/group-detail';
   }
@@ -395,8 +395,8 @@ function handleMenuHeaderClick(e: MouseEvent): void {
   headerState?.set({ showUserMenu: false });
   
   // 导航到个人资料页
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/profile');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/profile');
   } else {
     location.hash = '#/profile';
   }
@@ -449,8 +449,8 @@ function handleLogoutClick(e: MouseEvent): void {
   headerState?.set({ showUserMenu: false });
   
   // 重定向到欢迎页
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/welcome');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/welcome');
   } else {
     location.hash = '#/welcome';
   }

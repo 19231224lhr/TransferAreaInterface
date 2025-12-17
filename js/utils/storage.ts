@@ -227,15 +227,14 @@ export function saveUser(user: Partial<User>): void {
     
     // Sync to centralized store for state management
     setUser(acc);
-    
-    // Update header user display
-    if (typeof (window as any).updateHeaderUser === 'function') {
-      (window as any).updateHeaderUser(acc);
+
+    // Namespace-only UI updates (no legacy window.* globals)
+    const pp = (window as any).PanguPay;
+    if (pp?.ui?.updateHeaderUser) {
+      pp.ui.updateHeaderUser(acc);
     }
-    
-    // Trigger chart update
-    if (typeof (window as any).updateWalletChart === 'function') {
-      (window as any).updateWalletChart(acc);
+    if (pp?.charts?.updateWalletChart) {
+      pp.charts.updateWalletChart(acc);
     }
   } catch (e) {
     console.warn('Failed to save user data', e);

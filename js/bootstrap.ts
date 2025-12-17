@@ -265,7 +265,7 @@ function init(): void {
         <div>
           <h1 style="color:#ef4444;margin-bottom:16px;">初始化失败</h1>
           <p style="color:#94a3b8;margin-bottom:24px;">模板系统加载失败，请刷新页面重试</p>
-          <button onclick="location.reload()" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;">刷新页面</button>
+          <button data-action="reload" style="padding:12px 24px;background:#0ea5e9;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;">刷新页面</button>
         </div>
       </div>
     `;

@@ -139,8 +139,8 @@ export function initNewUserPage() {
   if (newBackBtn && !newBackBtn.dataset._newUserBind) {
     newBackBtn.dataset._newUserBind = 'true';
     newBackBtn.addEventListener('click', () => {
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/welcome');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/welcome');
       }
     });
   }
@@ -159,8 +159,8 @@ export function initNewUserPage() {
       window.__pendingAccountData = pendingAccountData;
       
       // Navigate to set password page
-      if (typeof window.routeTo === 'function') {
-        window.routeTo('#/set-password');
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/set-password');
       }
     });
   }

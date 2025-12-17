@@ -3,11 +3,22 @@
  * 
  * This file declares global types that extend Window and other built-in interfaces.
  * It allows TypeScript/JSDoc to understand custom window properties.
+ * 
+ * NOTE: The window.xxx declarations are kept for backward compatibility.
+ * New code should use window.PanguPay.xxx namespace instead.
  */
+
+// Import types from core module
+import type { PanguPayNamespace } from './core/types';
 
 // Use declare global to extend the Window interface
 declare global {
   interface Window {
+    /** 
+     * PanguPay centralized namespace (preferred for new code)
+     * All public APIs are organized under this namespace.
+     */
+    PanguPay: PanguPayNamespace;
     // Router functions
     routeTo: (route: string) => void;
     showCard: (card: HTMLElement) => void;

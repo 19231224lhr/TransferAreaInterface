@@ -403,8 +403,8 @@ function handlePasswordVisibilityToggle(): void {
  */
 function handleBackClick(): void {
   resetLoginPageState();
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/welcome');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/welcome');
   }
 }
 
@@ -413,11 +413,11 @@ function handleBackClick(): void {
  */
 function handleNextClick(): void {
   (window as unknown as Record<string, unknown>).__skipExitConfirm = true;
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/entry');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/entry');
   }
-  if (typeof window.updateWalletBrief === 'function') {
-    window.updateWalletBrief();
+  if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+    window.PanguPay.wallet.updateWalletBrief();
   }
 }
 
@@ -468,7 +468,7 @@ async function handleLoginClick(): Promise<void> {
   // 验证私钥
   const privError = quickValidate(priv, ['required', 'privateKey']);
   if (privError) {
-    window.showErrorToast?.(privError, t('modal.inputIncomplete', '输入不完整'));
+    window.PanguPay?.ui?.showErrorToast?.(privError, t('modal.inputIncomplete', '输入不完整'));
     inputEl?.focus();
     return;
   }
@@ -476,14 +476,14 @@ async function handleLoginClick(): Promise<void> {
   // 验证密码
   const pwdError = quickValidate(password, ['required', 'minLength'], { minLength: 6 });
   if (pwdError) {
-    window.showErrorToast?.(pwdError, t('modal.inputIncomplete', '输入不完整'));
+    window.PanguPay?.ui?.showErrorToast?.(pwdError, t('modal.inputIncomplete', '输入不完整'));
     passwordEl?.focus();
     return;
   }
   
   // 验证确认密码
   if (!confirmPassword) {
-    window.showErrorToast?.(
+    window.PanguPay?.ui?.showErrorToast?.(
       t('login.confirmPasswordRequired', '请再次输入密码'),
       t('modal.inputIncomplete', '输入不完整')
     );
@@ -492,7 +492,7 @@ async function handleLoginClick(): Promise<void> {
   }
   
   if (password !== confirmPassword) {
-    window.showErrorToast?.(
+    window.PanguPay?.ui?.showErrorToast?.(
       t('login.passwordMismatch', '两次输入的密码不一致'),
       t('modal.formatError', '格式错误')
     );
@@ -534,8 +534,8 @@ async function handleLoginClick(): Promise<void> {
       pubYHex: string;
     };
     
-    if (typeof window.importFromPrivHex === 'function') {
-      data = await window.importFromPrivHex(priv);
+    if (typeof window.PanguPay?.account?.importFromPrivHex === 'function') {
+      data = await window.PanguPay.account.importFromPrivHex(priv);
     } else {
       throw new Error('importFromPrivHex function not available');
     }
@@ -572,16 +572,16 @@ async function handleLoginClick(): Promise<void> {
     });
     
     // 清除旧账户数据
-    const oldUser = typeof window.loadUser === 'function' ? window.loadUser() : null;
+    const oldUser = typeof window.PanguPay?.storage?.loadUser === 'function' ? window.PanguPay.storage.loadUser() : null;
     if (!oldUser || oldUser.accountId !== data.accountId) {
-      if (typeof window.clearAccountStorage === 'function') {
-        window.clearAccountStorage();
+      if (typeof window.PanguPay?.storage?.clearAccountStorage === 'function') {
+        window.PanguPay.storage.clearAccountStorage();
       }
     }
     
     // 保存用户 (不保存明文私钥)
-    if (typeof window.saveUser === 'function') {
-      window.saveUser({
+    if (typeof window.PanguPay?.storage?.saveUser === 'function') {
+      window.PanguPay.storage.saveUser({
         accountId: data.accountId,
         address: data.address,
         pubXHex: data.pubXHex,
@@ -592,12 +592,12 @@ async function handleLoginClick(): Promise<void> {
     }
     
     // 更新 header
-    const user = typeof window.loadUser === 'function' ? window.loadUser() : null;
+    const user = typeof window.PanguPay?.storage?.loadUser === 'function' ? window.PanguPay.storage.loadUser() : null;
     updateHeaderUser(user);
     
     // 显示成功提示
-    if (typeof window.showSuccessToast === 'function') {
-      window.showSuccessToast(
+    if (typeof window.PanguPay?.ui?.showSuccessToast === 'function') {
+      window.PanguPay.ui.showSuccessToast(
         t('toast.login.successDesc', '登录成功'),
         t('toast.login.success', '成功')
       );
@@ -619,8 +619,8 @@ async function handleLoginClick(): Promise<void> {
     // 展开表单
     await animateFormExpand();
     
-    if (typeof window.showErrorToast === 'function') {
-      window.showErrorToast(
+    if (typeof window.PanguPay?.ui?.showErrorToast === 'function') {
+      window.PanguPay.ui.showErrorToast(
         (e as Error).message || t('modal.cannotRecognizeKey', '无法识别私钥'),
         t('modal.loginFailed', '登录失败')
       );

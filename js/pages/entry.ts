@@ -176,9 +176,12 @@ function handleToggleClick(): void {
 /**
  * 处理创建钱包按钮点击
  */
-function handleCreateWalletClick(): void {
-  if (typeof window.addNewSubWallet === 'function') {
-    window.addNewSubWallet(0); // 默认创建 PGC 类型地址
+async function handleCreateWalletClick(): Promise<void> {
+  const fn = window.PanguPay?.account?.addNewSubWallet;
+  if (typeof fn === 'function') {
+    await fn();
+    // Ensure entry page list reflects latest storage immediately
+    try { window.PanguPay?.wallet?.updateWalletBrief?.(); } catch (_) { }
   }
 }
 
@@ -186,8 +189,8 @@ function handleCreateWalletClick(): void {
  * 处理导入钱包按钮点击
  */
 function handleImportWalletClick(): void {
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/wallet-import');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/wallet-import');
   }
 }
 
@@ -195,8 +198,8 @@ function handleImportWalletClick(): void {
  * 处理返回按钮点击
  */
 function handleBackClick(): void {
-  if (typeof window.routeTo === 'function') {
-    window.routeTo('#/welcome');
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/welcome');
   }
 }
 
@@ -232,10 +235,10 @@ function handleProceedOk(): void {
   const u = loadUser();
   const gid = u?.orgNumber || '';
   
-  if (gid && typeof window.routeTo === 'function') {
-    window.routeTo('#/inquiry-main');
-  } else if (typeof window.routeTo === 'function') {
-    window.routeTo('#/join-group');
+  if (gid && typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/inquiry-main');
+  } else if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/join-group');
   }
 }
 
