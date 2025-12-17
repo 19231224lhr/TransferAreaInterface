@@ -14,6 +14,7 @@ import { withLoading } from './utils/loading';
 import { navigateTo as enhancedNavigateTo } from './utils/enhancedRouter';
 import { pageManager } from './utils/pageManager';
 import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
+import { resetWalletBindings } from './services/wallet';
 
 // Lazy page loaders (registered on demand)
 const pageLoaders = {
@@ -254,6 +255,9 @@ export function routeTo(hash) {
  * Main router function - handles hash changes with dynamic page loading
  */
 export async function router() {
+  // Reset wallet binding flags before cleanup so events can be re-bound
+  resetWalletBindings();
+  
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
 

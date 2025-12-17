@@ -291,7 +291,13 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   // Currency selector
   const cs = card.querySelector('#' + idBase + '_mt');
   if (cs) {
-    cs.addEventListener('click', (e) => { e.stopPropagation(); cs.classList.toggle('open'); });
+    cs.addEventListener('click', (e) => { 
+      e.stopPropagation(); 
+      const isOpening = !cs.classList.contains('open');
+      cs.classList.toggle('open'); 
+      // Toggle overflow class on card for dropdown visibility
+      card.classList.toggle('has-dropdown-open', isOpening);
+    });
     const menu = cs.querySelector('.recipient-coin-menu');
     if (menu) {
       menu.addEventListener('click', (ev) => {
@@ -309,9 +315,13 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           valEl.querySelector('.coin-label').textContent = lbl.t;
         }
         cs.classList.remove('open');
+        card.classList.remove('has-dropdown-open');
       });
     }
-    document.addEventListener('click', () => { cs.classList.remove('open'); });
+    document.addEventListener('click', () => { 
+      cs.classList.remove('open'); 
+      card.classList.remove('has-dropdown-open');
+    });
   }
 }
 

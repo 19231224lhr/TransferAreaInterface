@@ -22,6 +22,12 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* 当有下拉菜单打开时允许溢出 */
+.transfer-panel:has(.recipient-coin-select.open),
+.transfer-panel:has(.custom-select.open) {
+  overflow: visible;
+}
+
 /* 转账交易头部 - 蓝色主题 */
 .transfer-header {
   background: var(--transfer-gradient);

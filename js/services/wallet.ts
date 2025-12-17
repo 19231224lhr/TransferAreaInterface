@@ -60,6 +60,38 @@ let srcAddrs: string[] = [];
 let __addrMode: 'create' | 'import' = 'create';
 
 // ============================================================================
+// Binding Reset Function
+// ============================================================================
+
+/**
+ * Reset all wallet-related event binding flags.
+ * Call this when globalEventManager.cleanup() is called to ensure
+ * events can be re-bound on the next initialization.
+ */
+export function resetWalletBindings(): void {
+  // Reset transfer mode tabs binding
+  const modeTabsContainer = document.querySelector('.transfer-mode-tabs') as HTMLElement | null;
+  if (modeTabsContainer) {
+    delete modeTabsContainer.dataset._bind;
+  }
+  
+  // Reset address list change binding
+  const addrList = document.getElementById('srcAddrList');
+  if (addrList) {
+    delete addrList.dataset._changeBind;
+  }
+  
+  // Reset custom select bindings
+  const customSelects = ['csChPGC', 'csChBTC', 'csChETH'];
+  customSelects.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      delete el.dataset._bind;
+    }
+  });
+}
+
+// ============================================================================
 // Wallet Brief Functions
 // ============================================================================
 
