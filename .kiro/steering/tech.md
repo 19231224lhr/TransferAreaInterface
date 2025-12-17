@@ -111,8 +111,19 @@ go run ./backend/verify_tx
 
 ### TypeScript Modules (已迁移)
 
+**Core (核心模块):** 🆕
+- `js/core/namespace.ts` - PanguPay 命名空间定义
+- `js/core/eventDelegate.ts` - 全局事件委托系统
+- `js/core/types.ts` - 命名空间类型定义
+- `js/core/index.ts` - 模块导出
+
+**Bootstrap (启动模块):** 🆕
+- `js/bootstrap.ts` - 应用启动和生命周期管理
+- `js/router.ts` - 路由系统 (从 router.js 迁移)
+
 **Config:**
 - `js/config/constants.ts` - 配置常量和类型定义
+- `js/config/pageTemplates.ts` - 页面模板配置
 
 **Utils:**
 - `js/utils/crypto.ts` - 加密/哈希/签名工具
@@ -120,6 +131,8 @@ go run ./backend/verify_tx
 - `js/utils/keyEncryptionUI.ts` - 私钥加密 UI 集成
 - `js/utils/security.ts` - 安全工具 (XSS, CSRF, 验证)
 - `js/utils/storage.ts` - 本地存储管理
+- `js/utils/statePersistence.ts` - 🆕 Store 状态持久化
+- `js/utils/view.ts` - 🆕 安全 DOM 渲染 (lit-html)
 - `js/utils/accessibility.ts` - 无障碍工具
 - `js/utils/loading.ts` - 加载状态管理
 - `js/utils/formValidator.ts` - 表单验证器
@@ -127,7 +140,10 @@ go run ./backend/verify_tx
 - `js/utils/lazyLoader.ts` - 懒加载管理
 - `js/utils/serviceWorker.ts` - Service Worker 管理
 - `js/utils/transaction.ts` - 事务操作和自动保存
-- `js/utils/reactive.ts` - 🆕 响应式 UI 绑定系统
+- `js/utils/reactive.ts` - 响应式 UI 绑定系统
+- `js/utils/screenLock.ts` - 🆕 屏幕锁定功能
+- `js/utils/templateLoader.ts` - 模板加载器
+- `js/utils/pageManager.ts` - 页面管理器
 
 **Services:**
 - `js/services/account.ts` - 账户服务
@@ -179,6 +195,177 @@ go run ./backend/verify_tx
 
 **i18n:** (纯数据文件)
 - `js/i18n/*.js` - 国际化系统
+
+## PanguPay Namespace System (命名空间系统) 🆕
+
+### Overview
+
+项目使用统一的 `window.PanguPay` 命名空间暴露所有公共 API，减少全局变量污染。
+
+### Core Files
+
+- `js/core/namespace.ts` - 命名空间定义和初始化
+- `js/core/types.ts` - TypeScript 类型定义
+- `js/core/eventDelegate.ts` - 事件委托系统
+- `js/core/index.ts` - 模块导出
+
+### Namespace Structure
+
+```typescript
+window.PanguPay = {
+  router: { routeTo, router, showCard, initRouter },
+  i18n: { t, setLanguage, getCurrentLanguage, updatePageTranslations },
+  theme: { loadThemeSetting, initThemeSelector },
+  account: { generateKeyPair, deriveAccountId, deriveAddress },
+  storage: { loadUser, saveUser, clearUser, ... },
+  wallet: { renderWallet, refreshOrgPanel, refreshSrcAddrList, ... },
+  ui: { showToast, showErrorToast, showModal, closeModal, ... },
+  crypto: { sha256Hex, signData, verifySignature, ... },
+  charts: { updateWalletChart, cleanupWalletChart, ... }
+}
+```
+
+### Usage
+
+```typescript
+// ✅ 新代码使用命名空间
+window.PanguPay.router.routeTo('#/main');
+window.PanguPay.ui.showToast('操作成功');
+window.PanguPay.i18n.t('common.confirm');
+
+// ❌ 避免直接使用 window（仅兼容旧代码）
+window.routeTo('#/main');
+```
+
+---
+
+## Event Delegation System (事件委托系统) 🆕
+
+### Overview
+
+使用 `data-action` 属性实现全局事件委托，替代内联 `onclick`，提高 CSP 合规性。
+
+### Core API
+
+| Function | Purpose |
+|----------|---------|
+| `registerAction(name, handler)` | 注册动作处理器 |
+| `unregisterAction(name)` | 注销动作处理器 |
+| `initEventDelegation()` | 初始化事件委托（自动调用） |
+
+### Usage
+
+**HTML (动态生成):**
+```html
+<button data-action="showUtxoDetail" data-addr="xxx" data-key="yyy">详情</button>
+```
+
+**JavaScript:**
+```typescript
+import { registerAction } from './core';
+
+registerAction('showUtxoDetail', (el, data) => {
+  // data = { addr: 'xxx', key: 'yyy' }
+  showUtxoDetail(data.addr, data.key);
+});
+```
+
+### Benefits
+
+- ✅ CSP 合规（无内联脚本）
+- ✅ 自动处理动态内容
+- ✅ 集中管理事件处理器
+- ✅ 类型安全的参数传递
+
+---
+
+## State Persistence System (状态持久化系统) 🆕
+
+### Overview
+
+解决状态管理"脑裂"问题：Store 是唯一的事实来源，localStorage 仅用于持久化。
+
+### Core File
+
+`js/utils/statePersistence.ts`
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `initUserPersistence()` | 启动 Store → localStorage 自动同步 |
+| `flushUserPersistence()` | 立即刷新持久化（用于 beforeunload） |
+| `stopUserPersistence()` | 停止持久化监听 |
+
+### Design Principles
+
+1. **Single Source of Truth**: Store 是唯一的事实来源
+2. **Hydration Once**: 启动时从 localStorage 水合一次
+3. **Debounced Persistence**: 防抖写入，避免频繁 I/O
+4. **Lifecycle Hooks**: beforeunload/visibilitychange 时刷新
+
+### Usage
+
+```typescript
+// 在 bootstrap.ts 中初始化
+import { initUserPersistence } from './utils/statePersistence';
+
+// 1. 从 localStorage 水合 Store（一次性）
+const hydratedUser = initUserStateFromStorage();
+
+// 2. 启动自动持久化
+initUserPersistence();
+
+// 之后所有状态变更通过 Store
+store.setState({ user: newUser });
+// localStorage 自动同步（防抖 200ms）
+```
+
+---
+
+## View Utilities (视图工具) 🆕
+
+### Overview
+
+封装 `lit-html` 提供安全的 DOM 渲染，替代不安全的 `innerHTML` 拼接。
+
+### Core File
+
+`js/utils/view.ts`
+
+### Key Exports
+
+| Export | Purpose |
+|--------|---------|
+| `html` | lit-html 模板标签 |
+| `svg` | SVG 模板标签 |
+| `render` | 渲染到容器 |
+| `nothing` | 空内容占位符 |
+| `renderInto(target, content)` | 安全渲染封装 |
+
+### Usage
+
+```typescript
+import { html, renderInto } from './utils/view';
+
+// 安全渲染（自动转义）
+renderInto(container, html`
+  <div class="card">
+    <h2>${userName}</h2>
+    <p>${userBio}</p>
+    <button data-action="edit">编辑</button>
+  </div>
+`);
+```
+
+### Benefits
+
+- ✅ 自动 XSS 防护（变量自动转义）
+- ✅ 高效 DOM 更新（差异更新）
+- ✅ 类型安全的模板
+- ✅ 与事件委托系统配合使用
+
+---
 
 ## Reactive UI Binding System (响应式 UI 绑定系统)
 

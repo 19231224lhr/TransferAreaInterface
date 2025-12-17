@@ -78,6 +78,57 @@ registerAction('showUtxoDetail', (el, data) => {
 });
 ```
 
+### 5. State Persistence (状态持久化规范) ✅ NEW
+
+**Store 是唯一的事实来源，禁止直接读写 localStorage 管理用户状态**
+
+为了解决状态管理"脑裂"问题：
+
+- ✅ **使用 `store.setState()` 更新用户状态**
+- ✅ **使用 `selectUser(store.getState())` 读取用户状态**
+- ✅ **状态持久化由 `statePersistence.ts` 自动处理**
+- ❌ **禁止直接调用 `localStorage.setItem('user', ...)` 管理用户状态**
+
+```typescript
+// ✅ 正确（通过 Store）
+import { store, selectUser } from './utils/store.js';
+
+// 读取
+const user = selectUser(store.getState());
+
+// 更新（自动持久化到 localStorage）
+store.setState({ user: newUser });
+
+// ❌ 错误（直接操作 localStorage）
+localStorage.setItem('user', JSON.stringify(user));  // 禁止！
+const user = JSON.parse(localStorage.getItem('user'));  // 禁止！
+```
+
+### 6. Safe DOM Rendering (安全 DOM 渲染规范) ✅ NEW
+
+**使用 `view.ts` 模块进行 DOM 渲染，禁止直接拼接 innerHTML**
+
+为了防止 XSS 攻击和提高渲染效率：
+
+- ✅ **使用 `html` 模板标签和 `renderInto()` 函数**
+- ✅ **变量自动转义，无需手动调用 `escapeHtml()`**
+- ❌ **禁止使用 `element.innerHTML = '<div>' + userInput + '</div>'`**
+
+```typescript
+// ✅ 正确（使用 view.ts）
+import { html, renderInto } from './utils/view';
+
+renderInto(container, html`
+  <div class="card">
+    <h2>${userName}</h2>
+    <button data-action="edit">编辑</button>
+  </div>
+`);
+
+// ❌ 错误（直接拼接 innerHTML）
+container.innerHTML = `<div class="card"><h2>${userName}</h2></div>`;  // XSS 风险！
+```
+
 ---
 
 ## 📁 文件创建规则
@@ -642,7 +693,7 @@ state.set({
 
 ## ✅ 总结
 
-**记住这四个核心原则：**
+**记住这六个核心原则：**
 
 1. 🎯 **新代码 = TypeScript**
    - 所有新文件必须是 `.ts`
@@ -656,7 +707,19 @@ state.set({
    - 使用 `createReactiveState`
    - 状态驱动 UI，禁止命令式 DOM 操作
 
-4. 🔍 **提交前 = 类型检查**
+4. 🏷️ **公共 API = PanguPay 命名空间**
+   - 使用 `window.PanguPay.xxx` 调用公共 API
+   - 禁止新增 `window.xxx` 全局变量
+
+5. 🎯 **事件处理 = 事件委托**
+   - 使用 `data-action` 属性
+   - 禁止内联 `onclick`
+
+6. 🔒 **DOM 渲染 = view.ts**
+   - 使用 `html` 模板和 `renderInto()`
+   - 禁止直接拼接 `innerHTML`
+
+7. 🔍 **提交前 = 类型检查**
    - 运行 `npm run typecheck`
    - 修复所有错误
 

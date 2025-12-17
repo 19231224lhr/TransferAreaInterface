@@ -60,10 +60,17 @@ TransferAreaInterface/
 │       └── dark-mode.css       # 深色模式
 │
 ├── js/                     # Frontend code (JS/TS mixed)
-│   ├── app.js              # Application entry point
-│   ├── router.js           # Hash-based routing
+│   ├── app.js              # 兼容层入口 (全局导出)
+│   ├── bootstrap.ts        # 🆕 应用启动和生命周期管理 (TS)
+│   ├── router.ts           # 🆕 路由系统 (TS，从 router.js 迁移)
 │   ├── types.js            # JSDoc type definitions
 │   ├── globals.d.ts        # Global TypeScript declarations
+│   │
+│   ├── core/               # 🆕 核心模块 (命名空间 + 事件委托)
+│   │   ├── index.ts        # 模块导出入口
+│   │   ├── namespace.ts    # PanguPay 命名空间定义
+│   │   ├── eventDelegate.ts # 全局事件委托系统
+│   │   └── types.ts        # 命名空间类型定义
 │   │
 │   ├── api/                # API client modules (TypeScript only)
 │   │   ├── client.ts       # Base API client with secureFetch
@@ -122,6 +129,8 @@ TransferAreaInterface/
 │       ├── keyEncryptionUI.ts # Key encryption UI integration (TS)
 │       ├── security.ts     # Security utilities (TS)
 │       ├── storage.ts      # localStorage management (TS)
+│       ├── statePersistence.ts # 🆕 Store 状态持久化 (TS)
+│       ├── view.ts         # 🆕 安全 DOM 渲染 (lit-html 封装)
 │       ├── accessibility.ts # A11y utilities (TS)
 │       ├── loading.ts      # Loading state manager (TS)
 │       ├── formValidator.ts # Form validation (TS)
@@ -129,7 +138,8 @@ TransferAreaInterface/
 │       ├── lazyLoader.ts   # Lazy loading (TS)
 │       ├── serviceWorker.ts # SW management (TS)
 │       ├── transaction.ts  # Transaction helpers & auto-save (TS)
-│       ├── reactive.ts     # 🆕 响应式 UI 绑定系统 (TS)
+│       ├── reactive.ts     # 响应式 UI 绑定系统 (TS)
+│       ├── screenLock.ts   # 🆕 屏幕锁定功能 (TS)
 │       ├── store.js        # State management
 │       ├── toast.js        # Toast helpers
 │       ├── helpers.js      # General helpers
@@ -245,6 +255,13 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - Metrics tracking and reporting
 - Optimization suggestions
 
+**Core Architecture Refactoring (2025):** ✅ 已完成
+- `router.js` → `router.ts` - 路由系统 TypeScript 化
+- `app.js` 拆分为 `app.js` (兼容层) + `bootstrap.ts` (启动逻辑)
+- 新增 `js/core/` 目录 - 命名空间 + 事件委托系统
+- 新增 `js/utils/statePersistence.ts` - 解决状态管理"脑裂"问题
+- 新增 `js/utils/view.ts` - 安全 DOM 渲染 (lit-html 封装)
+
 **Reactive UI Binding (2025):** ✅ 已完成
 - `js/utils/reactive.ts` - 轻量级响应式绑定系统 (456 行)
 - 声明式 UI 绑定，状态变化自动同步 DOM
@@ -293,16 +310,19 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 
 | Directory | Purpose | Language | Status |
 |-----------|---------|----------|--------|
-| `js/api/` | API client modules (frontend-backend integration) | **TypeScript only** | 🆕 New |
+| `js/core/` | 命名空间 + 事件委托 | **TypeScript only** | 🆕 New |
+| `js/api/` | API client modules | **TypeScript only** | ✅ Migrated |
 | `js/config/` | Configuration constants | TypeScript | ✅ Migrated |
 | `js/services/` | Business logic | TypeScript | ✅ Migrated |
 | `js/utils/` | Utility functions | TypeScript | ✅ Migrated |
-| `js/pages/` | Page components | JavaScript | 🔄 To migrate |
-| `js/ui/` | UI components | JavaScript | 🔄 To migrate |
-| `js/i18n/` | Translations | JavaScript | 🔄 To migrate |
+| `js/pages/` | Page components | TS + JS | 🔄 Partial |
+| `js/ui/` | UI components | TS + JS | 🔄 Partial |
+| `js/i18n/` | Translations | JavaScript | 保持现状 |
 
 **Important Notes:**
-- 🆕 `js/api/` - **NEW directory for all API integration code** (TypeScript only)
+- 🆕 `js/core/` - **核心模块：命名空间定义 + 事件委托系统** (TypeScript only)
+- 🆕 `js/bootstrap.ts` - **应用启动和生命周期管理**
+- 🆕 `js/router.ts` - **路由系统 (从 router.js 迁移)**
 - ✅ All new code MUST be written in TypeScript
 - 🔄 Existing JavaScript files can remain as-is until major refactoring
 
@@ -316,18 +336,24 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 
 | File | Purpose |
 |------|---------|
-| `js/app.js` | Application entry, routing, initialization |
-| `js/router.js` | Hash-based routing system |
-| **`js/api/client.ts`** | **🆕 Base API client with secureFetch (NEW)** |
-| **`js/api/account.ts`** | **🆕 Account API endpoints (NEW)** |
-| **`js/api/types.ts`** | **🆕 API request/response types (NEW)** |
+| `js/app.js` | 兼容层入口，全局导出 |
+| `js/bootstrap.ts` | 🆕 应用启动和生命周期管理 |
+| `js/router.ts` | 🆕 路由系统 (TypeScript) |
+| **`js/core/namespace.ts`** | **🆕 PanguPay 命名空间定义** |
+| **`js/core/eventDelegate.ts`** | **🆕 全局事件委托系统** |
+| **`js/core/types.ts`** | **🆕 命名空间类型定义** |
+| `js/api/client.ts` | Base API client with secureFetch |
+| `js/api/account.ts` | Account API endpoints |
+| `js/api/types.ts` | API request/response types |
 | `js/config/constants.ts` | All configuration constants and types |
 | `js/utils/security.ts` | Security utilities (XSS, CSRF, validation) |
 | `js/utils/storage.ts` | localStorage operations |
+| **`js/utils/statePersistence.ts`** | **🆕 Store 状态持久化** |
+| **`js/utils/view.ts`** | **🆕 安全 DOM 渲染 (lit-html)** |
 | `js/utils/keyEncryption.ts` | Private key encryption core logic |
 | `js/utils/keyEncryptionUI.ts` | Private key encryption UI integration |
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
-| **`js/utils/reactive.ts`** | **🆕 响应式 UI 绑定系统 (NEW)** |
+| `js/utils/reactive.ts` | 响应式 UI 绑定系统 |
 | `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
 | `js/services/transferDraft.ts` | Transfer form state persistence |
@@ -344,6 +370,21 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - Use `apiClient` from `js/api/client.ts` for all HTTP requests
 - Define request/response types in `js/api/types.ts`
 - Business logic in `js/services/` should import from `js/api/`
+
+**🆕 PanguPay Namespace Pattern (2025):**
+- 所有公共 API 通过 `window.PanguPay` 命名空间暴露
+- API 按功能分组：`router`, `i18n`, `theme`, `account`, `storage`, `wallet`, `ui`, `crypto`
+- 旧的 `window.xxx` 别名保留用于兼容，新代码使用命名空间
+
+**🆕 Event Delegation Pattern (2025):**
+- 动态生成的 HTML 使用 `data-action` 属性指定动作
+- 通过 `registerAction()` 注册处理器
+- 禁止在动态 HTML 中使用内联 `onclick`
+
+**🆕 State Persistence Pattern (2025):**
+- Store 是唯一的事实来源 (Single Source of Truth)
+- localStorage 仅用于启动时水合 + 持久化
+- 使用 `initUserPersistence()` 自动同步 Store 到 localStorage
 
 ### Backup Files
 
