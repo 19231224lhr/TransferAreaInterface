@@ -75,35 +75,18 @@ function deepClone<T>(obj: T): T {
 }
 
 // ============================================================================
-// Binding Reset Function
+// Binding Reset Function (DEPRECATED)
 // ============================================================================
 
 /**
- * Reset all wallet-related event binding flags.
- * Call this when globalEventManager.cleanup() is called to ensure
- * events can be re-bound on the next initialization.
+ * @deprecated This function is no longer needed after migrating to event delegation.
+ * All dynamic element events are now handled via data-action attributes and the
+ * global event delegation system in js/core/eventDelegate.ts.
+ * 
+ * Kept for backward compatibility - will be removed in future versions.
  */
 export function resetWalletBindings(): void {
-  // Reset transfer mode tabs binding
-  const modeTabsContainer = document.querySelector('.transfer-mode-tabs') as HTMLElement | null;
-  if (modeTabsContainer) {
-    delete modeTabsContainer.dataset._bind;
-  }
-  
-  // Reset address list change binding
-  const addrList = document.getElementById('srcAddrList');
-  if (addrList) {
-    delete addrList.dataset._changeBind;
-  }
-  
-  // Reset custom select bindings
-  const customSelects = ['csChPGC', 'csChBTC', 'csChETH'];
-  customSelects.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      delete el.dataset._bind;
-    }
-  });
+  // No-op: Event delegation eliminates the need for manual binding resets
 }
 
 // ============================================================================
@@ -260,6 +243,9 @@ export function refreshOrgPanel(): void {
 
 /**
  * Render wallet address list
+ * 
+ * Uses event delegation via data-action attributes for all interactive elements.
+ * No manual event binding needed - the global event delegate handles everything.
  */
 export function renderWallet(): void {
   const u = getCurrentUser();
@@ -296,6 +282,7 @@ export function renderWallet(): void {
   addresses.forEach((a) => {
     const item = document.createElement('div');
     item.className = 'addr-card';
+    item.dataset.addr = a; // Store address on card for event delegation
     const meta = u.wallet?.addressMsg?.[a] || null;
     
     const typeId0 = Number(meta?.type ?? 0);
@@ -305,8 +292,9 @@ export function renderWallet(): void {
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
 
+    // Use data-action for event delegation instead of onclick
     const itemHtml = `
-      <div class="addr-card-summary">
+      <div class="addr-card-summary" data-action="toggleAddrCard" data-addr="${escapeHtml(a)}">
         <div class="addr-card-avatar coin--${coinClass}">${escapeHtml(coinType)}</div>
         <div class="addr-card-main">
           <span class="addr-card-hash" title="${escapeHtml(a)}">${escapeHtml(shortAddr)}</span>
@@ -331,11 +319,11 @@ export function renderWallet(): void {
             <span class="addr-detail-value gas">${escapeHtml(String(gas0))}</span>
           </div>
           <div class="addr-card-actions">
-            <button class="addr-action-btn addr-action-btn--primary btn-add" data-addr="${escapeHtml(a)}" title="${t('address.add')}">
+            <button class="addr-action-btn addr-action-btn--primary btn-add" data-action="addToAddress" data-addr="${escapeHtml(a)}" title="${t('address.add')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               ${t('address.add')}
             </button>
-            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-addr="${escapeHtml(a)}" title="${t('address.clear')}">
+            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-action="zeroAddress" data-addr="${escapeHtml(a)}" title="${t('address.clear')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               ${t('address.clear')}
             </button>
@@ -348,40 +336,10 @@ export function renderWallet(): void {
     const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
     item.replaceChildren(...Array.from(doc.body.childNodes));
     
-    // Add click to expand/collapse - 直接使用 onclick 避免事件管理器的问题
-    const summaryEl = item.querySelector('.addr-card-summary') as HTMLElement | null;
-    if (summaryEl) {
-      summaryEl.onclick = (e: MouseEvent) => {
-        e.stopPropagation();
-        item.classList.toggle('expanded');
-      };
-    }
-    
-    // 直接在按钮上绑定事件，使用 onclick 而非 globalEventManager
-    // 这样可以避免事件冒泡和重复绑定的问题
-    const addBtn = item.querySelector('.btn-add') as HTMLButtonElement | null;
-    const zeroBtn = item.querySelector('.btn-zero') as HTMLButtonElement | null;
-    
-    if (addBtn) {
-      addBtn.onclick = (e: MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        handleAddToAddress(a);
-      };
-    }
-    
-    if (zeroBtn) {
-      zeroBtn.onclick = (e: MouseEvent) => {
-        e.stopPropagation();
-        e.preventDefault();
-        handleZeroAddress(a);
-      };
-    }
-    
-    // Add operations menu
+    // Add operations menu (also uses event delegation)
     const metaEl = item.querySelector('.addr-ops-container');
     if (metaEl) {
-      addAddressOperationsMenu(metaEl as HTMLElement, a, item);
+      addAddressOperationsMenu(metaEl as HTMLElement, a);
     }
     
     // Append to fragment instead of directly to DOM
@@ -406,74 +364,29 @@ export function renderWallet(): void {
 
 /**
  * Add operations menu to address card
+ * Uses event delegation via data-action attributes - no manual event binding needed.
  */
-function addAddressOperationsMenu(container: HTMLElement, address: string, cardItem: HTMLElement): void {
+function addAddressOperationsMenu(container: HTMLElement, address: string): void {
   const ops = document.createElement('div');
   ops.className = 'addr-ops';
+  ops.dataset.addr = address;
   
-  const toggle = document.createElement('button');
-  toggle.className = 'ops-toggle';
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 24 24');
-  svg.setAttribute('width', '16');
-  svg.setAttribute('height', '16');
-  svg.setAttribute('stroke', 'currentColor');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('fill', 'none');
-  const c1 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  c1.setAttribute('cx', '12');
-  c1.setAttribute('cy', '12');
-  c1.setAttribute('r', '1');
-  const c2 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  c2.setAttribute('cx', '12');
-  c2.setAttribute('cy', '5');
-  c2.setAttribute('r', '1');
-  const c3 = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
-  c3.setAttribute('cx', '12');
-  c3.setAttribute('cy', '19');
-  c3.setAttribute('r', '1');
-  svg.appendChild(c1);
-  svg.appendChild(c2);
-  svg.appendChild(c3);
-  toggle.appendChild(svg);
+  // Use innerHTML with data-action for event delegation
+  ops.innerHTML = `
+    <button class="ops-toggle" data-action="toggleOpsMenu" data-addr="${escapeHtml(address)}">
+      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+        <circle cx="12" cy="12" r="1"></circle>
+        <circle cx="12" cy="5" r="1"></circle>
+        <circle cx="12" cy="19" r="1"></circle>
+      </svg>
+    </button>
+    <div class="ops-menu hidden">
+      <button class="ops-item" data-action="exportPrivateKey" data-addr="${escapeHtml(address)}">${escapeHtml(t('wallet.exportPrivateKey'))}</button>
+      <button class="ops-item danger" data-action="deleteAddress" data-addr="${escapeHtml(address)}">${escapeHtml(t('wallet.deleteAddress'))}</button>
+    </div>
+  `;
   
-  const menu = document.createElement('div');
-  menu.className = 'ops-menu hidden';
-  
-  const delBtn = document.createElement('button');
-  delBtn.className = 'ops-item danger';
-  delBtn.textContent = t('wallet.deleteAddress');
-  
-  const expBtn = document.createElement('button');
-  expBtn.className = 'ops-item';
-  expBtn.textContent = t('wallet.exportPrivateKey');
-  
-  menu.appendChild(expBtn);
-  menu.appendChild(delBtn);
-  ops.appendChild(toggle);
-  ops.appendChild(menu);
   container.appendChild(ops);
-  
-  globalEventManager.add(toggle, 'click', (e: Event) => {
-    e.stopPropagation();
-    menu.classList.toggle('hidden');
-  });
-  
-  globalEventManager.add(document.body, 'click', () => {
-    menu.classList.add('hidden');
-  });
-  
-  // Delete handler
-  globalEventManager.add(delBtn, 'click', (e: Event) => {
-    e.stopPropagation();
-    handleDeleteAddress(address, menu);
-  });
-  
-  // Export handler
-  globalEventManager.add(expBtn, 'click', (e: Event) => {
-    e.stopPropagation();
-    handleExportPrivateKey(address, menu);
-  });
 }
 
 
@@ -483,12 +396,16 @@ function addAddressOperationsMenu(container: HTMLElement, address: string, cardI
 
 /**
  * Handle address deletion
+ * Exported for use by event delegation system
  */
-function handleDeleteAddress(address: string, menu: HTMLElement): void {
+export function handleDeleteAddress(address: string): void {
   const modal = document.getElementById('confirmDelModal');
   const okBtn = document.getElementById('confirmDelOk');
   const cancelBtn = document.getElementById('confirmDelCancel');
   const textEl = document.getElementById('confirmDelText');
+  
+  // Close any open ops menus
+  closeAllOpsMenus();
   
   if (textEl) textEl.textContent = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
   if (modal) modal.classList.remove('hidden');
@@ -528,7 +445,6 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
     
     const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
     ok1?.addEventListener('click', h2);
-    menu.classList.add('hidden');
   };
   
   const cancel = () => {
@@ -543,12 +459,57 @@ function handleDeleteAddress(address: string, menu: HTMLElement): void {
 
 
 /**
- * Handle private key export
+ * Close all open operations menus
+ * Used when clicking outside or performing an action
  */
-function handleExportPrivateKey(address: string, menu: HTMLElement): void {
+export function closeAllOpsMenus(): void {
+  document.querySelectorAll('.ops-menu').forEach(menu => {
+    menu.classList.add('hidden');
+  });
+}
+
+/**
+ * Toggle operations menu for a specific address
+ * Exported for use by event delegation system
+ */
+export function toggleOpsMenu(address: string, element: HTMLElement): void {
+  // Find the menu within the same ops container
+  const opsContainer = element.closest('.addr-ops');
+  const menu = opsContainer?.querySelector('.ops-menu');
+  
+  if (!menu) return;
+  
+  // Close all other menus first
+  document.querySelectorAll('.ops-menu').forEach(m => {
+    if (m !== menu) m.classList.add('hidden');
+  });
+  
+  // Toggle this menu
+  menu.classList.toggle('hidden');
+}
+
+/**
+ * Toggle address card expand/collapse
+ * Exported for use by event delegation system
+ */
+export function toggleAddrCard(address: string, element: HTMLElement): void {
+  const card = element.closest('.addr-card');
+  if (card) {
+    card.classList.toggle('expanded');
+  }
+}
+
+/**
+ * Handle private key export
+ * Exported for use by event delegation system
+ */
+export function handleExportPrivateKey(address: string): void {
   const u = getCurrentUser();
   const key = String(address).toLowerCase();
   let priv = '';
+  
+  // Close any open ops menus
+  closeAllOpsMenus();
   
   if (u) {
     const map = u.wallet?.addressMsg || {};
@@ -590,7 +551,6 @@ function handleExportPrivateKey(address: string, menu: HTMLElement): void {
   
   const handler = () => { modal?.classList.add('hidden'); ok?.removeEventListener('click', handler); };
   ok?.addEventListener('click', handler);
-  menu.classList.add('hidden');
 }
 
 /**
@@ -1505,4 +1465,38 @@ export function hideWalletSkeletons(): void {
   if (srcAddrList) {
     clearSkeletonState(srcAddrList);
   }
+}
+
+// ============================================================================
+// Global Click Handler for Closing Menus
+// ============================================================================
+
+/**
+ * Initialize global click handler to close ops menus when clicking outside.
+ * This is called once at app startup from app.js.
+ */
+let globalClickHandlerInitialized = false;
+
+export function initGlobalClickHandler(): void {
+  if (globalClickHandlerInitialized) return;
+  
+  // Use setTimeout to ensure this runs after event delegation handlers
+  document.addEventListener('click', (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    
+    // Don't close if clicking on ops-toggle or inside ops-menu
+    if (target.closest('.ops-toggle') || target.closest('.ops-menu')) {
+      return;
+    }
+    
+    // Don't close if clicking on addr-card-summary (card toggle)
+    if (target.closest('.addr-card-summary')) {
+      return;
+    }
+    
+    // Close all ops menus
+    closeAllOpsMenus();
+  }, { capture: false });
+  
+  globalClickHandlerInitialized = true;
 }

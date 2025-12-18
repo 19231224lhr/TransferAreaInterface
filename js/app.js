@@ -144,7 +144,28 @@ import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, addNewSubWallet } from './services/account';
-import { renderWallet, refreshOrgPanel, handleAddToAddress, handleZeroAddress, initAddressModal, showAddrModal, hideAddrModal, initTransferModeTabs, rebuildAddrList, refreshSrcAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from './services/wallet';
+import { 
+  renderWallet, 
+  refreshOrgPanel, 
+  handleAddToAddress, 
+  handleZeroAddress, 
+  handleDeleteAddress,
+  handleExportPrivateKey,
+  toggleOpsMenu,
+  toggleAddrCard,
+  closeAllOpsMenus,
+  initGlobalClickHandler,
+  initAddressModal, 
+  showAddrModal, 
+  hideAddrModal, 
+  initTransferModeTabs, 
+  rebuildAddrList, 
+  refreshSrcAddrList, 
+  initRefreshSrcAddrList, 
+  initChangeAddressSelects, 
+  initRecipientCards, 
+  initAdvancedOptions 
+} from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit, initBuildTransaction } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
@@ -528,6 +549,43 @@ registerAction('showTxCerDetail', (el, data) => {
 registerAction('reload', () => {
   location.reload();
 });
+
+// ========================================
+// Wallet Event Delegation Actions
+// ========================================
+
+// Toggle address card expand/collapse
+registerAction('toggleAddrCard', (el, data) => {
+  toggleAddrCard(data.addr, el);
+});
+
+// Add balance to address
+registerAction('addToAddress', (el, data) => {
+  handleAddToAddress(data.addr);
+});
+
+// Clear address balance
+registerAction('zeroAddress', (el, data) => {
+  handleZeroAddress(data.addr);
+});
+
+// Toggle operations menu
+registerAction('toggleOpsMenu', (el, data) => {
+  toggleOpsMenu(data.addr, el);
+});
+
+// Delete address
+registerAction('deleteAddress', (el, data) => {
+  handleDeleteAddress(data.addr);
+});
+
+// Export private key
+registerAction('exportPrivateKey', (el, data) => {
+  handleExportPrivateKey(data.addr);
+});
+
+// Initialize global click handler for closing menus
+initGlobalClickHandler();
 
 // ========================================
 // Start Application

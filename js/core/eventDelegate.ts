@@ -59,10 +59,14 @@ function extractDataAttributes(element: HTMLElement): Record<string, string> {
 
 /**
  * Find the closest element with a data-action attribute
+ * Handles both HTML and SVG elements
  */
 function findActionElement(target: EventTarget | null): HTMLElement | null {
-  if (!(target instanceof HTMLElement)) return null;
-  return target.closest('[data-action]');
+  // Handle both HTMLElement and SVGElement (SVG elements have closest() but aren't HTMLElement)
+  if (!(target instanceof Element)) return null;
+  const actionEl = target.closest('[data-action]');
+  // closest() returns Element, but we know data-action is only on HTMLElements
+  return actionEl as HTMLElement | null;
 }
 
 /**
