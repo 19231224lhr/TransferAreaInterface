@@ -129,6 +129,92 @@ renderInto(container, html`
 container.innerHTML = `<div class="card"><h2>${userName}</h2></div>`;  // XSS 风险！
 ```
 
+### 7. DOM ID Management (DOM ID 管理规范) ✅ NEW
+
+**所有 DOM ID 必须通过 `js/config/domIds.ts` 集中管理**
+
+为了避免硬编码字符串导致的脆弱耦合，提供自动补全和重构安全性：
+
+- ✅ **使用 `DOM_IDS` 常量引用 DOM ID**
+- ✅ **使用 `idSelector()` 辅助函数生成选择器**
+- ✅ **新增 DOM ID 时必须添加到 `domIds.ts`**
+- ❌ **禁止在代码中硬编码 DOM ID 字符串**
+
+### 8. Skeleton Loading (骨架屏加载规范) ✅ NEW
+
+**使用 `walletSkeleton.ts` 提供优雅的加载状态反馈**
+
+为了改善用户体验，减少等待焦虑：
+
+- ✅ **在数据加载前显示骨架屏**
+- ✅ **使用 `showXxxSkeleton()` 函数显示骨架屏**
+- ✅ **数据加载完成后用实际内容替换（自动隐藏骨架屏）**
+- ✅ **骨架屏必须包含 ARIA 标签和 role 属性**
+- ❌ **禁止使用简单的 "加载中..." 文本或 spinner**
+
+```typescript
+// ✅ 正确（使用 DOM_IDS 常量）
+import { DOM_IDS, idSelector } from '../config/domIds';
+
+// 获取元素
+const loginBtn = document.getElementById(DOM_IDS.loginBtn);
+const loader = document.querySelector(idSelector(DOM_IDS.loginLoader));
+
+// 在选择器中使用
+const form = document.querySelector(`${idSelector(DOM_IDS.loginForm)} input`);
+
+// ❌ 错误（硬编码字符串）
+const loginBtn = document.getElementById('loginBtn');  // ❌ 禁止！
+const loader = document.querySelector('#loginLoader');  // ❌ 禁止！
+```
+
+**Benefits (优势):**
+- ✅ **类型安全**: TypeScript 自动补全和类型检查
+- ✅ **重构安全**: 修改 ID 时只需更新一处
+- ✅ **避免拼写错误**: 编译时捕获错误
+- ✅ **集中管理**: 所有 DOM ID 一目了然
+
+**Adding New DOM IDs (添加新 DOM ID):**
+```typescript
+// js/config/domIds.ts
+export const DOM_IDS = {
+  // ... existing IDs
+  
+  // 新增 ID（按功能分组）
+  myNewButton: 'myNewButton',
+  myNewModal: 'myNewModal',
+} as const;
+```
+
+**Skeleton Loading Usage (骨架屏使用示例):**
+```typescript
+// ✅ 正确（使用骨架屏）
+import { showAddressListSkeleton } from '../utils/walletSkeleton';
+import { DOM_IDS } from '../config/domIds';
+
+async function loadAddressList() {
+  const container = document.getElementById(DOM_IDS.walletAddrList);
+  
+  // 1. 显示骨架屏
+  showAddressListSkeleton(container, { count: 3 });
+  
+  // 2. 加载数据
+  const addresses = await fetchAddresses();
+  
+  // 3. 渲染实际内容（自动隐藏骨架屏）
+  container.innerHTML = renderAddresses(addresses);
+}
+
+// ❌ 错误（简单的加载提示）
+async function loadAddressList() {
+  const container = document.getElementById('walletAddrList');
+  container.innerHTML = '<div>加载中...</div>';  // ❌ 用户体验差！
+  
+  const addresses = await fetchAddresses();
+  container.innerHTML = renderAddresses(addresses);
+}
+```
+
 ---
 
 ## 📁 文件创建规则
@@ -693,7 +779,7 @@ state.set({
 
 ## ✅ 总结
 
-**记住这六个核心原则：**
+**记住这九个核心原则：**
 
 1. 🎯 **新代码 = TypeScript**
    - 所有新文件必须是 `.ts`
@@ -719,7 +805,15 @@ state.set({
    - 使用 `html` 模板和 `renderInto()`
    - 禁止直接拼接 `innerHTML`
 
-7. 🔍 **提交前 = 类型检查**
+7. 🔑 **DOM ID = 集中管理**
+   - 使用 `DOM_IDS` 常量
+   - 禁止硬编码 ID 字符串
+
+8. ⏳ **加载状态 = 骨架屏**
+   - 使用 `walletSkeleton.ts` 工具
+   - 禁止简单的 "加载中..." 文本
+
+9. 🔍 **提交前 = 类型检查**
    - 运行 `npm run typecheck`
    - 修复所有错误
 

@@ -131,6 +131,7 @@ go run ./backend/verify_tx
 **Config:**
 - `js/config/constants.ts` - 配置常量和类型定义
 - `js/config/pageTemplates.ts` - 页面模板配置
+- `js/config/domIds.ts` - 🆕 DOM ID 集中管理
 
 **Utils:**
 - `js/utils/crypto.ts` - 加密/哈希/签名工具
@@ -149,6 +150,7 @@ go run ./backend/verify_tx
 - `js/utils/transaction.ts` - 事务操作和自动保存
 - `js/utils/reactive.ts` - 响应式 UI 绑定系统
 - `js/utils/screenLock.ts` - 🆕 屏幕锁定功能
+- `js/utils/walletSkeleton.ts` - 🆕 骨架屏加载工具
 - `js/utils/templateLoader.ts` - 模板加载器
 - `js/utils/pageManager.ts` - 页面管理器
 
@@ -252,37 +254,157 @@ window.routeTo('#/main');
 
 使用 `data-action` 属性实现全局事件委托，替代内联 `onclick`，提高 CSP 合规性。
 
+### Core File
+
+`js/core/eventDelegate.ts`
+
 ### Core API
 
 | Function | Purpose |
 |----------|---------|
+| `initEventDelegate()` | 初始化全局事件委托（自动调用） |
 | `registerAction(name, handler)` | 注册动作处理器 |
+| `registerActions(actions)` | 批量注册多个动作 |
 | `unregisterAction(name)` | 注销动作处理器 |
-| `initEventDelegation()` | 初始化事件委托（自动调用） |
+| `hasAction(name)` | 检查动作是否已注册 |
+| `triggerAction(name, data, element)` | 程序化触发动作 |
+| `getRegisteredActions()` | 获取所有已注册的动作名 |
 
 ### Usage
 
 **HTML (动态生成):**
 ```html
 <button data-action="showUtxoDetail" data-addr="xxx" data-key="yyy">详情</button>
+<button data-action="toggleAddrCard" data-addr="addr123">展开</button>
 ```
 
-**JavaScript:**
+**JavaScript (注册处理器):**
 ```typescript
-import { registerAction } from './core';
+import { registerAction, registerActions } from './core';
 
-registerAction('showUtxoDetail', (el, data) => {
+// 单个注册
+registerAction('showUtxoDetail', (el, data, event) => {
   // data = { addr: 'xxx', key: 'yyy' }
   showUtxoDetail(data.addr, data.key);
 });
+
+// 批量注册
+registerActions({
+  toggleAddrCard: (el, data) => toggleAddrCard(data.addr, el),
+  addToAddress: (el, data) => handleAddToAddress(data.addr),
+  deleteAddress: (el, data) => handleDeleteAddress(data.addr),
+});
+```
+
+### Handler Signature
+
+```typescript
+type ActionHandler = (
+  element: HTMLElement,      // 触发动作的元素
+  data: Record<string, string>, // 所有 data-* 属性（除了 data-action）
+  event: Event                // 原始 DOM 事件
+) => void | Promise<void>;
 ```
 
 ### Benefits
 
-- ✅ CSP 合规（无内联脚本）
-- ✅ 自动处理动态内容
-- ✅ 集中管理事件处理器
-- ✅ 类型安全的参数传递
+- ✅ **CSP 合规**: 无内联脚本，符合内容安全策略
+- ✅ **自动清理**: 元素移除时无需手动解绑事件
+- ✅ **集中管理**: 所有动作处理器在 `app.js` 中注册
+- ✅ **类型安全**: TypeScript 类型定义和参数传递
+- ✅ **支持 SVG**: 自动处理 SVG 元素的点击事件
+- ✅ **异步支持**: 处理器可以返回 Promise
+
+### Registered Actions (已注册的动作)
+
+项目中已注册的全局动作（在 `js/app.js` 中）：
+
+| Action Name | Purpose | Data Attributes |
+|-------------|---------|-----------------|
+| `showUtxoDetail` | 显示 UTXO 详情 | `data-addr`, `data-key` |
+| `showTxCerDetail` | 显示 TXCer 详情 | `data-addr`, `data-key` |
+| `toggleAddrCard` | 展开/折叠地址卡片 | `data-addr` |
+| `addToAddress` | 向地址添加余额 | `data-addr` |
+| `zeroAddress` | 清空地址余额 | `data-addr` |
+| `toggleOpsMenu` | 切换操作菜单 | `data-addr` |
+| `deleteAddress` | 删除地址 | `data-addr` |
+| `exportPrivateKey` | 导出私钥 | `data-addr` |
+| `reload` | 重新加载页面 | 无 |
+
+### Implementation Details
+
+- **全局监听器**: 在 `document` 上监听 `click` 事件（capture: false）
+- **事件冒泡**: 利用事件冒泡机制，自动处理动态添加的元素
+- **最近祖先查找**: 使用 `closest('[data-action]')` 查找最近的动作元素
+- **自动阻止默认行为**: 对 `<button>` 和 `<a>` 元素自动调用 `preventDefault()`
+- **错误处理**: 捕获并记录处理器中的错误，不影响其他功能
+
+---
+
+## Type Safety & Window Escape Hatches (类型安全与 Window 逃生舱)
+
+### Overview
+
+项目已大幅减少 `window as any` 逃生舱的使用，但仍有少量遗留代码需要逐步迁移。
+
+### Current Status (当前状态)
+
+**已消除的逃生舱：**
+- ✅ 所有公共 API 已迁移到 `window.PanguPay` 命名空间
+- ✅ 事件处理器已迁移到事件委托系统
+- ✅ DOM ID 已迁移到集中管理
+
+**剩余的逃生舱（需要逐步迁移）：**
+
+| File | Usage | Reason | Migration Plan |
+|------|-------|--------|----------------|
+| `utils/templateLoader.ts` | `(window as any).updatePageTranslations` | 调用全局 i18n 函数 | 使用 `window.PanguPay.i18n.updatePageTranslations` |
+| `utils/security.ts` | `(window as any).t` | 获取翻译函数 | 使用 `window.PanguPay.i18n.t` |
+| `utils/pageManager.ts` | `(window as any).cleanupNetworkChart` | 清理图表资源 | 使用 `window.PanguPay.charts.cleanupNetworkChart` |
+| `utils/pageManager.ts` | `(window as any).cleanupWalletChart` | 清理图表资源 | 使用 `window.PanguPay.charts.cleanupWalletChart` |
+| `utils/enhancedRouter.ts` | `(window as any).requestIdleCallback` | 使用浏览器 API | 添加到 `globals.d.ts` 类型定义 |
+| `utils/crypto.ts` | `(window as any).elliptic` | 使用第三方库 | 添加到 `globals.d.ts` 类型定义 |
+| `services/account.ts` | `(window as any).elliptic` | 使用第三方库 | 添加到 `globals.d.ts` 类型定义 |
+| `services/transferDraft.ts` | `(window as any).computeCurrentOrgId` | 调用全局函数 | 重构为模块导出 |
+| `services/transferDraft.ts` | `(window as any).t` | 获取翻译函数 | 使用 `window.PanguPay.i18n.t` |
+
+### Migration Guidelines (迁移指南)
+
+**优先级 1 - 高优先级（使用命名空间）：**
+```typescript
+// ❌ 错误（使用逃生舱）
+const t = (window as any).t;
+
+// ✅ 正确（使用命名空间）
+const t = window.PanguPay.i18n.t;
+```
+
+**优先级 2 - 中优先级（添加类型定义）：**
+```typescript
+// 在 js/globals.d.ts 中添加类型定义
+interface Window {
+  requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+  elliptic?: {
+    ec: any; // 或更精确的类型定义
+  };
+}
+
+// 然后在代码中使用
+if (window.requestIdleCallback) {
+  window.requestIdleCallback(() => { ... });
+}
+```
+
+**优先级 3 - 低优先级（重构为模块）：**
+- 将全局函数重构为模块导出
+- 通过 `import` 导入使用
+
+### Benefits of Removing Escape Hatches (消除逃生舱的优势)
+
+- ✅ **类型安全**: 编译时捕获错误
+- ✅ **自动补全**: IDE 提供智能提示
+- ✅ **重构安全**: 重命名时自动更新所有引用
+- ✅ **代码可读性**: 明确的 API 调用路径
 
 ---
 
@@ -371,6 +493,131 @@ renderInto(container, html`
 - ✅ 高效 DOM 更新（差异更新）
 - ✅ 类型安全的模板
 - ✅ 与事件委托系统配合使用
+
+---
+
+## Skeleton Loading System (骨架屏加载系统) 🆕
+
+### Overview
+
+钱包页面专用骨架屏工具，提供优雅的加载状态反馈，改善用户体验。
+
+### Core File
+
+`js/utils/walletSkeleton.ts`
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `showAddressListSkeleton(element, options)` | 显示地址列表骨架屏 |
+| `hideAddressListSkeleton(element)` | 隐藏地址列表骨架屏 |
+| `showSrcAddrSkeleton(element, options)` | 显示转账来源地址骨架屏 |
+| `hideSrcAddrSkeleton(element)` | 隐藏转账来源地址骨架屏 |
+| `showOrgPanelSkeleton(element)` | 显示组织面板骨架屏 |
+| `hideOrgPanelSkeleton(element)` | 隐藏组织面板骨架屏 |
+| `showBalanceSkeleton(element)` | 显示余额骨架屏 |
+| `isShowingSkeleton(element)` | 检查是否正在显示骨架屏 |
+
+### Usage
+
+```typescript
+import { showAddressListSkeleton, hideAddressListSkeleton } from '../utils/walletSkeleton';
+
+// 显示骨架屏
+const container = document.getElementById('walletAddrList');
+showAddressListSkeleton(container, { count: 3 });
+
+// 加载数据后，用实际内容替换（自动隐藏骨架屏）
+container.innerHTML = actualContent;
+```
+
+### Skeleton Types
+
+- **Address List**: 地址列表卡片骨架屏（头像 + 地址 + 余额）
+- **Source Address**: 转账来源地址骨架屏（币种图标 + 地址信息 + 金额）
+- **Organization Panel**: 组织面板骨架屏（4 个信息项网格）
+- **Balance Display**: 余额显示骨架屏（金额 + 单位）
+- **Coin Distribution**: 币种分布骨架屏（3 个币种卡片）
+
+### Benefits
+
+- ✅ **改善感知性能**: 用户立即看到内容结构，减少等待焦虑
+- ✅ **一致的加载体验**: 统一的骨架屏样式和动画
+- ✅ **无障碍支持**: 包含 ARIA 标签和 role 属性
+- ✅ **深色模式适配**: 自动适配主题
+- ✅ **减少动画模式**: 尊重用户的 prefers-reduced-motion 设置
+
+---
+
+## DOM ID Management System (DOM ID 管理系统) 🆕
+
+### Overview
+
+项目使用集中式 DOM ID 管理，避免硬编码字符串导致的脆弱耦合。
+
+### Core File
+
+`js/config/domIds.ts`
+
+### Key Exports
+
+| Export | Purpose |
+|--------|---------|
+| `DOM_IDS` | 所有 DOM ID 的常量对象 |
+| `DomId` | DOM ID 的 TypeScript 类型 |
+| `idSelector(id)` | 生成 ID 选择器字符串 |
+
+### Usage
+
+```typescript
+import { DOM_IDS, idSelector } from '../config/domIds';
+
+// ✅ 获取元素
+const loginBtn = document.getElementById(DOM_IDS.loginBtn);
+const loader = document.querySelector(idSelector(DOM_IDS.loginLoader));
+
+// ✅ 在选择器中使用
+const input = document.querySelector(`${idSelector(DOM_IDS.loginForm)} input`);
+
+// ❌ 禁止硬编码
+const loginBtn = document.getElementById('loginBtn');  // 错误！
+```
+
+### Benefits
+
+- ✅ **类型安全**: TypeScript 自动补全和编译时检查
+- ✅ **重构安全**: 修改 ID 只需更新 `domIds.ts` 一处
+- ✅ **避免拼写错误**: 编译时捕获错误
+- ✅ **集中管理**: 所有 DOM ID 一目了然，便于维护
+
+### Adding New IDs
+
+```typescript
+// js/config/domIds.ts
+export const DOM_IDS = {
+  // ... existing IDs
+  
+  // 新增 ID（按功能分组，添加注释）
+  // My Feature
+  myFeatureButton: 'myFeatureButton',
+  myFeatureModal: 'myFeatureModal',
+} as const;
+```
+
+### ID Categories
+
+DOM IDs 按功能分组：
+
+- **Accessibility**: `a11yLiveRegion`
+- **Screen Lock**: `screenLockOverlay`, `screenLockPassword`, etc.
+- **Login**: `loginBtn`, `loginLoader`, `loginPrivHex`, etc.
+- **Import**: `importBtn`, `importLoader`, `importPrivHex`, etc.
+- **Wallet**: `walletCard`, `walletAddrList`, `walletBTC`, etc.
+- **Transfer**: `tfSendBtn`, `tfMode`, `txGasInput`, etc.
+- **Profile**: `profileBackBtn`, `profileSaveBtn`, `nicknameInput`, etc.
+- **Modals**: `actionModal`, `confirmDelModal`, `noOrgModal`, etc.
+- **Header/Menu**: `userButton`, `userMenu`, `menuBalance`, etc.
 
 ---
 

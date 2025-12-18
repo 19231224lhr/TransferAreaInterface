@@ -55,6 +55,7 @@ TransferAreaInterface/
 │       ├── struct-section.css  # 结构体区域
 │       ├── no-org-warning.css  # 未加入组织警告
 │       ├── tx-detail.css       # 交易详情
+│       ├── skeleton.css        # 🆕 骨架屏样式
 │       ├── utilities.css       # 工具类
 │       ├── responsive.css      # 响应式适配
 │       └── dark-mode.css       # 深色模式
@@ -81,6 +82,8 @@ TransferAreaInterface/
 │   │
 │   ├── config/             # Configuration
 │   │   ├── constants.ts    # App constants and types (TS)
+│   │   ├── domIds.ts       # 🆕 DOM ID 集中管理 (TS)
+│   │   ├── pageTemplates.ts # Page template configuration (TS)
 │   │   └── constants.js.backup # Original JS version
 │   │
 │   ├── i18n/               # Internationalization
@@ -140,6 +143,7 @@ TransferAreaInterface/
 │       ├── transaction.ts  # Transaction helpers & auto-save (TS)
 │       ├── reactive.ts     # 响应式 UI 绑定系统 (TS)
 │       ├── screenLock.ts   # 🆕 屏幕锁定功能 (TS)
+│       ├── walletSkeleton.ts # 🆕 骨架屏加载工具 (TS)
 │       ├── store.js        # State management
 │       ├── toast.js        # Toast helpers
 │       ├── helpers.js      # General helpers
@@ -346,6 +350,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `js/api/account.ts` | Account API endpoints |
 | `js/api/types.ts` | API request/response types |
 | `js/config/constants.ts` | All configuration constants and types |
+| **`js/config/domIds.ts`** | **🆕 DOM ID 集中管理** |
 | `js/utils/security.ts` | Security utilities (XSS, CSRF, validation) |
 | `js/utils/storage.ts` | localStorage operations |
 | **`js/utils/statePersistence.ts`** | **🆕 Store 状态持久化** |
@@ -354,6 +359,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `js/utils/keyEncryptionUI.ts` | Private key encryption UI integration |
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
 | `js/utils/reactive.ts` | 响应式 UI 绑定系统 |
+| **`js/utils/walletSkeleton.ts`** | **🆕 骨架屏加载工具** |
 | `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
 | `js/services/transferDraft.ts` | Transfer form state persistence |
