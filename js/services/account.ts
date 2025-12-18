@@ -13,6 +13,7 @@ import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
 import { clearLegacyKey } from '../utils/keyEncryption';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Type Definitions
@@ -395,13 +396,13 @@ export async function addNewSubWallet(): Promise<void> {
  * @returns Created account data or null on failure
  */
 export async function handleCreate(showToastNotification: boolean = true): Promise<AccountData | null> {
-  const btn = document.getElementById('createBtn') as HTMLButtonElement | null;
+  const btn = document.getElementById(DOM_IDS.createBtn) as HTMLButtonElement | null;
   if (btn) btn.disabled = true;
   
   try {
-    const loader = document.getElementById('newLoader');
-    const resultEl = document.getElementById('result');
-    const nextBtn = document.getElementById('newNextBtn');
+    const loader = document.getElementById(DOM_IDS.newLoader);
+    const resultEl = document.getElementById(DOM_IDS.result);
+    const nextBtn = document.getElementById(DOM_IDS.newNextBtn);
     
     if (btn) btn.classList.add('hidden');
     if (nextBtn) nextBtn.classList.add('hidden');
@@ -445,11 +446,11 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     }
     
     // Update UI with account data
-    const accountIdEl = document.getElementById('accountId');
-    const addressEl = document.getElementById('address');
-    const privHexEl = document.getElementById('privHex');
-    const pubXEl = document.getElementById('pubX');
-    const pubYEl = document.getElementById('pubY');
+    const accountIdEl = document.getElementById(DOM_IDS.accountId);
+    const addressEl = document.getElementById(DOM_IDS.address);
+    const privHexEl = document.getElementById(DOM_IDS.privHex);
+    const pubXEl = document.getElementById(DOM_IDS.pubX);
+    const pubYEl = document.getElementById(DOM_IDS.pubY);
     
     if (accountIdEl) accountIdEl.textContent = data.accountId;
     if (addressEl) addressEl.textContent = data.address;
@@ -501,14 +502,14 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
   } catch (err: any) {
     alert('Failed to create user: ' + err);
     console.error(err);
-    const nextBtn = document.getElementById('newNextBtn');
+    const nextBtn = document.getElementById(DOM_IDS.newNextBtn);
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
     return null;
     
   } finally {
     if (btn) btn.disabled = false;
-    const loader = document.getElementById('newLoader');
+    const loader = document.getElementById(DOM_IDS.newLoader);
     if (loader) loader.classList.add('hidden');
   }
 }

@@ -6,6 +6,7 @@
 
 import { loadUser } from '../utils/storage';
 import { debounce, rafThrottle } from '../utils/eventUtils.js';
+import { DOM_IDS } from '../config/domIds';
 
 function normalizeTypeId(type) {
   if (type === 0 || type === 1 || type === 2) return type;
@@ -79,16 +80,16 @@ export function updateWalletChart(user) {
   if (!user) {
     user = loadUser();
   }
-  const chartEl = document.getElementById('balanceChart');
+  const chartEl = document.getElementById(DOM_IDS.balanceChart);
   if (!chartEl) return;
 
   const chartInner = chartEl.querySelector('.balance-chart-inner');
   const svg = chartEl.querySelector('.balance-chart-svg');
-  const lineEl = document.getElementById('chartLine');
-  const fillEl = document.getElementById('chartFill');
-  const dotsEl = document.getElementById('chartDots');
-  const tooltip = document.getElementById('chartTooltip');
-  const timeLabelsEl = document.getElementById('chartTimeLabels');
+  const lineEl = document.getElementById(DOM_IDS.chartLine);
+  const fillEl = document.getElementById(DOM_IDS.chartFill);
+  const dotsEl = document.getElementById(DOM_IDS.chartDots);
+  const tooltip = document.getElementById(DOM_IDS.chartTooltip);
+  const timeLabelsEl = document.getElementById(DOM_IDS.chartTimeLabels);
 
   if (!svg || !lineEl || !fillEl || !dotsEl) return;
 
@@ -357,7 +358,7 @@ export function updateWalletChart(user) {
  */
 export function initWalletChart() {
   // Check if chart element exists
-  const chartEl = document.getElementById('balanceChart');
+  const chartEl = document.getElementById(DOM_IDS.balanceChart);
   if (!chartEl) {
     console.warn('Balance chart element not found, skipping initialization');
     return;

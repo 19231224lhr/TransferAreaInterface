@@ -11,6 +11,7 @@
 import { t, formatDate } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
+import { DOM_IDS } from '../config/domIds';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [
@@ -132,7 +133,7 @@ function filterTransactions(period) {
  * Render transaction list
  */
 function renderTransactionList(transactions) {
-  const listEl = document.getElementById('historyList');
+  const listEl = document.getElementById(DOM_IDS.historyList);
   if (!listEl) return;
   
   if (transactions.length === 0) {
@@ -331,8 +332,8 @@ function toggleTransactionDetail(itemEl, tx) {
  * Uses scheduleBatchUpdate for performance optimization
  */
 function updateStatistics(transactions) {
-  const totalCountEl = document.getElementById('historyTotalCount');
-  const totalVolumeEl = document.getElementById('historyTotalVolume');
+  const totalCountEl = document.getElementById(DOM_IDS.historyTotalCount);
+  const totalVolumeEl = document.getElementById(DOM_IDS.historyTotalVolume);
   
   // Use scheduleBatchUpdate to batch DOM updates for better performance
   scheduleBatchUpdate('history-total-count', () => {
@@ -362,7 +363,7 @@ function updateStatistics(transactions) {
  */
 export function initHistoryPage() {
   // Bind back button
-  const backBtn = document.getElementById('historyBackBtn');
+  const backBtn = document.getElementById(DOM_IDS.historyBackBtn);
   if (backBtn && !backBtn.dataset._historyBind) {
     backBtn.dataset._historyBind = 'true';
     backBtn.addEventListener('click', () => {

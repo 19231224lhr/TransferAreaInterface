@@ -20,6 +20,7 @@ import { updateWalletBrief } from './entry.js';
 import { updateHeaderUser } from '../ui/header.js';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
 import { showLoading, hideLoading, showElementLoading, hideElementLoading } from '../utils/loading';
+import { DOM_IDS } from '../config/domIds';
 import {
   createReactiveState,
   runAnimationSequence,
@@ -179,7 +180,7 @@ async function animateFormExpand(): Promise<void> {
  * 结果展开动画
  */
 async function animateResultReveal(): Promise<void> {
-  const resultEl = document.getElementById('importResult');
+  const resultEl = document.getElementById(DOM_IDS.importResult);
   if (resultEl) {
     resultEl.classList.remove('hidden', 'fade-in', 'reveal');
     resultEl.classList.add('expanding');
@@ -211,8 +212,8 @@ async function animateResultCollapse(): Promise<void> {
  * 更新私钥可见性 UI
  */
 function updateVisibilityUI(visible: boolean): void {
-  const toggle = document.getElementById('importToggleVisibility');
-  const input = document.getElementById('importPrivHex') as HTMLInputElement | null;
+  const toggle = document.getElementById(DOM_IDS.importToggleVisibility);
+  const input = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   
   if (toggle) {
     const eyeOpen = toggle.querySelector('.eye-open');
@@ -297,9 +298,9 @@ async function handleImport(): Promise<void> {
     pageState = createReactiveState(initialState, stateBindings);
   }
   
-  const importBtn = document.getElementById('importBtn') as HTMLButtonElement | null;
+  const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   const mode = importBtn?.dataset.mode as ImportMode || 'account';
-  const inputEl = document.getElementById('importPrivHex') as HTMLInputElement | null;
+  const inputEl = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   const priv = inputEl?.value.trim() || '';
   
   // 验证私钥
@@ -347,7 +348,7 @@ async function handleImport(): Promise<void> {
     if (elapsed < 1000) await wait(1000 - elapsed);
     
     // 隐藏加载器
-    const loader = document.getElementById('importLoader');
+    const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
     pageState.set({ showLoader: false });
     
@@ -505,7 +506,7 @@ async function handleImport(): Promise<void> {
     console.error(err);
     
     // 隐藏加载器
-    const loader = document.getElementById('importLoader');
+    const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
     
     // 恢复表单状态
@@ -529,7 +530,7 @@ async function handleImport(): Promise<void> {
     hideLoading(loadingId);
     
     // 确保加载器隐藏
-    const loader = document.getElementById('importLoader');
+    const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
   }
 }
@@ -547,19 +548,19 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   pageState?.set({ mode });
   
   // 重置导入按钮模式
-  const importBtn = document.getElementById('importBtn') as HTMLButtonElement | null;
+  const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   if (importBtn) importBtn.dataset.mode = mode;
   
   // 重置表单输入
-  const inputEl = document.getElementById('importPrivHex') as HTMLInputElement | null;
+  const inputEl = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   if (inputEl) {
     inputEl.value = '';
     inputEl.type = 'password';
   }
   
   // 重置钱包简介
-  const brief = document.getElementById('walletBriefList');
-  const toggleBtn = document.getElementById('briefToggleBtn');
+  const brief = document.getElementById(DOM_IDS.walletBriefList);
+  const toggleBtn = document.getElementById(DOM_IDS.briefToggleBtn);
   if (brief) {
     brief.classList.add('hidden');
     brief.replaceChildren();
@@ -567,13 +568,13 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   if (toggleBtn) toggleBtn.classList.add('hidden');
   
   // 重置错误提示
-  const addrError = document.getElementById('addrError');
+  const addrError = document.getElementById(DOM_IDS.addrError);
   if (addrError) {
     addrError.textContent = '';
     addrError.classList.add('hidden');
   }
   
-  const addrPrivHex = document.getElementById('addrPrivHex') as HTMLInputElement | null;
+  const addrPrivHex = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
   if (addrPrivHex) addrPrivHex.value = '';
   
   // 重置可见性 UI
@@ -582,7 +583,7 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   // 重置表单卡片状态
   const formCard = document.querySelector('.import-form-card');
   const tipBlock = document.querySelector('.import-tip-block');
-  const resultEl = document.getElementById('importResult');
+  const resultEl = document.getElementById(DOM_IDS.importResult);
   
   formCard?.classList.remove('import-form-card--hidden', 'collapsing', 'expanding');
   tipBlock?.classList.remove('import-tip-block--hidden', 'collapsing', 'expanding');
@@ -623,7 +624,7 @@ function bindEvents(): void {
   cleanupEvents();
   
   // 导入按钮
-  const importBtn = document.getElementById('importBtn') as HTMLButtonElement | null;
+  const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   if (importBtn) {
     importBtn.disabled = false;
     importBtn.classList.remove('is-loading');
@@ -631,23 +632,23 @@ function bindEvents(): void {
   }
   
   // 私钥可见性切换
-  const importToggleVisibility = document.getElementById('importToggleVisibility');
+  const importToggleVisibility = document.getElementById(DOM_IDS.importToggleVisibility);
   addEvent(importToggleVisibility, 'click', handleVisibilityToggle);
   
   // 返回按钮
-  const importBackBtn = document.getElementById('importBackBtn');
+  const importBackBtn = document.getElementById(DOM_IDS.importBackBtn);
   addEvent(importBackBtn, 'click', handleBackClick);
   
   // 下一步按钮
-  const importNextBtn = document.getElementById('importNextBtn');
+  const importNextBtn = document.getElementById(DOM_IDS.importNextBtn);
   addEvent(importNextBtn, 'click', handleNextClick);
   
   // 取消按钮
-  const importCancelBtn = document.getElementById('importCancelBtn');
+  const importCancelBtn = document.getElementById(DOM_IDS.importCancelBtn);
   addEvent(importCancelBtn, 'click', handleCancelClick);
   
   // 私钥折叠切换
-  const importPrivateKeyToggle = document.getElementById('importPrivateKeyToggle');
+  const importPrivateKeyToggle = document.getElementById(DOM_IDS.importPrivateKeyToggle);
   addEvent(importPrivateKeyToggle, 'click', handlePrivKeyToggle);
 }
 

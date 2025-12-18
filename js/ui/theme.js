@@ -8,6 +8,7 @@ import { t } from '../i18n/index.js';
 import { showSuccessToast } from '../utils/toast.js';
 import { THEME_STORAGE_KEY } from '../config/constants.ts';
 import { store, setThemeState, selectTheme } from '../utils/store.js';
+import { DOM_IDS } from '../config/domIds';
 
 // Current theme state
 let currentTheme = 'light';
@@ -98,7 +99,7 @@ export function loadThemeSetting() {
  * Update theme selector UI to reflect current theme
  */
 export function updateThemeSelectorUI() {
-  const selector = document.getElementById('themeSelector');
+  const selector = document.getElementById(DOM_IDS.themeSelector);
   if (!selector) return;
   
   const options = selector.querySelectorAll('.theme-option');
@@ -116,7 +117,7 @@ export function updateThemeSelectorUI() {
  * Initialize theme selector events
  */
 export function initThemeSelector() {
-  const selector = document.getElementById('themeSelector');
+  const selector = document.getElementById(DOM_IDS.themeSelector);
   if (!selector || selector.dataset._bind) return;
   
   selector.addEventListener('click', (e) => {

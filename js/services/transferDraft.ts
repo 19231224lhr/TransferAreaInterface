@@ -6,6 +6,7 @@
  */
 
 import { startAutoSave, restoreAutoSaved, clearAutoSaved, enableFormAutoSave, restoreFormFromDraft } from '../utils/transaction';
+import { DOM_IDS } from '../config/domIds';
 
 export interface RecipientDraft {
   to: string;
@@ -50,7 +51,7 @@ function setInputValue(id: string, value: string): void {
 }
 
 function getCheckedAddresses(): string[] {
-  const list = document.getElementById('srcAddrList');
+  const list = document.getElementById(DOM_IDS.srcAddrList);
   if (!list) return [];
   return Array.from(list.querySelectorAll<HTMLInputElement>('input[type="checkbox"]'))
     .filter(cb => cb.checked)
@@ -58,7 +59,7 @@ function getCheckedAddresses(): string[] {
 }
 
 function setCheckedAddresses(addrs: string[]): void {
-  const list = document.getElementById('srcAddrList');
+  const list = document.getElementById(DOM_IDS.srcAddrList);
   if (!list) return;
 
   const set = new Set(addrs);
@@ -78,7 +79,7 @@ function setCheckedAddresses(addrs: string[]): void {
 }
 
 function captureRecipients(): RecipientDraft[] {
-  const billList = document.getElementById('billList');
+  const billList = document.getElementById(DOM_IDS.billList);
   if (!billList) return [];
 
   const cards = Array.from(billList.querySelectorAll<HTMLElement>('.recipient-card'));
@@ -96,14 +97,14 @@ function captureRecipients(): RecipientDraft[] {
 }
 
 function clearRecipients(): void {
-  const billList = document.getElementById('billList');
+  const billList = document.getElementById(DOM_IDS.billList);
   if (!billList) return;
   billList.replaceChildren();
   delete (billList as any).dataset._recipientBind;
 }
 
 async function ensureRecipientCards(count: number): Promise<void> {
-  const billList = document.getElementById('billList');
+  const billList = document.getElementById(DOM_IDS.billList);
   if (!billList) return;
 
   const recipientModule = await import('./recipient.js');
@@ -132,7 +133,7 @@ function setRecipientCurrency(card: HTMLElement, mt: string): void {
 
 function applyRecipients(recipients: RecipientDraft[]): Promise<void> {
   return (async () => {
-    const billList = document.getElementById('billList');
+    const billList = document.getElementById(DOM_IDS.billList);
     if (!billList) return;
 
     // Start from a clean slate
@@ -185,8 +186,8 @@ function applyRecipients(recipients: RecipientDraft[]): Promise<void> {
 }
 
 function setOptionsOpen(open: boolean): void {
-  const optionsToggle = document.getElementById('optionsToggle');
-  const optionsContent = document.getElementById('optionsContent');
+  const optionsToggle = document.getElementById(DOM_IDS.optionsToggle);
+  const optionsContent = document.getElementById(DOM_IDS.optionsContent);
   if (!optionsToggle || !optionsContent) return;
 
   optionsToggle.classList.toggle('active', open);
@@ -194,7 +195,7 @@ function setOptionsOpen(open: boolean): void {
 }
 
 function captureDraft(): TransferDraft {
-  const optionsToggle = document.getElementById('optionsToggle');
+  const optionsToggle = document.getElementById(DOM_IDS.optionsToggle);
   const isOpen = !!optionsToggle?.classList.contains('active');
 
   return {
@@ -203,15 +204,15 @@ function captureDraft(): TransferDraft {
     srcAddr: getCheckedAddresses(),
     recipients: captureRecipients(),
     advanced: {
-      extraGasPGC: getInputValue('extraGasPGC'),
-      txGasInput: getInputValue('txGasInput'),
-      chAddrPGC: getInputValue('chAddrPGC'),
-      chAddrBTC: getInputValue('chAddrBTC'),
-      chAddrETH: getInputValue('chAddrETH'),
-      useTXCerChk: !!(document.getElementById('useTXCerChk') as HTMLInputElement | null)?.checked,
-      tfMode: getInputValue('tfMode'),
-      useTXCer: getInputValue('useTXCer'),
-      isPledge: getInputValue('isPledge'),
+      extraGasPGC: getInputValue(DOM_IDS.extraGasPGC),
+      txGasInput: getInputValue(DOM_IDS.txGasInput),
+      chAddrPGC: getInputValue(DOM_IDS.chAddrPGC),
+      chAddrBTC: getInputValue(DOM_IDS.chAddrBTC),
+      chAddrETH: getInputValue(DOM_IDS.chAddrETH),
+      useTXCerChk: !!(document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null)?.checked,
+      tfMode: getInputValue(DOM_IDS.tfMode),
+      useTXCer: getInputValue(DOM_IDS.useTXCer),
+      isPledge: getInputValue(DOM_IDS.isPledge),
       optionsOpen: isOpen
     }
   };
@@ -222,18 +223,18 @@ async function applyDraft(draft: TransferDraft): Promise<void> {
   setCheckedAddresses(draft.srcAddr ?? []);
 
   // Advanced options values (set hidden selects before fillChange runs)
-  setInputValue('extraGasPGC', draft.advanced?.extraGasPGC ?? '0');
-  setInputValue('txGasInput', draft.advanced?.txGasInput ?? '1');
-  setInputValue('chAddrPGC', draft.advanced?.chAddrPGC ?? '');
-  setInputValue('chAddrBTC', draft.advanced?.chAddrBTC ?? '');
-  setInputValue('chAddrETH', draft.advanced?.chAddrETH ?? '');
+  setInputValue(DOM_IDS.extraGasPGC, draft.advanced?.extraGasPGC ?? '0');
+  setInputValue(DOM_IDS.txGasInput, draft.advanced?.txGasInput ?? '1');
+  setInputValue(DOM_IDS.chAddrPGC, draft.advanced?.chAddrPGC ?? '');
+  setInputValue(DOM_IDS.chAddrBTC, draft.advanced?.chAddrBTC ?? '');
+  setInputValue(DOM_IDS.chAddrETH, draft.advanced?.chAddrETH ?? '');
 
-  const chk = document.getElementById('useTXCerChk') as HTMLInputElement | null;
+  const chk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
   if (chk) chk.checked = !!draft.advanced?.useTXCerChk;
 
-  setInputValue('tfMode', draft.advanced?.tfMode ?? 'quick');
-  setInputValue('useTXCer', draft.advanced?.useTXCer ?? 'true');
-  setInputValue('isPledge', draft.advanced?.isPledge ?? 'false');
+  setInputValue(DOM_IDS.tfMode, draft.advanced?.tfMode ?? 'quick');
+  setInputValue(DOM_IDS.useTXCer, draft.advanced?.useTXCer ?? 'true');
+  setInputValue(DOM_IDS.isPledge, draft.advanced?.isPledge ?? 'false');
 
   setOptionsOpen(!!draft.advanced?.optionsOpen);
 

@@ -19,6 +19,7 @@ import {
   createReactiveState,
   type ReactiveState
 } from '../utils/reactive';
+import { DOM_IDS, idSelector } from '../config/domIds';
 
 // ============================================================================
 // Types
@@ -72,19 +73,19 @@ const initialState: ProfilePageState = {
  */
 const stateBindings = {
   nickname: [
-    { selector: '#profileDisplayName', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.profileDisplayName), type: 'text' as const }
   ],
   accountId: [
-    { selector: '#profileAccountId', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.profileAccountId), type: 'text' as const }
   ],
   nicknameCharCount: [
-    { selector: '#nicknameCharCount', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.nicknameCharCount), type: 'text' as const }
   ],
   signatureCharCount: [
-    { selector: '#signatureCharCount', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.signatureCharCount), type: 'text' as const }
   ],
   isSaving: [
-    { selector: '#profileSaveBtn', type: 'prop' as const, name: 'disabled' }
+    { selector: idSelector(DOM_IDS.profileSaveBtn), type: 'prop' as const, name: 'disabled' }
   ]
 };
 
@@ -144,12 +145,12 @@ function compressImage(
  */
 function updateAvatarPreview(avatarUrl: string | null, isLoggedIn: boolean): void {
   // 右侧小预览
-  const avatarPreviewImg = document.getElementById('avatarPreviewImg') as HTMLImageElement | null;
-  const avatarUploadPreview = document.getElementById('avatarUploadPreview');
+  const avatarPreviewImg = document.getElementById(DOM_IDS.avatarPreviewImg) as HTMLImageElement | null;
+  const avatarUploadPreview = document.getElementById(DOM_IDS.avatarUploadPreview);
   
   // 左侧大预览
-  const profileAvatarPreview = document.getElementById('profileAvatarPreview') as HTMLImageElement | null;
-  const profileAvatarLarge = document.getElementById('profileAvatarLarge');
+  const profileAvatarPreview = document.getElementById(DOM_IDS.profileAvatarPreview) as HTMLImageElement | null;
+  const profileAvatarLarge = document.getElementById(DOM_IDS.profileAvatarLarge);
   
   if (isLoggedIn && avatarUrl) {
     // 显示头像
@@ -192,7 +193,7 @@ function updateAvatarPreview(avatarUrl: string | null, isLoggedIn: boolean): voi
 function handleNicknameInput(): void {
   if (!pageState) return;
   
-  const nicknameInput = document.getElementById('nicknameInput') as HTMLInputElement | null;
+  const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
   const nickname = nicknameInput?.value || '';
   
   pageState.set({
@@ -207,7 +208,7 @@ function handleNicknameInput(): void {
 function handleSignatureInput(): void {
   if (!pageState) return;
   
-  const signatureInput = document.getElementById('signatureInput') as HTMLInputElement | null;
+  const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
   const signature = signatureInput?.value || '';
   
   pageState.set({
@@ -248,7 +249,7 @@ function handleAvatarFileSelect(e: Event): void {
       updateAvatarPreview(compressedUrl, true);
       
       // 临时存储到页面数据
-      const avatarFileInput = document.getElementById('avatarFileInput') as HTMLInputElement | null;
+      const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
       if (avatarFileInput) {
         avatarFileInput.dataset.pendingAvatar = compressedUrl;
         avatarFileInput.dataset.removeAvatar = '';
@@ -272,7 +273,7 @@ function handleAvatarUploadClick(): void {
     return;
   }
   
-  const avatarFileInput = document.getElementById('avatarFileInput') as HTMLInputElement | null;
+  const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
   avatarFileInput?.click();
 }
 
@@ -290,7 +291,7 @@ function handleAvatarRemove(): void {
   updateAvatarPreview(null, true);
   
   // 标记移除
-  const avatarFileInput = document.getElementById('avatarFileInput') as HTMLInputElement | null;
+  const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
   if (avatarFileInput) {
     avatarFileInput.value = '';
     avatarFileInput.dataset.pendingAvatar = '';
@@ -315,10 +316,10 @@ function handleBackClick(): void {
 function handleProfileSave(): void {
   if (!pageState) return;
   
-  const nicknameInput = document.getElementById('nicknameInput') as HTMLInputElement | null;
-  const signatureInput = document.getElementById('signatureInput') as HTMLInputElement | null;
-  const avatarFileInput = document.getElementById('avatarFileInput') as HTMLInputElement | null;
-  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
+  const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
+  const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
+  const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn);
   
   const nickname = nicknameInput?.value?.trim() || 'Amiya';
   const signature = signatureInput?.value?.trim() || t('profile.signature.placeholder') || '';
@@ -463,12 +464,12 @@ export function updateProfilePageAccess(): void {
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
   
-  const avatarUploadBtn = document.getElementById('avatarUploadBtn') as HTMLButtonElement | null;
-  const avatarRemoveBtn = document.getElementById('avatarRemoveBtn') as HTMLButtonElement | null;
-  const nicknameInput = document.getElementById('nicknameInput') as HTMLInputElement | null;
-  const signatureInput = document.getElementById('signatureInput') as HTMLInputElement | null;
-  const profileSaveBtn = document.getElementById('profileSaveBtn') as HTMLButtonElement | null;
-  const profileAccountId = document.getElementById('profileAccountId');
+  const avatarUploadBtn = document.getElementById(DOM_IDS.avatarUploadBtn) as HTMLButtonElement | null;
+  const avatarRemoveBtn = document.getElementById(DOM_IDS.avatarRemoveBtn) as HTMLButtonElement | null;
+  const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
+  const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
+  const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn) as HTMLButtonElement | null;
+  const profileAccountId = document.getElementById(DOM_IDS.profileAccountId);
   
   const settingGroups = document.querySelectorAll('.profile-setting-group');
   const avatarSettingGroup = settingGroups[0] as HTMLElement | undefined;
@@ -515,7 +516,7 @@ export function updateProfileDisplay(): void {
   const signature = profile.signature || t('profile.signature.placeholder') || '';
   
   // 更新顶部导航栏
-  const userLabel = document.getElementById('userLabel');
+  const userLabel = document.getElementById(DOM_IDS.userLabel);
   if (userLabel) {
     const u = loadUser();
     if (u && u.accountId) {
@@ -524,21 +525,23 @@ export function updateProfileDisplay(): void {
   }
   
   // 更新菜单头部标题
-  const menuHeaderTitle = document.getElementById('menuHeaderTitle');
+  const menuHeaderTitle = document.getElementById(DOM_IDS.menuHeaderTitle);
   if (menuHeaderTitle) {
     menuHeaderTitle.textContent = nickname;
   }
   
   // 更新菜单头部签名
-  const menuHeaderSub = document.getElementById('menuHeaderSub');
+  const menuHeaderSub = document.getElementById(DOM_IDS.menuHeaderSub);
   if (menuHeaderSub) {
     menuHeaderSub.textContent = signature;
   }
   
   // 更新所有头像
+  const userAvatar = document.getElementById(DOM_IDS.userAvatar);
+  const menuHeaderAvatar = document.getElementById(DOM_IDS.menuHeaderAvatar);
   const avatarTargets = [
-    { container: document.getElementById('userAvatar'), img: document.querySelector('#userAvatar .avatar-img') as HTMLImageElement | null },
-    { container: document.getElementById('menuHeaderAvatar'), img: document.querySelector('#menuHeaderAvatar .avatar-img') as HTMLImageElement | null }
+    { container: userAvatar, img: (userAvatar?.querySelector('.avatar-img') as HTMLImageElement | null) },
+    { container: menuHeaderAvatar, img: (menuHeaderAvatar?.querySelector('.avatar-img') as HTMLImageElement | null) }
   ];
   
   const u = loadUser();
@@ -594,42 +597,42 @@ function bindEvents(): void {
   cleanupEvents();
   
   // 返回按钮
-  const profileBackBtn = document.getElementById('profileBackBtn');
+  const profileBackBtn = document.getElementById(DOM_IDS.profileBackBtn);
   addEvent(profileBackBtn, 'click', handleBackClick);
   
   // 取消按钮
-  const profileCancelBtn = document.getElementById('profileCancelBtn');
+  const profileCancelBtn = document.getElementById(DOM_IDS.profileCancelBtn);
   addEvent(profileCancelBtn, 'click', handleBackClick);
   
   // 昵称输入
-  const nicknameInput = document.getElementById('nicknameInput');
+  const nicknameInput = document.getElementById(DOM_IDS.nicknameInput);
   addEvent(nicknameInput, 'input', handleNicknameInput);
   
   // 签名输入
-  const signatureInput = document.getElementById('signatureInput');
+  const signatureInput = document.getElementById(DOM_IDS.signatureInput);
   addEvent(signatureInput, 'input', handleSignatureInput);
   
   // 头像上传按钮
-  const avatarUploadBtn = document.getElementById('avatarUploadBtn');
+  const avatarUploadBtn = document.getElementById(DOM_IDS.avatarUploadBtn);
   addEvent(avatarUploadBtn, 'click', handleAvatarUploadClick);
   
   // 头像文件选择
-  const avatarFileInput = document.getElementById('avatarFileInput');
+  const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput);
   addEvent(avatarFileInput, 'change', handleAvatarFileSelect);
   
   // 移除头像按钮
-  const avatarRemoveBtn = document.getElementById('avatarRemoveBtn');
+  const avatarRemoveBtn = document.getElementById(DOM_IDS.avatarRemoveBtn);
   addEvent(avatarRemoveBtn, 'click', handleAvatarRemove);
   
   // 保存按钮
-  const profileSaveBtn = document.getElementById('profileSaveBtn');
+  const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn);
   if (profileSaveBtn) {
     (profileSaveBtn as HTMLButtonElement).disabled = false;
   }
   addEvent(profileSaveBtn, 'click', handleProfileSave);
   
   // 语言选择器
-  const languageSelector = document.getElementById('languageSelector');
+  const languageSelector = document.getElementById(DOM_IDS.languageSelector);
   if (languageSelector) {
     const options = languageSelector.querySelectorAll('.language-option');
     options.forEach(opt => {
@@ -641,7 +644,7 @@ function bindEvents(): void {
   }
   
   // 主题选择器
-  const themeSelector = document.getElementById('themeSelector');
+  const themeSelector = document.getElementById(DOM_IDS.themeSelector);
   if (themeSelector) {
     const options = themeSelector.querySelectorAll('.theme-option');
     options.forEach(opt => {
@@ -653,7 +656,7 @@ function bindEvents(): void {
   }
   
   // 性能模式选择器
-  const performanceSelector = document.getElementById('performanceSelector');
+  const performanceSelector = document.getElementById(DOM_IDS.performanceSelector);
   if (performanceSelector) {
     const options = performanceSelector.querySelectorAll('.performance-option');
     options.forEach(opt => {
@@ -698,8 +701,8 @@ export function initProfilePage(): void {
   }, stateBindings);
   
   // 填充表单
-  const nicknameInput = document.getElementById('nicknameInput') as HTMLInputElement | null;
-  const signatureInput = document.getElementById('signatureInput') as HTMLInputElement | null;
+  const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
+  const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
   
   if (nicknameInput) {
     nicknameInput.value = isLoggedIn ? (profile.nickname || 'Amiya') : (t('common.notLoggedIn') || '未登录');

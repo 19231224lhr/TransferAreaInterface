@@ -5,6 +5,7 @@
  */
 
 import { debounce } from '../utils/eventUtils.js';
+import { DOM_IDS } from '../config/domIds';
 
 const DATA_POINTS = 30; // 数据点数量
 const UPDATE_INTERVAL = 2000; // 2秒更新一次
@@ -65,9 +66,9 @@ function updateNetworkStats() {
   if (speedData.length > DATA_POINTS) speedData.shift();
   
   // Update UI elements
-  const downloadEl = document.getElementById('downloadSpeed');
-  const uploadEl = document.getElementById('uploadSpeed');
-  const latencyEl = document.getElementById('latencyValue');
+  const downloadEl = document.getElementById(DOM_IDS.downloadSpeed);
+  const uploadEl = document.getElementById(DOM_IDS.uploadSpeed);
+  const latencyEl = document.getElementById(DOM_IDS.latencyValue);
   
   if (downloadEl) downloadEl.textContent = formatSpeed(downloadSpeed);
   if (uploadEl) uploadEl.textContent = formatSpeed(uploadSpeed);
@@ -109,10 +110,10 @@ function catmullRomSpline(points, tension = 0.5) {
  * Render network chart
  */
 function renderChart() {
-  const svg = document.getElementById('networkChartSvg');
-  const line = document.getElementById('networkChartLine');
-  const fill = document.getElementById('networkChartFill');
-  const dot = document.getElementById('networkChartDot');
+  const svg = document.getElementById(DOM_IDS.networkChartSvg);
+  const line = document.getElementById(DOM_IDS.networkChartLine);
+  const fill = document.getElementById(DOM_IDS.networkChartFill);
+  const dot = document.getElementById(DOM_IDS.networkChartDot);
   
   if (!svg || !line || !fill || !dot) return;
   

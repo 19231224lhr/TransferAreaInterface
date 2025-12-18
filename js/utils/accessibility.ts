@@ -10,6 +10,7 @@
  */
 
 import { t } from '../i18n/index.js';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Type Definitions
@@ -410,7 +411,7 @@ export function initLiveRegion(): void {
   if (liveRegion) return;
   
   liveRegion = document.createElement('div');
-  liveRegion.id = 'a11y-live-region';
+  liveRegion.id = DOM_IDS.a11yLiveRegion;
   liveRegion.setAttribute('role', 'status');
   liveRegion.setAttribute('aria-live', 'polite');
   liveRegion.setAttribute('aria-atomic', 'true');
@@ -504,7 +505,7 @@ export function initSkipLinks(): void {
   if (document.querySelector('.skip-link')) return;
   
   // Create skip link to main content
-  const mainContent = document.querySelector('main') || document.getElementById('walletCard');
+  const mainContent = document.querySelector('main') || document.getElementById(DOM_IDS.walletCard);
   if (mainContent) {
     const mainId = mainContent.id || 'main-content';
     if (!mainContent.id) {

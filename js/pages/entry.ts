@@ -14,6 +14,7 @@
 import { loadUser } from '../utils/storage';
 import { t } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
+import { DOM_IDS, idSelector } from '../config/domIds';
 import {
   createReactiveState,
   type ReactiveState
@@ -75,19 +76,19 @@ const initialState: EntryPageState = {
  */
 const stateBindings = {
   walletCount: [
-    { selector: '#walletCount', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.walletCount), type: 'text' as const }
   ],
   hasWallets: [
-    { selector: '#walletBriefList', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.walletBriefList), type: 'visible' as const }
   ],
   showToggleBtn: [
-    { selector: '#briefToggleBtn', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.briefToggleBtn), type: 'visible' as const }
   ],
   nextBtnDisabled: [
-    { selector: '#entryNextBtn', type: 'prop' as const, name: 'disabled' }
+    { selector: idSelector(DOM_IDS.entryNextBtn), type: 'prop' as const, name: 'disabled' }
   ],
   showEmptyTip: [
-    { selector: '#walletEmptyTip', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.walletEmptyTip), type: 'visible' as const }
   ]
 };
 
@@ -120,7 +121,7 @@ function getAddressOrigin(addr: string): AddressOrigin {
  * 渲染钱包地址列表
  */
 function renderWalletList(addrs: string[]): void {
-  const brief = document.getElementById('walletBriefList');
+  const brief = document.getElementById(DOM_IDS.walletBriefList);
   if (!brief) return;
   
   if (addrs.length === 0) {
@@ -152,8 +153,8 @@ function renderWalletList(addrs: string[]): void {
  * 更新展开/折叠状态
  */
 function updateExpandState(isExpanded: boolean): void {
-  const list = document.getElementById('walletBriefList');
-  const toggleBtn = document.getElementById('briefToggleBtn');
+  const list = document.getElementById(DOM_IDS.walletBriefList);
+  const toggleBtn = document.getElementById(DOM_IDS.briefToggleBtn);
   
   if (list) {
     list.classList.toggle('collapsed', !isExpanded);
@@ -223,8 +224,8 @@ function handleNextClick(): void {
   const addrs = u?.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
   
   // 显示确认模态框
-  const proceedModal = document.getElementById('confirmProceedModal');
-  const proceedText = document.getElementById('confirmProceedText');
+  const proceedModal = document.getElementById(DOM_IDS.confirmProceedModal);
+  const proceedText = document.getElementById(DOM_IDS.confirmProceedText);
   
   if (proceedText) {
     proceedText.textContent = t('modal.currentSubAddressCount', { count: addrs.length }) || `当前有 ${addrs.length} 个子地址`;
@@ -238,7 +239,7 @@ function handleNextClick(): void {
  * 处理确认模态框确定按钮
  */
 function handleProceedOk(): void {
-  const proceedModal = document.getElementById('confirmProceedModal');
+  const proceedModal = document.getElementById(DOM_IDS.confirmProceedModal);
   if (proceedModal) {
     proceedModal.classList.add('hidden');
   }
@@ -258,7 +259,7 @@ function handleProceedOk(): void {
  * 处理确认模态框取消按钮
  */
 function handleProceedCancel(): void {
-  const proceedModal = document.getElementById('confirmProceedModal');
+  const proceedModal = document.getElementById(DOM_IDS.confirmProceedModal);
   if (proceedModal) {
     proceedModal.classList.add('hidden');
   }
@@ -300,34 +301,34 @@ function bindEvents(): void {
   cleanupEvents();
   
   // 展开/折叠按钮
-  const toggleBtn = document.getElementById('briefToggleBtn');
+  const toggleBtn = document.getElementById(DOM_IDS.briefToggleBtn);
   addEvent(toggleBtn, 'click', handleToggleClick);
   
   // 创建钱包按钮
-  const createWalletBtn = document.getElementById('createWalletBtn');
+  const createWalletBtn = document.getElementById(DOM_IDS.createWalletBtn);
   addEvent(createWalletBtn, 'click', handleCreateWalletClick);
   
   // 导入钱包按钮
-  const importWalletBtn = document.getElementById('importWalletBtn');
+  const importWalletBtn = document.getElementById(DOM_IDS.importWalletBtn);
   addEvent(importWalletBtn, 'click', handleImportWalletClick);
   
   // 返回按钮
-  const entryBackBtn = document.getElementById('entryBackBtn');
+  const entryBackBtn = document.getElementById(DOM_IDS.entryBackBtn);
   addEvent(entryBackBtn, 'click', handleBackClick);
   
   // 下一步按钮
-  const entryNextBtn = document.getElementById('entryNextBtn');
+  const entryNextBtn = document.getElementById(DOM_IDS.entryNextBtn);
   if (entryNextBtn) {
     (entryNextBtn as HTMLButtonElement).disabled = false;
   }
   addEvent(entryNextBtn, 'click', handleNextClick);
   
   // 确认模态框确定按钮
-  const proceedOk = document.getElementById('confirmProceedOk');
+  const proceedOk = document.getElementById(DOM_IDS.confirmProceedOk);
   addEvent(proceedOk, 'click', handleProceedOk);
   
   // 确认模态框取消按钮
-  const proceedCancel = document.getElementById('confirmProceedCancel');
+  const proceedCancel = document.getElementById(DOM_IDS.confirmProceedCancel);
   addEvent(proceedCancel, 'click', handleProceedCancel);
 }
 
@@ -373,7 +374,7 @@ export function updateWalletBrief(): void {
     updateExpandState(isExpanded);
   } else {
     // 少于3个地址时，移除折叠状态
-    const list = document.getElementById('walletBriefList');
+    const list = document.getElementById(DOM_IDS.walletBriefList);
     if (list) {
       list.classList.remove('collapsed');
     }

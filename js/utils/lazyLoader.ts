@@ -12,6 +12,7 @@
  */
 
 import { showLoading, hideLoading } from './loading';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Types
@@ -303,7 +304,7 @@ export function lazyComponent<T extends (...args: unknown[]) => unknown>(
     
     // Show fallback if provided
     if (fallback) {
-      const container = document.getElementById('app');
+      const container = document.getElementById(DOM_IDS.app);
       if (container) {
         container.appendChild(fallback());
       }

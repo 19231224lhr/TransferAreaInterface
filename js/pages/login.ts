@@ -17,6 +17,7 @@ import { encryptPrivateKey, saveEncryptedKey } from '../utils/keyEncryption';
 import { t } from '../i18n/index.js';
 import { showLoading, hideLoading, showElementLoading, hideElementLoading } from '../utils/loading';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
+import { DOM_IDS } from '../config/domIds';
 import {
   createReactiveState,
   runAnimationSequence,
@@ -171,8 +172,8 @@ function getStrengthLabel(strength: PasswordStrength): string {
  * 更新密码强度 UI (这部分需要特殊处理，因为涉及多个 class)
  */
 function updateStrengthUI(strength: PasswordStrength): void {
-  const strengthFill = document.getElementById('loginStrengthFill');
-  const strengthText = document.getElementById('loginStrengthText');
+  const strengthFill = document.getElementById(DOM_IDS.loginStrengthFill);
+  const strengthText = document.getElementById(DOM_IDS.loginStrengthText);
   
   if (strengthFill) {
     strengthFill.className = 'login-strength-fill' + (strength ? ' ' + strength : '');
@@ -188,9 +189,9 @@ function updateStrengthUI(strength: PasswordStrength): void {
  * 更新密码匹配 UI
  */
 function updateMatchUI(showIndicator: boolean, isMatch: boolean): void {
-  const matchIcon = document.getElementById('loginPasswordMatchIcon');
-  const matchText = document.getElementById('loginPasswordMatchText');
-  const confirmInput = document.getElementById('loginConfirmPassword');
+  const matchIcon = document.getElementById(DOM_IDS.loginPasswordMatchIcon);
+  const matchText = document.getElementById(DOM_IDS.loginPasswordMatchText);
+  const confirmInput = document.getElementById(DOM_IDS.loginConfirmPassword);
   
   if (matchIcon) {
     matchIcon.classList.toggle('hidden', !showIndicator);
@@ -310,7 +311,7 @@ async function animateLoaderCollapse(): Promise<void> {
  * 结果展开动画
  */
 async function animateResultReveal(): Promise<void> {
-  const resultEl = document.getElementById('loginResult');
+  const resultEl = document.getElementById(DOM_IDS.loginResult);
   if (resultEl) {
     resultEl.classList.remove('hidden', 'collapsed');
     resultEl.classList.add('expanding');
@@ -344,8 +345,8 @@ async function animateResultCollapse(): Promise<void> {
 function handlePasswordInput(): void {
   if (!pageState) return;
   
-  const passwordInput = document.getElementById('loginPassword') as HTMLInputElement | null;
-  const confirmInput = document.getElementById('loginConfirmPassword') as HTMLInputElement | null;
+  const passwordInput = document.getElementById(DOM_IDS.loginPassword) as HTMLInputElement | null;
+  const confirmInput = document.getElementById(DOM_IDS.loginConfirmPassword) as HTMLInputElement | null;
   
   const password = passwordInput?.value || '';
   const confirm = confirmInput?.value || '';
@@ -456,10 +457,10 @@ async function handleLoginClick(): Promise<void> {
     pageState = createReactiveState(initialState, stateBindings);
   }
   
-  const loginBtn = document.getElementById('loginBtn') as HTMLButtonElement | null;
-  const inputEl = document.getElementById('loginPrivHex') as HTMLInputElement | null;
-  const passwordEl = document.getElementById('loginPassword') as HTMLInputElement | null;
-  const confirmEl = document.getElementById('loginConfirmPassword') as HTMLInputElement | null;
+  const loginBtn = document.getElementById(DOM_IDS.loginBtn) as HTMLButtonElement | null;
+  const inputEl = document.getElementById(DOM_IDS.loginPrivHex) as HTMLInputElement | null;
+  const passwordEl = document.getElementById(DOM_IDS.loginPassword) as HTMLInputElement | null;
+  const confirmEl = document.getElementById(DOM_IDS.loginConfirmPassword) as HTMLInputElement | null;
   
   const priv = inputEl?.value.trim() || '';
   const password = passwordEl?.value.trim() || '';
@@ -605,7 +606,7 @@ async function handleLoginClick(): Promise<void> {
     
   } catch (e) {
     // 错误处理：恢复表单状态
-    const loader = document.getElementById('loginLoader');
+    const loader = document.getElementById(DOM_IDS.loginLoader);
     if (loader) {
       loader.classList.add('hidden');
       loader.classList.remove('collapsing', 'collapsed');
@@ -650,9 +651,9 @@ export function resetLoginPageState(): void {
   pageState?.reset();
   
   // 重置表单输入
-  const inputEl = document.getElementById('loginPrivHex') as HTMLInputElement | null;
-  const passwordEl = document.getElementById('loginPassword') as HTMLInputElement | null;
-  const confirmEl = document.getElementById('loginConfirmPassword') as HTMLInputElement | null;
+  const inputEl = document.getElementById(DOM_IDS.loginPrivHex) as HTMLInputElement | null;
+  const passwordEl = document.getElementById(DOM_IDS.loginPassword) as HTMLInputElement | null;
+  const confirmEl = document.getElementById(DOM_IDS.loginConfirmPassword) as HTMLInputElement | null;
   
   if (inputEl) {
     inputEl.value = '';
@@ -670,8 +671,8 @@ export function resetLoginPageState(): void {
   // 重置表单卡片状态
   const formCard = document.querySelector('.login-form-card');
   const tipBlock = document.querySelector('.login-tip-block');
-  const resultEl = document.getElementById('loginResult');
-  const loader = document.getElementById('loginLoader');
+  const resultEl = document.getElementById(DOM_IDS.loginResult);
+  const loader = document.getElementById(DOM_IDS.loginLoader);
   
   formCard?.classList.remove('collapsed', 'collapsing', 'expanding');
   tipBlock?.classList.remove('collapsed', 'collapsing', 'expanding');
@@ -763,7 +764,7 @@ function bindEvents(): void {
   cleanupEvents();
   
   // 登录按钮
-  const loginBtn = document.getElementById('loginBtn');
+  const loginBtn = document.getElementById(DOM_IDS.loginBtn);
   if (loginBtn) {
     // 确保按钮可用（防止上次登录流程中断导致的状态残留）
     (loginBtn as HTMLButtonElement).disabled = false;
@@ -772,35 +773,35 @@ function bindEvents(): void {
   }
   
   // 私钥可见性切换
-  const loginToggleVisibility = document.getElementById('loginToggleVisibility');
+  const loginToggleVisibility = document.getElementById(DOM_IDS.loginToggleVisibility);
   addEvent(loginToggleVisibility, 'click', handlePrivKeyVisibilityToggle);
   
   // 密码可见性切换
-  const loginPasswordToggle = document.getElementById('loginPasswordToggle');
+  const loginPasswordToggle = document.getElementById(DOM_IDS.loginPasswordToggle);
   addEvent(loginPasswordToggle, 'click', handlePasswordVisibilityToggle);
   
   // 密码输入 (强度指示)
-  const loginPasswordInput = document.getElementById('loginPassword');
+  const loginPasswordInput = document.getElementById(DOM_IDS.loginPassword);
   addEvent(loginPasswordInput, 'input', handlePasswordInput);
   
   // 确认密码输入 (匹配指示)
-  const loginConfirmInput = document.getElementById('loginConfirmPassword');
+  const loginConfirmInput = document.getElementById(DOM_IDS.loginConfirmPassword);
   addEvent(loginConfirmInput, 'input', handleConfirmPasswordInput);
   
   // 返回按钮
-  const loginBackBtn = document.getElementById('loginBackBtn');
+  const loginBackBtn = document.getElementById(DOM_IDS.loginBackBtn);
   addEvent(loginBackBtn, 'click', handleBackClick);
   
   // 下一步按钮
-  const loginNextBtn = document.getElementById('loginNextBtn');
+  const loginNextBtn = document.getElementById(DOM_IDS.loginNextBtn);
   addEvent(loginNextBtn, 'click', handleNextClick);
   
   // 取消按钮
-  const loginCancelBtn = document.getElementById('loginCancelBtn');
+  const loginCancelBtn = document.getElementById(DOM_IDS.loginCancelBtn);
   addEvent(loginCancelBtn, 'click', handleCancelClick);
   
   // 私钥折叠切换
-  const loginPrivContainer = document.getElementById('loginPrivContainer');
+  const loginPrivContainer = document.getElementById(DOM_IDS.loginPrivContainer);
   if (loginPrivContainer) {
     const labelClickable = loginPrivContainer.querySelector('.login-result-label--clickable') as HTMLElement | null;
     addEvent(labelClickable, 'click', handlePrivKeyToggle);

@@ -15,6 +15,7 @@ import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnap
 import { clearTransferDraft } from './transferDraft';
 import { getCoinName, COIN_TO_PGC_RATES, CoinTypeId } from '../config/constants';
 import { showLoading, hideLoading } from '../utils/loading';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Type Definitions
@@ -57,7 +58,7 @@ function normalizeAddrInput(addr: string): string {
  * Show transaction validation error
  */
 function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: string = '参数校验失败'): void {
-  const txErr = document.getElementById('txError');
+  const txErr = document.getElementById(DOM_IDS.txError);
   if (txErr) {
     txErr.textContent = msg;
     txErr.classList.remove('hidden');
@@ -120,18 +121,18 @@ function parsePub(raw: string): { x: string; y: string; ok: boolean } {
  * Initialize transfer form submission
  */
 export function initTransferSubmit(): void {
-  const tfBtn = document.getElementById('tfSendBtn') as HTMLButtonElement | null;
-  const addrList = document.getElementById('srcAddrList');
-  const billList = document.getElementById('billList');
-  const tfMode = document.getElementById('tfMode') as HTMLSelectElement | null;
-  const isPledge = document.getElementById('isPledge') as HTMLSelectElement | null;
-  const useTXCer = document.getElementById('useTXCer') as HTMLSelectElement | null;
-  const chPGC = document.getElementById('chAddrPGC') as HTMLSelectElement | null;
-  const chBTC = document.getElementById('chAddrBTC') as HTMLSelectElement | null;
-  const chETH = document.getElementById('chAddrETH') as HTMLSelectElement | null;
-  const gasInput = document.getElementById('extraGasPGC') as HTMLInputElement | null;
-  const txGasInput = document.getElementById('txGasInput') as HTMLInputElement | null;
-  const txErr = document.getElementById('txError');
+  const tfBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLButtonElement | null;
+  const addrList = document.getElementById(DOM_IDS.srcAddrList);
+  const billList = document.getElementById(DOM_IDS.billList);
+  const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
+  const isPledge = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
+  const useTXCer = document.getElementById(DOM_IDS.useTXCer) as HTMLSelectElement | null;
+  const chPGC = document.getElementById(DOM_IDS.chAddrPGC) as HTMLSelectElement | null;
+  const chBTC = document.getElementById(DOM_IDS.chAddrBTC) as HTMLSelectElement | null;
+  const chETH = document.getElementById(DOM_IDS.chAddrETH) as HTMLSelectElement | null;
+  const gasInput = document.getElementById(DOM_IDS.extraGasPGC) as HTMLInputElement | null;
+  const txGasInput = document.getElementById(DOM_IDS.txGasInput) as HTMLInputElement | null;
+  const txErr = document.getElementById(DOM_IDS.txError);
   
   if (!tfBtn || (tfBtn as any).dataset._bind) return;
   
@@ -162,10 +163,10 @@ export function initTransferSubmit(): void {
     
     // Snapshot key UI elements so we can restore to a stable state if something throws unexpectedly.
     const snapTxErr = txErr ? createDOMSnapshot(txErr) : null;
-    const txResultActions = document.getElementById('txResultActions');
-    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
-    const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
-    const buildTxBtn = document.getElementById('buildTxBtn');
+    const txResultActions = document.getElementById(DOM_IDS.txResultActions);
+    const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
+    const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
+    const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn);
     const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
     const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
     const snapViewBuild = viewBuildInfoBtn ? createDOMSnapshot(viewBuildInfoBtn) : null;
@@ -489,7 +490,7 @@ export function initTransferSubmit(): void {
       // Save transaction structure and show view button
       if (txResultActions) {
         txResultActions.classList.remove('hidden');
-        const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
+        const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
         if (viewBuildInfoBtn) {
           (viewBuildInfoBtn as any).dataset.txData = JSON.stringify(build, null, 2);
         }
@@ -532,14 +533,14 @@ export function initTransferSubmit(): void {
  * Initialize build transaction button
  */
 export function initBuildTransaction(): void {
-  const buildTxBtn = document.getElementById('buildTxBtn') as HTMLButtonElement | null;
+  const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn) as HTMLButtonElement | null;
   if (!buildTxBtn || (buildTxBtn as any).dataset._buildBind) return;
   
   buildTxBtn.addEventListener('click', async () => {
     const checkpointId = `transfer-build-${Date.now()}`;
     createCheckpoint(checkpointId, ['auto-save-transfer-v1', 'form-draft-transfer-v1']);
-    const txResultActions = document.getElementById('txResultActions');
-    const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+    const txResultActions = document.getElementById(DOM_IDS.txResultActions);
+    const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
     const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
     const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
     const loadingId = showLoading(t('toast.buildingTx'));
@@ -558,7 +559,7 @@ export function initBuildTransaction(): void {
       const transaction = await buildNewTX(buildInfo, user);
 
       // Save transaction data and show view button
-      const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+      const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
       if (viewTxInfoBtn) {
         (viewTxInfoBtn as any).dataset.txData = JSON.stringify(transaction, null, 2);
         viewTxInfoBtn.classList.remove('hidden');

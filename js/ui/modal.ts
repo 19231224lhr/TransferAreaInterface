@@ -13,6 +13,7 @@ import {
   type ReactiveState
 } from '../utils/reactive';
 import { html, nothing, renderInto, type TemplateResult } from '../utils/view';
+import { DOM_IDS, idSelector } from '../config/domIds';
 
 // ============================================================================
 // Types
@@ -54,13 +55,13 @@ const initialState: UnifiedModalState = {
  */
 const stateBindings = {
   isVisible: [
-    { selector: '#actionOverlay', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.actionOverlay), type: 'visible' as const }
   ],
   title: [
-    { selector: '#unifiedTitle', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.unifiedTitle), type: 'text' as const }
   ],
   text: [
-    { selector: '#unifiedText', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.unifiedText), type: 'text' as const }
   ]
 };
 
@@ -89,11 +90,11 @@ function ensureState(): ReactiveState<UnifiedModalState> {
  * 更新模态框 UI 元素
  */
 function updateModalUI(mode: ModalMode, isError: boolean = false): void {
-  const loading = document.getElementById('unifiedLoading');
-  const success = document.getElementById('unifiedSuccess');
-  const iconWrap = document.getElementById('unifiedIconWrap');
-  const successIcon = document.getElementById('unifiedSuccessIcon');
-  const errorIcon = document.getElementById('unifiedErrorIcon');
+  const loading = document.getElementById(DOM_IDS.unifiedLoading);
+  const success = document.getElementById(DOM_IDS.unifiedSuccess);
+  const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
+  const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
+  const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
   
   if (mode === 'loading') {
     if (loading) loading.classList.remove('hidden');
@@ -131,12 +132,12 @@ function updateModalUI(mode: ModalMode, isError: boolean = false): void {
  * 重置模态框状态
  */
 function resetModalState(): void {
-  const loading = document.getElementById('unifiedLoading');
-  const success = document.getElementById('unifiedSuccess');
-  const iconWrap = document.getElementById('unifiedIconWrap');
-  const successIcon = document.getElementById('unifiedSuccessIcon');
-  const errorIcon = document.getElementById('unifiedErrorIcon');
-  const textEl = document.getElementById('unifiedText');
+  const loading = document.getElementById(DOM_IDS.unifiedLoading);
+  const success = document.getElementById(DOM_IDS.unifiedSuccess);
+  const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
+  const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
+  const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
+  const textEl = document.getElementById(DOM_IDS.unifiedText);
   
   if (loading) loading.classList.remove('hidden');
   if (success) {
@@ -172,7 +173,7 @@ export function showUnifiedLoading(text?: string): void {
   });
   
   // 更新加载文本元素
-  const textEl = document.getElementById('actionOverlayText');
+  const textEl = document.getElementById(DOM_IDS.actionOverlayText);
   if (textEl) textEl.textContent = text || t('common.processing') || '处理中...';
   
   updateModalUI('loading');
@@ -214,7 +215,7 @@ export function showUnifiedSuccess(
   updateModalUI(isError ? 'error' : 'success', isError);
   
   // 处理取消按钮
-  const cancelBtn = document.getElementById('unifiedCancelBtn');
+  const cancelBtn = document.getElementById(DOM_IDS.unifiedCancelBtn);
   if (cancelBtn) {
     if (onCancel) {
       cancelBtn.classList.remove('hidden');
@@ -229,7 +230,7 @@ export function showUnifiedSuccess(
   }
   
   // 处理确定按钮
-  const okBtn = document.getElementById('unifiedOkBtn');
+  const okBtn = document.getElementById(DOM_IDS.unifiedOkBtn);
   if (okBtn) {
     okBtn.onclick = () => {
       hideUnifiedOverlay();
@@ -251,7 +252,7 @@ export function hideUnifiedOverlay(): void {
     isVisible: false
   });
   
-  const overlay = document.getElementById('actionOverlay');
+  const overlay = document.getElementById(DOM_IDS.actionOverlay);
   if (overlay) overlay.classList.add('hidden');
   
   resetModalState();
@@ -268,15 +269,15 @@ export function getActionModalElements(): {
   okEl: HTMLElement | null;
   cancelEl: HTMLElement | null;
 } {
-  const modal = document.getElementById('actionOverlay');
-  const titleEl = document.getElementById('unifiedTitle');
-  const textEl = document.getElementById('unifiedText');
-  const okEl = document.getElementById('unifiedOkBtn');
-  const cancelEl = document.getElementById('unifiedCancelBtn');
+  const modal = document.getElementById(DOM_IDS.actionOverlay);
+  const titleEl = document.getElementById(DOM_IDS.unifiedTitle);
+  const textEl = document.getElementById(DOM_IDS.unifiedText);
+  const okEl = document.getElementById(DOM_IDS.unifiedOkBtn);
+  const cancelEl = document.getElementById(DOM_IDS.unifiedCancelBtn);
   
   // 准备显示成功状态
-  const loading = document.getElementById('unifiedLoading');
-  const success = document.getElementById('unifiedSuccess');
+  const loading = document.getElementById(DOM_IDS.unifiedLoading);
+  const success = document.getElementById(DOM_IDS.unifiedSuccess);
   if (loading) loading.classList.add('hidden');
   if (success) success.classList.remove('hidden');
   
@@ -295,11 +296,11 @@ export function getActionModalElements(): {
  * @param isError - 是否为错误
  */
 export function showModalTip(title: string, content?: string | TemplateResult, isError?: boolean): void {
-  const loading = document.getElementById('unifiedLoading');
-  const success = document.getElementById('unifiedSuccess');
-  const iconWrap = document.getElementById('unifiedIconWrap');
-  const successIcon = document.getElementById('unifiedSuccessIcon');
-  const errorIcon = document.getElementById('unifiedErrorIcon');
+  const loading = document.getElementById(DOM_IDS.unifiedLoading);
+  const success = document.getElementById(DOM_IDS.unifiedSuccess);
+  const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
+  const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
+  const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
   
   if (loading) loading.classList.add('hidden');
   if (success) {
@@ -363,11 +364,11 @@ export function showConfirmModal(
   cancelText?: string
 ): Promise<boolean> {
   return new Promise((resolve) => {
-    const modal = document.getElementById('confirmGasModal');
-    const titleEl = document.getElementById('confirmGasTitle');
-    const textEl = document.getElementById('confirmGasText');
-    const okEl = document.getElementById('confirmGasOk');
-    const cancelEl = document.getElementById('confirmGasCancel');
+    const modal = document.getElementById(DOM_IDS.confirmGasModal);
+    const titleEl = document.getElementById(DOM_IDS.confirmGasTitle);
+    const textEl = document.getElementById(DOM_IDS.confirmGasText);
+    const okEl = document.getElementById(DOM_IDS.confirmGasOk);
+    const cancelEl = document.getElementById(DOM_IDS.confirmGasCancel);
     
     if (!modal || !okEl || !cancelEl) {
       resolve(true);

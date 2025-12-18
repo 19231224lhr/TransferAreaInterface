@@ -17,6 +17,7 @@ import {
   createReactiveState,
   type ReactiveState
 } from '../utils/reactive';
+import { DOM_IDS, idSelector } from '../config/domIds';
 
 // ============================================================================
 // Types
@@ -121,38 +122,38 @@ const initialState: HeaderState = {
  */
 const stateBindings = {
   nickname: [
-    { selector: '#userLabel', type: 'text' as const },
-    { selector: '#menuHeaderTitle', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.userLabel), type: 'text' as const },
+    { selector: idSelector(DOM_IDS.menuHeaderTitle), type: 'text' as const }
   ],
   bio: [
-    { selector: '#menuHeaderSub', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuHeaderSub), type: 'text' as const }
   ],
   accountId: [
-    { selector: '#menuAccountId', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuAccountId), type: 'text' as const }
   ],
   orgId: [
-    { selector: '#menuOrg', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuOrg), type: 'text' as const }
   ],
   totalUsdt: [
-    { selector: '#menuBalance', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuBalance), type: 'text' as const }
   ],
   pgcBalance: [
-    { selector: '#menuBalancePGC', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuBalancePGC), type: 'text' as const }
   ],
   btcBalance: [
-    { selector: '#menuBalanceBTC', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuBalanceBTC), type: 'text' as const }
   ],
   ethBalance: [
-    { selector: '#menuBalanceETH', type: 'text' as const }
+    { selector: idSelector(DOM_IDS.menuBalanceETH), type: 'text' as const }
   ],
   showAddressPopup: [
-    { selector: '#menuAddressPopup', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.menuAddressPopup), type: 'visible' as const }
   ],
   showBalancePopup: [
-    { selector: '#menuBalancePopup', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.menuBalancePopup), type: 'visible' as const }
   ],
   showUserMenu: [
-    { selector: '#userMenu', type: 'visible' as const }
+    { selector: idSelector(DOM_IDS.userMenu), type: 'visible' as const }
   ]
 };
 
@@ -167,8 +168,8 @@ let headerState: ReactiveState<HeaderState> | null = null;
  * 更新头像显示
  */
 function updateAvatarUI(avatar: string, isLoggedIn: boolean): void {
-  const avatarEl = document.getElementById('userAvatar');
-  const menuHeaderAvatar = document.getElementById('menuHeaderAvatar');
+  const avatarEl = document.getElementById(DOM_IDS.userAvatar);
+  const menuHeaderAvatar = document.getElementById(DOM_IDS.menuHeaderAvatar);
   
   if (avatarEl) {
     avatarEl.classList.toggle('avatar--active', isLoggedIn);
@@ -203,13 +204,13 @@ function updateAvatarUI(avatar: string, isLoggedIn: boolean): void {
 function updateMenuVisibility(isLoggedIn: boolean): void {
   const menuHeader = document.querySelector('.menu-header');
   const menuCards = document.querySelector('.menu-cards');
-  const menuAccountItem = document.getElementById('menuAccountItem');
-  const menuAddressItem = document.getElementById('menuAddressItem');
-  const menuOrgItem = document.getElementById('menuOrgItem');
-  const menuBalanceItem = document.getElementById('menuBalanceItem');
-  const menuEmpty = document.getElementById('menuEmpty');
-  const logoutEl = document.getElementById('logoutBtn') as HTMLButtonElement | null;
-  const menuOrgEl = document.getElementById('menuOrg');
+  const menuAccountItem = document.getElementById(DOM_IDS.menuAccountItem);
+  const menuAddressItem = document.getElementById(DOM_IDS.menuAddressItem);
+  const menuOrgItem = document.getElementById(DOM_IDS.menuOrgItem);
+  const menuBalanceItem = document.getElementById(DOM_IDS.menuBalanceItem);
+  const menuEmpty = document.getElementById(DOM_IDS.menuEmpty);
+  const logoutEl = document.getElementById(DOM_IDS.logoutBtn) as HTMLButtonElement | null;
+  const menuOrgEl = document.getElementById(DOM_IDS.menuOrg);
   
   if (menuHeader) menuHeader.classList.remove('hidden');
   
@@ -244,7 +245,7 @@ function updateMenuVisibility(isLoggedIn: boolean): void {
  * 更新地址数量显示
  */
 function updateAddressCountUI(count: number): void {
-  const menuAddrEl = document.getElementById('menuAddress');
+  const menuAddrEl = document.getElementById(DOM_IDS.menuAddress);
   if (menuAddrEl) {
     menuAddrEl.textContent = t('header.addresses', { count });
   }
@@ -255,60 +256,72 @@ function updateAddressCountUI(count: number): void {
  */
 function clearUIState(): void {
   // 清除新用户页面
-  const newResult = document.getElementById('result');
+  const newResult = document.getElementById(DOM_IDS.result);
   if (newResult) newResult.classList.add('hidden');
   
-  const ids1 = ['accountId', 'address', 'privHex', 'pubX', 'pubY'];
+  const ids1 = [DOM_IDS.accountId, DOM_IDS.address, DOM_IDS.privHex, DOM_IDS.pubX, DOM_IDS.pubY];
   ids1.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
   
-  const newLoader = document.getElementById('newLoader');
+  const newLoader = document.getElementById(DOM_IDS.newLoader);
   if (newLoader) newLoader.classList.add('hidden');
   
   // 清除导入页面
-  const importInput = document.getElementById('importPrivHex') as HTMLInputElement | null;
+  const importInput = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   if (importInput) importInput.value = '';
   
-  const importResult = document.getElementById('importResult');
+  const importResult = document.getElementById(DOM_IDS.importResult);
   if (importResult) importResult.classList.add('hidden');
   
-  const ids2 = ['importAccountId', 'importAddress', 'importPrivHexOut', 'importPubX', 'importPubY'];
+  const ids2 = [
+    DOM_IDS.importAccountId,
+    DOM_IDS.importAddress,
+    DOM_IDS.importPrivHexOut,
+    DOM_IDS.importPubX,
+    DOM_IDS.importPubY
+  ];
   ids2.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
   
-  const importLoader = document.getElementById('importLoader');
+  const importLoader = document.getElementById(DOM_IDS.importLoader);
   if (importLoader) importLoader.classList.add('hidden');
   
-  const importNextBtn2 = document.getElementById('importNextBtn');
+  const importNextBtn2 = document.getElementById(DOM_IDS.importNextBtn);
   if (importNextBtn2) importNextBtn2.classList.add('hidden');
   
   // 清除创建/新建按钮
-  const createBtnEl = document.getElementById('createBtn');
-  const newNextBtnEl = document.getElementById('newNextBtn');
+  const createBtnEl = document.getElementById(DOM_IDS.createBtn);
+  const newNextBtnEl = document.getElementById(DOM_IDS.newNextBtn);
   if (createBtnEl) createBtnEl.classList.add('hidden');
   if (newNextBtnEl) newNextBtnEl.classList.add('hidden');
   
   // 清除登录页面
-  const loginInput = document.getElementById('loginPrivHex') as HTMLInputElement | null;
+  const loginInput = document.getElementById(DOM_IDS.loginPrivHex) as HTMLInputElement | null;
   if (loginInput) loginInput.value = '';
   
-  const loginResult = document.getElementById('loginResult');
+  const loginResult = document.getElementById(DOM_IDS.loginResult);
   if (loginResult) loginResult.classList.add('hidden');
   
-  const ids3 = ['loginAccountId', 'loginAddress', 'loginPrivOut', 'loginPubX', 'loginPubY'];
+  const ids3 = [
+    DOM_IDS.loginAccountId,
+    DOM_IDS.loginAddress,
+    DOM_IDS.loginPrivOut,
+    DOM_IDS.loginPubX,
+    DOM_IDS.loginPubY
+  ];
   ids3.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
   
-  const loginLoader = document.getElementById('loginLoader');
+  const loginLoader = document.getElementById(DOM_IDS.loginLoader);
   if (loginLoader) loginLoader.classList.add('hidden');
   
-  const loginNextBtn2 = document.getElementById('loginNextBtn');
+  const loginNextBtn2 = document.getElementById(DOM_IDS.loginNextBtn);
   if (loginNextBtn2) loginNextBtn2.classList.add('hidden');
 }
 
@@ -326,8 +339,8 @@ function handleAddressPopupClick(e: MouseEvent): void {
   headerState?.set({ showBalancePopup: false });
   
   const u = loadUser() as UserInfo | null;
-  const popup = document.getElementById('menuAddressPopup');
-  const list = document.getElementById('menuAddressList');
+  const popup = document.getElementById(DOM_IDS.menuAddressPopup);
+  const list = document.getElementById(DOM_IDS.menuAddressList);
   if (!popup || !list) return;
   
   const map = (u?.wallet?.addressMsg) || {};
@@ -452,8 +465,8 @@ function handleUserButtonClick(e: MouseEvent): void {
  * 处理文档点击 (关闭菜单)
  */
 function handleDocumentClick(e: Event): void {
-  const userMenu = document.getElementById('userMenu');
-  const userButton = document.getElementById('userButton');
+  const userMenu = document.getElementById(DOM_IDS.userMenu);
+  const userButton = document.getElementById(DOM_IDS.userButton);
   
   if (userMenu && userButton) {
     if (!userMenu.contains(e.target as Node) && !userButton.contains(e.target as Node)) {
@@ -469,7 +482,7 @@ function handleLogoutClick(e: MouseEvent): void {
   e.preventDefault();
   e.stopPropagation();
   
-  const logoutBtn = document.getElementById('logoutBtn') as HTMLButtonElement | null;
+  const logoutBtn = document.getElementById(DOM_IDS.logoutBtn) as HTMLButtonElement | null;
   if (logoutBtn?.disabled) return;
   
   // 清除账户存储
@@ -500,8 +513,8 @@ function handleLogoutClick(e: MouseEvent): void {
  * 更新头部用户显示
  */
 export function updateHeaderUser(user: UserInfo | null): void {
-  const labelEl = document.getElementById('userLabel');
-  const avatarEl = document.getElementById('userAvatar');
+  const labelEl = document.getElementById(DOM_IDS.userLabel);
+  const avatarEl = document.getElementById(DOM_IDS.userAvatar);
   
   if (!labelEl || !avatarEl) return; // 头部不存在
   
@@ -579,7 +592,7 @@ export function updateHeaderUser(user: UserInfo | null): void {
     updateMenuVisibility(false);
     
     // 清空地址列表
-    const menuAddrList = document.getElementById('menuAddressList');
+    const menuAddrList = document.getElementById(DOM_IDS.menuAddressList);
     if (menuAddrList) menuAddrList.replaceChildren();
   }
   
@@ -594,12 +607,12 @@ export function updateHeaderUser(user: UserInfo | null): void {
  * 绑定地址弹出框事件
  */
 function bindAddressPopupEvent(): void {
-  const menuAddressItem = document.getElementById('menuAddressItem');
+  const menuAddressItem = document.getElementById(DOM_IDS.menuAddressItem);
   if (menuAddressItem) {
     // 每次都重新绑定，因为 globalEventManager 在路由切换时会清理事件
     globalEventManager.add(menuAddressItem, 'click', handleAddressPopupClick);
     
-    const popup = document.getElementById('menuAddressPopup');
+    const popup = document.getElementById(DOM_IDS.menuAddressPopup);
     if (popup) {
       globalEventManager.add(popup, 'click', (e: Event) => e.stopPropagation());
     }
@@ -610,12 +623,12 @@ function bindAddressPopupEvent(): void {
  * 绑定余额弹出框事件
  */
 function bindBalancePopupEvent(): void {
-  const menuBalanceItem = document.getElementById('menuBalanceItem');
+  const menuBalanceItem = document.getElementById(DOM_IDS.menuBalanceItem);
   if (menuBalanceItem) {
     // 每次都重新绑定，因为 globalEventManager 在路由切换时会清理事件
     globalEventManager.add(menuBalanceItem, 'click', handleBalancePopupClick);
     
-    const popup = document.getElementById('menuBalancePopup');
+    const popup = document.getElementById(DOM_IDS.menuBalancePopup);
     if (popup) {
       globalEventManager.add(popup, 'click', (e: Event) => e.stopPropagation());
     }
@@ -626,7 +639,7 @@ function bindBalancePopupEvent(): void {
  * 绑定组织点击事件
  */
 function bindOrgClickEvent(): void {
-  const menuOrgItem = document.getElementById('menuOrgItem');
+  const menuOrgItem = document.getElementById(DOM_IDS.menuOrgItem);
   if (menuOrgItem) {
     globalEventManager.add(menuOrgItem, 'click', handleOrgClick);
   }
@@ -647,8 +660,8 @@ function bindMenuHeaderClickEvent(): void {
  * 初始化用户菜单
  */
 export function initUserMenu(): void {
-  const userButton = document.getElementById('userButton');
-  const userMenu = document.getElementById('userMenu');
+  const userButton = document.getElementById(DOM_IDS.userButton);
+  const userMenu = document.getElementById(DOM_IDS.userMenu);
   
   if (!userButton || !userMenu) return;
   
@@ -664,7 +677,7 @@ export function initUserMenu(): void {
   globalEventManager.add(document as unknown as Element, 'click', handleDocumentClick);
   
   // 绑定登出按钮
-  const logoutBtn = document.getElementById('logoutBtn');
+  const logoutBtn = document.getElementById(DOM_IDS.logoutBtn);
   if (logoutBtn) {
     globalEventManager.add(logoutBtn, 'click', handleLogoutClick);
   }

@@ -5,14 +5,15 @@
  */
 
 import { t } from '../i18n/index.js';
+import { DOM_IDS } from '../config/domIds';
 
 /**
  * Initialize wallet structure toggle
  */
 export function initWalletStructToggle() {
-  const wsToggle = document.getElementById('walletStructToggle');
-  const wsBox = document.getElementById('walletStructBox');
-  const wsSection = document.getElementById('walletStructPane');
+  const wsToggle = document.getElementById(DOM_IDS.walletStructToggle);
+  const wsBox = document.getElementById(DOM_IDS.walletStructBox);
+  const wsSection = document.getElementById(DOM_IDS.walletStructPane);
   const wsContent = wsToggle?.closest('.struct-section')?.querySelector('.struct-content');
   
   if (!wsToggle || !wsBox || wsToggle.dataset._bind) return;
@@ -82,14 +83,14 @@ export function initWalletStructToggle() {
  * Initialize transaction detail modal
  */
 export function initTxDetailModal() {
-  const modal = document.getElementById('txDetailModal');
-  const titleEl = document.getElementById('txDetailTitle');
-  const contentEl = document.getElementById('txDetailContent');
-  const closeBtn = document.getElementById('txDetailClose');
-  const copyBtn = document.getElementById('txDetailCopy');
-  const okBtn = document.getElementById('txDetailOk');
-  const viewBuildInfoBtn = document.getElementById('viewBuildInfoBtn');
-  const viewTxInfoBtn = document.getElementById('viewTxInfoBtn');
+  const modal = document.getElementById(DOM_IDS.txDetailModal);
+  const titleEl = document.getElementById(DOM_IDS.txDetailTitle);
+  const contentEl = document.getElementById(DOM_IDS.txDetailContent);
+  const closeBtn = document.getElementById(DOM_IDS.txDetailClose);
+  const copyBtn = document.getElementById(DOM_IDS.txDetailCopy);
+  const okBtn = document.getElementById(DOM_IDS.txDetailOk);
+  const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
+  const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
   
   if (!modal) return;
   

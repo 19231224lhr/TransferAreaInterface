@@ -10,6 +10,7 @@ import { showModalTip, showConfirmModal } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
 import { showMiniToast } from '../utils/toast.js';
 import { routeTo } from '../router';
+import { DOM_IDS, idSelector } from '../config/domIds';
 
 /**
  * Update group detail page display
@@ -18,17 +19,17 @@ export function updateGroupDetailDisplay() {
   const g1 = getJoinedGroup();
   const joined1 = !!(g1 && g1.groupID);
   
-  const groupJoinedPane = document.getElementById('groupJoinedPane');
-  const groupEmptyPane = document.getElementById('groupEmptyPane');
+  const groupJoinedPane = document.getElementById(DOM_IDS.groupJoinedPane);
+  const groupEmptyPane = document.getElementById(DOM_IDS.groupEmptyPane);
   
   if (joined1) {
     if (groupJoinedPane) groupJoinedPane.classList.remove('hidden');
     if (groupEmptyPane) groupEmptyPane.classList.add('hidden');
     
-    const groupDetailID = document.getElementById('groupDetailID');
-    const groupDetailAggre = document.getElementById('groupDetailAggre');
-    const groupDetailAssign = document.getElementById('groupDetailAssign');
-    const groupDetailPledge = document.getElementById('groupDetailPledge');
+    const groupDetailID = document.getElementById(DOM_IDS.groupDetailID);
+    const groupDetailAggre = document.getElementById(DOM_IDS.groupDetailAggre);
+    const groupDetailAssign = document.getElementById(DOM_IDS.groupDetailAssign);
+    const groupDetailPledge = document.getElementById(DOM_IDS.groupDetailPledge);
     
     if (groupDetailID) groupDetailID.textContent = g1.groupID || '-';
     if (groupDetailAggre) groupDetailAggre.textContent = g1.aggreNode || '-';
@@ -77,39 +78,39 @@ export function initGroupDetailPage() {
   updateGroupDetailDisplay();
   
   // Bind leave button event
-  const leaveBtn = document.getElementById('groupLeaveBtn');
+  const leaveBtn = document.getElementById(DOM_IDS.groupLeaveBtn);
   if (leaveBtn && !leaveBtn.dataset._groupBind) {
     leaveBtn.dataset._groupBind = 'true';
     leaveBtn.addEventListener('click', () => {
       // Show confirm modal
-      const modal = document.getElementById('leaveOrgModal');
+      const modal = document.getElementById(DOM_IDS.leaveOrgModal);
       if (modal) modal.classList.remove('hidden');
     });
   }
   
   // Bind confirm leave button
-  const confirmLeaveBtn = document.getElementById('confirmLeaveBtn');
+  const confirmLeaveBtn = document.getElementById(DOM_IDS.confirmLeaveBtn);
   if (confirmLeaveBtn && !confirmLeaveBtn.dataset._groupBind) {
     confirmLeaveBtn.dataset._groupBind = 'true';
     confirmLeaveBtn.addEventListener('click', () => {
-      const modal = document.getElementById('leaveOrgModal');
+      const modal = document.getElementById(DOM_IDS.leaveOrgModal);
       if (modal) modal.classList.add('hidden');
       handleLeaveOrg();
     });
   }
   
   // Bind cancel leave button
-  const cancelLeaveBtn = document.getElementById('cancelLeaveBtn');
+  const cancelLeaveBtn = document.getElementById(DOM_IDS.cancelLeaveBtn);
   if (cancelLeaveBtn && !cancelLeaveBtn.dataset._groupBind) {
     cancelLeaveBtn.dataset._groupBind = 'true';
     cancelLeaveBtn.addEventListener('click', () => {
-      const modal = document.getElementById('leaveOrgModal');
+      const modal = document.getElementById(DOM_IDS.leaveOrgModal);
       if (modal) modal.classList.add('hidden');
     });
   }
   
   // Bind copy buttons
-  const groupCopyBtns = document.querySelectorAll('#groupDetailCard .info-copy-btn');
+  const groupCopyBtns = document.querySelectorAll(`${idSelector(DOM_IDS.groupDetailCard)} .info-copy-btn`);
   groupCopyBtns.forEach(btn => {
     if (!btn.dataset._groupBind) {
       btn.dataset._groupBind = 'true';
@@ -128,7 +129,7 @@ export function initGroupDetailPage() {
   });
   
   // Bind back button
-  const backBtn = document.getElementById('groupDetailBackBtn');
+  const backBtn = document.getElementById(DOM_IDS.groupDetailBackBtn);
   if (backBtn && !backBtn.dataset._groupBind) {
     backBtn.dataset._groupBind = 'true';
     backBtn.addEventListener('click', () => {
@@ -139,7 +140,7 @@ export function initGroupDetailPage() {
   }
   
   // Bind join now button (for empty state)
-  const joinNowBtn = document.getElementById('groupJoinNowBtn');
+  const joinNowBtn = document.getElementById(DOM_IDS.groupJoinNowBtn);
   if (joinNowBtn && !joinNowBtn.dataset._groupBind) {
     joinNowBtn.dataset._groupBind = 'true';
     joinNowBtn.addEventListener('click', () => {
@@ -157,10 +158,10 @@ export function initGroupDetailPage() {
  * Initialize group detail page buttons (copied from backup)
  */
 function initGroupDetailButtons() {
-  const groupExitBtn = document.getElementById('groupExitBtn');
-  const groupBackBtn = document.getElementById('groupBackBtn');
-  const groupJoinBtn = document.getElementById('groupJoinBtn');
-  const groupEmptyBackBtn = document.getElementById('groupEmptyBackBtn');
+  const groupExitBtn = document.getElementById(DOM_IDS.groupExitBtn);
+  const groupBackBtn = document.getElementById(DOM_IDS.groupBackBtn);
+  const groupJoinBtn = document.getElementById(DOM_IDS.groupJoinBtn);
+  const groupEmptyBackBtn = document.getElementById(DOM_IDS.groupEmptyBackBtn);
   
   if (groupExitBtn && !groupExitBtn.dataset._bind) {
     groupExitBtn.addEventListener('click', async () => {
@@ -177,8 +178,8 @@ function initGroupDetailButtons() {
       );
       if (!confirmed) return;
       
-      const ov = document.getElementById('actionOverlay');
-      const ovt = document.getElementById('actionOverlayText');
+      const ov = document.getElementById(DOM_IDS.actionOverlay);
+      const ovt = document.getElementById(DOM_IDS.actionOverlayText);
       if (ovt) ovt.textContent = t('join.leavingOrg');
       if (ov) ov.classList.remove('hidden');
       await wait(2000);

@@ -7,6 +7,7 @@
 import { t } from '../i18n/index.js';
 import { showMiniToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
+import { DOM_IDS } from '../config/domIds';
 
 let billSeq = 0;
 
@@ -48,7 +49,7 @@ async function fetchAddrInfo(addr) {
  * Show transaction validation error
  */
 function showTxValidationError(msg, focusEl, title = '参数校验失败') {
-  const txErr = document.getElementById('txError');
+  const txErr = document.getElementById(DOM_IDS.txError);
   if (txErr) {
     txErr.textContent = msg;
     txErr.classList.remove('hidden');
@@ -332,7 +333,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
  * Initialize recipient cards in transfer panel
  */
 export function initRecipientCards() {
-  const billList = document.getElementById('billList');
+  const billList = document.getElementById(DOM_IDS.billList);
   if (!billList || billList.dataset._recipientBind) return;
   
   // Compute current org ID helper
@@ -355,8 +356,8 @@ export function initRecipientCards() {
  * Initialize advanced options (change address section) collapse/expand
  */
 export function initAdvancedOptions() {
-  const optionsToggle = document.getElementById('optionsToggle');
-  const optionsContent = document.getElementById('optionsContent');
+  const optionsToggle = document.getElementById(DOM_IDS.optionsToggle);
+  const optionsContent = document.getElementById(DOM_IDS.optionsContent);
   
   if (!optionsToggle || !optionsContent) return;
   if (optionsToggle.dataset._bind) return;

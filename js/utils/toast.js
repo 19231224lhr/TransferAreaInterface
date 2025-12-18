@@ -6,6 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { html as viewHtml, renderInto } from './view';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Toast Icons
@@ -31,7 +32,7 @@ const TOAST_ICONS = {
  * @returns {HTMLElement} Toast element
  */
 export function showToast(message, type = 'info', title = '', duration = 3500) {
-  const container = document.getElementById('toastContainer');
+  const container = document.getElementById(DOM_IDS.toastContainer);
   if (!container) return null;
 
   // Default titles based on type

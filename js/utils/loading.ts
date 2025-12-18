@@ -11,6 +11,7 @@
 
 import { t } from '../i18n/index.js';
 import { setAriaBusy, announce } from './accessibility';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Type Definitions
@@ -52,9 +53,9 @@ class LoadingManager {
    * Initialize DOM element references
    */
   private initElements(): void {
-    this.overlay = document.getElementById('actionOverlay');
-    this.textElement = document.getElementById('actionOverlayText');
-    this.loadingContent = document.getElementById('unifiedLoading');
+    this.overlay = document.getElementById(DOM_IDS.actionOverlay);
+    this.textElement = document.getElementById(DOM_IDS.actionOverlayText);
+    this.loadingContent = document.getElementById(DOM_IDS.unifiedLoading);
   }
   
   /**
@@ -184,7 +185,7 @@ class LoadingManager {
       this.loadingContent.classList.remove('hidden');
     }
     
-    const successContent = document.getElementById('unifiedSuccess');
+    const successContent = document.getElementById(DOM_IDS.unifiedSuccess);
     if (successContent) {
       successContent.classList.add('hidden');
     }
@@ -207,7 +208,7 @@ class LoadingManager {
       // IMPORTANT: #actionOverlay is also used by modal tips/success states.
       // Avoid hiding the overlay if the unified success/tip content is currently shown,
       // otherwise unrelated loading completions can accidentally dismiss user feedback.
-      const successContent = document.getElementById('unifiedSuccess');
+      const successContent = document.getElementById(DOM_IDS.unifiedSuccess);
       const isInTipMode = !!successContent && !successContent.classList.contains('hidden');
 
       if (!isInTipMode) {

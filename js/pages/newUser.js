@@ -10,6 +10,7 @@ import { showErrorToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';
+import { DOM_IDS } from '../config/domIds';
 
 // Flag to prevent duplicate key generation
 let isGeneratingKeys = false;
@@ -26,10 +27,10 @@ async function generateAndDisplayKeypair() {
   
   isGeneratingKeys = true;
   
-  const loader = document.getElementById('newLoader');
-  const resultEl = document.getElementById('result');
-  const nextBtn = document.getElementById('newNextBtn');
-  const keyTip = document.getElementById('newKeyTip');
+  const loader = document.getElementById(DOM_IDS.newLoader);
+  const resultEl = document.getElementById(DOM_IDS.result);
+  const nextBtn = document.getElementById(DOM_IDS.newNextBtn);
+  const keyTip = document.getElementById(DOM_IDS.newKeyTip);
   
   // Show loader, hide everything else
   if (loader) loader.classList.remove('hidden');
@@ -69,11 +70,11 @@ async function generateAndDisplayKeypair() {
     if (loader) loader.classList.add('hidden');
     
     // Display keypair info
-    const accountIdEl = document.getElementById('accountId');
-    const addressEl = document.getElementById('address');
-    const privHexEl = document.getElementById('privHex');
-    const pubXEl = document.getElementById('pubX');
-    const pubYEl = document.getElementById('pubY');
+    const accountIdEl = document.getElementById(DOM_IDS.accountId);
+    const addressEl = document.getElementById(DOM_IDS.address);
+    const privHexEl = document.getElementById(DOM_IDS.privHex);
+    const pubXEl = document.getElementById(DOM_IDS.pubX);
+    const pubYEl = document.getElementById(DOM_IDS.pubY);
     
     if (accountIdEl) accountIdEl.textContent = data.accountId;
     if (addressEl) addressEl.textContent = data.address;
@@ -111,10 +112,10 @@ async function generateAndDisplayKeypair() {
  * Reset page state
  */
 function resetPageState() {
-  const resultEl = document.getElementById('result');
-  const loader = document.getElementById('newLoader');
-  const nextBtn = document.getElementById('newNextBtn');
-  const keyTip = document.getElementById('newKeyTip');
+  const resultEl = document.getElementById(DOM_IDS.result);
+  const loader = document.getElementById(DOM_IDS.newLoader);
+  const nextBtn = document.getElementById(DOM_IDS.newNextBtn);
+  const keyTip = document.getElementById(DOM_IDS.newKeyTip);
   
   // Hide everything initially
   if (resultEl) resultEl.classList.add('hidden');
@@ -135,7 +136,7 @@ export function initNewUserPage() {
   resetPageState();
   
   // Bind back button
-  const newBackBtn = document.getElementById('newBackBtn');
+  const newBackBtn = document.getElementById(DOM_IDS.newBackBtn);
   if (newBackBtn && !newBackBtn.dataset._newUserBind) {
     newBackBtn.dataset._newUserBind = 'true';
     newBackBtn.addEventListener('click', () => {
@@ -146,7 +147,7 @@ export function initNewUserPage() {
   }
   
   // Bind next button - navigate to set password page
-  const newNextBtn = document.getElementById('newNextBtn');
+  const newNextBtn = document.getElementById(DOM_IDS.newNextBtn);
   if (newNextBtn && !newNextBtn.dataset._newUserBind) {
     newNextBtn.dataset._newUserBind = 'true';
     newNextBtn.addEventListener('click', () => {
@@ -166,8 +167,8 @@ export function initNewUserPage() {
   }
   
   // Bind private key toggle (expand/collapse)
-  const privateKeyToggle = document.getElementById('privateKeyToggle');
-  const privateKeyItem = document.getElementById('privateKeyItem');
+  const privateKeyToggle = document.getElementById(DOM_IDS.privateKeyToggle);
+  const privateKeyItem = document.getElementById(DOM_IDS.privateKeyItem);
   if (privateKeyToggle && privateKeyItem && !privateKeyToggle.dataset._newUserBind) {
     privateKeyToggle.dataset._newUserBind = 'true';
     privateKeyToggle.addEventListener('click', () => {

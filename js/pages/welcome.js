@@ -5,14 +5,15 @@
  */
 
 import { loadUser } from '../utils/storage';
+import { DOM_IDS } from '../config/domIds';
 
 /**
  * Update welcome page buttons based on login state
  * Shows different buttons depending on whether user is logged in
  */
 export function updateWelcomeButtons() {
-  const splitContainer = document.getElementById('splitLoginContainer');
-  const loginBtn = document.getElementById('loginAccountBtn');
+  const splitContainer = document.getElementById(DOM_IDS.splitLoginContainer);
+  const loginBtn = document.getElementById(DOM_IDS.loginAccountBtn);
   
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
@@ -33,7 +34,7 @@ export function updateWelcomeButtons() {
  */
 function bindWelcomeEvents() {
   // Register/Get Started button
-  const registerAccountBtn = document.getElementById('registerAccountBtn');
+  const registerAccountBtn = document.getElementById(DOM_IDS.registerAccountBtn);
   if (registerAccountBtn && !registerAccountBtn.dataset._welcomeBind) {
     registerAccountBtn.dataset._welcomeBind = 'true';
     registerAccountBtn.addEventListener('click', () => {
@@ -47,7 +48,7 @@ function bindWelcomeEvents() {
   }
   
   // Login button (single)
-  const loginAccountBtn = document.getElementById('loginAccountBtn');
+  const loginAccountBtn = document.getElementById(DOM_IDS.loginAccountBtn);
   if (loginAccountBtn && !loginAccountBtn.dataset._welcomeBind) {
     loginAccountBtn.dataset._welcomeBind = 'true';
     loginAccountBtn.addEventListener('click', () => {
@@ -58,7 +59,7 @@ function bindWelcomeEvents() {
   }
   
   // Split login button
-  const splitLoginBtn = document.getElementById('splitLoginBtn');
+  const splitLoginBtn = document.getElementById(DOM_IDS.splitLoginBtn);
   if (splitLoginBtn && !splitLoginBtn.dataset._welcomeBind) {
     splitLoginBtn.dataset._welcomeBind = 'true';
     splitLoginBtn.addEventListener('click', () => {
@@ -69,7 +70,7 @@ function bindWelcomeEvents() {
   }
   
   // Split home button
-  const splitHomeBtn = document.getElementById('splitHomeBtn');
+  const splitHomeBtn = document.getElementById(DOM_IDS.splitHomeBtn);
   if (splitHomeBtn && !splitHomeBtn.dataset._welcomeBind) {
     splitHomeBtn.dataset._welcomeBind = 'true';
     splitHomeBtn.addEventListener('click', () => {

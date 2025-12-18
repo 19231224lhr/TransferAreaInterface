@@ -8,6 +8,7 @@ import zhCN from './zh-CN.js';
 import en from './en.js';
 import { I18N_STORAGE_KEY } from '../config/constants.ts';
 import { store, setLanguageState, selectLanguage } from '../utils/store.js';
+import { DOM_IDS } from '../config/domIds';
 
 // Translation dictionaries
 const translations = {
@@ -239,7 +240,7 @@ function updateRecipientCardTranslations() {
  * Update language selector UI to reflect current language
  */
 export function updateLanguageSelectorUI() {
-  const selector = document.getElementById('languageSelector');
+  const selector = document.getElementById(DOM_IDS.languageSelector);
   if (!selector) return;
   
   const options = selector.querySelectorAll('.language-option');

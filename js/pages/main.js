@@ -11,6 +11,7 @@ import { initTransferDraftPersistence, restoreTransferDraft } from '../services/
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
 import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
+import { DOM_IDS } from '../config/domIds';
 
 // Re-export for convenience
 export { renderWallet };
@@ -107,10 +108,10 @@ export function initMainPage() {
  * Initialize no-org-warn button (copied from backup lines 6227-6281)
  */
 function initNoOrgWarnBtn() {
-  const noOrgWarnBtn = document.getElementById('noOrgWarnBtn');
-  const noOrgModal = document.getElementById('noOrgModal');
-  const noOrgModalCancel = document.getElementById('noOrgModalCancel');
-  const noOrgModalOk = document.getElementById('noOrgModalOk');
+  const noOrgWarnBtn = document.getElementById(DOM_IDS.noOrgWarnBtn);
+  const noOrgModal = document.getElementById(DOM_IDS.noOrgModal);
+  const noOrgModalCancel = document.getElementById(DOM_IDS.noOrgModalCancel);
+  const noOrgModalOk = document.getElementById(DOM_IDS.noOrgModalOk);
   
   if (noOrgWarnBtn && noOrgModal && !noOrgWarnBtn.dataset._bind) {
     // Show modal

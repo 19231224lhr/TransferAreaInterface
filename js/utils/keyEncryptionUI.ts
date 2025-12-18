@@ -21,6 +21,7 @@ import {
 } from './keyEncryption';
 import { loadUser, saveUser, User } from './storage';
 import { html as viewHtml, nothing, renderInto } from './view';
+import { DOM_IDS } from '../config/domIds';
 
 // ========================================
 // Password Prompt Functions
@@ -41,14 +42,14 @@ export function showPasswordPrompt(options: {
     const { title, description, confirmMode = false, placeholder = '' } = options;
     
     // Check if modal already exists, remove it
-    const existingModal = document.getElementById('passwordPromptModal');
+    const existingModal = document.getElementById(DOM_IDS.passwordPromptModal);
     if (existingModal) {
       existingModal.remove();
     }
     
     // Create modal HTML
     const modal = document.createElement('div');
-    modal.id = 'passwordPromptModal';
+    modal.id = DOM_IDS.passwordPromptModal;
     modal.className = 'modal';
     renderInto(modal, viewHtml`
       <div class="modal-overlay"></div>
@@ -58,12 +59,12 @@ export function showPasswordPrompt(options: {
         <div class="password-input-group">
           <input
             type="password"
-            id="pwdPromptInput"
+            id=${DOM_IDS.pwdPromptInput}
             class="modal-input"
             placeholder=${placeholder || t('encryption.enterPassword')}
             autocomplete="off"
           />
-          <button type="button" class="pwd-toggle-btn" id="pwdToggleBtn">
+          <button type="button" class="pwd-toggle-btn" id=${DOM_IDS.pwdToggleBtn}>
             <svg class="eye-open hidden" viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
               <circle cx="12" cy="12" r="3"></circle>
@@ -80,7 +81,7 @@ export function showPasswordPrompt(options: {
               <div class="password-input-group" style="margin-top: 12px;">
                 <input
                   type="password"
-                  id="pwdConfirmInput"
+                  id=${DOM_IDS.pwdConfirmInput}
                   class="modal-input"
                   placeholder=${t('encryption.confirmPassword')}
                   autocomplete="off"
@@ -89,10 +90,10 @@ export function showPasswordPrompt(options: {
             `
           : nothing}
 
-        <div class="modal-error hidden" id="pwdPromptError"></div>
+        <div class="modal-error hidden" id=${DOM_IDS.pwdPromptError}></div>
         <div class="modal-actions">
-          <button class="modal-btn modal-btn--secondary" id="pwdCancelBtn">${t('common.cancel')}</button>
-          <button class="modal-btn modal-btn--primary" id="pwdConfirmBtn">${t('common.confirm')}</button>
+          <button class="modal-btn modal-btn--secondary" id=${DOM_IDS.pwdCancelBtn}>${t('common.cancel')}</button>
+          <button class="modal-btn modal-btn--primary" id=${DOM_IDS.pwdConfirmBtn}>${t('common.confirm')}</button>
         </div>
       </div>
     `);
@@ -100,12 +101,12 @@ export function showPasswordPrompt(options: {
     document.body.appendChild(modal);
     
     // Get elements
-    const input = document.getElementById('pwdPromptInput') as HTMLInputElement;
-    const confirmInput = document.getElementById('pwdConfirmInput') as HTMLInputElement | null;
-    const toggleBtn = document.getElementById('pwdToggleBtn');
-    const cancelBtn = document.getElementById('pwdCancelBtn');
-    const confirmBtn = document.getElementById('pwdConfirmBtn');
-    const errorEl = document.getElementById('pwdPromptError');
+    const input = document.getElementById(DOM_IDS.pwdPromptInput) as HTMLInputElement;
+    const confirmInput = document.getElementById(DOM_IDS.pwdConfirmInput) as HTMLInputElement | null;
+    const toggleBtn = document.getElementById(DOM_IDS.pwdToggleBtn);
+    const cancelBtn = document.getElementById(DOM_IDS.pwdCancelBtn);
+    const confirmBtn = document.getElementById(DOM_IDS.pwdConfirmBtn);
+    const errorEl = document.getElementById(DOM_IDS.pwdPromptError);
     
     // Show modal with animation
     requestAnimationFrame(() => {

@@ -7,12 +7,13 @@
 import { t } from '../i18n/index.js';
 import { loadUser } from '../utils/storage';
 import { escapeHtml } from '../utils/security';
+import { DOM_IDS } from '../config/domIds';
 
 /**
  * Update wallet structure display (copied from backup lines 3663-3850)
  */
 export function updateWalletStruct() {
-  const box = document.getElementById('walletStructBox');
+  const box = document.getElementById(DOM_IDS.walletStructBox);
   const u = loadUser();
   if (!box) return;
 

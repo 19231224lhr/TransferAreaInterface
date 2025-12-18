@@ -33,6 +33,8 @@ import { templateLoader } from './utils/templateLoader';
 import { pageManager } from './utils/pageManager';
 import { PAGE_TEMPLATES } from './config/pageTemplates';
 
+import { DOM_IDS } from './config/domIds';
+
 import { updateHeaderUser, initUserMenu, initHeaderScroll } from './ui/header';
 import { loadThemeSetting, initThemeSelector } from './ui/theme.js';
 import { cleanupWalletChart } from './ui/charts.js';
@@ -54,10 +56,10 @@ import { initRouter, routeTo } from './router';
 
 function setupOnlineIndicator(): void {
   // Create offline indicator element
-  let indicator = document.getElementById('offlineIndicator');
+  let indicator = document.getElementById(DOM_IDS.offlineIndicator);
   if (!indicator) {
     indicator = document.createElement('div');
-    indicator.id = 'offlineIndicator';
+    indicator.id = DOM_IDS.offlineIndicator;
     indicator.className = 'offline-indicator';
     indicator.setAttribute('role', 'alert');
     indicator.setAttribute('aria-live', 'assertive');
@@ -88,10 +90,10 @@ function setupOnlineIndicator(): void {
 // ========================================
 
 function setupServiceWorkerUpdates(): void {
-  let banner = document.getElementById('updateBanner');
+  let banner = document.getElementById(DOM_IDS.updateBanner);
   if (!banner) {
     banner = document.createElement('div');
-    banner.id = 'updateBanner';
+    banner.id = DOM_IDS.updateBanner;
     banner.className = 'update-banner';
     banner.setAttribute('role', 'status');
     banner.setAttribute('aria-live', 'polite');
@@ -384,9 +386,9 @@ function init(): void {
   }
 
   // Initialize confirmSkipModal event listeners
-  const confirmSkipModal = document.getElementById('confirmSkipModal');
-  const confirmSkipOk = document.getElementById('confirmSkipOk');
-  const confirmSkipCancel = document.getElementById('confirmSkipCancel');
+  const confirmSkipModal = document.getElementById(DOM_IDS.confirmSkipModal);
+  const confirmSkipOk = document.getElementById(DOM_IDS.confirmSkipOk);
+  const confirmSkipCancel = document.getElementById(DOM_IDS.confirmSkipCancel);
 
   if (confirmSkipOk && !(confirmSkipOk as HTMLElement).dataset._bind) {
     confirmSkipOk.addEventListener('click', () => {

@@ -18,6 +18,7 @@ import { pageManager } from './utils/pageManager';
 import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 import { resetWalletBindings } from './services/wallet';
 import { html as viewHtml, renderInto } from './utils/view';
+import { DOM_IDS } from './config/domIds';
 
 type PageModule = Record<string, unknown>;
 
@@ -207,13 +208,12 @@ export function showCard(card: HTMLElement): void {
 
   // Hide overlays and modals
   const overlayIds = [
-    'newLoader',
-    'importLoader',
-    'groupSuggest',
-    'joinOverlay',
-    'confirmSkipModal',
-    'actionOverlay',
-    'actionModal'
+    DOM_IDS.newLoader,
+    DOM_IDS.importLoader,
+    DOM_IDS.groupSuggest,
+    DOM_IDS.confirmSkipModal,
+    DOM_IDS.actionOverlay,
+    DOM_IDS.actionModal
   ];
 
   overlayIds.forEach((id) => {
@@ -222,13 +222,13 @@ export function showCard(card: HTMLElement): void {
   });
 
   // Reset search state
-  const joinSearchBtn = document.getElementById('joinSearchBtn') as HTMLButtonElement | null;
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
   if (joinSearchBtn) joinSearchBtn.disabled = true;
-  const searchResult = document.getElementById('searchResult');
+  const searchResult = document.getElementById(DOM_IDS.searchResult);
   if (searchResult) searchResult.classList.add('hidden');
-  const recPane = document.getElementById('recPane');
+  const recPane = document.getElementById(DOM_IDS.recPane);
   if (recPane) recPane.classList.remove('collapsed');
-  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
+  const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   if (groupSearch) groupSearch.value = '';
 
   // Show the specified card
@@ -241,7 +241,7 @@ export function showCard(card: HTMLElement): void {
   if (innerPage) innerPage.classList.remove('hidden');
 
   // Control footer visibility (hide on welcome page, show on others)
-  const pageFooter = document.getElementById('pageFooter');
+  const pageFooter = document.getElementById(DOM_IDS.pageFooter);
   if (pageFooter) {
     if (card.id === 'welcomeCard') {
       pageFooter.classList.add('hidden');
@@ -327,10 +327,10 @@ export async function router(): Promise<void> {
     console.error(`[router] Page not loaded for route: ${h}`);
 
     // Try to show a fallback error message
-    const main = document.getElementById('main');
-    if (main && !document.getElementById('pageLoadError')) {
+    const main = document.getElementById(DOM_IDS.main);
+    if (main && !document.getElementById(DOM_IDS.pageLoadError)) {
       const errorDiv = document.createElement('div');
-      errorDiv.id = 'pageLoadError';
+      errorDiv.id = DOM_IDS.pageLoadError;
       errorDiv.className = 'page-load-error';
         renderInto(errorDiv, viewHtml`
           <div style="text-align:center;padding:60px 20px;">
@@ -345,7 +345,7 @@ export async function router(): Promise<void> {
   }
 
   // Remove any previous error message
-  const errorEl = document.getElementById('pageLoadError');
+  const errorEl = document.getElementById(DOM_IDS.pageLoadError);
   if (errorEl) errorEl.remove();
 
   switch (route) {
@@ -495,14 +495,14 @@ function handleNewUserRoute(): void {
   };
   void doReset();
 
-  const resultEl = document.getElementById('result');
-  const createBtn = document.getElementById('createBtn');
-  const newNextBtn = document.getElementById('newNextBtn');
-  const newLoader = document.getElementById('newLoader');
+  const resultEl = document.getElementById(DOM_IDS.result);
+  const createBtn = document.getElementById(DOM_IDS.createBtn);
+  const newNextBtn = document.getElementById(DOM_IDS.newNextBtn);
+  const newLoader = document.getElementById(DOM_IDS.newLoader);
 
   if (newLoader) newLoader.classList.add('hidden');
 
-  const accountIdEl = document.getElementById('accountId');
+  const accountIdEl = document.getElementById(DOM_IDS.accountId);
   const hasData = !!(accountIdEl && (accountIdEl.textContent || '').trim() !== '');
 
   if (hasData) {
@@ -551,10 +551,10 @@ async function handleJoinGroupRoute(preloadedElement: HTMLElement): Promise<void
     showCard(preloadedElement);
 
     // Set default group info (elements are now in the loaded template)
-    const recGroupID = document.getElementById('recGroupID');
-    const recAggre = document.getElementById('recAggre');
-    const recAssign = document.getElementById('recAssign');
-    const recPledge = document.getElementById('recPledge');
+    const recGroupID = document.getElementById(DOM_IDS.recGroupID);
+    const recAggre = document.getElementById(DOM_IDS.recAggre);
+    const recAssign = document.getElementById(DOM_IDS.recAssign);
+    const recPledge = document.getElementById(DOM_IDS.recPledge);
 
     if (recGroupID) recGroupID.textContent = DEFAULT_GROUP.groupID;
     if (recAggre) recAggre.textContent = DEFAULT_GROUP.aggreNode;

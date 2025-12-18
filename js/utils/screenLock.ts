@@ -14,6 +14,7 @@
 import { verifyPassword, hasEncryptedKey } from './keyEncryption';
 import { loadUser } from './storage';
 import { t } from '../i18n/index.js';
+import { DOM_IDS, idSelector } from '../config/domIds';
 
 // ========================================
 // Types
@@ -58,7 +59,7 @@ const ACTIVITY_LISTENERS: Array<{
   { target: window, event: 'touchstart', options: { passive: true } },
   { target: window, event: 'wheel', options: { passive: true } }
 ];
-const LOCK_SCREEN_ID = 'screenLockOverlay';
+const LOCK_SCREEN_ID = DOM_IDS.screenLockOverlay;
 const STORAGE_KEY = 'screenLockState';
 let isVerifying = false;
 
@@ -89,7 +90,7 @@ function createLockScreenElement(): HTMLElement {
   overlay.className = 'screen-lock-overlay';
   overlay.setAttribute('role', 'dialog');
   overlay.setAttribute('aria-modal', 'true');
-  overlay.setAttribute('aria-labelledby', 'lockScreenTitle');
+  overlay.setAttribute('aria-labelledby', DOM_IDS.lockScreenTitle);
 
   const doc = new DOMParser().parseFromString(`
     <div class="screen-lock-backdrop"></div>
@@ -101,7 +102,7 @@ function createLockScreenElement(): HTMLElement {
             <img src="/assets/logo.png" alt="PanguPay" class="screen-lock-logo-img" />
             <div class="screen-lock-logo-glow"></div>
           </div>
-          <h2 id="lockScreenTitle" class="screen-lock-title" data-i18n="lock.title">钱包已锁定</h2>
+          <h2 id="${DOM_IDS.lockScreenTitle}" class="screen-lock-title" data-i18n="lock.title">钱包已锁定</h2>
           <p class="screen-lock-subtitle" data-i18n="lock.subtitle">请输入密码以解锁</p>
         </div>
         
@@ -115,13 +116,13 @@ function createLockScreenElement(): HTMLElement {
               </svg>
               <input 
                 type="password" 
-                id="screenLockPassword" 
+                id="${DOM_IDS.screenLockPassword}" 
                 class="screen-lock-input" 
                 placeholder="输入密码..."
                 data-i18n-placeholder="lock.enterPassword"
                 autocomplete="current-password"
               />
-              <button type="button" class="screen-lock-toggle-visibility" id="screenLockToggleVisibility">
+              <button type="button" class="screen-lock-toggle-visibility" id="${DOM_IDS.screenLockToggleVisibility}">
                 <svg class="eye-open hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
@@ -132,7 +133,7 @@ function createLockScreenElement(): HTMLElement {
                 </svg>
               </button>
             </div>
-            <div class="screen-lock-error hidden" id="screenLockError">
+            <div class="screen-lock-error hidden" id="${DOM_IDS.screenLockError}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="10" />
                 <line x1="12" y1="8" x2="12" y2="12" />
@@ -142,7 +143,7 @@ function createLockScreenElement(): HTMLElement {
             </div>
           </div>
           
-          <button type="button" id="screenLockUnlockBtn" class="screen-lock-unlock-btn">
+          <button type="button" id="${DOM_IDS.screenLockUnlockBtn}" class="screen-lock-unlock-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 9.9-1" />
@@ -158,9 +159,9 @@ function createLockScreenElement(): HTMLElement {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            <span id="screenLockAccountId" class="screen-lock-account-id"></span>
+            <span id="${DOM_IDS.screenLockAccountId}" class="screen-lock-account-id"></span>
           </div>
-          <button type="button" id="screenLockLogoutBtn" class="screen-lock-logout-btn">
+          <button type="button" id="${DOM_IDS.screenLockLogoutBtn}" class="screen-lock-logout-btn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
               <polyline points="16 17 21 12 16 7" />
@@ -199,10 +200,10 @@ function getLockScreenElement(): HTMLElement {
  * Bind events to lock screen elements
  */
 function bindLockScreenEvents(overlay: HTMLElement): void {
-  const passwordInput = overlay.querySelector('#screenLockPassword') as HTMLInputElement;
-  const unlockBtn = overlay.querySelector('#screenLockUnlockBtn') as HTMLButtonElement;
-  const toggleBtn = overlay.querySelector('#screenLockToggleVisibility') as HTMLButtonElement;
-  const logoutBtn = overlay.querySelector('#screenLockLogoutBtn') as HTMLButtonElement;
+  const passwordInput = overlay.querySelector(idSelector(DOM_IDS.screenLockPassword)) as HTMLInputElement;
+  const unlockBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockUnlockBtn)) as HTMLButtonElement;
+  const toggleBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockToggleVisibility)) as HTMLButtonElement;
+  const logoutBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockLogoutBtn)) as HTMLButtonElement;
   
   // Unlock button click
   unlockBtn?.addEventListener('click', handleUnlockAttempt);
@@ -275,9 +276,9 @@ async function handleUnlockAttempt(): Promise<void> {
   if (isVerifying) return;
 
   const overlay = document.getElementById(LOCK_SCREEN_ID);
-  const passwordInput = overlay?.querySelector('#screenLockPassword') as HTMLInputElement;
-  const errorEl = overlay?.querySelector('#screenLockError') as HTMLElement;
-  const unlockBtn = overlay?.querySelector('#screenLockUnlockBtn') as HTMLButtonElement;
+  const passwordInput = overlay?.querySelector(idSelector(DOM_IDS.screenLockPassword)) as HTMLInputElement;
+  const errorEl = overlay?.querySelector(idSelector(DOM_IDS.screenLockError)) as HTMLElement;
+  const unlockBtn = overlay?.querySelector(idSelector(DOM_IDS.screenLockUnlockBtn)) as HTMLButtonElement;
   
   const password = passwordInput?.value?.trim();
   
@@ -423,13 +424,13 @@ export function lockScreen(): void {
   const overlay = getLockScreenElement();
   
   // Update account ID display
-  const accountIdEl = overlay.querySelector('#screenLockAccountId');
+  const accountIdEl = overlay.querySelector(idSelector(DOM_IDS.screenLockAccountId));
   if (accountIdEl) {
     accountIdEl.textContent = user.accountId;
   }
   
   // Clear password input
-  const passwordInput = overlay.querySelector('#screenLockPassword') as HTMLInputElement;
+  const passwordInput = overlay.querySelector(idSelector(DOM_IDS.screenLockPassword)) as HTMLInputElement;
   if (passwordInput) {
     passwordInput.value = '';
     passwordInput.type = 'password';
@@ -442,7 +443,7 @@ export function lockScreen(): void {
   eyeClosed?.classList.remove('hidden');
   
   // Hide error
-  const errorEl = overlay.querySelector('#screenLockError') as HTMLElement;
+  const errorEl = overlay.querySelector(idSelector(DOM_IDS.screenLockError)) as HTMLElement;
   hideLockError(errorEl);
   
   // Show overlay with animation

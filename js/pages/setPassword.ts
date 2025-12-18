@@ -20,6 +20,7 @@ import {
   createReactiveState,
   type ReactiveState
 } from '../utils/reactive';
+import { DOM_IDS } from '../config/domIds';
 
 // ============================================================================
 // Types
@@ -130,8 +131,8 @@ function getStrengthLabel(strength: PasswordStrength): string {
  * 更新密码强度 UI
  */
 function updateStrengthUI(strength: PasswordStrength): void {
-  const strengthFill = document.getElementById('setpwdStrengthFill');
-  const strengthText = document.getElementById('setpwdStrengthText');
+  const strengthFill = document.getElementById(DOM_IDS.setpwdStrengthFill);
+  const strengthText = document.getElementById(DOM_IDS.setpwdStrengthText);
   
   if (strengthFill) {
     strengthFill.className = 'setpwd-strength-fill' + (strength ? ' ' + strength : '');
@@ -147,9 +148,9 @@ function updateStrengthUI(strength: PasswordStrength): void {
  * 更新密码匹配 UI
  */
 function updateMatchUI(showIndicator: boolean, isMatch: boolean): void {
-  const matchIcon = document.getElementById('setpwdPasswordMatchIcon');
-  const matchText = document.getElementById('setpwdPasswordMatchText');
-  const confirmInput = document.getElementById('setpwdConfirm');
+  const matchIcon = document.getElementById(DOM_IDS.setpwdPasswordMatchIcon);
+  const matchText = document.getElementById(DOM_IDS.setpwdPasswordMatchText);
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm);
   
   if (matchIcon) {
     matchIcon.classList.toggle('hidden', !showIndicator);
@@ -186,9 +187,9 @@ function updateMatchUI(showIndicator: boolean, isMatch: boolean): void {
  * 更新密码可见性 UI
  */
 function updateVisibilityUI(visible: boolean): void {
-  const toggleBtn = document.getElementById('setpwdToggle');
-  const passwordInput = document.getElementById('setpwdPassword') as HTMLInputElement | null;
-  const confirmInput = document.getElementById('setpwdConfirm') as HTMLInputElement | null;
+  const toggleBtn = document.getElementById(DOM_IDS.setpwdToggle);
+  const passwordInput = document.getElementById(DOM_IDS.setpwdPassword) as HTMLInputElement | null;
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm) as HTMLInputElement | null;
   
   if (toggleBtn) {
     const eyeOpen = toggleBtn.querySelector('.eye-open');
@@ -233,8 +234,8 @@ export function clearPendingAccountData(): void {
 function handlePasswordInput(): void {
   if (!pageState) return;
   
-  const passwordInput = document.getElementById('setpwdPassword') as HTMLInputElement | null;
-  const confirmInput = document.getElementById('setpwdConfirm') as HTMLInputElement | null;
+  const passwordInput = document.getElementById(DOM_IDS.setpwdPassword) as HTMLInputElement | null;
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm) as HTMLInputElement | null;
   
   const password = passwordInput?.value || '';
   const confirm = confirmInput?.value || '';
@@ -284,8 +285,8 @@ function handleBackClick(): void {
  * 验证密码输入
  */
 function validatePasswords(): { valid: boolean; password: string; error?: string } {
-  const passwordInput = document.getElementById('setpwdPassword') as HTMLInputElement | null;
-  const confirmInput = document.getElementById('setpwdConfirm') as HTMLInputElement | null;
+  const passwordInput = document.getElementById(DOM_IDS.setpwdPassword) as HTMLInputElement | null;
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm) as HTMLInputElement | null;
   
   const password = passwordInput?.value?.trim() || '';
   const confirm = confirmInput?.value?.trim() || '';
@@ -332,7 +333,7 @@ async function handleSubmit(): Promise<void> {
   
   pageState.set({ isSubmitting: true });
   
-  const btn = document.getElementById('setpwdSubmitBtn') as HTMLButtonElement | null;
+  const btn = document.getElementById(DOM_IDS.setpwdSubmitBtn) as HTMLButtonElement | null;
   if (btn) {
     btn.disabled = true;
     const span = btn.querySelector('span');
@@ -372,8 +373,8 @@ async function handleSubmit(): Promise<void> {
     showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
     
     // 导航到入口页面
-    const ov = document.getElementById('actionOverlay');
-    const ovt = document.getElementById('actionOverlayText');
+    const ov = document.getElementById(DOM_IDS.actionOverlay);
+    const ovt = document.getElementById(DOM_IDS.actionOverlayText);
     if (ovt) ovt.textContent = t('modal.enteringWalletPage') || '正在进入钱包管理页面...';
     if (ov) ov.classList.remove('hidden');
     
@@ -410,9 +411,9 @@ async function handleSubmit(): Promise<void> {
 function resetPageState(): void {
   pageState?.reset();
   
-  const passwordInput = document.getElementById('setpwdPassword') as HTMLInputElement | null;
-  const confirmInput = document.getElementById('setpwdConfirm') as HTMLInputElement | null;
-  const btn = document.getElementById('setpwdSubmitBtn') as HTMLButtonElement | null;
+  const passwordInput = document.getElementById(DOM_IDS.setpwdPassword) as HTMLInputElement | null;
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm) as HTMLInputElement | null;
+  const btn = document.getElementById(DOM_IDS.setpwdSubmitBtn) as HTMLButtonElement | null;
   
   if (passwordInput) {
     passwordInput.value = '';
@@ -468,19 +469,19 @@ function bindEvents(): void {
   cleanupEvents();
   
   // 密码输入
-  const passwordInput = document.getElementById('setpwdPassword');
+  const passwordInput = document.getElementById(DOM_IDS.setpwdPassword);
   addEvent(passwordInput, 'input', handlePasswordInput);
   
   // 确认密码输入
-  const confirmInput = document.getElementById('setpwdConfirm');
+  const confirmInput = document.getElementById(DOM_IDS.setpwdConfirm);
   addEvent(confirmInput, 'input', handleConfirmPasswordInput);
   
   // 密码可见性切换
-  const toggleBtn = document.getElementById('setpwdToggle');
+  const toggleBtn = document.getElementById(DOM_IDS.setpwdToggle);
   addEvent(toggleBtn, 'click', handleVisibilityToggle);
   
   // 提交按钮
-  const submitBtn = document.getElementById('setpwdSubmitBtn');
+  const submitBtn = document.getElementById(DOM_IDS.setpwdSubmitBtn);
   if (submitBtn) {
     (submitBtn as HTMLButtonElement).disabled = false;
     submitBtn.classList.remove('is-loading');
@@ -488,7 +489,7 @@ function bindEvents(): void {
   }
   
   // 返回按钮
-  const backBtn = document.getElementById('setpwdBackBtn');
+  const backBtn = document.getElementById(DOM_IDS.setpwdBackBtn);
   addEvent(backBtn, 'click', handleBackClick);
 }
 
@@ -522,7 +523,7 @@ export function initSetPasswordPage(): void {
   
   // 聚焦密码输入框
   setTimeout(() => {
-    const passwordInput = document.getElementById('setpwdPassword') as HTMLInputElement | null;
+    const passwordInput = document.getElementById(DOM_IDS.setpwdPassword) as HTMLInputElement | null;
     passwordInput?.focus();
   }, 300);
 }

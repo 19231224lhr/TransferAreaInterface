@@ -22,6 +22,7 @@ import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
+import { DOM_IDS } from '../config/domIds';
 import { scheduleBatchUpdate } from '../utils/performanceMode.js';
 import { globalEventManager } from '../utils/eventUtils.js';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
@@ -98,9 +99,9 @@ export function resetWalletBindings(): void {
  */
 export function updateWalletBrief(): void {
   const u = getCurrentUser();
-  const countEl = document.getElementById('walletCount');
-  const brief = document.getElementById('walletBriefList');
-  const tip = document.getElementById('walletEmptyTip');
+  const countEl = document.getElementById(DOM_IDS.walletCount);
+  const brief = document.getElementById(DOM_IDS.walletBriefList);
+  const tip = document.getElementById(DOM_IDS.walletEmptyTip);
   const addrs = u?.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
   
   if (countEl) {
@@ -144,10 +145,10 @@ export function updateWalletBrief(): void {
  * Refresh organization panel display
  */
 export function refreshOrgPanel(): void {
-  const woCard = document.getElementById('woCard');
-  const woEmpty = document.getElementById('woEmpty');
-  const woExit = document.getElementById('woExitBtn');
-  const joinBtn = document.getElementById('woJoinBtn');
+  const woCard = document.getElementById(DOM_IDS.woCard);
+  const woEmpty = document.getElementById(DOM_IDS.woEmpty);
+  const woExit = document.getElementById(DOM_IDS.woExitBtn);
+  const joinBtn = document.getElementById(DOM_IDS.woJoinBtn);
   const g = getJoinedGroup();
   const joined = !!(g && g.groupID);
   
@@ -156,15 +157,15 @@ export function refreshOrgPanel(): void {
   if (woEmpty) woEmpty.classList.toggle('hidden', joined);
   if (joinBtn) joinBtn.classList.toggle('hidden', joined);
   
-  const tfMode = document.getElementById('tfMode') as HTMLSelectElement | null;
-  const tfModeQuick = document.getElementById('tfModeQuick') as HTMLInputElement | null;
-  const tfModeCross = document.getElementById('tfModeCross') as HTMLInputElement | null;
-  const tfModePledge = document.getElementById('tfModePledge') as HTMLInputElement | null;
-  const isPledgeSel = document.getElementById('isPledge') as HTMLSelectElement | null;
+  const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
+  const tfModeQuick = document.getElementById(DOM_IDS.tfModeQuick) as HTMLInputElement | null;
+  const tfModeCross = document.getElementById(DOM_IDS.tfModeCross) as HTMLInputElement | null;
+  const tfModePledge = document.getElementById(DOM_IDS.tfModePledge) as HTMLInputElement | null;
+  const isPledgeSel = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
   const hasOrg = joined;
   
   // Update transfer mode tabs UI
-  const modeTabsContainer = document.getElementById('transferModeTabs');
+  const modeTabsContainer = document.getElementById(DOM_IDS.transferModeTabs);
   
   if (modeTabsContainer) {
     if (hasOrg) {
@@ -224,10 +225,10 @@ export function refreshOrgPanel(): void {
     
     // Update organization info display
     const orgFields: [string, string][] = [
-      ['woGroupID', joined && g ? g.groupID : ''],
-      ['woAggre', joined && g ? (g.aggreNode || '') : ''],
-      ['woAssign', joined && g ? (g.assignNode || '') : ''],
-      ['woPledge', joined && g ? (g.pledgeAddress || '') : '']
+      [DOM_IDS.woGroupID, joined && g ? g.groupID : ''],
+      [DOM_IDS.woAggre, joined && g ? (g.aggreNode || '') : ''],
+      [DOM_IDS.woAssign, joined && g ? (g.assignNode || '') : ''],
+      [DOM_IDS.woPledge, joined && g ? (g.pledgeAddress || '') : '']
     ];
     
     orgFields.forEach(([id, val]) => {
@@ -249,12 +250,12 @@ export function refreshOrgPanel(): void {
  */
 export function renderWallet(): void {
   const u = getCurrentUser();
-  const aid = document.getElementById('walletAccountId');
-  const org = document.getElementById('walletOrg');
-  const addr = document.getElementById('walletMainAddr');
-  const priv = document.getElementById('walletPrivHex');
-  const px = document.getElementById('walletPubX');
-  const py = document.getElementById('walletPubY');
+  const aid = document.getElementById(DOM_IDS.walletAccountId);
+  const org = document.getElementById(DOM_IDS.walletOrg);
+  const addr = document.getElementById(DOM_IDS.walletMainAddr);
+  const priv = document.getElementById(DOM_IDS.walletPrivHex);
+  const px = document.getElementById(DOM_IDS.walletPubX);
+  const py = document.getElementById(DOM_IDS.walletPubY);
   
   if (!u) return;
   
@@ -265,13 +266,13 @@ export function renderWallet(): void {
   if (px) px.textContent = u.pubXHex || '';
   if (py) py.textContent = u.pubYHex || '';
   
-  const list = document.getElementById('walletAddrList');
+  const list = document.getElementById(DOM_IDS.walletAddrList);
   if (!list) return;
   
   const addresses = Object.keys((u.wallet?.addressMsg) || {});
   
   // 更新地址数量显示
-  const addrCountEl = document.getElementById('addrCount');
+  const addrCountEl = document.getElementById(DOM_IDS.addrCount);
   if (addrCountEl) {
     addrCountEl.textContent = t('wallet.addressCount', { count: addresses.length }) || `${addresses.length} 个地址`;
   }
@@ -399,10 +400,10 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
  * Exported for use by event delegation system
  */
 export function handleDeleteAddress(address: string): void {
-  const modal = document.getElementById('confirmDelModal');
-  const okBtn = document.getElementById('confirmDelOk');
-  const cancelBtn = document.getElementById('confirmDelCancel');
-  const textEl = document.getElementById('confirmDelText');
+  const modal = document.getElementById(DOM_IDS.confirmDelModal);
+  const okBtn = document.getElementById(DOM_IDS.confirmDelOk);
+  const cancelBtn = document.getElementById(DOM_IDS.confirmDelCancel);
+  const textEl = document.getElementById(DOM_IDS.confirmDelText);
   
   // Close any open ops menus
   closeAllOpsMenus();
@@ -557,7 +558,7 @@ export function handleExportPrivateKey(address: string): void {
  * Update total GAS badge display
  */
 export function updateTotalGasBadge(u: User | null): void {
-  const gasBadge = document.getElementById('walletGAS');
+  const gasBadge = document.getElementById(DOM_IDS.walletGAS);
   if (gasBadge && u?.wallet) {
     const sumGas = Object.keys(u.wallet.addressMsg || {}).reduce((s, k) => {
       const m = u.wallet.addressMsg[k];
@@ -718,9 +719,9 @@ function recalculateWalletValue(u: User): void {
  * Update currency breakdown display
  */
 function updateCurrencyDisplay(u: User): void {
-  const walletPGCEl = document.getElementById('walletPGC');
-  const walletBTCEl = document.getElementById('walletBTC');
-  const walletETHEl = document.getElementById('walletETH');
+  const walletPGCEl = document.getElementById(DOM_IDS.walletPGC);
+  const walletBTCEl = document.getElementById(DOM_IDS.walletBTC);
+  const walletETHEl = document.getElementById(DOM_IDS.walletETH);
   const vdUpdated = u.wallet?.valueDivision || { 0: 0, 1: 0, 2: 0 };
   
   if (walletPGCEl) walletPGCEl.textContent = Number(vdUpdated[0] || 0).toLocaleString();
@@ -742,7 +743,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   const balance = Number(found.value?.utxoValue || 0);
   const gas = Number(found.estInterest || found.gas || 0);
   
-  const list = document.getElementById('walletAddrList');
+  const list = document.getElementById(DOM_IDS.walletAddrList);
   if (!list) return;
   
   const cards = list.querySelectorAll('.addr-card');
@@ -778,7 +779,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
  * Update USDT and breakdown display
  */
 function updateUSDTDisplay(u: User): void {
-  const usdtEl = document.getElementById('walletUSDT');
+  const usdtEl = document.getElementById(DOM_IDS.walletUSDT);
   if (usdtEl && u?.wallet) {
     const vdAll = u.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
     const pgcA = Number(vdAll[0] || 0);
@@ -813,17 +814,17 @@ function updateUSDTDisplay(u: User): void {
  */
 export function showAddrModal(mode: 'create' | 'import'): void {
   __addrMode = mode;
-  const addrModal = document.getElementById('addrModal');
-  const addrTitle = document.getElementById('addrModalTitle');
-  const addrCreateBox = document.getElementById('addrCreateBox');
-  const addrImportBox = document.getElementById('addrImportBox');
+  const addrModal = document.getElementById(DOM_IDS.addrModal);
+  const addrTitle = document.getElementById(DOM_IDS.addrModalTitle);
+  const addrCreateBox = document.getElementById(DOM_IDS.addrCreateBox);
+  const addrImportBox = document.getElementById(DOM_IDS.addrImportBox);
   
   if (addrTitle) addrTitle.textContent = mode === 'import' ? t('walletModal.importAddress') : t('walletModal.createAddress');
   if (addrCreateBox) addrCreateBox.classList.toggle('hidden', mode !== 'create');
   if (addrImportBox) addrImportBox.classList.toggle('hidden', mode !== 'import');
   
   if (mode === 'import') {
-    const input = document.getElementById('addrPrivHex') as HTMLInputElement | null;
+    const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
     if (input) input.value = '';
   }
   
@@ -836,7 +837,7 @@ export function showAddrModal(mode: 'create' | 'import'): void {
  * Hide address modal
  */
 export function hideAddrModal(): void {
-  const addrModal = document.getElementById('addrModal');
+  const addrModal = document.getElementById(DOM_IDS.addrModal);
   if (addrModal) addrModal.classList.add('hidden');
   setAddrError('');
 }
@@ -845,7 +846,7 @@ export function hideAddrModal(): void {
  * Set address error message
  */
 function setAddrError(msg: string): void {
-  const box = document.getElementById('addrError');
+  const box = document.getElementById(DOM_IDS.addrError);
   if (!box) return;
   if (msg) {
     box.textContent = msg;
@@ -866,8 +867,8 @@ async function importAddressInPlace(priv: string): Promise<void> {
     return; 
   }
   
-  const ov = document.getElementById('actionOverlay');
-  const ovt = document.getElementById('actionOverlayText');
+  const ov = document.getElementById(DOM_IDS.actionOverlay);
+  const ovt = document.getElementById(DOM_IDS.actionOverlayText);
   if (ovt) ovt.textContent = t('modal.addingWalletAddress');
   if (ov) ov.classList.remove('hidden');
   
@@ -951,7 +952,7 @@ export async function handleAddrModalOk(): Promise<void> {
       await window.PanguPay.account.addNewSubWallet();
     }
   } else {
-    const input = document.getElementById('addrPrivHex') as HTMLInputElement | null;
+    const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
     const v = input?.value.trim() || '';
     
     if (!v) {
@@ -977,11 +978,11 @@ export async function handleAddrModalOk(): Promise<void> {
  * Initialize address modal buttons
  */
 export function initAddressModal(): void {
-  const openCreateAddrBtn = document.getElementById('openCreateAddrBtn');
-  const openImportAddrBtn = document.getElementById('openImportAddrBtn');
-  const openHistoryBtn = document.getElementById('openHistoryBtn');
-  const addrCancelBtn = document.getElementById('addrCancelBtn');
-  const addrOkBtn = document.getElementById('addrOkBtn');
+  const openCreateAddrBtn = document.getElementById(DOM_IDS.openCreateAddrBtn);
+  const openImportAddrBtn = document.getElementById(DOM_IDS.openImportAddrBtn);
+  const openHistoryBtn = document.getElementById(DOM_IDS.openHistoryBtn);
+  const addrCancelBtn = document.getElementById(DOM_IDS.addrCancelBtn);
+  const addrOkBtn = document.getElementById(DOM_IDS.addrOkBtn);
   
   if (openCreateAddrBtn && !openCreateAddrBtn.dataset._walletBind) {
     openCreateAddrBtn.onclick = () => showAddrModal('create');
@@ -1032,15 +1033,15 @@ function refreshWalletSnapshot(): Record<string, AddressMetadata> {
  * Fill change address dropdowns based on selected addresses
  */
 function fillChange(): void {
-  const addrList = document.getElementById('srcAddrList');
+  const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
   
-  const chPGC = document.getElementById('chAddrPGC') as HTMLSelectElement | null;
-  const chBTC = document.getElementById('chAddrBTC') as HTMLSelectElement | null;
-  const chETH = document.getElementById('chAddrETH') as HTMLSelectElement | null;
-  const csPGC = document.getElementById('csChPGC');
-  const csBTC = document.getElementById('csChBTC');
-  const csETH = document.getElementById('csChETH');
+  const chPGC = document.getElementById(DOM_IDS.chAddrPGC) as HTMLSelectElement | null;
+  const chBTC = document.getElementById(DOM_IDS.chAddrBTC) as HTMLSelectElement | null;
+  const chETH = document.getElementById(DOM_IDS.chAddrETH) as HTMLSelectElement | null;
+  const csPGC = document.getElementById(DOM_IDS.csChPGC);
+  const csBTC = document.getElementById(DOM_IDS.csChBTC);
+  const csETH = document.getElementById(DOM_IDS.csChETH);
   
   const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]'))
     .filter((x: Element) => (x as HTMLInputElement).checked)
@@ -1135,7 +1136,7 @@ function fillChange(): void {
  */
 export function rebuildAddrList(): void {
   refreshWalletSnapshot();
-  const addrList = document.getElementById('srcAddrList');
+  const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
   
   // 清除骨架屏状态
@@ -1287,8 +1288,8 @@ export function initTransferModeTabs(): void {
         modeTabsContainer.setAttribute('data-active', String(activeIndex));
       }
     }
-    const tfModeSelect = document.getElementById('tfMode') as HTMLSelectElement | null;
-    const isPledgeSelect = document.getElementById('isPledge') as HTMLSelectElement | null;
+    const tfModeSelect = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
+    const isPledgeSelect = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
     if (tfModeSelect) tfModeSelect.value = mode;
     if (isPledgeSelect) isPledgeSelect.value = mode === 'pledge' ? 'true' : 'false';
     const radios = document.querySelectorAll('input[name="tfModeChoice"]');
@@ -1395,12 +1396,12 @@ function bindCustomSelect(box: HTMLElement | null, hidden: HTMLSelectElement | n
  * Initialize custom select dropdowns for change addresses
  */
 export function initChangeAddressSelects(): void {
-  const chPGC = document.getElementById('chAddrPGC') as HTMLSelectElement | null;
-  const chBTC = document.getElementById('chAddrBTC') as HTMLSelectElement | null;
-  const chETH = document.getElementById('chAddrETH') as HTMLSelectElement | null;
-  const csPGC = document.getElementById('csChPGC');
-  const csBTC = document.getElementById('csChBTC');
-  const csETH = document.getElementById('csChETH');
+  const chPGC = document.getElementById(DOM_IDS.chAddrPGC) as HTMLSelectElement | null;
+  const chBTC = document.getElementById(DOM_IDS.chAddrBTC) as HTMLSelectElement | null;
+  const chETH = document.getElementById(DOM_IDS.chAddrETH) as HTMLSelectElement | null;
+  const csPGC = document.getElementById(DOM_IDS.csChPGC);
+  const csBTC = document.getElementById(DOM_IDS.csChBTC);
+  const csETH = document.getElementById(DOM_IDS.csChETH);
   
   bindCustomSelect(csPGC, chPGC);
   bindCustomSelect(csBTC, chBTC);
@@ -1439,13 +1440,13 @@ export { initRecipientCards, initAdvancedOptions };
  */
 export function showWalletSkeletons(): void {
   // 地址列表骨架屏
-  const addrList = document.getElementById('walletAddrList');
+  const addrList = document.getElementById(DOM_IDS.walletAddrList);
   if (addrList && !isShowingSkeleton(addrList)) {
     showAddressListSkeleton(addrList, { count: 3 });
   }
   
   // 转账来源地址骨架屏
-  const srcAddrList = document.getElementById('srcAddrList');
+  const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList && !isShowingSkeleton(srcAddrList)) {
     showSrcAddrSkeleton(srcAddrList, { count: 2 });
   }
@@ -1456,12 +1457,12 @@ export function showWalletSkeletons(): void {
  * 在数据加载完成后调用
  */
 export function hideWalletSkeletons(): void {
-  const addrList = document.getElementById('walletAddrList');
+  const addrList = document.getElementById(DOM_IDS.walletAddrList);
   if (addrList) {
     clearSkeletonState(addrList);
   }
   
-  const srcAddrList = document.getElementById('srcAddrList');
+  const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList) {
     clearSkeletonState(srcAddrList);
   }

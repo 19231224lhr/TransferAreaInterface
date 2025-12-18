@@ -15,6 +15,7 @@ import { t } from '../i18n/index.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants';
 import { escapeHtml } from '../utils/security';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
+import { DOM_IDS, idSelector } from '../config/domIds';
 import {
   createReactiveState,
   type ReactiveState
@@ -155,15 +156,15 @@ let currentSelectedGroup: GroupInfo = DEFAULT_GROUP as GroupInfo;
  * 重置询问页面状态
  */
 export function resetInquiryState(): void {
-  const steps = document.querySelectorAll('#inquirySteps .inquiry-step');
-  const lines = document.querySelectorAll('#inquirySteps .inquiry-step-divider');
-  const progressFill = document.getElementById('inquiryProgressFill');
-  const icon = document.getElementById('inquiryIcon');
-  const title = document.getElementById('inquiryTitle');
-  const desc = document.getElementById('inquiryDesc');
-  const tip = document.getElementById('inquiryTip');
-  const tipText = document.getElementById('inquiryTipText');
-  const page = document.getElementById('inquiryPage');
+  const steps = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step`);
+  const lines = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step-divider`);
+  const progressFill = document.getElementById(DOM_IDS.inquiryProgressFill);
+  const icon = document.getElementById(DOM_IDS.inquiryIcon);
+  const title = document.getElementById(DOM_IDS.inquiryTitle);
+  const desc = document.getElementById(DOM_IDS.inquiryDesc);
+  const tip = document.getElementById(DOM_IDS.inquiryTip);
+  const tipText = document.getElementById(DOM_IDS.inquiryTipText);
+  const page = document.getElementById(DOM_IDS.inquiryPage);
   
   // 重置进度条
   if (progressFill) {
@@ -212,7 +213,7 @@ export function resetInquiryState(): void {
   }
   
   // 重置轨道系统
-  const orbitSystem = document.getElementById('inquiryOrbitSystem');
+  const orbitSystem = document.getElementById(DOM_IDS.inquiryOrbitSystem);
   if (orbitSystem) {
     orbitSystem.classList.remove('success');
   }
@@ -234,11 +235,11 @@ function getStageTexts(): Array<{ title: string; desc: string }> {
  * 更新询问阶段 UI
  */
 function updateInquiryStage(stageIndex: InquiryStage): void {
-  const steps = document.querySelectorAll('#inquirySteps .inquiry-step');
-  const lines = document.querySelectorAll('#inquirySteps .inquiry-step-divider');
-  const progressFill = document.getElementById('inquiryProgressFill');
-  const title = document.getElementById('inquiryTitle');
-  const desc = document.getElementById('inquiryDesc');
+  const steps = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step`);
+  const lines = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step-divider`);
+  const progressFill = document.getElementById(DOM_IDS.inquiryProgressFill);
+  const title = document.getElementById(DOM_IDS.inquiryTitle);
+  const desc = document.getElementById(DOM_IDS.inquiryDesc);
   const stageTexts = getStageTexts();
   
   // 更新进度条
@@ -282,16 +283,16 @@ function updateInquiryStage(stageIndex: InquiryStage): void {
  * 显示成功状态
  */
 function showInquirySuccess(): void {
-  const steps = document.querySelectorAll('#inquirySteps .inquiry-step');
-  const lines = document.querySelectorAll('#inquirySteps .inquiry-step-divider');
-  const progressFill = document.getElementById('inquiryProgressFill');
-  const icon = document.getElementById('inquiryIcon');
-  const title = document.getElementById('inquiryTitle');
-  const desc = document.getElementById('inquiryDesc');
-  const tip = document.getElementById('inquiryTip');
-  const tipText = document.getElementById('inquiryTipText');
-  const page = document.getElementById('inquiryPage');
-  const orbitSystem = document.getElementById('inquiryOrbitSystem');
+  const steps = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step`);
+  const lines = document.querySelectorAll(`${idSelector(DOM_IDS.inquirySteps)} .inquiry-step-divider`);
+  const progressFill = document.getElementById(DOM_IDS.inquiryProgressFill);
+  const icon = document.getElementById(DOM_IDS.inquiryIcon);
+  const title = document.getElementById(DOM_IDS.inquiryTitle);
+  const desc = document.getElementById(DOM_IDS.inquiryDesc);
+  const tip = document.getElementById(DOM_IDS.inquiryTip);
+  const tipText = document.getElementById(DOM_IDS.inquiryTipText);
+  const page = document.getElementById(DOM_IDS.inquiryPage);
+  const orbitSystem = document.getElementById(DOM_IDS.inquiryOrbitSystem);
   const stageTexts = getStageTexts();
   
   // 轨道系统成功状态
@@ -350,7 +351,7 @@ export function startInquiryAnimation(onComplete?: () => void): void {
   // 重置状态
   resetInquiryState();
   
-  const page = document.getElementById('inquiryPage');
+  const page = document.getElementById(DOM_IDS.inquiryPage);
   
   // 阶段 1: 初始化 (0-600ms)
   updateInquiryStage(0);
@@ -421,7 +422,7 @@ function showGroupInfo(group: GroupInfo): void {
   }
   
   // 添加 reveal 动画
-  const sr = document.getElementById('searchResult');
+  const sr = document.getElementById(DOM_IDS.searchResult);
   if (sr) {
     sr.classList.remove('reveal');
     requestAnimationFrame(() => sr.classList.add('reveal'));
@@ -432,7 +433,7 @@ function showGroupInfo(group: GroupInfo): void {
  * 按 ID 搜索组织
  */
 function doSearchById(): void {
-  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
+  const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   const q = groupSearch?.value.trim();
   if (!q) return;
   
@@ -450,8 +451,8 @@ function doSearchById(): void {
  * 处理组织搜索输入
  */
 function handleGroupSearchInput(): void {
-  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
-  const groupSuggest = document.getElementById('groupSuggest');
+  const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
+  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
   const q = groupSearch?.value.trim() || '';
   
   const err = quickValidate(q, ['required', 'orgId']);
@@ -555,8 +556,8 @@ function handleJoinRecClick(): void {
  * 处理加入搜索结果组织
  */
 async function handleJoinSearchClick(): Promise<void> {
-  const joinSearchBtn = document.getElementById('joinSearchBtn') as HTMLButtonElement | null;
-  const joinRecBtn = document.getElementById('joinRecBtn') as HTMLButtonElement | null;
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
+  const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
   
   if (joinSearchBtn?.disabled) return;
   
@@ -615,7 +616,7 @@ async function handleJoinSearchClick(): Promise<void> {
  * 处理跳过加入
  */
 function handleSkipClick(): void {
-  const modal = document.getElementById('confirmSkipModal');
+  const modal = document.getElementById(DOM_IDS.confirmSkipModal);
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -627,8 +628,8 @@ function handleTabClick(e: MouseEvent): void {
   const target = tab.getAttribute('data-tab');
   const joinTabs = document.querySelectorAll('.join-tab');
   const tabsContainer = document.querySelector('.join-tabs');
-  const recPane = document.getElementById('recPane');
-  const searchPane = document.getElementById('searchPane');
+  const recPane = document.getElementById(DOM_IDS.recPane);
+  const searchPane = document.getElementById(DOM_IDS.searchPane);
   
   // 更新标签状态
   joinTabs.forEach(t => t.classList.remove('join-tab--active'));
@@ -659,12 +660,12 @@ function handleTabClick(e: MouseEvent): void {
 function resetTabsAndPanes(): void {
   const joinTabs = document.querySelectorAll('.join-tab');
   const tabsContainer = document.querySelector('.join-tabs');
-  const recPane = document.getElementById('recPane');
-  const searchPane = document.getElementById('searchPane');
-  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
-  const groupSuggest = document.getElementById('groupSuggest');
-  const searchResult = document.getElementById('searchResult');
-  const searchEmpty = document.getElementById('searchEmpty');
+  const recPane = document.getElementById(DOM_IDS.recPane);
+  const searchPane = document.getElementById(DOM_IDS.searchPane);
+  const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
+  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
+  const searchResult = document.getElementById(DOM_IDS.searchResult);
+  const searchEmpty = document.getElementById(DOM_IDS.searchEmpty);
   
   // 重置标签状态 - 选中推荐标签
   joinTabs.forEach((tab, index) => {
@@ -760,11 +761,11 @@ function initJoinTabs(): void {
  * 初始化组织搜索
  */
 function initGroupSearch(): void {
-  const groupSearch = document.getElementById('groupSearch') as HTMLInputElement | null;
-  const groupSuggest = document.getElementById('groupSuggest');
+  const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
+  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
   
   // 添加表单验证
-  addInlineValidation('#groupSearch', [
+  addInlineValidation(idSelector(DOM_IDS.groupSearch), [
     { validator: 'required', message: t('validation.orgIdRequired') || '请输入组织ID' },
     { validator: 'orgId', message: t('validation.orgIdFormat') || '需8位数字' }
   ], { showOnInput: true, debounceMs: 150 });
@@ -793,15 +794,15 @@ function bindEvents(): void {
   initGroupSearch();
   
   // 加入推荐组织按钮
-  const joinRecBtn = document.getElementById('joinRecBtn');
+  const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn);
   addEvent(joinRecBtn, 'click', handleJoinRecClick);
   
   // 加入搜索结果组织按钮
-  const joinSearchBtn = document.getElementById('joinSearchBtn');
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn);
   addEvent(joinSearchBtn, 'click', handleJoinSearchClick);
   
   // 跳过按钮
-  const skipJoinBtn = document.getElementById('skipJoinBtn');
+  const skipJoinBtn = document.getElementById(DOM_IDS.skipJoinBtn);
   addEvent(skipJoinBtn, 'click', handleSkipClick);
 }
 
