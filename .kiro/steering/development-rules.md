@@ -152,6 +152,81 @@ container.innerHTML = `<div class="card"><h2>${userName}</h2></div>`;  // XSS �
 - ✅ **骨架屏必须包含 ARIA 标签和 role 属性**
 - ❌ **禁止使用简单的 "加载中..." 文本或 spinner**
 
+### 9. Blockchain Type Safety (区块链类型安全规范) ✅ NEW
+
+**使用 `js/types/blockchain.ts` 中的严格类型定义**
+
+为了确保前后端类型一致性和编译时类型检查：
+
+- ✅ **UTXO 数据必须使用 `UTXOData` 类型**
+- ✅ **交易数据必须使用 `Transaction` 类型**
+- ✅ **交易输出必须使用 `TXOutput` 类型**
+- ✅ **使用类型守卫进行运行时类型检查**
+- ❌ **禁止使用 `Record<string, any>` 或 `Record<string, unknown>` 存储 UTXO/交易数据**
+
+```typescript
+// ✅ 正确（使用严格类型）
+import { UTXOData, TXOutput, isUTXOData } from '../types/blockchain';
+
+interface AddressData {
+  utxos: Record<string, UTXOData>;  // ✅ 严格 UTXO 类型
+  txCers: Record<string, number>;   // ✅ TXCer ID -> 金额映射
+}
+
+// 类型安全的访问
+const utxoValue = addressData.utxos[key].Value;  // TypeScript 知道类型
+
+// 运行时类型检查
+if (isUTXOData(obj)) {
+  console.log(obj.Value, obj.Type);
+}
+
+// ❌ 错误（使用 any 或 unknown）
+interface AddressData {
+  utxos: Record<string, any>;       // ❌ 禁止！
+  txCers: Record<string, unknown>;  // ❌ 禁止！
+}
+```
+
+### 10. unsafeHTML Usage (unsafeHTML 使用规范) ✅ NEW
+
+**仅对受信任的 HTML 内容使用 `unsafeHTML`**
+
+lit-html 默认自动转义所有变量以防止 XSS 攻击。`unsafeHTML` 会绕过此保护，仅用于受信任的内容：
+
+- ✅ **来自其他模块的预渲染 HTML（如 `renderTransactionDetail()`）**
+- ✅ **服务端返回的已消毒 HTML**
+- ✅ **内部生成的静态 HTML 片段**
+- ❌ **禁止用于用户输入内容**
+- ❌ **禁止用于未经验证的外部数据**
+
+```typescript
+import { html, renderInto, unsafeHTML } from './utils/view';
+
+// ✅ 正确（受信任的预渲染 HTML）
+const trustedHtml = renderTransactionDetail(tx);  // 内部模块生成
+renderInto(container, html`
+  <div class="detail">
+    ${unsafeHTML(trustedHtml)}
+  </div>
+`);
+
+// ❌ 错误（用户输入）
+const userInput = getUserComment();
+renderInto(container, html`
+  <div class="comment">
+    ${unsafeHTML(userInput)}  // ❌ XSS 风险！
+  </div>
+`);
+
+// ✅ 正确（用户输入应使用默认转义）
+renderInto(container, html`
+  <div class="comment">
+    ${userInput}  // ✅ 自动转义
+  </div>
+`);
+```
+
 ```typescript
 // ✅ 正确（使用 DOM_IDS 常量）
 import { DOM_IDS, idSelector } from '../config/domIds';
@@ -779,7 +854,7 @@ state.set({
 
 ## ✅ 总结
 
-**记住这九个核心原则：**
+**记住这十一个核心原则：**
 
 1. 🎯 **新代码 = TypeScript**
    - 所有新文件必须是 `.ts`
@@ -813,9 +888,17 @@ state.set({
    - 使用 `walletSkeleton.ts` 工具
    - 禁止简单的 "加载中..." 文本
 
-9. 🔍 **提交前 = 类型检查**
-   - 运行 `npm run typecheck`
-   - 修复所有错误
+9. 🔗 **区块链数据 = 严格类型**
+   - 使用 `js/types/blockchain.ts` 中的类型
+   - 禁止 `Record<string, any>` 存储 UTXO/交易
+
+10. ⚠️ **受信任 HTML = unsafeHTML**
+    - 仅用于内部预渲染的 HTML
+    - 禁止用于用户输入
+
+11. 🔍 **提交前 = 类型检查**
+    - 运行 `npm run typecheck`
+    - 修复所有错误
 
 ---
 

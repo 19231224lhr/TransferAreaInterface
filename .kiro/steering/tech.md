@@ -116,6 +116,9 @@ go run ./backend/verify_tx
 - `js/globals.d.ts` - Global type declarations
 - `js/types.js` - JSDoc type definitions
 
+**Types (类型定义):** 🆕
+- `js/types/blockchain.ts` - 区块链核心类型定义 (UTXO, Transaction, TXOutput 等)
+
 ### TypeScript Modules (已迁移)
 
 **Core (核心模块):** 🆕
@@ -341,32 +344,119 @@ type ActionHandler = (
 
 ---
 
+## Blockchain Type Definitions (区块链类型定义) 🆕
+
+### Overview
+
+项目使用严格的 TypeScript 接口定义区块链核心数据结构，完全匹配后端 Go 代码结构，确保前后端类型一致性。
+
+### Core File
+
+`js/types/blockchain.ts`
+
+### Key Types
+
+| Type | Description | Go Equivalent |
+|------|-------------|---------------|
+| `UTXOData` | UTXO 数据结构 | `UTXO.go` |
+| `Transaction` | 完整交易结构 | `Transaction.go` |
+| `TXInputNormal` | 常规交易输入 | `Transaction.go` |
+| `TXOutput` | 交易输出 | `Transaction.go` |
+| `TxPosition` | 交易位置信息 | `Transaction.go` |
+| `InterestAssign` | Gas 费用分配 | `Transaction.go` |
+| `SubATX` | 聚合交易结构 | `Transaction.go` |
+| `BuildTXInfo` | 交易构造信息 | `SendTX.go` |
+| `EcdsaSignature` | ECDSA 签名 | `core.go` |
+| `PublicKeyNew` | 公钥结构 | `Account.go` |
+
+### Type Hierarchy
+
+```
+UTXOData (UTXO 数据)
+├── UTXO: SubATX (来源交易)
+│   ├── TXID: string
+│   ├── TXType: number
+│   ├── TXInputsNormal: TXInputNormal[]
+│   ├── TXOutputs: TXOutput[]
+│   └── InterestAssign: InterestAssign
+├── Value: number (金额)
+├── Type: number (货币类型: 0=PGC, 1=BTC, 2=ETH)
+├── Time: number (时间戳)
+├── Position: TxPosition (位置)
+└── IsTXCerUTXO: boolean (是否为 TXCer)
+```
+
+### Type Guards
+
+提供运行时类型检查函数：
+
+```typescript
+import { isUTXOData, isTXOutput, isTransaction } from '../types/blockchain';
+
+// 检查是否为 UTXOData
+if (isUTXOData(obj)) {
+  console.log(obj.Value, obj.Type, obj.UTXO.TXID);
+}
+
+// 检查是否为 TXOutput
+if (isTXOutput(obj)) {
+  console.log(obj.ToAddress, obj.ToValue);
+}
+
+// 检查是否为 Transaction
+if (isTransaction(obj)) {
+  console.log(obj.TXID, obj.TXType);
+}
+```
+
+### Usage in Storage
+
+```typescript
+// js/utils/storage.ts
+import { UTXOData } from '../types/blockchain';
+
+export interface AddressData {
+  utxos: Record<string, UTXOData>;  // ✅ 严格 UTXO 类型
+  txCers: Record<string, number>;   // TXCer ID -> 金额映射
+  // ...
+}
+```
+
+### Benefits
+
+- ✅ **编译时类型检查**: TypeScript 捕获 UTXO 和交易相关的类型错误
+- ✅ **智能提示**: IDE 提供精确的字段建议
+- ✅ **后端对接顺畅**: 前后端类型定义完全匹配
+- ✅ **消除类型断言**: 无需频繁使用 `as any` 或 `as unknown`
+
+---
+
 ## Type Safety & Window Escape Hatches (类型安全与 Window 逃生舱)
 
 ### Overview
 
-项目已大幅减少 `window as any` 逃生舱的使用，但仍有少量遗留代码需要逐步迁移。
+项目已大幅减少 `window as any` 逃生舱的使用，大部分已迁移到命名空间或添加了类型定义。
 
-### Current Status (当前状态)
+### Current Status (当前状态) ✅ 2025年12月更新
 
 **已消除的逃生舱：**
 - ✅ 所有公共 API 已迁移到 `window.PanguPay` 命名空间
 - ✅ 事件处理器已迁移到事件委托系统
 - ✅ DOM ID 已迁移到集中管理
+- ✅ `utils/templateLoader.ts` - 已迁移到 `window.PanguPay.i18n.updatePageTranslations`
+- ✅ `utils/security.ts` - 已迁移到 `window.t`（已添加类型定义）
+- ✅ `utils/pageManager.ts` - 已迁移到 `window.PanguPay.charts.cleanupNetworkChart/cleanupWalletChart`
+- ✅ `utils/enhancedRouter.ts` - 已添加 `window.requestIdleCallback` 类型定义
+- ✅ `utils/crypto.ts` - 已添加 `window.elliptic` 类型定义
+- ✅ `services/account.ts` - 已添加 `window.elliptic` 类型定义
+- ✅ 所有 UTXO/交易相关的 `any` 类型已替换为严格的 `blockchain.ts` 类型
 
-**剩余的逃生舱（需要逐步迁移）：**
+**剩余的逃生舱（低优先级）：**
 
-| File | Usage | Reason | Migration Plan |
-|------|-------|--------|----------------|
-| `utils/templateLoader.ts` | `(window as any).updatePageTranslations` | 调用全局 i18n 函数 | 使用 `window.PanguPay.i18n.updatePageTranslations` |
-| `utils/security.ts` | `(window as any).t` | 获取翻译函数 | 使用 `window.PanguPay.i18n.t` |
-| `utils/pageManager.ts` | `(window as any).cleanupNetworkChart` | 清理图表资源 | 使用 `window.PanguPay.charts.cleanupNetworkChart` |
-| `utils/pageManager.ts` | `(window as any).cleanupWalletChart` | 清理图表资源 | 使用 `window.PanguPay.charts.cleanupWalletChart` |
-| `utils/enhancedRouter.ts` | `(window as any).requestIdleCallback` | 使用浏览器 API | 添加到 `globals.d.ts` 类型定义 |
-| `utils/crypto.ts` | `(window as any).elliptic` | 使用第三方库 | 添加到 `globals.d.ts` 类型定义 |
-| `services/account.ts` | `(window as any).elliptic` | 使用第三方库 | 添加到 `globals.d.ts` 类型定义 |
-| `services/transferDraft.ts` | `(window as any).computeCurrentOrgId` | 调用全局函数 | 重构为模块导出 |
-| `services/transferDraft.ts` | `(window as any).t` | 获取翻译函数 | 使用 `window.PanguPay.i18n.t` |
+| File | Usage | Reason | Status |
+|------|-------|--------|--------|
+| `services/transferDraft.ts` | `(window as any).computeCurrentOrgId` | 调用全局函数 | 可重构为模块导出 |
+| `services/transferDraft.ts` | `(window as any).t` | 获取翻译函数 | 可迁移到命名空间 |
 
 ### Migration Guidelines (迁移指南)
 
@@ -408,15 +498,17 @@ if (window.requestIdleCallback) {
 
 ---
 
-## State Persistence System (状态持久化系统) 🆕
+## State Persistence System (状态持久化系统 - SSOT 架构) 🆕
 
 ### Overview
 
-解决状态管理"脑裂"问题：Store 是唯一的事实来源，localStorage 仅用于持久化。
+解决状态管理"脑裂"问题：Store 是唯一的事实来源 (Single Source of Truth)，localStorage 仅用于持久化。
 
-### Core File
+### Core Files
 
-`js/utils/statePersistence.ts`
+- `js/utils/statePersistence.ts` - Store → localStorage 自动同步
+- `js/utils/storage.ts` - 存储层 API（已重构为 Store-first）
+- `js/utils/store.js` - 状态管理核心
 
 ### Key Functions
 
@@ -425,19 +517,52 @@ if (window.requestIdleCallback) {
 | `initUserPersistence()` | 启动 Store → localStorage 自动同步 |
 | `flushUserPersistence()` | 立即刷新持久化（用于 beforeunload） |
 | `stopUserPersistence()` | 停止持久化监听 |
+| `initUserStateFromStorage()` | 启动时从 localStorage 水合 Store（一次性） |
+| `persistUserToStorage(user)` | 将 Store 状态持久化到 localStorage |
+
+### SSOT Architecture (单一数据源架构)
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Application Layer                        │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐        │
+│  │ Pages   │  │ Services│  │   UI    │  │  Utils  │        │
+│  └────┬────┘  └────┬────┘  └────┬────┘  └────┬────┘        │
+│       │            │            │            │              │
+│       └────────────┴────────────┴────────────┘              │
+│                         │                                   │
+│                         ▼                                   │
+│              ┌─────────────────────┐                        │
+│              │   Store (SSOT)      │  ← 唯一的事实来源      │
+│              │   store.getState()  │                        │
+│              │   store.setState()  │                        │
+│              └──────────┬──────────┘                        │
+│                         │                                   │
+│                         ▼                                   │
+│              ┌─────────────────────┐                        │
+│              │ statePersistence.ts │  ← 自动同步（防抖）    │
+│              └──────────┬──────────┘                        │
+│                         │                                   │
+│                         ▼                                   │
+│              ┌─────────────────────┐                        │
+│              │    localStorage     │  ← 仅用于持久化        │
+│              └─────────────────────┘                        │
+└─────────────────────────────────────────────────────────────┘
+```
 
 ### Design Principles
 
-1. **Single Source of Truth**: Store 是唯一的事实来源
-2. **Hydration Once**: 启动时从 localStorage 水合一次
-3. **Debounced Persistence**: 防抖写入，避免频繁 I/O
-4. **Lifecycle Hooks**: beforeunload/visibilitychange 时刷新
+1. **Single Source of Truth**: Store 是唯一的事实来源，所有组件从 Store 读取状态
+2. **Hydration Once**: 启动时从 localStorage 水合一次，之后不再直接读取
+3. **Debounced Persistence**: 防抖写入（200ms），避免频繁 I/O
+4. **Lifecycle Hooks**: beforeunload/visibilitychange 时立即刷新
 
 ### Usage
 
 ```typescript
 // 在 bootstrap.ts 中初始化
 import { initUserPersistence } from './utils/statePersistence';
+import { initUserStateFromStorage } from './utils/storage';
 
 // 1. 从 localStorage 水合 Store（一次性）
 const hydratedUser = initUserStateFromStorage();
@@ -446,8 +571,29 @@ const hydratedUser = initUserStateFromStorage();
 initUserPersistence();
 
 // 之后所有状态变更通过 Store
+import { store, setUser, selectUser } from './utils/store.js';
+
+// 读取状态
+const user = selectUser(store.getState());
+
+// 更新状态（自动持久化到 localStorage）
+setUser(newUser);
+// 或
 store.setState({ user: newUser });
-// localStorage 自动同步（防抖 200ms）
+```
+
+### Migration from Direct localStorage Access
+
+```typescript
+// ❌ 旧代码（直接操作 localStorage）
+localStorage.setItem('user', JSON.stringify(user));
+const user = JSON.parse(localStorage.getItem('user'));
+
+// ✅ 新代码（通过 Store）
+import { store, setUser, selectUser } from './utils/store.js';
+
+setUser(user);  // 自动持久化
+const user = selectUser(store.getState());  // 从 Store 读取
 ```
 
 ---
@@ -470,12 +616,13 @@ store.setState({ user: newUser });
 | `svg` | SVG 模板标签 |
 | `render` | 渲染到容器 |
 | `nothing` | 空内容占位符 |
+| `unsafeHTML` | 🆕 渲染受信任的 HTML 字符串 |
 | `renderInto(target, content)` | 安全渲染封装 |
 
 ### Usage
 
 ```typescript
-import { html, renderInto } from './utils/view';
+import { html, renderInto, unsafeHTML } from './utils/view';
 
 // 安全渲染（自动转义）
 renderInto(container, html`
@@ -485,7 +632,29 @@ renderInto(container, html`
     <button data-action="edit">编辑</button>
   </div>
 `);
+
+// 渲染受信任的 HTML 字符串（如来自其他模块的预渲染内容）
+const trustedHtml = renderTransactionDetail(tx);  // 返回 HTML 字符串
+renderInto(container, html`
+  <div class="detail">
+    ${unsafeHTML(trustedHtml)}
+  </div>
+`);
 ```
+
+### unsafeHTML 使用规范
+
+**⚠️ 重要**: `unsafeHTML` 会绕过 lit-html 的自动转义，仅用于受信任的 HTML 内容。
+
+**✅ 适用场景:**
+- 来自其他模块的预渲染 HTML（如 `renderTransactionDetail()`）
+- 服务端返回的已消毒 HTML
+- 内部生成的静态 HTML 片段
+
+**❌ 禁止场景:**
+- 用户输入内容
+- 未经验证的外部数据
+- 任何可能包含恶意脚本的内容
 
 ### Benefits
 
@@ -493,6 +662,7 @@ renderInto(container, html`
 - ✅ 高效 DOM 更新（差异更新）
 - ✅ 类型安全的模板
 - ✅ 与事件委托系统配合使用
+- ✅ 支持受信任 HTML 的安全渲染
 
 ---
 

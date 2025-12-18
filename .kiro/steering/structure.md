@@ -73,6 +73,9 @@ TransferAreaInterface/
 │   │   ├── eventDelegate.ts # 全局事件委托系统
 │   │   └── types.ts        # 命名空间类型定义
 │   │
+│   ├── types/              # 🆕 TypeScript 类型定义
+│   │   └── blockchain.ts   # 区块链核心类型 (UTXO, Transaction, TXOutput 等)
+│   │
 │   ├── api/                # API client modules (TypeScript only)
 │   │   ├── client.ts       # Base API client with secureFetch
 │   │   ├── account.ts      # Account-related API endpoints
@@ -266,6 +269,24 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - 新增 `js/utils/statePersistence.ts` - 解决状态管理"脑裂"问题
 - 新增 `js/utils/view.ts` - 安全 DOM 渲染 (lit-html 封装)
 
+**Type Safety Improvements (2025):** ✅ 已完成
+- 🆕 `js/types/blockchain.ts` - 区块链核心类型定义，完全匹配后端 Go 结构
+- 严格的 UTXO、Transaction、TXOutput 等类型定义
+- 类型守卫函数 (`isUTXOData`, `isTXOutput`, `isTransaction`)
+- 消除了所有 UTXO 相关的 `unknown` 和 `any` 类型
+- 更新了 `storage.ts`, `wallet.ts`, `transaction.ts`, `transfer.ts`, `account.ts`, `header.ts`
+
+**lit-html Full Adoption (2025):** ✅ 已完成
+- `js/utils/view.ts` 新增 `unsafeHTML` 导出
+- 用于渲染受信任的 HTML 字符串（如预渲染的交易详情）
+- 修复了 history 页面交易详情显示原始 HTML 的问题
+
+**SSOT Architecture (2025):** ✅ 已完成
+- Store 成为唯一的事实来源 (Single Source of Truth)
+- `js/utils/storage.ts` 重构为 Store-first API
+- `js/utils/statePersistence.ts` 处理 Store → localStorage 自动同步
+- 解决了状态管理"脑裂"问题
+
 **Reactive UI Binding (2025):** ✅ 已完成
 - `js/utils/reactive.ts` - 轻量级响应式绑定系统 (456 行)
 - 声明式 UI 绑定，状态变化自动同步 DOM
@@ -315,6 +336,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | Directory | Purpose | Language | Status |
 |-----------|---------|----------|--------|
 | `js/core/` | 命名空间 + 事件委托 | **TypeScript only** | 🆕 New |
+| `js/types/` | 🆕 类型定义 (区块链等) | **TypeScript only** | 🆕 New |
 | `js/api/` | API client modules | **TypeScript only** | ✅ Migrated |
 | `js/config/` | Configuration constants | TypeScript | ✅ Migrated |
 | `js/services/` | Business logic | TypeScript | ✅ Migrated |
@@ -325,6 +347,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 
 **Important Notes:**
 - 🆕 `js/core/` - **核心模块：命名空间定义 + 事件委托系统** (TypeScript only)
+- 🆕 `js/types/` - **类型定义：区块链核心类型 (UTXO, Transaction 等)** (TypeScript only)
 - 🆕 `js/bootstrap.ts` - **应用启动和生命周期管理**
 - 🆕 `js/router.ts` - **路由系统 (从 router.js 迁移)**
 - ✅ All new code MUST be written in TypeScript
@@ -346,6 +369,7 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | **`js/core/namespace.ts`** | **🆕 PanguPay 命名空间定义** |
 | **`js/core/eventDelegate.ts`** | **🆕 全局事件委托系统** |
 | **`js/core/types.ts`** | **🆕 命名空间类型定义** |
+| **`js/types/blockchain.ts`** | **🆕 区块链核心类型定义 (UTXO, Transaction, TXOutput 等)** |
 | `js/api/client.ts` | Base API client with secureFetch |
 | `js/api/account.ts` | Account API endpoints |
 | `js/api/types.ts` | API request/response types |
