@@ -432,8 +432,8 @@ export async function router(): Promise<void> {
 
         candidate(() => {
           const u3 = loadUser();
-          if (u3 && (u3 as any).accountId) {
-            saveUser({ accountId: (u3 as any).accountId, orgNumber: '10000000' } as any);
+          if (u3 && u3.accountId) {
+            saveUser({ accountId: u3.accountId, orgNumber: '10000000' });
           }
           routeTo('#/main');
         });

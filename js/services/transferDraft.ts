@@ -100,7 +100,7 @@ function clearRecipients(): void {
   const billList = document.getElementById(DOM_IDS.billList);
   if (!billList) return;
   billList.replaceChildren();
-  delete (billList as any).dataset._recipientBind;
+  delete billList.dataset._recipientBind;
 }
 
 async function ensureRecipientCards(count: number): Promise<void> {
@@ -108,9 +108,10 @@ async function ensureRecipientCards(count: number): Promise<void> {
   if (!billList) return;
 
   const recipientModule = await import('./recipient.js');
-  const computeCurrentOrgId = () => {
-    if (typeof (window as any).computeCurrentOrgId === 'function') return (window as any).computeCurrentOrgId();
-    return '';
+  const computeCurrentOrgId = (): string => {
+    // Use PanguPay namespace if available, otherwise return empty string
+    const guarGroup = window.PanguPay?.storage?.getJoinedGroup?.();
+    return guarGroup?.groupID || '';
   };
 
   while (billList.querySelectorAll('.recipient-card').length < count) {
@@ -173,7 +174,7 @@ function applyRecipients(recipients: RecipientDraft[]): Promise<void> {
         card.classList.add('expanded');
         const expandBtn = card.querySelector<HTMLElement>('[data-role="expand"]');
         const label = expandBtn?.querySelector<HTMLElement>('span');
-        if (label) label.textContent = (window as any).t ? (window as any).t('transfer.collapseOptions') : '收起选项';
+        if (label) label.textContent = window.PanguPay?.i18n?.t?.('transfer.collapseOptions') || '收起选项';
       } else {
         card.classList.remove('expanded');
       }

@@ -216,9 +216,9 @@ function computePublicKeyFromPrivate(privHex: string): { x: string; y: string } 
   }
   
   // Try to use elliptic library if available (faster and more tested)
-  if ((window as any).elliptic && (window as any).elliptic.ec) {
+  if (window.elliptic?.ec) {
     try {
-      const EC = (window as any).elliptic.ec;
+      const EC = window.elliptic.ec;
       const ec = new EC('p256');
       const keyPair = ec.keyFromPrivate(normalizedPrivHex, 'hex');
       const pubPoint = keyPair.getPublic();

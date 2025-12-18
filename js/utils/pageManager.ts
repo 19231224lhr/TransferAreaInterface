@@ -304,19 +304,21 @@ class PageContainerManager {
 
         // Special cleanup for wallet page (main)
         if (pageId === 'main' || pageId === 'wallet') {
-            // Cleanup network chart resources
-            if (typeof (window as any).cleanupNetworkChart === 'function') {
+            // Cleanup network chart resources (prefer namespace, fallback to window)
+            const cleanupNetwork = window.PanguPay?.charts?.cleanupNetworkChart ?? window.cleanupNetworkChart;
+            if (typeof cleanupNetwork === 'function') {
                 try {
-                    (window as any).cleanupNetworkChart();
+                    cleanupNetwork();
                 } catch (err) {
                     console.error('[PageManager] Failed to cleanup network chart:', err);
                 }
             }
             
-            // Cleanup wallet chart resources
-            if (typeof (window as any).cleanupWalletChart === 'function') {
+            // Cleanup wallet chart resources (prefer namespace, fallback to window)
+            const cleanupWallet = window.PanguPay?.charts?.cleanupWalletChart;
+            if (typeof cleanupWallet === 'function') {
                 try {
-                    (window as any).cleanupWalletChart();
+                    cleanupWallet();
                 } catch (err) {
                     console.error('[PageManager] Failed to cleanup wallet chart:', err);
                 }

@@ -17,8 +17,9 @@ let _t: ((key: string, fallback?: string) => string) | null = null;
 function getT(): (key: string, fallback?: string) => string {
   if (!_t) {
     try {
-      // Dynamic import would be better but we use lazy evaluation
-      const i18n = (window as any).t;
+      // Prefer namespace, fallback to window.t
+      // Note: window.t signature is (key, paramsOrDefault) which is compatible
+      const i18n = window.t;
       if (typeof i18n === 'function') {
         _t = i18n;
       }

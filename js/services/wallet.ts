@@ -37,22 +37,43 @@ import {
 // Types
 // ============================================================================
 
+interface AddressValue {
+  totalValue?: number;
+  TotalValue?: number;
+  utxoValue?: number;
+  txCerValue?: number;
+}
+
 interface AddressMetadata {
   type?: number;
-  value?: {
-    totalValue?: number;
-    TotalValue?: number;
-    utxoValue?: number;
-    txCerValue?: number;
-  };
+  value?: AddressValue;
   utxos?: Record<string, unknown>;
   txCers?: Record<string, unknown>;
   estInterest?: number;
   gas?: number;
   origin?: string;
+  /** Private key hex for this address (imported addresses) */
   privHex?: string;
+  /** Public key X coordinate hex */
   pubXHex?: string;
+  /** Public key Y coordinate hex */
   pubYHex?: string;
+}
+
+/**
+ * Extended Wallet interface with both camelCase and PascalCase fields
+ * for backward compatibility with backend API responses
+ */
+interface ExtendedWallet {
+  addressMsg: Record<string, AddressMetadata>;
+  totalTXCers?: Record<string, unknown>;
+  totalValue?: number;
+  TotalValue?: number;
+  valueDivision?: Record<number, number>;
+  ValueDivision?: Record<number, number>;
+  updateTime?: number;
+  updateBlock?: number;
+  history?: Array<{ t: number; v: number }>;
 }
 
 interface WalletSnapshot {
@@ -525,8 +546,9 @@ export function handleExportPrivateKey(address: string): void {
       }
     }
     
-    if (found && (found as any).privHex) {
-      priv = (found as any).privHex || '';
+    // AddressMetadata interface includes privHex field
+    if (found && found.privHex) {
+      priv = found.privHex;
     } else if (u.address && String(u.address).toLowerCase() === key) {
       priv = (u.keys?.privHex) || u.privHex || '';
     }
@@ -704,14 +726,17 @@ function recalculateWalletValue(u: User): void {
     }
   });
   u.wallet.valueDivision = sumVD;
-  (u.wallet as any).ValueDivision = sumVD;
+  // Also set PascalCase version for backward compatibility with backend API
+  const extWallet = u.wallet as ExtendedWallet;
+  extWallet.ValueDivision = sumVD;
 
   const pgcTotal = Number(sumVD[0] || 0);
   const btcTotal = Number(sumVD[1] || 0);
   const ethTotal = Number(sumVD[2] || 0);
   const valueTotalPGC = pgcTotal + btcTotal * 1000000 + ethTotal * 1000;
   u.wallet.totalValue = valueTotalPGC;
-  (u.wallet as any).TotalValue = valueTotalPGC;
+  // Also set PascalCase version for backward compatibility
+  extWallet.TotalValue = valueTotalPGC;
 }
 
 
@@ -913,9 +938,11 @@ async function importAddressInPlace(priv: string): Promise<void> {
     };
     
     const normPriv = (data.privHex || priv).replace(/^0x/i, '');
-    (acc.wallet.addressMsg[addr] as any).privHex = normPriv;
-    (acc.wallet.addressMsg[addr] as any).pubXHex = data.pubXHex || '';
-    (acc.wallet.addressMsg[addr] as any).pubYHex = data.pubYHex || '';
+    // AddressMetadata interface includes these fields
+    const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
+    addrMeta.privHex = normPriv;
+    addrMeta.pubXHex = data.pubXHex || '';
+    addrMeta.pubYHex = data.pubYHex || '';
     
     saveUser(acc);
     

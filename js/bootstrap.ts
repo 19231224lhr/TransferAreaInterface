@@ -6,7 +6,7 @@
  */
 
 import { t, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
-import { initUserStateFromStorage } from './utils/storage';
+import { initUserStateFromStorage, User } from './utils/storage';
 import { showErrorToast } from './utils/toast.js';
 import { initErrorBoundary } from './utils/security';
 import performanceModeManager from './utils/performanceMode.js';
@@ -324,9 +324,9 @@ function init(): void {
     let scheduled = false;
     const flushUi = () => {
       scheduled = false;
-      const u = selectUser(store.getState());
+      const u = selectUser(store.getState()) as User | null;
       try {
-        updateHeaderUser(u as any);
+        updateHeaderUser(u);
       } catch {
         // ignore
       }
@@ -342,12 +342,12 @@ function init(): void {
       try { pp?.wallet?.updateWalletBrief?.(); } catch { }
 
       // Charts
-      try { pp?.charts?.updateWalletChart?.(u as any); } catch { }
+      try { pp?.charts?.updateWalletChart?.(u); } catch { }
     };
 
     store.subscribe((state, prev) => {
-      const nextUser = (state as any).user;
-      const prevUser = (prev as any).user;
+      const nextUser = state.user;
+      const prevUser = prev.user;
       if (nextUser === prevUser) return;
       if (scheduled) return;
       scheduled = true;
@@ -361,7 +361,7 @@ function init(): void {
   // Initial paint from hydrated user
   requestAnimationFrame(() => {
     try {
-      updateHeaderUser(hydratedUser as any);
+      updateHeaderUser(hydratedUser);
     } catch {
       // ignore
     }
@@ -369,7 +369,7 @@ function init(): void {
 
   // Screen lock init (best-effort)
   requestAnimationFrame(() => {
-    const u = selectUser(store.getState()) as any;
+    const u = selectUser(store.getState()) as User | null;
     if (u && u.accountId) {
       initScreenLock({
         lockOnStart: true,

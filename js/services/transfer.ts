@@ -134,7 +134,7 @@ export function initTransferSubmit(): void {
   const txGasInput = document.getElementById(DOM_IDS.txGasInput) as HTMLInputElement | null;
   const txErr = document.getElementById(DOM_IDS.txError);
   
-  if (!tfBtn || (tfBtn as any).dataset._bind) return;
+  if (!tfBtn || tfBtn.dataset._bind) return;
   
   // Create submission guard to prevent double-submit
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
@@ -170,7 +170,7 @@ export function initTransferSubmit(): void {
     const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
     const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
     const snapViewBuild = viewBuildInfoBtn ? createDOMSnapshot(viewBuildInfoBtn) : null;
-    const snapBuildBtn = buildTxBtn ? createDOMSnapshot(buildTxBtn as any) : null;
+    const snapBuildBtn = buildTxBtn ? createDOMSnapshot(buildTxBtn) : null;
 
     try {
       const { walletMap, walletGasTotal } = getWalletSnapshot();
@@ -492,14 +492,14 @@ export function initTransferSubmit(): void {
         txResultActions.classList.remove('hidden');
         const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
         if (viewBuildInfoBtn) {
-          (viewBuildInfoBtn as any).dataset.txData = JSON.stringify(build, null, 2);
+          viewBuildInfoBtn.dataset.txData = JSON.stringify(build, null, 2);
         }
       }
 
       // Show "Build Transaction" button and save BuildTXInfo
       if (buildTxBtn) {
         buildTxBtn.classList.remove('hidden');
-        (buildTxBtn as any).dataset.buildInfo = JSON.stringify(build);
+        buildTxBtn.dataset.buildInfo = JSON.stringify(build);
       }
     } catch (err: any) {
       // Restore stable UI state and storage snapshot
@@ -526,7 +526,7 @@ export function initTransferSubmit(): void {
     }
   });
   
-  (tfBtn as any).dataset._bind = '1';
+  tfBtn.dataset._bind = '1';
 }
 
 /**
@@ -534,7 +534,7 @@ export function initTransferSubmit(): void {
  */
 export function initBuildTransaction(): void {
   const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn) as HTMLButtonElement | null;
-  if (!buildTxBtn || (buildTxBtn as any).dataset._buildBind) return;
+  if (!buildTxBtn || buildTxBtn.dataset._buildBind) return;
   
   buildTxBtn.addEventListener('click', async () => {
     const checkpointId = `transfer-build-${Date.now()}`;
@@ -546,7 +546,7 @@ export function initBuildTransaction(): void {
     const loadingId = showLoading(t('toast.buildingTx'));
 
     try {
-      const buildInfoStr = (buildTxBtn as any).dataset.buildInfo || '{}';
+      const buildInfoStr = buildTxBtn.dataset.buildInfo || '{}';
       const buildInfo: BuildTXInfo = JSON.parse(buildInfoStr);
       const user = loadUser();
 
@@ -561,7 +561,7 @@ export function initBuildTransaction(): void {
       // Save transaction data and show view button
       const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
       if (viewTxInfoBtn) {
-        (viewTxInfoBtn as any).dataset.txData = JSON.stringify(transaction, null, 2);
+        viewTxInfoBtn.dataset.txData = JSON.stringify(transaction, null, 2);
         viewTxInfoBtn.classList.remove('hidden');
       }
 
@@ -580,5 +580,5 @@ export function initBuildTransaction(): void {
     }
   });
   
-  (buildTxBtn as any).dataset._buildBind = '1';
+  buildTxBtn.dataset._buildBind = '1';
 }

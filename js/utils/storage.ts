@@ -154,8 +154,9 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
     if (basic.wallet.totalValue !== undefined) {
       acc.wallet.totalValue = basic.wallet.totalValue;
     }
-    if ((basic.wallet as any).TotalValue !== undefined) {
-      acc.wallet.TotalValue = (basic.wallet as any).TotalValue;
+    // Handle PascalCase version for backward compatibility with backend API
+    if (basic.wallet.TotalValue !== undefined) {
+      acc.wallet.TotalValue = basic.wallet.TotalValue;
     }
     if (basic.wallet.history) {
       acc.wallet.history = [...basic.wallet.history];
@@ -254,7 +255,17 @@ export function saveUser(user: Partial<User>): void {
     const acc = toAccount(user, prev);
 
     // Initialize wallet history if needed
-    if (!acc.wallet) (acc as any).wallet = {};
+    // Note: toAccount() always initializes wallet, but we keep this check for safety
+    if (!acc.wallet) {
+      acc.wallet = { 
+        addressMsg: {}, 
+        totalTXCers: {}, 
+        totalValue: 0, 
+        valueDivision: { 0: 0, 1: 0, 2: 0 }, 
+        updateTime: Date.now(), 
+        updateBlock: 0 
+      };
+    }
     if (!acc.wallet.history) acc.wallet.history = [];
 
     // Calculate current total assets (USDT)

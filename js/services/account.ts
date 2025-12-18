@@ -131,9 +131,9 @@ async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string
   const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
   
   // Try to use elliptic library if available (faster and more tested)
-  if ((window as any).elliptic && (window as any).elliptic.ec) {
+  if (window.elliptic?.ec) {
     try {
-      const EC = (window as any).elliptic.ec;
+      const EC = window.elliptic.ec;
       const ec = new EC('p256');
       const keyPair = ec.keyFromPrivate(normalizedPrivHex, 'hex');
       const pubPoint = keyPair.getPublic();
@@ -336,9 +336,11 @@ export async function addNewSubWallet(): Promise<void> {
       estInterest: 0,
       origin: 'created'
     };
-    (acc.wallet.addressMsg[addr] as any).privHex = privHex;
-    (acc.wallet.addressMsg[addr] as any).pubXHex = pubXHex;
-    (acc.wallet.addressMsg[addr] as any).pubYHex = pubYHex;
+    // AddressData interface includes these fields
+    const addrData = acc.wallet.addressMsg[addr];
+    addrData.privHex = privHex;
+    addrData.pubXHex = pubXHex;
+    addrData.pubYHex = pubYHex;
     
     saveUser(acc);
     
@@ -485,9 +487,9 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
           // Clear plaintext key from storage after successful encryption
           const user = loadUser();
           if (user) {
-            const updatedUser = clearLegacyKey(user as any);
+            const updatedUser = clearLegacyKey(user);
             if (updatedUser) {
-              saveUser(updatedUser as any);
+              saveUser(updatedUser);
             }
           }
         }

@@ -111,6 +111,8 @@ export interface ChartsNamespace {
   initWalletStructToggle: () => void;
   initTxDetailModal: () => void;
   updateWalletStruct: () => void;
+  cleanupWalletChart: () => void;
+  cleanupNetworkChart: () => void;
 }
 
 /** Transaction namespace */

@@ -812,14 +812,15 @@ export function restoreFormFromDraft(
     if (Array.isArray(value)) {
       const values = value.map(v => String(v));
       for (const field of fields) {
-        if ((field as HTMLInputElement).type === 'checkbox') {
-          const cb = field as HTMLInputElement;
+        const inputField = field as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+        if ((inputField as HTMLInputElement).type === 'checkbox') {
+          const cb = inputField as HTMLInputElement;
           cb.checked = values.includes(cb.value || 'on');
         } else {
           // Assign by index when possible
           const idx = fields.indexOf(field);
           const v = values[idx] ?? '';
-          (field as any).value = String(v);
+          inputField.value = String(v);
         }
       }
       continue;
@@ -827,8 +828,9 @@ export function restoreFormFromDraft(
 
     // Single-value
     for (const field of fields) {
-      if ((field as HTMLInputElement).type === 'checkbox') {
-        const cb = field as HTMLInputElement;
+      const inputField = field as HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+      if ((inputField as HTMLInputElement).type === 'checkbox') {
+        const cb = inputField as HTMLInputElement;
         if (typeof value === 'string') {
           // For checkbox, treat empty string as unchecked
           cb.checked = value !== '' && value !== 'false' && value !== '0';
@@ -836,7 +838,7 @@ export function restoreFormFromDraft(
           cb.checked = !!value;
         }
       } else {
-        (field as any).value = String(value);
+        inputField.value = String(value);
       }
     }
   }

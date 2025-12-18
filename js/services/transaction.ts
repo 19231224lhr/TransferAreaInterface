@@ -413,8 +413,9 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
 
     const getAddressPublicKey = (address: string): PublicKey => {
       const meta = addressMsg[address] as AddressData | undefined;
-      const x = normalizeHex64(meta?.pubXHex) || normalizeHex64(userAccount.keys?.pubXHex) || normalizeHex64((userAccount as any).pubXHex);
-      const y = normalizeHex64(meta?.pubYHex) || normalizeHex64(userAccount.keys?.pubYHex) || normalizeHex64((userAccount as any).pubYHex);
+      // Try address-specific keys first, then account keys, then legacy top-level fields
+      const x = normalizeHex64(meta?.pubXHex) || normalizeHex64(userAccount.keys?.pubXHex) || normalizeHex64(userAccount.pubXHex);
+      const y = normalizeHex64(meta?.pubYHex) || normalizeHex64(userAccount.keys?.pubYHex) || normalizeHex64(userAccount.pubYHex);
       return { Curve: 'P256', XHex: x, YHex: y };
     };
 
@@ -571,9 +572,10 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     // 1. Address-specific data (for sub-wallets)
     // 2. Account keys object (standard storage)
     // 3. Direct account properties (legacy/fallback)
-    const privHex = userAddrData?.privHex || userAccount.keys?.privHex || (userAccount as any).privHex || '';
-    let pubXHex = userAddrData?.pubXHex || userAccount.keys?.pubXHex || (userAccount as any).pubXHex || '';
-    let pubYHex = userAddrData?.pubYHex || userAccount.keys?.pubYHex || (userAccount as any).pubYHex || '';
+    // UserAccount interface includes privHex, pubXHex, pubYHex as legacy fields
+    const privHex = userAddrData?.privHex || userAccount.keys?.privHex || userAccount.privHex || '';
+    let pubXHex = userAddrData?.pubXHex || userAccount.keys?.pubXHex || userAccount.pubXHex || '';
+    let pubYHex = userAddrData?.pubYHex || userAccount.keys?.pubYHex || userAccount.pubYHex || '';
 
     if (!privHex) {
       throw new Error('Private key not found for signing');

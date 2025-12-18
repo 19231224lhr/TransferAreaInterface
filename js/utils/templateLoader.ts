@@ -218,9 +218,11 @@ class TemplateLoader {
      * This is called after inserting template content
      */
     updateTranslations(container?: HTMLElement): void {
-        // Call global i18n update function if available
-        if (typeof (window as any).updatePageTranslations === 'function') {
-            (window as any).updatePageTranslations();
+        // Call global i18n update function if available (prefer namespace)
+        if (typeof window.PanguPay?.i18n?.updatePageTranslations === 'function') {
+            window.PanguPay.i18n.updatePageTranslations();
+        } else if (typeof window.updatePageTranslations === 'function') {
+            window.updatePageTranslations();
         }
     }
 }

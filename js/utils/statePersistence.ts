@@ -9,9 +9,19 @@
  */
 
 import { store, selectUser } from './store.js';
-import { persistUserToStorage } from './storage';
+import { persistUserToStorage, User } from './storage';
 
 type Unsubscribe = () => void;
+
+/** Store state shape - matches store.js AppState */
+interface StoreState {
+  user: User | null;
+  currentRoute: string;
+  theme: string;
+  language: string;
+  isLoading: boolean;
+  // Note: isModalOpen may not exist in all versions
+}
 
 function debounce<T extends (...args: any[]) => void>(fn: T, ms: number): T {
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -84,9 +94,12 @@ export function initUserPersistence(): void {
   // Seed last json from current Store to avoid immediate redundant write.
   lastUserJson = computeUserJson();
 
-  unsubscribe = store.subscribe((state, prev) => {
-    const nextUser = (state as any).user;
-    const prevUser = (prev as any).user;
+  // Use any for state types to avoid strict type checking issues between
+  // store.js (uses types.js User) and storage.ts (uses its own User interface)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  unsubscribe = store.subscribe((state: any, prev: any) => {
+    const nextUser = state.user as User | null;
+    const prevUser = prev.user as User | null;
 
     // Fast path: if reference didn't change, skip.
     if (nextUser === prevUser) return;

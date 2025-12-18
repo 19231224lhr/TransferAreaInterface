@@ -518,7 +518,7 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
 
   // Add activity listeners
   ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
-    target.addEventListener(event, handleActivity, options as any);
+    target.addEventListener(event, handleActivity, options as AddEventListenerOptions | boolean | undefined);
   });
   
   const user = loadUser();
@@ -535,7 +535,7 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
 export function cleanupScreenLock(): void {
   // Remove activity listeners
   ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
-    target.removeEventListener(event, handleActivity, options as any);
+    target.removeEventListener(event, handleActivity, options as EventListenerOptions | boolean | undefined);
   });
   
   // Clear timer

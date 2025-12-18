@@ -244,7 +244,7 @@ export async function getDecryptedPrivateKey(accountId: string): Promise<string 
   if (!hasEncryptedKey(accountId)) {
     // Check legacy storage
     const user = loadUser();
-    if (user && hasLegacyKey(user as any)) {
+    if (user && hasLegacyKey(user)) {
       // Return legacy key directly (not encrypted)
       return user.keys?.privHex || user.privHex || null;
     }
@@ -280,7 +280,7 @@ export async function checkAndPromptMigration(): Promise<boolean> {
     return false;
   }
   
-  const status = checkEncryptionStatus(user as any);
+  const status = checkEncryptionStatus(user);
   
   if (!status.needsMigration) {
     return false; // No migration needed
@@ -300,13 +300,13 @@ export async function checkAndPromptMigration(): Promise<boolean> {
   }
   
   try {
-    const result = await migrateToEncrypted(user as any, password);
+    const result = await migrateToEncrypted(user, password);
     
     if (result.success) {
       // Clear plaintext key from storage
-      const updatedUser = clearLegacyKey(user as any);
+      const updatedUser = clearLegacyKey(user);
       if (updatedUser) {
-        saveUser(updatedUser as any);
+        saveUser(updatedUser);
       }
       showSuccessToast(t('encryption.encryptSuccess'));
       return true;
@@ -348,9 +348,9 @@ export async function saveUserWithEncryption(
         // Clear plaintext key from storage
         const user = loadUser();
         if (user) {
-          const updatedUser = clearLegacyKey(user as any);
+          const updatedUser = clearLegacyKey(user);
           if (updatedUser) {
-            saveUser(updatedUser as any);
+            saveUser(updatedUser);
           }
         }
       }

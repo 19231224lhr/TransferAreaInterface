@@ -121,6 +121,8 @@ export function initNamespace(): PanguPayNamespace {
         initWalletStructToggle: () => {},
         initTxDetailModal: () => {},
         updateWalletStruct: () => {},
+        cleanupWalletChart: () => {},
+        cleanupNetworkChart: () => {},
       },
       
       // Transaction

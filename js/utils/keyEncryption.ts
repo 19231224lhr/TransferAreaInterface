@@ -43,15 +43,17 @@ export interface EncryptionStatus {
   isEncrypted: boolean;
 }
 
-/** User type for encryption operations */
+/** User type for encryption operations - compatible with storage.User */
 interface UserForEncryption {
   accountId: string;
   keys?: {
     privHex?: string;
-    [key: string]: unknown;
+    pubXHex?: string;
+    pubYHex?: string;
+    /** Internal marker for encrypted keys */
+    _encrypted?: boolean;
   };
   privHex?: string;
-  [key: string]: unknown;
 }
 
 // ========================================

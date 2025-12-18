@@ -445,8 +445,8 @@ export async function prefetchRoute(path: string): Promise<void> {
   prefetchedRoutes.add(path);
   
   // Use requestIdleCallback for non-urgent prefetching
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => {
+  if (window.requestIdleCallback) {
+    window.requestIdleCallback(() => {
       // Import page module based on path
       switch (path) {
         case '/main':
