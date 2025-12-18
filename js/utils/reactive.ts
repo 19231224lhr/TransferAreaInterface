@@ -10,6 +10,8 @@
  * @module utils/reactive
  */
 
+import { html as viewHtml, renderInto, unsafeHTML } from './view';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -148,7 +150,7 @@ export function createReactiveState<T extends object>(
   let rafId: number | null = null;
 
   /**
-   * 应用单个绑定到 DOM
+   * 应用单个绑定到 DOM - 使用 lit-html 进行安全高效的渲染
    */
   function setHtmlContent(el: Element, raw: unknown): void {
     const htmlStr = String(raw ?? '');
@@ -156,9 +158,10 @@ export function createReactiveState<T extends object>(
       el.replaceChildren();
       return;
     }
-    const doc = new DOMParser().parseFromString(htmlStr, 'text/html');
-    const nodes = Array.from(doc.body.childNodes).map((n) => document.importNode(n, true));
-    el.replaceChildren(...nodes);
+    // Use lit-html with unsafeHTML for dynamic HTML content
+    // Note: Caller is responsible for sanitizing user input
+    const template = viewHtml`${unsafeHTML(htmlStr)}`;
+    renderInto(el, template);
   }
 
   function applyBinding<K extends keyof T>(

@@ -16,6 +16,7 @@ import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants';
 import { escapeHtml } from '../utils/security';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { html as viewHtml, renderInto } from '../utils/view';
 import {
   createReactiveState,
   type ReactiveState
@@ -494,27 +495,29 @@ function handleGroupSearchInput(): void {
   }
   
   if (groupSuggest) {
-    const html = list.map(g => 
-      `<div class="item" data-id="${escapeHtml(g.groupID)}">
-        <span class="suggest-id">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-            <circle cx="9" cy="7" r="4"/>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-          </svg>
-          <span class="suggest-id-text">${escapeHtml(g.groupID)}</span>
-        </span>
-        <span class="suggest-nodes">
-          <span class="node-badge aggre">${escapeHtml(g.aggreNode)}</span>
-          <span class="node-badge assign">${escapeHtml(g.assignNode)}</span>
-        </span>
-        <span class="suggest-arrow">→</span>
-      </div>`
-    ).join('');
+    // Use lit-html for safe and efficient rendering
+    const template = viewHtml`
+      ${list.map(g => viewHtml`
+        <div class="item" data-id="${g.groupID}">
+          <span class="suggest-id">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <span class="suggest-id-text">${g.groupID}</span>
+          </span>
+          <span class="suggest-nodes">
+            <span class="node-badge aggre">${g.aggreNode}</span>
+            <span class="node-badge assign">${g.assignNode}</span>
+          </span>
+          <span class="suggest-arrow">→</span>
+        </div>
+      `)}
+    `;
 
-    const doc = new DOMParser().parseFromString(html, 'text/html');
-    groupSuggest.replaceChildren(...Array.from(doc.body.childNodes));
+    renderInto(groupSuggest, template);
     
     if (pageState) {
       pageState.set({ showSuggest: true });

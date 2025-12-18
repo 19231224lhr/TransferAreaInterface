@@ -12,6 +12,7 @@ import { t, formatDate } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 import { DOM_IDS } from '../config/domIds';
+import { html as viewHtml, renderInto } from '../utils/view';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [
@@ -137,7 +138,8 @@ function renderTransactionList(transactions) {
   if (!listEl) return;
   
   if (transactions.length === 0) {
-    const emptyHtml = `
+    // Use lit-html for safe and efficient rendering
+    const template = viewHtml`
       <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;">
           <circle cx="12" cy="12" r="10"></circle>
@@ -148,8 +150,7 @@ function renderTransactionList(transactions) {
       </div>
     `;
 
-    const doc = new DOMParser().parseFromString(emptyHtml, 'text/html');
-    listEl.replaceChildren(...Array.from(doc.body.childNodes));
+    renderInto(listEl, template);
     return;
   }
   
@@ -161,18 +162,19 @@ function renderTransactionList(transactions) {
     item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
     item.dataset.txId = tx.id;
     
-    const itemHtml = `
+    // Use lit-html for safe and efficient rendering
+    const template = viewHtml`
       <div class="history-item-header">
         <div class="history-item-type">
-          <div class="history-item-icon ${escapeHtml(tx.type)}">
+          <div class="history-item-icon ${tx.type}">
             ${tx.type === 'send' ? '↑' : '↓'}
           </div>
           <span class="history-item-label">
-            ${tx.type === 'send' ? t('history.send') : t('history.receive')} ${escapeHtml(tx.currency)}
+            ${tx.type === 'send' ? t('history.send') : t('history.receive')} ${tx.currency}
           </span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span class="history-item-status ${escapeHtml(tx.status)}">
+          <span class="history-item-status ${tx.status}">
             ${t(`history.status.${tx.status}`)}
           </span>
           <svg class="history-item-expand-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -183,26 +185,25 @@ function renderTransactionList(transactions) {
       <div class="history-item-body">
         <div class="history-item-info">
           <span class="history-item-info-label">${tx.type === 'send' ? t('history.to') : t('history.from')}</span>
-          <span class="history-item-info-value">${escapeHtml(formatAddress(tx.type === 'send' ? tx.to : tx.from))}</span>
+          <span class="history-item-info-value">${formatAddress(tx.type === 'send' ? tx.to : tx.from)}</span>
         </div>
         <div class="history-item-info">
           <span class="history-item-info-label">${t('history.txHash')}</span>
-          <span class="history-item-info-value">${escapeHtml(formatAddress(tx.txHash))}</span>
+          <span class="history-item-info-value">${formatAddress(tx.txHash)}</span>
         </div>
       </div>
       <div class="history-item-footer">
-        <span class="history-item-amount ${escapeHtml(tx.type)}">
-          ${tx.type === 'send' ? '-' : '+'} ${escapeHtml(String(tx.amount.toLocaleString()))} ${escapeHtml(tx.currency)}
+        <span class="history-item-amount ${tx.type}">
+          ${tx.type === 'send' ? '-' : '+'} ${String(tx.amount.toLocaleString())} ${tx.currency}
         </span>
-        <span class="history-item-time">${escapeHtml(formatDate(tx.timestamp))}</span>
+        <span class="history-item-time">${formatDate(tx.timestamp)}</span>
       </div>
       <div class="history-item-detail">
         ${renderTransactionDetail(tx)}
       </div>
     `;
 
-    const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
-    item.replaceChildren(...Array.from(doc.body.childNodes));
+    renderInto(item, template);
     
     // Bind click event
     item.addEventListener('click', (e) => {

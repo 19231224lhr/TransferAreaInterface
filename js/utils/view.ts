@@ -7,8 +7,9 @@
  */
 
 import { html, svg, render, nothing, type TemplateResult } from 'lit-html';
+import { unsafeHTML } from 'lit-html/directives/unsafe-html.js';
 
-export { html, svg, render, nothing, TemplateResult };
+export { html, svg, render, nothing, TemplateResult, unsafeHTML };
 
 export type ViewContent = TemplateResult | typeof nothing;
 

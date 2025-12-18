@@ -24,6 +24,7 @@ import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
 import { DOM_IDS } from '../config/domIds';
 import { scheduleBatchUpdate } from '../utils/performanceMode.js';
+import { html as viewHtml, renderInto } from '../utils/view';
 import { globalEventManager } from '../utils/eventUtils.js';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
 import { 
@@ -366,13 +367,13 @@ export function renderWallet(): void {
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
 
-    // Use data-action for event delegation instead of onclick
-    const itemHtml = `
-      <div class="addr-card-summary" data-action="toggleAddrCard" data-addr="${escapeHtml(a)}">
-        <div class="addr-card-avatar coin--${coinClass}">${escapeHtml(coinType)}</div>
+    // Use lit-html for safe and efficient rendering
+    const template = viewHtml`
+      <div class="addr-card-summary" data-action="toggleAddrCard" data-addr="${a}">
+        <div class="addr-card-avatar coin--${coinClass}">${coinType}</div>
         <div class="addr-card-main">
-          <span class="addr-card-hash" title="${escapeHtml(a)}">${escapeHtml(shortAddr)}</span>
-          <span class="addr-card-balance">${escapeHtml(String(amtCash0))} ${escapeHtml(coinType)}</span>
+          <span class="addr-card-hash" title="${a}">${shortAddr}</span>
+          <span class="addr-card-balance">${String(amtCash0)} ${coinType}</span>
         </div>
         <div class="addr-card-arrow">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -382,22 +383,22 @@ export function renderWallet(): void {
         <div class="addr-card-detail-inner">
           <div class="addr-detail-row">
             <span class="addr-detail-label">${t('address.fullAddress')}</span>
-            <span class="addr-detail-value">${escapeHtml(a)}</span>
+            <span class="addr-detail-value">${a}</span>
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">${t('address.balance')}</span>
-            <span class="addr-detail-value">${escapeHtml(String(amtCash0))} ${escapeHtml(coinType)}</span>
+            <span class="addr-detail-value">${String(amtCash0)} ${coinType}</span>
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">GAS</span>
-            <span class="addr-detail-value gas">${escapeHtml(String(gas0))}</span>
+            <span class="addr-detail-value gas">${String(gas0)}</span>
           </div>
           <div class="addr-card-actions">
-            <button class="addr-action-btn addr-action-btn--primary btn-add" data-action="addToAddress" data-addr="${escapeHtml(a)}" title="${t('address.add')}">
+            <button class="addr-action-btn addr-action-btn--primary btn-add" data-action="addToAddress" data-addr="${a}" title="${t('address.add')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
               ${t('address.add')}
             </button>
-            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-action="zeroAddress" data-addr="${escapeHtml(a)}" title="${t('address.clear')}">
+            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-action="zeroAddress" data-addr="${a}" title="${t('address.clear')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
               ${t('address.clear')}
             </button>
@@ -407,8 +408,7 @@ export function renderWallet(): void {
       </div>
     `;
 
-    const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
-    item.replaceChildren(...Array.from(doc.body.childNodes));
+    renderInto(item, template);
     
     // Add operations menu (also uses event delegation)
     const metaEl = item.querySelector('.addr-ops-container');
@@ -1075,9 +1075,12 @@ export function initAddressModal(): void {
   
   if (openHistoryBtn && !openHistoryBtn.dataset._walletBind) {
     openHistoryBtn.onclick = () => {
-      if (typeof window.PanguPay?.router?.routeTo === 'function') {
-        window.PanguPay.router.routeTo('#/history');
-      }
+      // Import routeTo at the top of file and use directly to avoid timing issues
+      import('../router').then(({ routeTo }) => {
+        routeTo('#/history');
+      }).catch(err => {
+        console.error('Failed to navigate to history:', err);
+      });
     };
     openHistoryBtn.dataset._walletBind = '1';
   }
@@ -1238,19 +1241,20 @@ export function rebuildAddrList(): void {
     label.className = `src-addr-item item-type-${color}`;
     label.dataset.addr = a;
 
-    const labelHtml = `
-      <input type="checkbox" name="srcAddr" value="${escapeHtml(a)}">
+    // Use lit-html for safe and efficient rendering
+    const template = viewHtml`
+      <input type="checkbox" name="srcAddr" value="${a}">
       <div class="item-backdrop"></div>
       <div class="item-content">
         <div class="item-left">
-          <div class="coin-icon coin-icon--${escapeHtml(color)}">${escapeHtml(coinLetter)}</div>
+          <div class="coin-icon coin-icon--${color}">${coinLetter}</div>
           <div class="addr-info">
-            <span class="addr-text" title="${escapeHtml(a)}">${escapeHtml(shortAddr)}</span>
-            <span class="coin-name-tiny">${escapeHtml(coinName)}</span>
+            <span class="addr-text" title="${a}">${shortAddr}</span>
+            <span class="coin-name-tiny">${coinName}</span>
           </div>
         </div>
         <div class="item-right">
-          <span class="amount-num" title="${escapeHtml(String(amt))}">${escapeHtml(String(amt))}</span>
+          <span class="amount-num" title="${String(amt)}">${String(amt)}</span>
           <div class="check-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
@@ -1259,8 +1263,7 @@ export function rebuildAddrList(): void {
       <div class="selection-outline"></div>
     `;
 
-    const doc = new DOMParser().parseFromString(labelHtml, 'text/html');
-    label.replaceChildren(...Array.from(doc.body.childNodes));
+    renderInto(label, template);
     
     fragment.appendChild(label);
   });

@@ -6,6 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { DOM_IDS } from '../config/domIds';
+import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
 
 /**
  * Initialize wallet structure toggle
@@ -97,14 +98,14 @@ export function initTxDetailModal() {
   const showTxDetail = (title, data) => {
     if (titleEl) titleEl.textContent = title;
     if (contentEl) {
-      // Syntax highlight JSON
+      // Syntax highlight JSON using lit-html with unsafeHTML for trusted content
       const highlighted = data
         .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
         .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
         .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
         .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
-      const doc = new DOMParser().parseFromString(highlighted, 'text/html');
-      contentEl.replaceChildren(...Array.from(doc.body.childNodes));
+      const template = viewHtml`${unsafeHTML(highlighted)}`;
+      renderInto(contentEl, template);
     }
     modal.classList.remove('hidden');
   };

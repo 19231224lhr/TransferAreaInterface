@@ -15,6 +15,7 @@ import { verifyPassword, hasEncryptedKey } from './keyEncryption';
 import { loadUser } from './storage';
 import { t } from '../i18n/index.js';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { html as viewHtml, renderInto } from './view';
 
 // ========================================
 // Types
@@ -92,7 +93,8 @@ function createLockScreenElement(): HTMLElement {
   overlay.setAttribute('aria-modal', 'true');
   overlay.setAttribute('aria-labelledby', DOM_IDS.lockScreenTitle);
 
-  const doc = new DOMParser().parseFromString(`
+  // Use lit-html for safe and efficient rendering
+  const template = viewHtml`
     <div class="screen-lock-backdrop"></div>
     <div class="screen-lock-container">
       <div class="screen-lock-card">
@@ -172,9 +174,9 @@ function createLockScreenElement(): HTMLElement {
         </div>
       </div>
     </div>
-
-  `, 'text/html');
-  overlay.replaceChildren(...Array.from(doc.body.childNodes));
+  `;
+  
+  renderInto(overlay, template);
   
   return overlay;
 }

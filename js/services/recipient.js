@@ -8,6 +8,7 @@ import { t } from '../i18n/index.js';
 import { showMiniToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 import { DOM_IDS } from '../config/domIds';
+import { html as viewHtml, renderInto } from '../utils/view';
 
 let billSeq = 0;
 
@@ -104,7 +105,8 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   const cardIndex = billList.querySelectorAll('.recipient-card').length + 1;
   card.setAttribute('data-index', cardIndex);
 
-  const cardHtml = `
+  // Use lit-html for safe and efficient rendering
+  const template = viewHtml`
     <div class="recipient-content">
       <!-- Main area: Address -->
       <div class="recipient-main">
@@ -194,8 +196,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
     </div>
   `;
 
-  const doc = new DOMParser().parseFromString(cardHtml, 'text/html');
-  card.replaceChildren(...Array.from(doc.body.childNodes));
+  renderInto(card, template);
   
   const addrInputEl = card.querySelector('[data-name="to"]');
   const gidInputEl = card.querySelector('[data-name="gid"]');
@@ -212,7 +213,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       const raw = addrInputEl.value || '';
       const normalized = normalizeAddrInput(raw);
       if (!normalized) {
-        showTxValidationError(t('modal.pleaseEnterPrivateKeyHex'), addrInputEl, t('tx.addressEmpty'));
+        showTxValidationError(t('transfer.enterRecipientAddress'), addrInputEl, t('tx.addressEmpty'));
         return;
       }
       if (!isValidAddressFormat(normalized)) {

@@ -8,6 +8,7 @@ import { t } from '../i18n/index.js';
 import { loadUser } from '../utils/storage';
 import { escapeHtml } from '../utils/security';
 import { DOM_IDS } from '../config/domIds';
+import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
 
 /**
  * Update wallet structure display (copied from backup lines 3663-3850)
@@ -18,8 +19,9 @@ export function updateWalletStruct() {
   if (!box) return;
 
   const setBoxHtml = (html) => {
-    const doc = new DOMParser().parseFromString(String(html || ''), 'text/html');
-    box.replaceChildren(...Array.from(doc.body.childNodes));
+    // Use lit-html with unsafeHTML for pre-escaped content
+    const template = viewHtml`${unsafeHTML(String(html || ''))}`;
+    renderInto(box, template);
   };
 
   if (!u || !u.wallet) {
