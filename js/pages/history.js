@@ -12,7 +12,7 @@ import { t, formatDate } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 import { DOM_IDS } from '../config/domIds';
-import { html as viewHtml, renderInto } from '../utils/view';
+import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
 
 // 模拟交易数据
 const MOCK_TRANSACTIONS = [
@@ -199,7 +199,7 @@ function renderTransactionList(transactions) {
         <span class="history-item-time">${formatDate(tx.timestamp)}</span>
       </div>
       <div class="history-item-detail">
-        ${renderTransactionDetail(tx)}
+        ${unsafeHTML(renderTransactionDetail(tx))}
       </div>
     `;
 

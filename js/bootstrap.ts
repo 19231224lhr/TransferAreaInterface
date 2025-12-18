@@ -325,24 +325,51 @@ function init(): void {
     const flushUi = () => {
       scheduled = false;
       const u = selectUser(store.getState()) as User | null;
+      
+      // Single Source of Truth: All UI updates driven by Store changes
+      // This ensures UI and state are always in sync
+      
       try {
         updateHeaderUser(u);
       } catch {
         // ignore
       }
 
-      // Wallet/Org panels: safe no-op on pages where elements are absent.
-      // 注意：不要在这里调用 renderWallet()，因为它会重新渲染整个地址列表，
-      // 导致展开的卡片被折叠。handleAddToAddress 和 handleZeroAddress 
-      // 已经通过 updateAddressCardDisplay 更新了卡片显示。
+      // Wallet/Org panels: safe no-op on pages where elements are absent
       const pp = window.PanguPay;
+      
+      // Organization panel
       try { pp?.wallet?.refreshOrgPanel?.(); } catch { }
-      // try { pp?.wallet?.renderWallet?.(); } catch { }  // 移除：会导致卡片折叠
+      
+      // Source address list for transfer
       try { pp?.wallet?.refreshSrcAddrList?.(); } catch { }
+      
+      // Wallet brief/summary (entry page)
       try { pp?.wallet?.updateWalletBrief?.(); } catch { }
+      
+      // Currency display (PGC/BTC/ETH badges)
+      try {
+        const updateCurrency = (window as any).__updateCurrencyDisplay;
+        if (typeof updateCurrency === 'function' && u) {
+          updateCurrency(u);
+        }
+      } catch { }
+      
+      // Gas badge
+      try {
+        const updateGas = (window as any).__updateTotalGasBadge;
+        if (typeof updateGas === 'function' && u) {
+          updateGas(u);
+        }
+      } catch { }
 
       // Charts
       try { pp?.charts?.updateWalletChart?.(u); } catch { }
+      
+      // Note: We intentionally do NOT call renderWallet() here because:
+      // 1. It would re-render the entire address list, collapsing expanded cards
+      // 2. Address card updates are handled incrementally by renderWallet's internal logic
+      // 3. For adding/removing addresses, those operations call renderWallet explicitly
     };
 
     store.subscribe((state, prev) => {

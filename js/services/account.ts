@@ -6,6 +6,7 @@
 
 import { base64urlToBytes, bytesToHex, hexToBytes, generate8DigitFromInputHex } from '../utils/crypto';
 import { loadUser, saveUser, toAccount } from '../utils/storage';
+import { setUser } from '../utils/store.js';
 import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { showSuccessToast } from '../utils/toast.js';
@@ -342,6 +343,8 @@ export async function addNewSubWallet(): Promise<void> {
     addrData.pubXHex = pubXHex;
     addrData.pubYHex = pubYHex;
     
+    // Single Source of Truth: Update Store first, let subscriptions handle UI
+    setUser(acc);
     saveUser(acc);
     
     // P0-1 Fix: Prompt user to encrypt the new sub-wallet private key
@@ -358,30 +361,18 @@ export async function addNewSubWallet(): Promise<void> {
       console.warn('Sub-wallet key encryption skipped:', encryptErr);
     }
     
-    // Refresh UI via namespace (no legacy window.* globals)
-    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    // New address requires full wallet re-render (DOM structure change)
+    // This is an exception where we call renderWallet directly because:
+    // 1. We're adding a new card to the DOM, not just updating values
+    // 2. Store subscription can't determine the insertion position
     try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
-    try {
-      const fn = window.PanguPay?.wallet?.updateWalletBrief;
-      if (typeof fn === 'function') {
-        fn();
-        requestAnimationFrame(() => {
-          try { fn(); } catch (_) { }
-        });
-        setTimeout(() => {
-          try { fn(); } catch (_) { }
-        }, 0);
-      }
-    } catch (_) { }
     
     // Show success (smooth transition from loading state)
+    // No success callback needed - Store subscription handles all reactive updates
     showUnifiedSuccess(
       t('modal.walletAddSuccess'), 
       t('modal.walletAddSuccessDesc'), 
-      () => {
-        try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
-        try { window.PanguPay?.wallet?.updateWalletBrief?.(); } catch (_) { }
-      },
+      undefined,
       undefined // no cancel callback
     );
     

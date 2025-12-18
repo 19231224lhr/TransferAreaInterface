@@ -213,6 +213,9 @@
   flex-direction: column;
   background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
   position: relative;
+  /* Fix for grid item overflow - prevent content from expanding beyond grid column */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .history-back-btn {
@@ -261,6 +264,9 @@
   flex: 1;
   display: flex;
   flex-direction: column;
+  /* Prevent content overflow */
+  min-width: 0;
+  overflow: hidden;
 }
 
 .history-header {
@@ -363,7 +369,9 @@
 .history-list-container {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 24px;
+  min-width: 0;
 }
 
 .history-list {
@@ -381,6 +389,9 @@
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   animation: historyItemSlideIn 0.4s ease-out both;
   overflow: hidden;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .history-item:nth-child(1) { animation-delay: 0.05s; }
@@ -501,6 +512,8 @@
   color: #334155;
   font-weight: 600;
   font-family: 'SF Mono', 'Monaco', monospace;
+  word-break: break-all;
+  overflow-wrap: break-word;
 }
 
 .history-item-footer {
@@ -608,6 +621,9 @@
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   padding: 14px;
+  min-width: 0;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .history-detail-row {
@@ -617,6 +633,8 @@
   padding: 8px 0;
   border-bottom: 1px dashed #e2e8f0;
   gap: 16px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .history-detail-row:last-child {
@@ -644,6 +662,8 @@
   text-align: right;
   word-break: break-all;
   flex: 1;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* ========================================

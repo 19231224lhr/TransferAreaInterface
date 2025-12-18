@@ -503,13 +503,15 @@ export function handleDeleteAddress(address: string): void {
       u.address = '';
     }
     
+    // Single Source of Truth: Update Store, let subscriptions handle UI updates
+    setUser(u);
     saveUser(u);
     
-    // Refresh UI
-    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-    
+    // Address deletion requires full re-render since DOM structure changes
+    // This is an exception where we call renderWallet directly because:
+    // 1. We're removing elements from DOM, not just updating values
+    // 2. Store subscription can't know which specific card to remove
     renderWallet();
-    updateWalletBrief();
     
     // Show success modal
     const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
@@ -630,6 +632,7 @@ export function handleExportPrivateKey(address: string): void {
 
 /**
  * Update total GAS badge display
+ * Exported for store subscription in bootstrap.ts
  */
 export function updateTotalGasBadge(u: User | null): void {
   const gasBadge = document.getElementById(DOM_IDS.walletGAS);
@@ -646,6 +649,12 @@ export function updateTotalGasBadge(u: User | null): void {
     unit.textContent = 'GAS';
     gasBadge.replaceChildren(amt, unit);
   }
+}
+
+// Register UI update functions globally for store subscription access
+if (typeof window !== 'undefined') {
+  (window as any).__updateCurrencyDisplay = updateCurrencyDisplay;
+  (window as any).__updateTotalGasBadge = updateTotalGasBadge;
 }
 
 
@@ -700,26 +709,19 @@ export function handleAddToAddress(address: string): void {
 
   // Recalculate Wallet ValueDivision
   recalculateWalletValue(u);
-  // Keep Store as the single source of truth (prevents charts/header/etc from being overwritten by stale Store state).
+  
+  // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
   setUser(u);
-  updateTotalGasBadge(u);
-
-  // Best-effort persistence for legacy code paths that still read localStorage directly.
-  // Store persistence will also run via statePersistence.
+  
+  // Legacy persistence for backward compatibility (Store persistence will also run)
   saveUser(u);
 
-  // Update UI
+  // Show toast notification (not a state-driven UI element)
   const coinType = getCoinName(typeId);
   showMiniToast(`+${inc} ${coinType}`, 'success');
-  updateCurrencyDisplay(u);
-  updateAddressCardDisplay(address, found);
   
-  try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-  
-  updateWalletBrief();
-  
-  // 立即更新图表
-  try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
+  // All other UI updates (currency display, address cards, charts, etc.) 
+  // are handled by store.subscribe() in bootstrap.ts
 }
 
 
@@ -745,23 +747,18 @@ export function handleZeroAddress(address: string): void {
 
   // Recalculate ValueDivision
   recalculateWalletValue(u);
+  
+  // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
   setUser(u);
-  updateTotalGasBadge(u);
 
-  // Best-effort persistence for legacy code paths that still read localStorage directly.
+  // Legacy persistence for backward compatibility
   saveUser(u);
   
-  // Update UI
+  // Show toast notification (not a state-driven UI element)
   showMiniToast(t('address.clear'), 'info');
-  updateCurrencyDisplay(u);
-  updateAddressCardDisplay(address, found);
   
-  try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-  
-  updateWalletBrief();
-  
-  // 立即更新图表
-  try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
+  // All other UI updates (currency display, address cards, charts, etc.) 
+  // are handled by store.subscribe() in bootstrap.ts
 }
 
 /**
@@ -793,9 +790,10 @@ function recalculateWalletValue(u: User): void {
 
 
 /**
- * Update currency breakdown display
+ * Update currency breakdown display (PGC/BTC/ETH badges)
+ * Exported for store subscription in bootstrap.ts
  */
-function updateCurrencyDisplay(u: User): void {
+export function updateCurrencyDisplay(u: User): void {
   const walletPGCEl = document.getElementById(DOM_IDS.walletPGC);
   const walletBTCEl = document.getElementById(DOM_IDS.walletBTC);
   const walletETHEl = document.getElementById(DOM_IDS.walletETH);
