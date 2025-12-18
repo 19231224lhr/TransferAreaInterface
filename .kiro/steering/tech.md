@@ -98,10 +98,17 @@ go run ./backend/verify_tx
 ### Module System
 - **Target**: ES2020
 - **Module**: ESNext with bundler resolution
-- **Strict Mode**: Disabled (for gradual migration)
+- **Strict Mode**: ✅ Enabled (full strict type checking)
 - **JS Support**: 
   - `tsconfig.json`: `allowJs: true`, `checkJs: false` (TS files only)
   - `jsconfig.json`: `checkJs: false` (no type checking for JS files)
+
+### Strict Mode Features
+- `strictNullChecks`: Enabled - catches null/undefined errors
+- `noImplicitAny`: Enabled - requires explicit types
+- `strictFunctionTypes`: Enabled - stricter function type checking
+- `strictBindCallApply`: Enabled - stricter bind/call/apply checking
+- `strictPropertyInitialization`: Enabled - class property initialization
 
 ### Key Files
 - `tsconfig.json` - TypeScript compiler options (TS files only)

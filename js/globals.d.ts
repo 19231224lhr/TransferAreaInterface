@@ -25,7 +25,7 @@ declare global {
     router: any;
 
     // i18n functions
-    t: (key: string, params?: Record<string, any>) => string;
+    t: (key: string, paramsOrDefault?: string | Record<string, any>) => string;
     setLanguage: (lang: string) => void;
     getCurrentLanguage: () => string;
     updatePageTranslations: () => void;
@@ -286,6 +286,43 @@ declare global {
       totalJSHeapSize: number;
       jsHeapSizeLimit: number;
     };
+  }
+  
+  // Extend HTMLElement dataset for custom data attributes
+  interface HTMLElement {
+    dataset: DOMStringMap & {
+      // Common binding flags
+      _bind?: string;
+      _walletBind?: string;
+      _changeBind?: string;
+      _buildBind?: string;
+      _recipientBind?: string;
+      // Data storage
+      txData?: string;
+      buildInfo?: string;
+      addr?: string;
+      key?: string;
+      action?: string;
+    };
+  }
+  
+  // requestIdleCallback API (not in all browsers)
+  interface Window {
+    requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  }
+  
+  interface IdleRequestCallback {
+    (deadline: IdleDeadline): void;
+  }
+  
+  interface IdleDeadline {
+    readonly didTimeout: boolean;
+    timeRemaining(): number;
+  }
+  
+  interface IdleRequestOptions {
+    timeout?: number;
   }
 }
 

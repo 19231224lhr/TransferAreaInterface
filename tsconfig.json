@@ -6,10 +6,8 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     
-    // Type Checking - relaxed for gradual migration
-    "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    // Type Checking - strict mode enabled for better type safety
+    "strict": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,

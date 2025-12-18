@@ -126,17 +126,27 @@ export function setLanguage(lang) {
 /**
  * Get translated text for a key
  * @param {string} key - Translation key
- * @param {object} params - Optional parameters for string interpolation
+ * @param {string | Record<string, any>} [paramsOrDefault] - Optional parameters for string interpolation, or default value string
  * @returns {string} Translated text
  */
-export function t(key, params = {}) {
+export function t(key, paramsOrDefault) {
   const dict = translations[currentLanguage] || translations['zh-CN'];
-  let text = dict[key] || translations['zh-CN'][key] || key;
+  let text = dict[key] || translations['zh-CN'][key];
   
-  // Replace parameters {param}
-  Object.keys(params).forEach(param => {
-    text = text.replace(new RegExp(`\\{${param}\\}`, 'g'), params[param]);
-  });
+  // If no translation found, use default value (if string) or key
+  if (!text) {
+    if (typeof paramsOrDefault === 'string') {
+      return paramsOrDefault;
+    }
+    return key;
+  }
+  
+  // Replace parameters {param} if params is an object
+  if (paramsOrDefault && typeof paramsOrDefault === 'object') {
+    Object.keys(paramsOrDefault).forEach(param => {
+      text = text.replace(new RegExp(`\\{${param}\\}`, 'g'), paramsOrDefault[param]);
+    });
+  }
   
   return text;
 }

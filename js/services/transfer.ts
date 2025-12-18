@@ -13,8 +13,7 @@ import { buildNewTX, BuildTXInfo } from './transaction';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
 import { clearTransferDraft } from './transferDraft';
-import { getCoinName } from '../config/constants';
-import { COIN_TO_PGC_RATES } from '../config/constants';
+import { getCoinName, COIN_TO_PGC_RATES, CoinTypeId } from '../config/constants';
 import { showLoading, hideLoading } from '../utils/loading';
 
 // ========================================
@@ -390,7 +389,7 @@ export function initTransferSubmit(): void {
           const bal: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
           if (bal[type] !== undefined) bal[type] = val;
 
-          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * (COIN_TO_PGC_RATES[t] || 1), 0);
+          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * (COIN_TO_PGC_RATES[t as CoinTypeId] || 1), 0);
           return { addr, bal, totalRel };
         });
         
@@ -462,7 +461,7 @@ export function initTransferSubmit(): void {
       const backAssign: Record<string, number> = {};
       finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
       
-      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k)] || 1), 0);
+      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k) as CoinTypeId] || 1), 0);
       
       const build: BuildTXInfo = {
         Value: valueTotal,

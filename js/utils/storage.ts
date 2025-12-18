@@ -79,7 +79,8 @@ export interface User {
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
-  guarGroup?: GuarantorGroup | null;
+  /** Guarantor group info - undefined means not joined */
+  guarGroup?: GuarantorGroup;
 }
 
 /** User profile structure */
@@ -396,7 +397,7 @@ export function resetOrgSelectionForNewUser(): boolean {
   
   const current = loadUser();
   if (current && (current.orgNumber || current.guarGroup)) {
-    const next = { ...current, orgNumber: '', guarGroup: null } as User;
+    const next = { ...current, orgNumber: '', guarGroup: undefined } as User;
     setUser(next);
     changed = true;
   }

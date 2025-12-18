@@ -458,7 +458,7 @@ async function handleImport(): Promise<void> {
             hideElementLoading(importBtn);
           }
           hideLoading(loadingId);
-        }, null, true);
+        }, undefined, true);
         return;
       }
       
@@ -473,7 +473,7 @@ async function handleImport(): Promise<void> {
             hideElementLoading(importBtn);
           }
           hideLoading(loadingId);
-        }, null, true);
+        }, undefined, true);
         return;
       }
       
@@ -496,7 +496,7 @@ async function handleImport(): Promise<void> {
         if (typeof window.PanguPay?.router?.routeTo === 'function') {
           window.PanguPay.router.routeTo('#/entry');
         }
-      }, null);
+      }, undefined);
     }
   } catch (err) {
     hideUnifiedOverlay();

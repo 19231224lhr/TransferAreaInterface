@@ -687,6 +687,8 @@ export function initHeaderScroll(): void {
   }
   
   function updateHeader(): void {
+    if (!header) return;
+    
     const currentScrollY = window.scrollY;
     const delta = currentScrollY - lastScrollY;
     

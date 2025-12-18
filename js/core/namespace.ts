@@ -51,9 +51,9 @@ export function initNamespace(): PanguPayNamespace {
       
       // Account
       account: {
-        newUser: async () => null,
-        importFromPrivHex: async () => null,
-        addNewSubWallet: async () => null,
+        newUser: async () => undefined,
+        importFromPrivHex: async () => undefined,
+        addNewSubWallet: async () => {},
         handleCreate: async () => {},
       },
       

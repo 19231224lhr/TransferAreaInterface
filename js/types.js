@@ -94,12 +94,9 @@
 /**
  * @typedef {Object} GuarGroup
  * @property {string} groupID - Organization ID
- * @property {string} [aggreNode] - Aggregation node ID
- * @property {string} [assignNode] - Assignment node ID
- * @property {string} [pledgeAddress] - Pledge address
- * @property {string} [AggrID] - Alternative key for aggregation node
- * @property {string} [AssiID] - Alternative key for assignment node
- * @property {string} [PledgeAddress] - Alternative key for pledge address
+ * @property {string} aggreNode - Aggregation node ID
+ * @property {string} assignNode - Assignment node ID
+ * @property {string} pledgeAddress - Pledge address
  */
 
 /**
@@ -110,8 +107,7 @@
  * @property {string} [privHex] - Legacy private key field
  * @property {Wallet} [wallet] - Wallet data
  * @property {string} [orgNumber] - Organization number
- * @property {GuarGroup} [guarGroup] - Guarantor group info
- * @property {string} [GuarantorGroupID] - Alternative guarantor ID field
+ * @property {GuarGroup} [guarGroup] - Guarantor group info (undefined means not joined)
  */
 
 // ========================================
