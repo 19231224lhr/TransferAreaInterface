@@ -24,6 +24,9 @@
 /* 地址卡片 */
 @import './address-card.css';
 
+/* 骨架屏加载 */
+@import './skeleton.css';
+
 /* 转账面板 */
 @import './transfer-panel.css';
 

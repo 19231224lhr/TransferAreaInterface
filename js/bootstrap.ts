@@ -330,14 +330,17 @@ function init(): void {
       }
 
       // Wallet/Org panels: safe no-op on pages where elements are absent.
+      // 注意：不要在这里调用 renderWallet()，因为它会重新渲染整个地址列表，
+      // 导致展开的卡片被折叠。handleAddToAddress 和 handleZeroAddress 
+      // 已经通过 updateAddressCardDisplay 更新了卡片显示。
       const pp = window.PanguPay;
       try { pp?.wallet?.refreshOrgPanel?.(); } catch { }
-      try { pp?.wallet?.renderWallet?.(); } catch { }
+      // try { pp?.wallet?.renderWallet?.(); } catch { }  // 移除：会导致卡片折叠
       try { pp?.wallet?.refreshSrcAddrList?.(); } catch { }
       try { pp?.wallet?.updateWalletBrief?.(); } catch { }
 
       // Charts
-      try { pp?.charts?.updateWalletChart?.(); } catch { }
+      try { pp?.charts?.updateWalletChart?.(u as any); } catch { }
     };
 
     store.subscribe((state, prev) => {

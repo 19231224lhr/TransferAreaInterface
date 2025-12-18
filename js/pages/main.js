@@ -5,7 +5,7 @@
  */
 
 import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.ts';
-import { renderWallet, refreshOrgPanel, initAddressModal, handleAddToAddress, handleZeroAddress, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions } from '../services/wallet';
+import { renderWallet, refreshOrgPanel, initAddressModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions, showWalletSkeletons } from '../services/wallet';
 import { initTransferSubmit, initBuildTransaction } from '../services/transfer.ts';
 import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
@@ -20,6 +20,9 @@ export { renderWallet };
  * Processes any pending organization choice and renders wallet
  */
 export function handleMainRoute() {
+  // 首先显示骨架屏，提供更好的加载体验
+  showWalletSkeletons();
+  
   try {
     const raw = localStorage.getItem('guarChoice');
     const choice = raw ? JSON.parse(raw) : null;
@@ -36,6 +39,7 @@ export function handleMainRoute() {
     }
   } catch (_) { }
   
+  // 渲染实际内容（会自动替换骨架屏）
   renderWallet();
   refreshOrgPanel();
   
@@ -96,32 +100,7 @@ export function handleMainRoute() {
  */
 export function initMainPage() {
   handleMainRoute();
-  
-  // Bind address card events
-  const list = document.getElementById('walletAddrList');
-  if (list && !list.dataset._mainBind) {
-    list.dataset._mainBind = 'true';
-    
-    // Delegate click events for address cards
-    list.addEventListener('click', (e) => {
-      const addBtn = e.target.closest('.btn-add');
-      const zeroBtn = e.target.closest('.btn-zero');
-      
-      if (addBtn) {
-        const addr = addBtn.dataset.addr;
-        if (addr) {
-          handleAddToAddress(addr);
-        }
-      }
-      
-      if (zeroBtn) {
-        const addr = zeroBtn.dataset.addr;
-        if (addr) {
-          handleZeroAddress(addr);
-        }
-      }
-    });
-  }
+  // 按钮事件已在 wallet.ts 的 renderWallet 中直接绑定
 }
 
 /**

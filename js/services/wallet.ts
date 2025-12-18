@@ -14,7 +14,7 @@
 
 import { t } from '../i18n/index.js';
 import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
-import { store, selectUser } from '../utils/store.js';
+import { store, selectUser, setUser } from '../utils/store.js';
 import { readAddressInterest } from '../utils/helpers.js';
 import { getActionModalElements } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
@@ -25,6 +25,12 @@ import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
 import { scheduleBatchUpdate } from '../utils/performanceMode.js';
 import { globalEventManager } from '../utils/eventUtils.js';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
+import { 
+  showAddressListSkeleton, 
+  showSrcAddrSkeleton, 
+  clearSkeletonState,
+  isShowingSkeleton
+} from '../utils/walletSkeleton';
 
 // ============================================================================
 // Types
@@ -278,6 +284,12 @@ export function renderWallet(): void {
   
   const addresses = Object.keys((u.wallet?.addressMsg) || {});
   
+  // 更新地址数量显示
+  const addrCountEl = document.getElementById('addrCount');
+  if (addrCountEl) {
+    addrCountEl.textContent = t('wallet.addressCount', { count: addresses.length }) || `${addresses.length} 个地址`;
+  }
+  
   // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
   
@@ -336,13 +348,34 @@ export function renderWallet(): void {
     const doc = new DOMParser().parseFromString(itemHtml, 'text/html');
     item.replaceChildren(...Array.from(doc.body.childNodes));
     
-    // Add click to expand/collapse using globalEventManager
-    const summaryEl = item.querySelector('.addr-card-summary');
+    // Add click to expand/collapse - 直接使用 onclick 避免事件管理器的问题
+    const summaryEl = item.querySelector('.addr-card-summary') as HTMLElement | null;
     if (summaryEl) {
-      globalEventManager.add(summaryEl, 'click', (e: Event) => {
+      summaryEl.onclick = (e: MouseEvent) => {
         e.stopPropagation();
         item.classList.toggle('expanded');
-      });
+      };
+    }
+    
+    // 直接在按钮上绑定事件，使用 onclick 而非 globalEventManager
+    // 这样可以避免事件冒泡和重复绑定的问题
+    const addBtn = item.querySelector('.btn-add') as HTMLButtonElement | null;
+    const zeroBtn = item.querySelector('.btn-zero') as HTMLButtonElement | null;
+    
+    if (addBtn) {
+      addBtn.onclick = (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleAddToAddress(a);
+      };
+    }
+    
+    if (zeroBtn) {
+      zeroBtn.onclick = (e: MouseEvent) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleZeroAddress(a);
+      };
     }
     
     // Add operations menu
@@ -354,6 +387,9 @@ export function renderWallet(): void {
     // Append to fragment instead of directly to DOM
     fragment.appendChild(item);
   });
+  
+  // 清除骨架屏状态
+  clearSkeletonState(list);
   
   // Single DOM update
   list.replaceChildren();
@@ -629,8 +665,13 @@ export function handleAddToAddress(address: string): void {
 
   // Recalculate Wallet ValueDivision
   recalculateWalletValue(u);
-  saveUser(u);
+  // Keep Store as the single source of truth (prevents charts/header/etc from being overwritten by stale Store state).
+  setUser(u);
   updateTotalGasBadge(u);
+
+  // Best-effort persistence for legacy code paths that still read localStorage directly.
+  // Store persistence will also run via statePersistence.
+  saveUser(u);
 
   // Update UI
   const coinType = getCoinName(typeId);
@@ -641,6 +682,9 @@ export function handleAddToAddress(address: string): void {
   try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
+  
+  // 立即更新图表
+  try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
 }
 
 
@@ -666,8 +710,11 @@ export function handleZeroAddress(address: string): void {
 
   // Recalculate ValueDivision
   recalculateWalletValue(u);
-  saveUser(u);
+  setUser(u);
   updateTotalGasBadge(u);
+
+  // Best-effort persistence for legacy code paths that still read localStorage directly.
+  saveUser(u);
   
   // Update UI
   showMiniToast(t('address.clear'), 'info');
@@ -677,6 +724,9 @@ export function handleZeroAddress(address: string): void {
   try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
   
   updateWalletBrief();
+  
+  // 立即更新图表
+  try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
 }
 
 /**
@@ -723,6 +773,7 @@ function updateCurrencyDisplay(u: User): void {
 
 /**
  * Update a specific address card display without re-rendering entire wallet
+ * 直接更新 DOM，不使用 scheduleBatchUpdate 以避免延迟导致的状态问题
  */
 function updateAddressCardDisplay(address: string, found: AddressMetadata): void {
   const key = String(address).toLowerCase();
@@ -738,27 +789,25 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   cards.forEach(card => {
     const btn = card.querySelector('.btn-add') || card.querySelector('.btn-zero');
     if (btn && (btn as HTMLElement).dataset.addr?.toLowerCase() === key) {
-      scheduleBatchUpdate(`addr-card-balance-${key}`, () => {
-        const balanceEl = card.querySelector('.addr-card-balance');
-        if (balanceEl) {
-          balanceEl.textContent = `${balance} ${coinType}`;
-        }
-      });
+      // 直接更新余额显示，不使用 scheduleBatchUpdate
+      const balanceEl = card.querySelector('.addr-card-balance');
+      if (balanceEl) {
+        balanceEl.textContent = `${balance} ${coinType}`;
+      }
       
-      scheduleBatchUpdate(`addr-card-details-${key}`, () => {
-        const detailRows = card.querySelectorAll('.addr-detail-row');
-        detailRows.forEach(row => {
-          const label = row.querySelector('.addr-detail-label');
-          const value = row.querySelector('.addr-detail-value');
-          if (label && value) {
-            const labelText = label.textContent;
-            if (labelText === t('address.balance') || labelText === '余额') {
-              value.textContent = `${balance} ${coinType}`;
-            } else if (labelText === 'GAS') {
-              value.textContent = String(gas);
-            }
+      // 直接更新详情行
+      const detailRows = card.querySelectorAll('.addr-detail-row');
+      detailRows.forEach(row => {
+        const label = row.querySelector('.addr-detail-label');
+        const value = row.querySelector('.addr-detail-value');
+        if (label && value) {
+          const labelText = label.textContent;
+          if (labelText === t('address.balance') || labelText === '余额') {
+            value.textContent = `${balance} ${coinType}`;
+          } else if (labelText === 'GAS') {
+            value.textContent = String(gas);
           }
-        });
+        }
       });
     }
   });
@@ -1129,6 +1178,9 @@ export function rebuildAddrList(): void {
   const addrList = document.getElementById('srcAddrList');
   if (!addrList) return;
   
+  // 清除骨架屏状态
+  clearSkeletonState(addrList);
+  
   const fragment = document.createDocumentFragment();
   
   srcAddrs.forEach(a => {
@@ -1416,3 +1468,41 @@ export function refreshSrcAddrList(): void {
 
 // Re-export recipient functions
 export { initRecipientCards, initAdvancedOptions };
+
+// ============================================================================
+// Skeleton Loading Functions
+// ============================================================================
+
+/**
+ * 显示钱包页面骨架屏
+ * 在页面首次加载时调用，提供更好的加载体验
+ */
+export function showWalletSkeletons(): void {
+  // 地址列表骨架屏
+  const addrList = document.getElementById('walletAddrList');
+  if (addrList && !isShowingSkeleton(addrList)) {
+    showAddressListSkeleton(addrList, { count: 3 });
+  }
+  
+  // 转账来源地址骨架屏
+  const srcAddrList = document.getElementById('srcAddrList');
+  if (srcAddrList && !isShowingSkeleton(srcAddrList)) {
+    showSrcAddrSkeleton(srcAddrList, { count: 2 });
+  }
+}
+
+/**
+ * 隐藏钱包页面骨架屏
+ * 在数据加载完成后调用
+ */
+export function hideWalletSkeletons(): void {
+  const addrList = document.getElementById('walletAddrList');
+  if (addrList) {
+    clearSkeletonState(addrList);
+  }
+  
+  const srcAddrList = document.getElementById('srcAddrList');
+  if (srcAddrList) {
+    clearSkeletonState(srcAddrList);
+  }
+}

@@ -1,0 +1,380 @@
+/* =====================================================
+   Main V2 - Skeleton Loading (骨架屏)
+   钱包页面专用骨架屏样式
+   ===================================================== */
+
+/* ========================================
+   基础骨架屏动画
+   ======================================== */
+.wallet-skeleton {
+  --skeleton-base: rgba(255, 255, 255, 0.1);
+  --skeleton-highlight: rgba(255, 255, 255, 0.2);
+}
+
+.wallet-skeleton .skeleton-item {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-highlight) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+@keyframes walletSkeletonShimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ========================================
+   地址列表骨架屏
+   ======================================== */
+.address-skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 12px;
+}
+
+.address-skeleton-card {
+  background: var(--neutral-100);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 头像骨架 */
+.address-skeleton-card .skeleton-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.15) 25%,
+    rgba(16, 185, 129, 0.25) 50%,
+    rgba(16, 185, 129, 0.15) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* 内容区骨架 */
+.address-skeleton-card .skeleton-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.address-skeleton-card .skeleton-text {
+  height: 14px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-300) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.address-skeleton-card .skeleton-text--addr {
+  width: 120px;
+}
+
+.address-skeleton-card .skeleton-text--balance {
+  width: 60px;
+  margin-left: auto;
+  background: linear-gradient(
+    90deg,
+    rgba(16, 185, 129, 0.1) 25%,
+    rgba(16, 185, 129, 0.2) 50%,
+    rgba(16, 185, 129, 0.1) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* 箭头骨架 */
+.address-skeleton-card .skeleton-arrow {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  background: var(--neutral-200);
+  flex-shrink: 0;
+}
+
+/* ========================================
+   转账来源地址骨架屏
+   ======================================== */
+.src-addr-skeleton-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.src-addr-skeleton-item {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.src-addr-skeleton-item .skeleton-coin {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.src-addr-skeleton-item .skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.src-addr-skeleton-item .skeleton-line {
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.src-addr-skeleton-item .skeleton-line--long {
+  width: 80%;
+}
+
+.src-addr-skeleton-item .skeleton-line--short {
+  width: 40%;
+  opacity: 0.6;
+}
+
+.src-addr-skeleton-item .skeleton-amount {
+  width: 50px;
+  height: 20px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.08) 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    rgba(255, 255, 255, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ========================================
+   组织面板骨架屏
+   ======================================== */
+.org-skeleton-container {
+  padding: 16px;
+}
+
+.org-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.org-skeleton-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.org-skeleton-item .skeleton-label {
+  width: 60px;
+  height: 10px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-300) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 3px;
+}
+
+.org-skeleton-item .skeleton-value {
+  width: 100%;
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-100) 25%,
+    var(--neutral-200) 50%,
+    var(--neutral-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ========================================
+   余额显示骨架屏
+   ======================================== */
+.balance-skeleton {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.balance-skeleton .skeleton-amount {
+  width: 120px;
+  height: 40px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.15) 25%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.balance-skeleton .skeleton-unit {
+  width: 50px;
+  height: 16px;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.1) 25%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ========================================
+   币种卡片骨架屏
+   ======================================== */
+.coin-skeleton-card {
+  padding: 16px 12px;
+  background: var(--neutral-100);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.coin-skeleton-card .skeleton-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-300) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+}
+
+.coin-skeleton-card .skeleton-name {
+  width: 30px;
+  height: 12px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-200) 25%,
+    var(--neutral-300) 50%,
+    var(--neutral-200) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 3px;
+}
+
+.coin-skeleton-card .skeleton-value {
+  width: 50px;
+  height: 18px;
+  background: linear-gradient(
+    90deg,
+    var(--neutral-100) 25%,
+    var(--neutral-200) 50%,
+    var(--neutral-100) 75%
+  );
+  background-size: 200% 100%;
+  animation: walletSkeletonShimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+[data-theme="dark"] .address-skeleton-card {
+  background: var(--neutral-800);
+}
+
+[data-theme="dark"] .address-skeleton-card .skeleton-text {
+  background: linear-gradient(
+    90deg,
+    var(--neutral-700) 25%,
+    var(--neutral-600) 50%,
+    var(--neutral-700) 75%
+  );
+  background-size: 200% 100%;
+}
+
+[data-theme="dark"] .coin-skeleton-card {
+  background: var(--neutral-800);
+}
+
+[data-theme="dark"] .coin-skeleton-card .skeleton-icon,
+[data-theme="dark"] .coin-skeleton-card .skeleton-name,
+[data-theme="dark"] .coin-skeleton-card .skeleton-value {
+  background: linear-gradient(
+    90deg,
+    var(--neutral-700) 25%,
+    var(--neutral-600) 50%,
+    var(--neutral-700) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ========================================
+   减少动画模式
+   ======================================== */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-item,
+  .skeleton-avatar,
+  .skeleton-text,
+  .skeleton-coin,
+  .skeleton-line,
+  .skeleton-amount,
+  .skeleton-label,
+  .skeleton-value,
+  .skeleton-icon,
+  .skeleton-name,
+  .skeleton-unit {
+    animation: none;
+    background-size: 100% 100%;
+  }
+}

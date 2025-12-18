@@ -7,6 +7,41 @@
 import { loadUser } from '../utils/storage';
 import { debounce, rafThrottle } from '../utils/eventUtils.js';
 
+function normalizeTypeId(type) {
+  if (type === 0 || type === 1 || type === 2) return type;
+  if (typeof type === 'string') {
+    const upper = type.trim().toUpperCase();
+    if (upper === 'PGC') return 0;
+    if (upper === 'BTC') return 1;
+    if (upper === 'ETH') return 2;
+  }
+  const n = Number(type);
+  return n === 0 || n === 1 || n === 2 ? n : 0;
+}
+
+function getWalletValueDivision(user) {
+  const w = user && user.wallet;
+  const vd = (w && (w.valueDivision || w.ValueDivision)) || null;
+  if (vd && (vd[0] !== undefined || vd[1] !== undefined || vd[2] !== undefined || vd['0'] !== undefined || vd['1'] !== undefined || vd['2'] !== undefined)) {
+    return {
+      0: Number(vd[0] ?? vd['0'] ?? 0) || 0,
+      1: Number(vd[1] ?? vd['1'] ?? 0) || 0,
+      2: Number(vd[2] ?? vd['2'] ?? 0) || 0,
+    };
+  }
+
+  // Fallback: derive from per-address totals if ValueDivision is missing/stale.
+  const sum = { 0: 0, 1: 0, 2: 0 };
+  const addrMsg = (w && w.addressMsg) || {};
+  for (const k in addrMsg) {
+    const meta = addrMsg[k] || {};
+    const t = normalizeTypeId(meta.type);
+    const v = Number((meta.value && (meta.value.totalValue ?? meta.value.TotalValue)) ?? 0) || 0;
+    if (t === 0 || t === 1 || t === 2) sum[t] += v;
+  }
+  return sum;
+}
+
 // Chart history storage key
 const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
 
@@ -29,7 +64,9 @@ const loadChartHistory = () => {
  */
 const saveChartHistory = (history) => {
   try {
-    const trimmed = history.slice(-10);
+    // Keep more than display window so frequent balance changes don't immediately overwrite history.
+    // Display still uses the last 10 points.
+    const trimmed = history.slice(-120);
     localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
   } catch (e) {}
 };
@@ -39,6 +76,9 @@ const saveChartHistory = (history) => {
  * @param {object} user - User data with wallet info
  */
 export function updateWalletChart(user) {
+  if (!user) {
+    user = loadUser();
+  }
   const chartEl = document.getElementById('balanceChart');
   if (!chartEl) return;
 
@@ -53,10 +93,11 @@ export function updateWalletChart(user) {
   if (!svg || !lineEl || !fillEl || !dotsEl) return;
 
   // Get current balance
-  const vd = (user && user.wallet && user.wallet.valueDivision) || { 0: 0, 1: 0, 2: 0 };
+  const vd = getWalletValueDivision(user);
   const currentVal = Math.round(Number(vd[0] || 0) * 1 + Number(vd[1] || 0) * 100 + Number(vd[2] || 0) * 10);
   const now = Date.now();
   const minuteMs = 60 * 1000;
+  const minPointIntervalMs = 3000;
   
   // Load persistent history data
   let history = loadChartHistory();
@@ -71,16 +112,33 @@ export function updateWalletChart(user) {
     saveChartHistory(history);
   } else {
     const lastPoint = history[history.length - 1];
-    if (now - lastPoint.t >= minuteMs) {
+    const timeSinceLastPoint = now - lastPoint.t;
+
+    const valueChanged = lastPoint.v !== currentVal;
+
+    if (valueChanged) {
+      // Balance changed: update chart immediately.
+      // If changes are very frequent, update the last point instead of pushing too many points.
+      if (timeSinceLastPoint < minPointIntervalMs) {
+        lastPoint.v = currentVal;
+        lastPoint.t = now;
+      } else {
+        history.push({ t: now, v: currentVal });
+      }
+      saveChartHistory(history);
+    } else if (timeSinceLastPoint >= minuteMs) {
+      // Keep time moving even if balance is stable (one point per minute).
       history.push({ t: now, v: currentVal });
       saveChartHistory(history);
-    } else {
-      history[history.length - 1].v = currentVal;
     }
   }
 
   // Take last 10 points for display
+  // 确保最后一个点的值是当前值（防止缓存问题）
   const displayHistory = history.slice(-10);
+  if (displayHistory.length > 0) {
+    displayHistory[displayHistory.length - 1].v = currentVal;
+  }
   
   // Calculate value range - key fix: when all values are same (including all 0), show horizontal line
   const values = displayHistory.map(h => h.v);
