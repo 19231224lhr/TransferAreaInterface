@@ -108,7 +108,59 @@ function deepClone<T>(obj: T): T {
  * Kept for backward compatibility - will be removed in future versions.
  */
 export function resetWalletBindings(): void {
-  // No-op: Event delegation eliminates the need for manual binding resets
+  // Reset binding flags so events can be re-bound when returning to main page
+  // This is necessary because cleanupPageListeners() removes the event handlers
+  // but the dataset flags remain, preventing re-binding
+  
+  // Reset transfer mode tabs binding
+  const modeTabsContainer = document.querySelector('.transfer-mode-tabs') as HTMLElement | null;
+  if (modeTabsContainer) {
+    delete modeTabsContainer.dataset._bind;
+  }
+  
+  // Reset custom select bindings
+  document.querySelectorAll('.custom-select').forEach((el) => {
+    delete (el as HTMLElement).dataset._bind;
+  });
+  
+  // Reset source address list change binding
+  const srcAddrList = document.getElementById(DOM_IDS.srcAddrList) as HTMLElement | null;
+  if (srcAddrList) {
+    delete srcAddrList.dataset._changeBind;
+  }
+  
+  // Reset wallet button bindings
+  const walletButtons = [
+    DOM_IDS.openCreateAddrBtn,
+    DOM_IDS.openImportAddrBtn,
+    DOM_IDS.openHistoryBtn,
+    DOM_IDS.addrCancelBtn,
+    DOM_IDS.addrOkBtn
+  ];
+  walletButtons.forEach((id) => {
+    const el = document.getElementById(id) as HTMLElement | null;
+    if (el) {
+      delete el.dataset._walletBind;
+    }
+  });
+  
+  // Reset transfer submit button binding
+  const tfSendBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLElement | null;
+  if (tfSendBtn) {
+    delete tfSendBtn.dataset._bind;
+  }
+  
+  // Reset build transaction button binding
+  const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn) as HTMLElement | null;
+  if (buildTxBtn) {
+    delete buildTxBtn.dataset._buildBind;
+  }
+  
+  // Reset recipient list binding
+  const billList = document.getElementById(DOM_IDS.billList) as HTMLElement | null;
+  if (billList) {
+    delete billList.dataset._recipientBind;
+  }
 }
 
 // ============================================================================
