@@ -15,6 +15,7 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
+import { UTXOData } from '../types/blockchain';
 
 // ========================================
 // Type Definitions
@@ -35,11 +36,11 @@ export interface AddressValue {
   txCerValue: number;
 }
 
-/** Address data structure */
+/** Address data structure with strict UTXO typing */
 export interface AddressData {
   type: number;
-  utxos: Record<string, any>;
-  txCers: Record<string, any>;
+  utxos: Record<string, UTXOData>;  // Strict UTXO type instead of 'any'
+  txCers: Record<string, number>;   // TXCer ID -> value mapping
   value: AddressValue;
   estInterest: number;
   gas?: number;
@@ -55,10 +56,10 @@ export interface HistoryRecord {
   v: number;
 }
 
-/** Wallet structure */
+/** Wallet structure with strict typing */
 export interface Wallet {
   addressMsg: Record<string, AddressData>;
-  totalTXCers: Record<string, any>;
+  totalTXCers: Record<string, number>;  // TXCer ID -> value mapping
   totalValue: number;
   TotalValue?: number;
   valueDivision: Record<number, number>;

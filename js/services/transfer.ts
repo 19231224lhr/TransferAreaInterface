@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, User } from '../utils/storage';
+import { loadUser, User, AddressData } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
 import { html as viewHtml } from '../utils/view';
@@ -30,9 +30,9 @@ export interface TransferBill {
   ToInterest: number;
 }
 
-/** Wallet snapshot */
+/** Wallet snapshot with strict AddressData typing */
 interface WalletSnapshot {
-  walletMap: Record<string, any>;
+  walletMap: Record<string, AddressData>;
   walletGasTotal: number;
 }
 
@@ -68,12 +68,12 @@ function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: 
 }
 
 /**
- * Get wallet snapshot
+ * Get wallet snapshot with strict typing
  */
 function getWalletSnapshot(): WalletSnapshot {
   const u0 = loadUser();
   let walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
-  const getWalletGasSum = (map: Record<string, any>): number => Object.keys(map).reduce((sum, addr) => {
+  const getWalletGasSum = (map: Record<string, AddressData>): number => Object.keys(map).reduce((sum, addr) => {
     const meta = map[addr];
     return sum + readAddressInterest(meta);
   }, 0);
@@ -83,9 +83,9 @@ function getWalletSnapshot(): WalletSnapshot {
 }
 
 /**
- * Get address metadata
+ * Get address metadata with strict typing
  */
-function getAddrMeta(addr: string): any {
+function getAddrMeta(addr: string): AddressData | null {
   const { walletMap } = getWalletSnapshot();
   return walletMap[addr] || null;
 }

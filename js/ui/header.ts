@@ -36,12 +36,12 @@ interface UserInfo {
 }
 
 /**
- * 地址信息
+ * 地址信息 with strict typing
  */
 interface AddressInfo {
   type?: number;
-  utxos?: Record<string, unknown>;
-  txCers?: Record<string, unknown>;
+  utxos?: Record<string, import('../types/blockchain').UTXOData>;  // Strict UTXO type
+  txCers?: Record<string, number>;  // TXCer ID -> value mapping
   value?: {
     totalValue?: number;
     TotalValue?: number;

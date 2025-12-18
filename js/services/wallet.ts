@@ -33,6 +33,7 @@ import {
   clearSkeletonState,
   isShowingSkeleton
 } from '../utils/walletSkeleton';
+import { UTXOData } from '../types/blockchain';
 
 // ============================================================================
 // Types
@@ -45,11 +46,15 @@ interface AddressValue {
   txCerValue?: number;
 }
 
+/**
+ * Address metadata with strict UTXO typing
+ * Ensures type safety for blockchain data operations
+ */
 interface AddressMetadata {
   type?: number;
   value?: AddressValue;
-  utxos?: Record<string, unknown>;
-  txCers?: Record<string, unknown>;
+  utxos?: Record<string, UTXOData>;  // Strict UTXO type
+  txCers?: Record<string, number>;   // TXCer ID -> value mapping
   estInterest?: number;
   gas?: number;
   origin?: string;
@@ -67,7 +72,7 @@ interface AddressMetadata {
  */
 interface ExtendedWallet {
   addressMsg: Record<string, AddressMetadata>;
-  totalTXCers?: Record<string, unknown>;
+  totalTXCers?: Record<string, number>;  // TXCer ID -> value mapping
   totalValue?: number;
   TotalValue?: number;
   valueDivision?: Record<number, number>;
@@ -686,10 +691,19 @@ export function handleAddToAddress(address: string): void {
   crypto.getRandomValues(randomBytes);
   const txid = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
 
-  // Construct UTXOData
+  // Construct UTXOData with strict typing
   const utxoKey = `${txid}_0`;
-  const utxoData = {
-    UTXO: { TXID: txid, TXType: 0 },
+  const utxoData: UTXOData = {
+    UTXO: { 
+      TXID: txid, 
+      TXType: 0,
+      TXInputsNormal: [],
+      TXInputsCertificate: [],
+      TXOutputs: [],
+      InterestAssign: { Gas: 0, Output: 0, BackAssign: {} },
+      ExTXCerID: [],
+      Data: []
+    },
     Value: inc,
     Type: typeId,
     Time: Date.now(),
@@ -697,11 +711,11 @@ export function handleAddToAddress(address: string): void {
     IsTXCerUTXO: false
   };
 
-  // Add to UTXOs
-  (found.utxos as Record<string, unknown>)[utxoKey] = utxoData;
+  // Add to UTXOs (no type assertion needed)
+  found.utxos![utxoKey] = utxoData;
 
-  // Update Balance
-  const newUtxoVal = Object.values(found.utxos as Record<string, any>).reduce((s, u) => s + (Number(u.Value) || 0), 0);
+  // Update Balance with type-safe reduction
+  const newUtxoVal = Object.values(found.utxos!).reduce((sum, utxo) => sum + utxo.Value, 0);
   found.value.utxoValue = newUtxoVal;
   found.value.totalValue = newUtxoVal + Number(found.value.txCerValue || 0);
   found.estInterest = Number(found.estInterest || 0) + 10;

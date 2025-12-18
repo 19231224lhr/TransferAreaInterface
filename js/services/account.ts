@@ -15,6 +15,7 @@ import { secureFetchWithRetry } from '../utils/security';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
 import { clearLegacyKey } from '../utils/keyEncryption';
 import { DOM_IDS } from '../config/domIds';
+import { UTXOData } from '../types/blockchain';
 
 // ========================================
 // Type Definitions
@@ -29,11 +30,11 @@ export interface AccountData {
   pubYHex: string;
 }
 
-/** Address metadata structure */
+/** Address metadata structure with strict UTXO typing */
 export interface AddressMetadata {
   type: number;
-  utxos: Record<string, any>;
-  txCers: Record<string, any>;
+  utxos: Record<string, UTXOData>;  // Strict UTXO type
+  txCers: Record<string, number>;   // TXCer ID -> value mapping
   value: { totalValue: number; utxoValue: number; txCerValue: number };
   estInterest: number;
   origin?: string;

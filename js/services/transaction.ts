@@ -5,6 +5,14 @@
  */
 
 import { bytesToHex, ecdsaSignData, ECDSASignature } from '../utils/crypto';
+import { 
+  TXInputNormal, 
+  TxCertificate,
+  TXOutput as BlockchainTXOutput,
+  InterestAssign as BlockchainInterestAssign,
+  EcdsaSignature,
+  UTXOData
+} from '../types/blockchain';
 
 // ========================================
 // Type Definitions
@@ -17,34 +25,21 @@ export interface PublicKey {
   YHex: string;
 }
 
-/** Transaction output structure */
-export interface TXOutput {
-  ToAddress: string;
-  ToValue: number;
-  ToGuarGroupID: string;
-  ToPublicKey: PublicKey;
-  ToInterest?: number;
-  ToCoinType?: number;
-  IsPayForGas?: boolean;
-  IsCrossChain?: boolean;
-  IsGuarMake?: boolean;
+/** Transaction output structure (extends blockchain type) */
+export interface TXOutput extends BlockchainTXOutput {
   Hash?: string;
 }
 
-/** ECDSA signature structure */
+/** ECDSA signature structure (for compatibility) */
 export interface TXSignature {
   R: string | null;
   S: string | null;
 }
 
-/** Interest assignment structure */
-export interface InterestAssign {
-  Gas: number;
-  Output: number;
-  BackAssign: Record<string, number>;
-}
+/** Interest assignment structure (re-export from blockchain) */
+export type InterestAssign = BlockchainInterestAssign;
 
-/** Transaction structure */
+/** Transaction structure with strict types */
 export interface Transaction {
   Version: number;
   TXID: string;
@@ -53,8 +48,8 @@ export interface Transaction {
   Value: number;
   ValueDivision: Record<number, number>;
   GuarantorGroup: string;
-  TXInputsNormal: any[];
-  TXInputsCertificate: any[];
+  TXInputsNormal: TXInputNormal[];       // Strict type instead of any[]
+  TXInputsCertificate: TxCertificate[];  // Strict type instead of any[]
   TXOutputs: TXOutput[];
   InterestAssign: InterestAssign;
   UserSignature: TXSignature;
@@ -86,12 +81,12 @@ export interface BuildTXInfo {
   InterestAssign: InterestAssign;
 }
 
-/** Address data structure */
+/** Address data structure with strict UTXO typing */
 export interface AddressData {
   type?: number;
   value?: { totalValue?: number; TotalValue?: number; utxoValue?: number; txCerValue?: number };
-  utxos?: Record<string, any>;
-  txCers?: Record<string, any>;
+  utxos?: Record<string, UTXOData>;  // Strict UTXO type
+  txCers?: Record<string, number>;   // TXCer ID -> value mapping
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
@@ -477,7 +472,7 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
         const addrType = Number(addrData.type || 0);
         if (addrType !== typeId) continue;
 
-        const utxos = (addrData.utxos || {}) as Record<string, any>;
+        const utxos = addrData.utxos || {};
         const utxoKeys = Object.keys(utxos).sort(); // stable selection
         for (const utxoKey of utxoKeys) {
           const utxo = utxos[utxoKey];
