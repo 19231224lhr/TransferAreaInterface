@@ -5,18 +5,17 @@
  * 特性：
  * - 声明式 UI 绑定，状态变化自动同步 DOM
  * - 询问动画序列
- * - 组织搜索和选择
+ * - 组织搜索和选择（调用真实后端 API）
  * 
  * @module pages/joinGroup
  */
 
 import { loadUser, saveUser, getJoinedGroup, saveGuarChoice } from '../utils/storage';
 import { t } from '../i18n/index.js';
-import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants';
-import { escapeHtml } from '../utils/security';
+import { DEFAULT_GROUP } from '../config/constants';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
 import { DOM_IDS, idSelector } from '../config/domIds';
-import { html as viewHtml, renderInto } from '../utils/view';
+import { queryGroupInfoSafe, type GroupInfo } from '../services/group';
 import {
   createReactiveState,
   type ReactiveState
@@ -27,31 +26,24 @@ import {
 // ============================================================================
 
 /**
- * 组织信息
- */
-interface GroupInfo {
-  groupID: string;
-  aggreNode: string;
-  assignNode: string;
-  pledgeAddress: string;
-}
-
-/**
  * 询问动画阶段
  */
 type InquiryStage = 0 | 1 | 2 | 3;
+
+/**
+ * 搜索状态
+ */
+type SearchState = 'idle' | 'loading' | 'found' | 'not-found' | 'error';
 
 /**
  * 加入组织页面状态
  */
 interface JoinGroupPageState {
   // 当前选中的组织
-  selectedGroup: GroupInfo;
+  selectedGroup: GroupInfo | null;
   
-  // 搜索结果显示
-  showSearchResult: boolean;
-  showSearchEmpty: boolean;
-  showSuggest: boolean;
+  // 搜索状态
+  searchState: SearchState;
   
   // 搜索按钮状态
   searchBtnDisabled: boolean;
@@ -81,10 +73,8 @@ interface JoinGroupPageState {
  * 初始状态
  */
 const initialState: JoinGroupPageState = {
-  selectedGroup: DEFAULT_GROUP as GroupInfo,
-  showSearchResult: false,
-  showSearchEmpty: true,
-  showSuggest: false,
+  selectedGroup: null,
+  searchState: 'idle',
   searchBtnDisabled: true,
   inquiryStage: 0,
   inquirySuccess: false,
@@ -102,17 +92,8 @@ const initialState: JoinGroupPageState = {
  * 状态到 DOM 的绑定配置
  */
 const stateBindings = {
-  showSearchResult: [
-    { selector: '#searchResult', type: 'visible' as const }
-  ],
-  showSearchEmpty: [
-    { selector: '#searchEmpty', type: 'visible' as const }
-  ],
-  showSuggest: [
-    { selector: '#groupSuggest', type: 'visible' as const }
-  ],
   searchBtnDisabled: [
-    { selector: '#joinSearchBtn', type: 'prop' as const, name: 'disabled' }
+    { selector: '#groupSearchBtn', type: 'prop' as const, name: 'disabled' }
   ],
   recGroupID: [
     { selector: '#recGroupID', type: 'text' as const }
@@ -147,7 +128,10 @@ let pageState: ReactiveState<JoinGroupPageState> | null = null;
 let eventCleanups: (() => void)[] = [];
 
 // 当前选中的组织 (兼容旧 API)
-let currentSelectedGroup: GroupInfo = DEFAULT_GROUP as GroupInfo;
+let currentSelectedGroup: GroupInfo | null = null;
+
+// 正在搜索的请求标记
+let searchAbortController: AbortController | null = null;
 
 // ============================================================================
 // Inquiry Animation
@@ -390,7 +374,7 @@ export function startInquiryAnimation(onComplete?: () => void): void {
 /**
  * 获取当前选中的组织
  */
-export function getCurrentSelectedGroup(): GroupInfo {
+export function getCurrentSelectedGroup(): GroupInfo | null {
   return currentSelectedGroup;
 }
 
@@ -403,6 +387,43 @@ export function setCurrentSelectedGroup(group: GroupInfo): void {
 }
 
 /**
+ * 更新搜索 UI 状态
+ */
+function updateSearchUI(state: SearchState): void {
+  const searchEmpty = document.getElementById(DOM_IDS.searchEmpty);
+  const searchLoading = document.getElementById(DOM_IDS.searchLoading);
+  const searchNotFound = document.getElementById(DOM_IDS.searchNotFound);
+  const searchResult = document.getElementById(DOM_IDS.searchResult);
+  
+  // 隐藏所有状态
+  searchEmpty?.classList.add('hidden');
+  searchLoading?.classList.add('hidden');
+  searchNotFound?.classList.add('hidden');
+  searchResult?.classList.add('hidden');
+  
+  // 显示对应状态
+  switch (state) {
+    case 'idle':
+      searchEmpty?.classList.remove('hidden');
+      break;
+    case 'loading':
+      searchLoading?.classList.remove('hidden');
+      break;
+    case 'not-found':
+    case 'error':
+      searchNotFound?.classList.remove('hidden');
+      break;
+    case 'found':
+      searchResult?.classList.remove('hidden');
+      break;
+  }
+  
+  if (pageState) {
+    pageState.set({ searchState: state });
+  }
+}
+
+/**
  * 显示组织信息到搜索结果
  */
 function showGroupInfo(group: GroupInfo): void {
@@ -411,16 +432,15 @@ function showGroupInfo(group: GroupInfo): void {
   if (pageState) {
     pageState.set({
       selectedGroup: group,
-      showSuggest: false,
-      showSearchEmpty: false,
-      showSearchResult: true,
-      searchBtnDisabled: false,
+      searchState: 'found',
       srGroupID: group.groupID,
       srAggre: group.aggreNode,
       srAssign: group.assignNode,
       srPledge: group.pledgeAddress
     });
   }
+  
+  updateSearchUI('found');
   
   // 添加 reveal 动画
   const sr = document.getElementById(DOM_IDS.searchResult);
@@ -431,16 +451,73 @@ function showGroupInfo(group: GroupInfo): void {
 }
 
 /**
- * 按 ID 搜索组织
+ * 执行真实 API 搜索
  */
-function doSearchById(): void {
+async function doRealSearch(): Promise<void> {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
+  const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   const q = groupSearch?.value.trim();
+  
   if (!q) return;
   
-  const g = (GROUP_LIST as GroupInfo[]).find(x => x.groupID === q);
-  if (g) {
-    showGroupInfo(g);
+  // 验证格式
+  const err = quickValidate(q, ['required', 'orgId']);
+  if (err) return;
+  
+  console.info(`[JoinGroup] 🔍 开始搜索组织: ${q}`);
+  
+  // 取消之前的请求
+  if (searchAbortController) {
+    searchAbortController.abort();
+  }
+  searchAbortController = new AbortController();
+  
+  // 显示加载状态
+  updateSearchUI('loading');
+  if (groupSearchBtn) groupSearchBtn.disabled = true;
+  
+  // 记录搜索开始时间，确保最小加载时长
+  const searchStartTime = Date.now();
+  const MIN_LOADING_TIME = 600; // 最小加载时间 600ms，避免闪烁
+  
+  try {
+    const result = await queryGroupInfoSafe(q);
+    
+    // 确保加载动画至少显示 MIN_LOADING_TIME 毫秒
+    const elapsed = Date.now() - searchStartTime;
+    if (elapsed < MIN_LOADING_TIME) {
+      await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
+    }
+    
+    if (result.success && result.data) {
+      console.info(`[JoinGroup] ✓ 找到组织: ${result.data.groupID} (Aggre: ${result.data.aggreNode}, Assign: ${result.data.assignNode})`);
+      showGroupInfo(result.data);
+    } else {
+      if (result.notFound) {
+        console.warn(`[JoinGroup] ✗ 组织不存在: ${q}`);
+      } else {
+        console.error(`[JoinGroup] ✗ 搜索失败: ${result.error}`);
+      }
+      updateSearchUI('not-found');
+      currentSelectedGroup = null;
+      if (pageState) {
+        pageState.set({ selectedGroup: null, searchState: 'not-found' });
+      }
+    }
+  } catch (error) {
+    // 如果是取消请求，不显示错误
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.debug(`[JoinGroup] 搜索已取消: ${q}`);
+      return;
+    }
+    console.error(`[JoinGroup] ✗ 搜索异常:`, error);
+    updateSearchUI('error');
+    currentSelectedGroup = null;
+    if (pageState) {
+      pageState.set({ selectedGroup: null, searchState: 'error' });
+    }
+  } finally {
+    if (groupSearchBtn) groupSearchBtn.disabled = false;
   }
 }
 
@@ -449,79 +526,27 @@ function doSearchById(): void {
 // ============================================================================
 
 /**
- * 处理组织搜索输入
+ * 处理组织搜索输入 - 只做验证，不显示下拉建议
  */
 function handleGroupSearchInput(): void {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
-  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
+  const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   const q = groupSearch?.value.trim() || '';
   
   const err = quickValidate(q, ['required', 'orgId']);
   
+  // 更新搜索按钮状态
+  const isValid = !err && q.length > 0;
+  if (groupSearchBtn) {
+    groupSearchBtn.disabled = !isValid;
+  }
   if (pageState) {
-    pageState.set({ searchBtnDisabled: !!err });
+    pageState.set({ searchBtnDisabled: !isValid });
   }
   
-  if (err) {
-    if (pageState) {
-      pageState.set({
-        showSuggest: false,
-        showSearchResult: false,
-        showSearchEmpty: true
-      });
-    }
-    return;
-  }
-  
+  // 如果输入为空，显示空状态
   if (!q) {
-    if (pageState) {
-      pageState.set({
-        showSuggest: false,
-        showSearchResult: false,
-        showSearchEmpty: true,
-        searchBtnDisabled: true
-      });
-    }
-    return;
-  }
-  
-  const list = (GROUP_LIST as GroupInfo[]).filter(g => g.groupID.includes(q)).slice(0, 6);
-  
-  if (list.length === 0) {
-    if (pageState) {
-      pageState.set({ showSuggest: false });
-    }
-    return;
-  }
-  
-  if (groupSuggest) {
-    // Use lit-html for safe and efficient rendering
-    const template = viewHtml`
-      ${list.map(g => viewHtml`
-        <div class="item" data-id="${g.groupID}">
-          <span class="suggest-id">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-              <circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-            </svg>
-            <span class="suggest-id-text">${g.groupID}</span>
-          </span>
-          <span class="suggest-nodes">
-            <span class="node-badge aggre">${g.aggreNode}</span>
-            <span class="node-badge assign">${g.assignNode}</span>
-          </span>
-          <span class="suggest-arrow">→</span>
-        </div>
-      `)}
-    `;
-
-    renderInto(groupSuggest, template);
-    
-    if (pageState) {
-      pageState.set({ showSuggest: true });
-    }
+    updateSearchUI('idle');
   }
 }
 
@@ -530,29 +555,32 @@ function handleGroupSearchInput(): void {
  */
 function handleGroupSearchKeydown(e: KeyboardEvent): void {
   if (e.key === 'Enter') {
-    doSearchById();
+    const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
+    if (groupSearchBtn && !groupSearchBtn.disabled) {
+      doRealSearch();
+    }
   }
 }
 
 /**
- * 处理建议列表点击
+ * 处理搜索按钮点击
  */
-function handleSuggestClick(e: MouseEvent): void {
-  const target = (e.target as HTMLElement).closest('.item');
-  if (!target) return;
-  
-  const id = target.getAttribute('data-id');
-  const g = (GROUP_LIST as GroupInfo[]).find(x => x.groupID === id);
-  if (g) {
-    showGroupInfo(g);
-  }
+function handleSearchBtnClick(): void {
+  doRealSearch();
 }
 
 /**
  * 处理加入推荐组织
  */
 function handleJoinRecClick(): void {
-  handleJoinGroup(currentSelectedGroup);
+  // 使用默认组织
+  const defaultGroup: GroupInfo = {
+    groupID: DEFAULT_GROUP.groupID,
+    aggreNode: DEFAULT_GROUP.aggreNode,
+    assignNode: DEFAULT_GROUP.assignNode,
+    pledgeAddress: DEFAULT_GROUP.pledgeAddress
+  };
+  handleJoinGroup(defaultGroup);
 }
 
 /**
@@ -563,8 +591,9 @@ async function handleJoinSearchClick(): Promise<void> {
   const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
   
   if (joinSearchBtn?.disabled) return;
+  if (!currentSelectedGroup) return;
   
-  const g = currentSelectedGroup || DEFAULT_GROUP as GroupInfo;
+  const g = currentSelectedGroup;
   
   try {
     // 显示加载状态
@@ -666,9 +695,7 @@ function resetTabsAndPanes(): void {
   const recPane = document.getElementById(DOM_IDS.recPane);
   const searchPane = document.getElementById(DOM_IDS.searchPane);
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
-  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
-  const searchResult = document.getElementById(DOM_IDS.searchResult);
-  const searchEmpty = document.getElementById(DOM_IDS.searchEmpty);
+  const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   
   // 重置标签状态 - 选中推荐标签
   joinTabs.forEach((tab, index) => {
@@ -691,10 +718,11 @@ function resetTabsAndPanes(): void {
   // 重置搜索输入
   if (groupSearch) groupSearch.value = '';
   
-  // 重置搜索结果
-  if (groupSuggest) groupSuggest.classList.add('hidden');
-  if (searchResult) searchResult.classList.add('hidden');
-  if (searchEmpty) searchEmpty.classList.remove('hidden');
+  // 重置搜索按钮
+  if (groupSearchBtn) groupSearchBtn.disabled = true;
+  
+  // 重置搜索 UI 状态
+  updateSearchUI('idle');
 }
 
 /**
@@ -709,7 +737,16 @@ export function handleJoinGroup(group: GroupInfo): void {
   // 更新用户
   const u = loadUser();
   if (u?.accountId) {
-    saveUser({ accountId: u.accountId, orgNumber: group.groupID, guarGroup: group });
+    saveUser({ 
+      accountId: u.accountId, 
+      orgNumber: group.groupID, 
+      guarGroup: {
+        groupID: group.groupID,
+        aggreNode: group.aggreNode,
+        assignNode: group.assignNode,
+        pledgeAddress: group.pledgeAddress
+      }
+    });
   }
   
   // 导航到询问页面
@@ -765,7 +802,7 @@ function initJoinTabs(): void {
  */
 function initGroupSearch(): void {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
-  const groupSuggest = document.getElementById(DOM_IDS.groupSuggest);
+  const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   
   // 添加表单验证
   addInlineValidation(idSelector(DOM_IDS.groupSearch), [
@@ -778,8 +815,9 @@ function initGroupSearch(): void {
     addEvent(groupSearch, 'keydown', handleGroupSearchKeydown);
   }
   
-  if (groupSuggest) {
-    addEvent(groupSuggest, 'click', handleSuggestClick);
+  // 搜索按钮点击
+  if (groupSearchBtn) {
+    addEvent(groupSearchBtn, 'click', handleSearchBtnClick);
   }
 }
 
@@ -833,19 +871,17 @@ export function initJoinGroupPage(): void {
   // 创建新的响应式状态
   pageState = createReactiveState(initialState, stateBindings);
   
-  // 设置当前选中组织为默认组织
-  currentSelectedGroup = DEFAULT_GROUP as GroupInfo;
+  // 清除当前选中组织
+  currentSelectedGroup = null;
   
-  // 设置默认组织信息
+  // 设置默认组织信息（用于推荐面板）
   pageState.set({
-    selectedGroup: DEFAULT_GROUP as GroupInfo,
+    selectedGroup: null,
+    searchState: 'idle',
     recGroupID: DEFAULT_GROUP.groupID,
     recAggre: DEFAULT_GROUP.aggreNode,
     recAssign: DEFAULT_GROUP.assignNode,
     recPledge: DEFAULT_GROUP.pledgeAddress,
-    showSearchResult: false,
-    showSearchEmpty: true,
-    showSuggest: false,
     searchBtnDisabled: true
   });
   

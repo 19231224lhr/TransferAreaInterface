@@ -50,6 +50,8 @@ import {
 
 import { initRouter, routeTo } from './router';
 
+import { performStartupHealthCheck, onGatewayStatusChange } from './services/api';
+
 // ========================================
 // P2: Online/Offline Indicator Setup
 // ========================================
@@ -155,6 +157,39 @@ function setupServiceWorkerUpdates(): void {
 
   onUpdateAvailable(() => {
     showBanner();
+  });
+}
+
+// ========================================
+// Gateway Health Check
+// ========================================
+
+/**
+ * Perform Gateway health check on application startup
+ * Shows a toast notification if backend service is unavailable
+ */
+async function performGatewayHealthCheck(): Promise<void> {
+  try {
+    const isHealthy = await performStartupHealthCheck();
+    
+    if (!isHealthy) {
+      // Import toast lazily to avoid circular dependency
+      const { showErrorToast } = await import('./utils/toast.js');
+      showErrorToast(
+        t('gateway.unavailable', '后端服务不可用，部分功能可能无法正常使用'),
+        t('gateway.error', '服务连接失败')
+      );
+    }
+  } catch (error) {
+    console.warn('[Bootstrap] Gateway health check error:', error);
+    // Don't show toast for check errors, just log
+  }
+  
+  // Subscribe to future status changes
+  onGatewayStatusChange((status) => {
+    if (!status.isOnline && status.errorMessage) {
+      console.warn('[Bootstrap] Gateway went offline:', status.errorMessage);
+    }
   });
 }
 
@@ -308,6 +343,10 @@ function init(): void {
     });
 
   setupOnlineIndicator();
+
+  // Perform Gateway health check on startup
+  // This runs async and shows a toast if backend is unavailable
+  performGatewayHealthCheck();
 
   initUserMenu();
   initHeaderScroll();

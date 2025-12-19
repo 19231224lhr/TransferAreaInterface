@@ -195,7 +195,35 @@
               </svg>
               <input id="groupSearch" type="text" data-i18n-placeholder="join.enterOrgNumber" placeholder="输入担保组织编号..." autocomplete="off" />
             </div>
-            <div id="groupSuggest" class="join-suggest hidden"></div>
+            <button id="groupSearchBtn" class="join-search-action-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span data-i18n="join.search">搜索</span>
+            </button>
+          </div>
+
+          <!-- 搜索中状态 -->
+          <div id="searchLoading" class="join-loading-state hidden">
+            <div class="join-loader-logo">
+              <img src="/logo.png" alt="Logo" class="loader-logo-img" width="48" height="48" />
+            </div>
+            <p data-i18n="join.searching">正在查询...</p>
+          </div>
+
+          <!-- 组织不存在状态 -->
+          <div id="searchNotFound" class="join-not-found-state hidden">
+            <div class="join-not-found-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <path d="M11 7v4" />
+                <circle cx="11" cy="15" r="0.5" fill="currentColor" />
+              </svg>
+            </div>
+            <h3 class="join-not-found-title" data-i18n="join.orgNotFound">未找到该担保组织</h3>
+            <p class="join-not-found-desc" data-i18n="join.orgNotFoundDesc">请检查组织编号是否正确，或稍后再试</p>
           </div>
 
           <!-- 搜索结果 -->
