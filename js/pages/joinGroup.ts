@@ -489,10 +489,11 @@ async function doRealSearch(): Promise<void> {
       await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
     }
     
-    if (result.success && result.data) {
+    if (result.success) {
       console.info(`[JoinGroup] ✓ 找到组织: ${result.data.groupID} (Aggre: ${result.data.aggreNode}, Assign: ${result.data.assignNode})`);
       showGroupInfo(result.data);
     } else {
+      // result.success === false, so notFound and error are available
       if (result.notFound) {
         console.warn(`[JoinGroup] ✗ 组织不存在: ${q}`);
       } else {
@@ -576,8 +577,11 @@ function handleJoinRecClick(): void {
   // 使用默认组织
   const defaultGroup: GroupInfo = {
     groupID: DEFAULT_GROUP.groupID,
+    peerGroupID: '',
     aggreNode: DEFAULT_GROUP.aggreNode,
+    aggrePeerID: '',
     assignNode: DEFAULT_GROUP.assignNode,
+    assignPeerID: '',
     pledgeAddress: DEFAULT_GROUP.pledgeAddress
   };
   handleJoinGroup(defaultGroup);

@@ -87,6 +87,7 @@ TransferAreaInterface/
 │   │   ├── constants.ts    # App constants and types (TS)
 │   │   ├── domIds.ts       # 🆕 DOM ID 集中管理 (TS)
 │   │   ├── pageTemplates.ts # Page template configuration (TS)
+│   │   ├── api.ts          # 🆕 Gateway API 配置 (端点, 超时, 重试)
 │   │   └── constants.js.backup # Original JS version
 │   │
 │   ├── i18n/               # Internationalization
@@ -107,6 +108,8 @@ TransferAreaInterface/
 │   │   └── groupDetail.js  # Organization details
 │   │
 │   ├── services/           # Business logic services (TS + JS)
+│   │   ├── api.ts          # 🆕 Gateway API 客户端核心 (HTTP, 重试, 错误处理)
+│   │   ├── group.ts        # 🆕 担保组织查询服务
 │   │   ├── account.ts      # Account management (TS)
 │   │   ├── transaction.ts  # Transaction building (TS)
 │   │   ├── transfer.ts     # Transfer form logic (TS)
@@ -384,6 +387,9 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
 | `js/utils/reactive.ts` | 响应式 UI 绑定系统 |
 | **`js/utils/walletSkeleton.ts`** | **🆕 骨架屏加载工具** |
+| **`js/services/api.ts`** | **🆕 Gateway API 客户端核心** |
+| **`js/services/group.ts`** | **🆕 担保组织查询服务** |
+| **`js/config/api.ts`** | **🆕 Gateway API 配置** |
 | `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
 | `js/services/transferDraft.ts` | Transfer form state persistence |
@@ -415,6 +421,12 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - Store 是唯一的事实来源 (Single Source of Truth)
 - localStorage 仅用于启动时水合 + 持久化
 - 使用 `initUserPersistence()` 自动同步 Store 到 localStorage
+
+**🆕 Gateway API Client Pattern (2025):**
+- 统一的 HTTP 客户端 (`js/services/api.ts`)
+- 集中的 API 配置 (`js/config/api.ts`)
+- 按业务实体组织的服务模块 (`js/services/*.ts`)
+- 自动超时、重试、结构化错误处理
 
 ### Backup Files
 

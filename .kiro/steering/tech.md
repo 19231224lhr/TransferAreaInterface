@@ -135,6 +135,7 @@ go run ./backend/verify_tx
 - `js/config/constants.ts` - 配置常量和类型定义
 - `js/config/pageTemplates.ts` - 页面模板配置
 - `js/config/domIds.ts` - 🆕 DOM ID 集中管理
+- `js/config/api.ts` - 🆕 Gateway API 配置 (端点、超时、重试)
 
 **Utils:**
 - `js/utils/crypto.ts` - 加密/哈希/签名工具
@@ -158,6 +159,8 @@ go run ./backend/verify_tx
 - `js/utils/pageManager.ts` - 页面管理器
 
 **Services:**
+- `js/services/api.ts` - 🆕 Gateway API 客户端核心 (HTTP 请求、重试、错误处理)
+- `js/services/group.ts` - 🆕 担保组织查询服务
 - `js/services/account.ts` - 账户服务
 - `js/services/transaction.ts` - 交易构建服务
 - `js/services/transfer.ts` - 转账表单逻辑
@@ -1266,3 +1269,206 @@ Before submitting code (提交代码前检查):
 ## Environment Variables
 
 - `PORT`: Server port (default: 8081 for Go, 3000 for Vite)
+
+---
+
+## Gateway API Client Framework (Gateway API 客户端框架) 🆕
+
+### Overview
+
+项目使用统一的 Gateway API 客户端框架与后端服务通信，提供类型安全、自动重试、结构化错误处理等功能。
+
+### Core Files
+
+| File | Purpose |
+|------|---------|
+| `js/config/api.ts` | API 配置中心 (端点、超时、重试) |
+| `js/services/api.ts` | HTTP 客户端核心 (请求、重试、错误处理) |
+| `js/services/group.ts` | 担保组织业务模块 |
+
+### API Configuration (`js/config/api.ts`)
+
+```typescript
+// API 基础 URL
+export const API_BASE_URL = 'http://localhost:8080';
+
+// 默认超时 (10秒)
+export const DEFAULT_TIMEOUT = 10000;
+
+// 默认重试次数
+export const DEFAULT_RETRY_COUNT = 2;
+
+// API 端点定义
+export const API_ENDPOINTS = {
+  HEALTH: '/health',
+  GROUP_INFO: (groupId: string) => `/api/v1/group/${groupId}`,
+  USER_NEW_ADDRESS: '/api/v1/assign/user-new-address',
+  USER_TX: '/api/v1/assign/user-tx',
+  // ... more endpoints
+} as const;
+```
+
+### HTTP Client (`js/services/api.ts`)
+
+#### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **自动超时** | 默认 10 秒超时，可配置 |
+| **指数退避重试** | 失败后自动重试，延迟递增 |
+| **结构化错误** | `ApiRequestError` 类区分网络错误、超时、中止等 |
+| **AbortController** | 支持请求取消 |
+| **请求/响应拦截** | 可扩展的拦截器支持 |
+
+#### API Client Usage
+
+```typescript
+import { apiClient } from './api';
+
+// GET 请求
+const data = await apiClient.get<GroupInfo>('/api/v1/group/12345678');
+
+// POST 请求
+const result = await apiClient.post<TxResult>('/api/v1/assign/user-tx', txData);
+
+// 带配置的请求
+const data = await apiClient.get<HealthResponse>('/health', {
+  timeout: 5000,
+  retries: 1,
+  silent: true  // 不显示错误 toast
+});
+```
+
+#### Error Handling
+
+```typescript
+import { apiClient, ApiRequestError, isNetworkError, isTimeoutError, getErrorMessage } from './api';
+
+try {
+  const data = await apiClient.get('/api/v1/group/12345678');
+} catch (error) {
+  if (error instanceof ApiRequestError) {
+    if (error.isTimeout) {
+      console.log('请求超时');
+    } else if (error.isNetworkError) {
+      console.log('网络错误 - 后端服务是否运行？');
+    } else if (error.status === 404) {
+      console.log('资源未找到');
+    }
+  }
+  
+  // 获取用户友好的错误消息
+  const message = getErrorMessage(error);
+}
+```
+
+#### Gateway Health Check
+
+```typescript
+import { checkGatewayHealth, getGatewayStatus, onGatewayStatusChange } from './api';
+
+// 检查后端健康状态
+const isHealthy = await checkGatewayHealth();
+
+// 获取当前状态
+const status = getGatewayStatus();
+console.log(status.isOnline, status.lastCheck, status.errorMessage);
+
+// 监听状态变化
+const unsubscribe = onGatewayStatusChange((status) => {
+  console.log('Gateway status changed:', status.isOnline);
+});
+```
+
+### Business Service Module (`js/services/group.ts`)
+
+#### Type Definitions
+
+```typescript
+// 后端返回格式 (PascalCase)
+export interface GuarGroupTable {
+  GroupID?: string;
+  PeerGroupID: string;
+  AggrID?: string;
+  AggrPeerID: string;
+  AssiID?: string;
+  AssiPeerID: string;
+  PledgeAddress?: string;
+}
+
+// 前端规范化格式 (camelCase)
+export interface GroupInfo {
+  groupID: string;
+  peerGroupID: string;
+  aggreNode: string;
+  assignNode: string;
+  pledgeAddress: string;
+}
+
+// 统一结果类型
+export type QueryResult<T> =
+  | { success: true; data: T }
+  | { success: false; error: string; notFound?: boolean };
+```
+
+#### API Functions
+
+```typescript
+import { queryGroupInfo, queryGroupInfoSafe } from './group';
+
+// 直接查询 (抛出异常)
+try {
+  const info = await queryGroupInfo('12345678');
+  console.log(info.groupID, info.aggreNode);
+} catch (error) {
+  // 处理错误
+}
+
+// 安全查询 (返回 Result 类型)
+const result = await queryGroupInfoSafe('12345678');
+if (result.success) {
+  console.log(result.data.groupID);
+} else {
+  console.log(result.error, result.notFound);
+}
+```
+
+### Service Module Organization (服务模块组织规范) 🆕
+
+**核心原则：按业务实体归类，而非按页面归类**
+
+所有前后端 API 对接方法必须写在 `js/services/` 目录下对应的业务实体文件中：
+
+| 业务实体 | 文件 | 包含的 API |
+|---------|------|-----------|
+| 账户 | `account.ts` | 创建账户、导入账户、账户信息查询 |
+| 交易 | `transaction.ts` | 交易构建、交易签名、交易提交 |
+| 组织 | `group.ts` | 组织查询、加入组织、退出组织 |
+| 钱包 | `wallet.ts` | 地址管理、余额查询、UTXO 操作 |
+| 转账 | `transfer.ts` | 转账表单逻辑、转账验证 |
+
+**示例：**
+```typescript
+// ✅ 正确：不管在哪个页面调用，组织相关的 API 都放在 group.ts
+// js/services/group.ts
+export async function queryGroupInfo(groupId: string): Promise<GroupInfo> { ... }
+export async function joinGroup(groupId: string): Promise<void> { ... }
+export async function exitGroup(): Promise<void> { ... }
+
+// 在任何页面中使用
+import { queryGroupInfo } from '../services/group';
+const info = await queryGroupInfo('12345678');
+
+// ❌ 错误：不要在页面文件中直接写 API 调用
+// js/pages/joinGroup.ts
+async function handleJoin() {
+  const response = await fetch('/api/v1/group/12345678');  // ❌ 错误！
+}
+```
+
+**优势：**
+- ✅ **复用性高**: 任何页面都可以导入使用
+- ✅ **逻辑清晰**: 按业务实体组织，易于查找
+- ✅ **类型安全**: 集中定义类型，避免重复
+- ✅ **易于测试**: 可以单独测试业务模块
+- ✅ **易于维护**: API 变更只需修改一处

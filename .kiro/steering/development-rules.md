@@ -188,7 +188,52 @@ interface AddressData {
 }
 ```
 
-### 10. unsafeHTML Usage (unsafeHTML 使用规范) ✅ NEW
+### 10. Service Module Organization (服务模块组织规范) ✅ NEW
+
+**所有前后端 API 对接代码必须按业务实体归类到 `js/services/` 目录**
+
+核心原则：**按业务实体归类，而非按页面归类**
+
+- ✅ **不管在哪个页面调用，只要涉及"账户"的接口，统统写在 `services/account.ts`**
+- ✅ **不管在哪个页面调用，只要涉及"组织"的接口，统统写在 `services/group.ts`**
+- ✅ **不管在哪个页面调用，只要涉及"交易"的接口，统统写在 `services/transaction.ts`**
+- ❌ **禁止在页面文件中直接写 API 调用逻辑**
+
+**服务模块划分：**
+
+| 业务实体 | 文件 | 包含的 API |
+|---------|------|-----------|
+| API 核心 | `api.ts` | HTTP 客户端、错误处理、健康检查 |
+| 账户 | `account.ts` | 创建账户、导入账户、账户信息查询 |
+| 交易 | `transaction.ts` | 交易构建、交易签名、交易提交 |
+| 组织 | `group.ts` | 组织查询、加入组织、退出组织 |
+| 钱包 | `wallet.ts` | 地址管理、余额查询、UTXO 操作 |
+| 转账 | `transfer.ts` | 转账表单逻辑、转账验证 |
+
+```typescript
+// ✅ 正确：组织相关的 API 都放在 group.ts
+// js/services/group.ts
+export async function queryGroupInfo(groupId: string): Promise<GroupInfo> { ... }
+export async function joinGroup(groupId: string): Promise<void> { ... }
+
+// 在任何页面中使用
+import { queryGroupInfo } from '../services/group';
+const info = await queryGroupInfo('12345678');
+
+// ❌ 错误：不要在页面文件中直接写 API 调用
+// js/pages/joinGroup.ts
+async function handleJoin() {
+  const response = await fetch('/api/v1/group/12345678');  // ❌ 错误！
+}
+```
+
+**优势：**
+- ✅ **复用性高**: 任何页面都可以导入使用
+- ✅ **逻辑清晰**: 按业务实体组织，易于查找
+- ✅ **类型安全**: 集中定义类型，避免重复
+- ✅ **易于测试**: 可以单独测试业务模块
+
+### 11. unsafeHTML Usage (unsafeHTML 使用规范) ✅ NEW
 
 **仅对受信任的 HTML 内容使用 `unsafeHTML`**
 
@@ -854,49 +899,55 @@ state.set({
 
 ## ✅ 总结
 
-**记住这十一个核心原则：**
+**记住这十二个核心原则：**
 
 1. 🎯 **新代码 = TypeScript**
    - 所有新文件必须是 `.ts`
    - 必须定义完整的类型
 
-2. 🔌 **API 调用 = 隔离模块**
-   - 创建 `js/api/` 模块
-   - 使用 `secureFetch`
+2. 🔌 **API 调用 = services 模块**
+   - 使用 `js/services/api.ts` 客户端
+   - 按业务实体归类到对应服务文件
 
-3. 🔄 **UI 更新 = 响应式绑定**
+3. 📦 **服务模块 = 按业务实体归类**
+   - 账户相关 → `services/account.ts`
+   - 组织相关 → `services/group.ts`
+   - 交易相关 → `services/transaction.ts`
+   - 禁止在页面文件中直接写 API 调用
+
+4. 🔄 **UI 更新 = 响应式绑定**
    - 使用 `createReactiveState`
    - 状态驱动 UI，禁止命令式 DOM 操作
 
-4. 🏷️ **公共 API = PanguPay 命名空间**
+5. 🏷️ **公共 API = PanguPay 命名空间**
    - 使用 `window.PanguPay.xxx` 调用公共 API
    - 禁止新增 `window.xxx` 全局变量
 
-5. 🎯 **事件处理 = 事件委托**
+6. 🎯 **事件处理 = 事件委托**
    - 使用 `data-action` 属性
    - 禁止内联 `onclick`
 
-6. 🔒 **DOM 渲染 = view.ts**
+7. 🔒 **DOM 渲染 = view.ts**
    - 使用 `html` 模板和 `renderInto()`
    - 禁止直接拼接 `innerHTML`
 
-7. 🔑 **DOM ID = 集中管理**
+8. 🔑 **DOM ID = 集中管理**
    - 使用 `DOM_IDS` 常量
    - 禁止硬编码 ID 字符串
 
-8. ⏳ **加载状态 = 骨架屏**
+9. ⏳ **加载状态 = 骨架屏**
    - 使用 `walletSkeleton.ts` 工具
    - 禁止简单的 "加载中..." 文本
 
-9. 🔗 **区块链数据 = 严格类型**
-   - 使用 `js/types/blockchain.ts` 中的类型
-   - 禁止 `Record<string, any>` 存储 UTXO/交易
+10. 🔗 **区块链数据 = 严格类型**
+    - 使用 `js/types/blockchain.ts` 中的类型
+    - 禁止 `Record<string, any>` 存储 UTXO/交易
 
-10. ⚠️ **受信任 HTML = unsafeHTML**
+11. ⚠️ **受信任 HTML = unsafeHTML**
     - 仅用于内部预渲染的 HTML
     - 禁止用于用户输入
 
-11. 🔍 **提交前 = 类型检查**
+12. 🔍 **提交前 = 类型检查**
     - 运行 `npm run typecheck`
     - 修复所有错误
 
