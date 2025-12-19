@@ -327,7 +327,8 @@ export function initTransferSubmit(): void {
       const availableGas = walletGasTotal;
       
       sel.forEach((addr) => {
-        const meta = getAddrMeta(addr) || {};
+        const meta = getAddrMeta(addr);
+        if (!meta) return;
         const type = Number(meta.type || 0);
         const val = Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0);
         if (typeBalances[type] !== undefined) {
@@ -384,9 +385,9 @@ export function initTransferSubmit(): void {
       
       if (usedTypes.length) {
         const infos: AddressInfo[] = sel.map((addr) => {
-          const meta = getAddrMeta(addr) || {};
-          const type = Number(meta.type || 0);
-          const val = Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0);
+          const meta = getAddrMeta(addr);
+          const type = meta ? Number(meta.type || 0) : 0;
+          const val = meta ? Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0) : 0;
           const bal: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
           if (bal[type] !== undefined) bal[type] = val;
 

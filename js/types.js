@@ -42,7 +42,14 @@
 /**
  * @typedef {Object} UTXOSource
  * @property {string} TXID - Transaction ID
- * @property {number} VOut - Output index
+ * @property {number} [VOut] - Output index (optional for compatibility with SubATX)
+ * @property {number} [TXType] - Transaction type
+ * @property {any[]} [TXInputsNormal] - Normal transaction inputs
+ * @property {any[]} [TXInputsCertificate] - Certificate inputs
+ * @property {any[]} [TXOutputs] - Transaction outputs
+ * @property {Object} [InterestAssign] - Interest assignment
+ * @property {string[]} [ExTXCerID] - TXCer IDs
+ * @property {number[]} [Data] - Extra data
  */
 
 /**
@@ -54,13 +61,14 @@
  * @property {number} [Time] - Timestamp
  * @property {UTXOPosition} [Position] - Position in blockchain
  * @property {boolean} [IsTXCerUTXO] - Whether this is a TXCer UTXO
- * @property {UTXOSource} [UTXO] - Source transaction info
+ * @property {UTXOSource} [UTXO] - Source transaction info (SubATX structure)
  */
 
 /**
- * @typedef {Object} TXCer
- * @property {number} Value - Certificate value
- * @property {number} Type - Coin type
+ * @typedef {Object|number} TXCer
+ * TXCer can be either a full object or just a number (value mapping)
+ * @property {number} [Value] - Certificate value
+ * @property {number} [Type] - Coin type
  * @property {string} [CerHash] - Certificate hash
  * @property {number} [Time] - Timestamp
  * @property {UTXOPosition} [Position] - Position in blockchain
@@ -80,9 +88,13 @@
  * @property {number} type - Coin type (0=PGC, 1=BTC, 2=ETH)
  * @property {AddressValue} [value] - Balance information
  * @property {Object<string, UTXO>} [utxos] - UTXOs by key
- * @property {Object<string, TXCer>} [txCers] - TXCers by key
+ * @property {Object<string, TXCer|number>} [txCers] - TXCers by key (can be TXCer object or number value)
  * @property {number} [estInterest] - Estimated interest/gas
+ * @property {number} [gas] - Gas amount
  * @property {string} [origin] - Address origin ('created' | 'imported')
+ * @property {string} [privHex] - Private key hex (for imported addresses)
+ * @property {string} [pubXHex] - Public key X coordinate hex
+ * @property {string} [pubYHex] - Public key Y coordinate hex
  */
 
 /**

@@ -30,11 +30,14 @@ export interface EcdsaSignature {
 /**
  * Public key structure
  * Corresponds to Go: PublicKeyNew
+ * Supports both X/Y (backend format) and XHex/YHex (frontend format)
  */
 export interface PublicKeyNew {
-  X: string;      // Big integer as string
-  Y: string;      // Big integer as string
-  Curve: string;  // e.g., "P256"
+  X?: string;      // Big integer as string (backend format)
+  Y?: string;      // Big integer as string (backend format)
+  XHex?: string;   // Hex string (frontend format)
+  YHex?: string;   // Hex string (frontend format)
+  Curve: string;   // e.g., "P256"
 }
 
 // ============================================================================
@@ -57,6 +60,14 @@ export interface TxPosition {
 // ============================================================================
 
 /**
+ * Nullable ECDSA signature (for unsigned inputs)
+ */
+export interface NullableEcdsaSignature {
+  R: string | null;
+  S: string | null;
+}
+
+/**
  * Normal transaction input
  * Corresponds to Go: TXInputNormal
  */
@@ -67,8 +78,8 @@ export interface TXInputNormal {
   IsGuarMake: boolean;           // Constructed by guarantor organization
   IsCommitteeMake: boolean;      // Constructed by guarantor committee for TXCer exchange
   IsCrossChain: boolean;         // Cross-chain transaction input (no verification needed)
-  InputSignature: EcdsaSignature; // Signature verification
-  TXOutputHash: number[];        // UTXO hash being used (byte array)
+  InputSignature: EcdsaSignature | NullableEcdsaSignature; // Signature verification (can be null before signing)
+  TXOutputHash: number[] | string; // UTXO hash being used (byte array or hex string)
 }
 
 /**
@@ -97,11 +108,13 @@ export interface TXOutput {
   ToGuarGroupID: string;     // Destination user's guarantor organization ID
   ToPublicKey: PublicKeyNew; // Destination address public key (user-locked transaction)
   ToInterest: number;        // Allocated interest amount
-  Type: number;              // Currency type: 0=PGC, 1=BTC, 2=ETH
-  ToPeerID: string;          // Destination user peer ID
-  IsPayForGas: boolean;      // Used to pay transaction fees
+  Type?: number;             // Currency type: 0=PGC, 1=BTC, 2=ETH (legacy field)
+  ToCoinType?: number;       // Currency type: 0=PGC, 1=BTC, 2=ETH (preferred field)
+  ToPeerID?: string;         // Destination user peer ID
+  IsPayForGas?: boolean;     // Used to pay transaction fees
   IsCrossChain: boolean;     // Cross-chain transaction output
   IsGuarMake: boolean;       // Constructed by guarantor
+  Hash?: string;             // Output hash (computed field)
 }
 
 // ============================================================================
@@ -188,6 +201,9 @@ export interface UTXOData {
   Time: number;          // Construction timestamp (milliseconds)
   Position: TxPosition;  // Position information
   IsTXCerUTXO: boolean;  // Is this a TXCer-related UTXO
+  // Legacy/compatibility fields
+  TXID?: string;         // Transaction ID (legacy, use UTXO.TXID instead)
+  TXOutputHash?: string; // Output hash for verification
 }
 
 // ============================================================================
