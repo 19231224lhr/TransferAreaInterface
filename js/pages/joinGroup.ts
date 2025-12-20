@@ -394,6 +394,7 @@ function updateSearchUI(state: SearchState): void {
   const searchLoading = document.getElementById(DOM_IDS.searchLoading);
   const searchNotFound = document.getElementById(DOM_IDS.searchNotFound);
   const searchResult = document.getElementById(DOM_IDS.searchResult);
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
   
   // 隐藏所有状态
   searchEmpty?.classList.add('hidden');
@@ -405,16 +406,24 @@ function updateSearchUI(state: SearchState): void {
   switch (state) {
     case 'idle':
       searchEmpty?.classList.remove('hidden');
+      // 禁用加入按钮
+      if (joinSearchBtn) joinSearchBtn.disabled = true;
       break;
     case 'loading':
       searchLoading?.classList.remove('hidden');
+      // 加载中禁用加入按钮
+      if (joinSearchBtn) joinSearchBtn.disabled = true;
       break;
     case 'not-found':
     case 'error':
       searchNotFound?.classList.remove('hidden');
+      // 未找到或错误时禁用加入按钮
+      if (joinSearchBtn) joinSearchBtn.disabled = true;
       break;
     case 'found':
       searchResult?.classList.remove('hidden');
+      // 找到组织时启用加入按钮（在 showGroupInfo 中也会设置）
+      if (joinSearchBtn) joinSearchBtn.disabled = false;
       break;
   }
   
@@ -441,6 +450,12 @@ function showGroupInfo(group: GroupInfo): void {
   }
   
   updateSearchUI('found');
+  
+  // 启用加入按钮（搜索成功后允许用户点击加入）
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
+  if (joinSearchBtn) {
+    joinSearchBtn.disabled = false;
+  }
   
   // 添加 reveal 动画
   const sr = document.getElementById(DOM_IDS.searchResult);
