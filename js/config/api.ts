@@ -61,25 +61,27 @@ export const API_ENDPOINTS = {
   HEALTH: '/health',
   
   // BootNode endpoints
-  GROUP_INFO: (groupId: string) => `/api/v1/group/${groupId}`,
+  GROUPS_LIST: '/api/v1/groups',  // 列出所有担保组织
+  GROUP_INFO: (groupId: string) => `/api/v1/groups/${groupId}`,  // 查询指定组织详情
   
-  // AssignNode endpoints (to be implemented)
-  USER_NEW_ADDRESS: '/api/v1/assign/user-new-address',
-  USER_FLOW: '/api/v1/assign/user-flow',
-  USER_TX: '/api/v1/assign/user-tx',
-  USER_REONLINE: '/api/v1/assign/user-reonline',
-  ASSIGN_GROUP_INFO: (groupId: string) => `/api/v1/assign/group/${groupId}`,
-  ACCOUNT_UPDATE: '/api/v1/assign/account-update',
-  TXCER_CHANGE: '/api/v1/assign/txcer-change',
+  // AssignNode endpoints (动态路由: /api/v1/{groupID}/assign/*)
+  ASSIGN_HEALTH: (groupId: string) => `/api/v1/${groupId}/assign/health`,
+  ASSIGN_NEW_ADDRESS: (groupId: string) => `/api/v1/${groupId}/assign/new-address`,
+  ASSIGN_FLOW_APPLY: (groupId: string) => `/api/v1/${groupId}/assign/flow-apply`,
+  ASSIGN_SUBMIT_TX: (groupId: string) => `/api/v1/${groupId}/assign/submit-tx`,
+  ASSIGN_RE_ONLINE: (groupId: string) => `/api/v1/${groupId}/assign/re-online`,
+  ASSIGN_GROUP_INFO: (groupId: string) => `/api/v1/${groupId}/assign/group-info`,
+  ASSIGN_ACCOUNT_UPDATE: (groupId: string) => `/api/v1/${groupId}/assign/account-update`,
+  ASSIGN_TXCER_CHANGE: (groupId: string) => `/api/v1/${groupId}/assign/txcer-change`,
   
-  // AggrNode endpoints (to be implemented)
-  TXCER: '/api/v1/aggr/txcer',
+  // AggrNode endpoints (动态路由: /api/v1/{groupID}/aggr/*)
+  AGGR_TXCER: (groupId: string) => `/api/v1/${groupId}/aggr/txcer`,
   
-  // ComNode endpoints (to be implemented)
-  QUERY_ADDRESS: '/api/v1/com/query-address',
-  QUERY_ADDRESS_GROUP: '/api/v1/com/query-address-group',
-  SUBMIT_NOGUARGROUP_TX: '/api/v1/com/submit-noguargroup-tx',
-  UTXO_CHANGE: '/api/v1/com/utxo-change'
+  // ComNode endpoints (动态路由: /api/v1/{committeeID}/com/*)
+  COM_QUERY_ADDRESS: (committeeId: string) => `/api/v1/${committeeId}/com/query-address`,
+  COM_QUERY_ADDRESS_GROUP: (committeeId: string) => `/api/v1/${committeeId}/com/query-address-group`,
+  COM_SUBMIT_NOGUARGROUP_TX: (committeeId: string) => `/api/v1/${committeeId}/com/submit-noguargroup-tx`,
+  COM_UTXO_CHANGE: (committeeId: string) => `/api/v1/${committeeId}/com/utxo-change`
 } as const;
 
 // ============================================================================

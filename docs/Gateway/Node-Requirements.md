@@ -4,6 +4,165 @@
 
 > **相关文档**：前端功能需求请参阅 [Frontend-Requirements.md](./Frontend-Requirements.md)
 
+---
+
+## ⚠️ 节点隔离架构规范（重要）
+
+### 架构设计原则
+
+Gateway 采用 **节点隔离架构**，确保不同类型的节点和不同担保组织之间的请求完全隔离：
+
+1. **单节点单路由**：每种节点类型只暴露属于自己的 API 路由
+   - BootNode 只处理 BootNode 相关路由（如 `/api/v1/group/{id}`）
+   - AssignNode 只处理 AssignNode 相关路由（如 `/api/v1/{groupID}/assign/*`）
+   - AggrNode 只处理 AggrNode 相关路由
+   - ComNode 只处理 ComNode 相关路由
+
+2. **多组织隔离**：同一类型的节点按担保组织 ID 隔离
+   - 每个担保组织的 AssignNode 独立注册，使用 `map[string]AssignNodeInterface` 存储
+   - 请求通过 URL 路径中的 `{groupID}` 路由到对应的节点实例
+   - 担保组织 A 的请求**绝对不会**被担保组织 B 的 AssignNode 处理
+
+3. **404 优于 503**：未注册的节点返回 404（资源不存在），而非 503（服务不可用）
+   - 更符合 REST 语义
+   - 前端可以明确知道是组织不存在还是服务故障
+
+### 路由注册规范
+
+**后续实现新节点 API 时必须遵循：**
+
+```go
+// ✅ 正确做法：使用 map 存储多个节点实例，按 ID 隔离
+type APIGateway struct {
+    BootNode    BootNodeInterface                  // 全局唯一
+    assignNodes map[string]AssignNodeInterface     // GroupID -> AssignNode
+    aggrNodes   map[string]AggrNodeInterface       // GroupID -> AggrNode
+    comNodes    map[string]ComNodeInterface        // 委员会ID -> ComNode
+}
+
+// ✅ 正确做法：注册时指定节点所属的组织/委员会 ID
+gw.RegisterAssignNode(groupID, assignNode)
+gw.RegisterAggrNode(groupID, aggrNode)
+gw.RegisterComNode(committeeID, comNode)
+
+// ✅ 正确做法：处理请求时根据 ID 获取对应实例
+func (g *APIGateway) handleXxxRequest(w http.ResponseWriter, r *http.Request) {
+    vars := mux.Vars(r)
+    groupID := vars["groupID"]  // 从 URL 获取
+    
+    node := g.getAssignNode(groupID)
+    if node == nil {
+        respondWithError(w, http.StatusNotFound, 
+            fmt.Sprintf("GuarGroup '%s' not found", groupID))
+        return
+    }
+    // 调用节点方法...
+}
+```
+
+```go
+// ❌ 错误做法：使用单个节点实例（无法支持多组织）
+type APIGateway struct {
+    AssignNode AssignNodeInterface  // 只能存一个！
+}
+
+// ❌ 错误做法：所有请求都发给同一个节点
+func (g *APIGateway) handleXxxRequest(w http.ResponseWriter, r *http.Request) {
+    if g.AssignNode == nil {
+        respondWithError(w, http.StatusServiceUnavailable, "...")
+        return
+    }
+    g.AssignNode.DoSomething()  // 无法区分组织！
+}
+```
+
+### 服务发现接口
+
+Gateway 提供服务发现接口，前端可查询当前可用的担保组织列表：
+
+```
+GET /api/v1/groups
+
+Response:
+{
+  "success": true,
+  "groups": [
+    {
+      "group_id": "10000000",
+      "assign_api_endpoint": ":8081",
+      "aggr_api_endpoint": ":8082",
+      "assi_peer_id": "12D3KooW...",
+      "aggr_peer_id": "12D3KooW..."
+    },
+    {
+      "group_id": "20000000",
+      "assign_api_endpoint": ":8083",
+      "aggr_api_endpoint": ":8084",
+      "assi_peer_id": "12D3KooW...",
+      "aggr_peer_id": "12D3KooW..."
+    }
+  ],
+  "count": 2,
+  "boot_node": true
+}
+```
+
+查询单个担保组织详细信息（RESTful 风格）：
+
+```
+GET /api/v1/groups/{id}
+
+Response: GuarGroupTable（包含 AssignAPIEndpoint 和 AggrAPIEndpoint）
+```
+
+### 动态路由设计
+
+AssignNode 使用动态路由 `/api/v1/{groupID}/assign/*`：
+
+| 路由 | 示例 | 说明 |
+|------|------|------|
+| `/api/v1/{groupID}/assign/new-address` | `/api/v1/10000000/assign/new-address` | 向 10000000 组织的 AssignNode 发送请求 |
+| `/api/v1/{groupID}/assign/submit-tx` | `/api/v1/20000000/assign/submit-tx` | 向 20000000 组织的 AssignNode 发送请求 |
+
+**工作流程**：
+```
+前端请求 POST /api/v1/10000000/assign/submit-tx
+    ↓
+Gateway 提取 groupID = "10000000"
+    ↓
+Gateway 调用 getAssignNode("10000000")
+    ↓
+找到对应的 AssignNode 实例
+    ↓
+调用 AssignNode.ReceiveUserNewTXForGateway(...)
+    ↓
+返回处理结果
+```
+
+### 节点启动时的注册流程
+
+```go
+// AssignNode 启动时
+func (a *AssignNode) Handle(...) {
+    gw := gateway.GetGlobalGateway()
+    if gw != nil {
+        // 使用组织 ID 注册
+        gw.RegisterAssignNode(a.GuarGroupID, a)
+    }
+    // ...
+}
+
+// AssignNode 关闭时
+func (a *AssignNode) AssignNodeOut() {
+    gw := gateway.GetGlobalGateway()
+    if gw != nil {
+        gw.UnregisterAssignNode(a.GuarGroupID)
+    }
+}
+```
+
+---
+
 命名约定  
 - 后端方法：`XxxForGateway`（与原业务函数同名，但移除单播发送）。  
 - 路由路径：与业务含义对应，`/api/v1/...`；GET 用查询，POST 用写入/提交。  
@@ -32,7 +191,8 @@
 
 | 路由 | 方法 | 功能 | 内部调用 | 状态 |
 | --- | --- | --- | --- | --- |
-| `/api/v1/group/{id}` | GET | 查询指定担保组织信息 | `ReturnGroupInfoForGateway` → 返回 `GuarGroupTable` | ✅ 已实现 |
+| `/api/v1/groups` | GET | 列出所有担保组织（简要信息 + API 端口） | `GetAllGroupsWithAPI` → 返回组织列表 | ✅ 已实现 |
+| `/api/v1/groups/{id}` | GET | 查询指定担保组织详细信息（包含 API 端口） | `ReturnGroupInfoForGateway` → 返回 `GuarGroupTable` | ✅ 已实现 |
 | `/health` | GET | 健康检查 | - | ✅ 已实现 |
 
 ### 3) 数据结构说明
@@ -41,7 +201,7 @@
 
 ```go
 // 查询担保组织 - Gateway 版简化输入（直接使用 URL 参数）
-// GET /api/v1/group/{id}
+// GET /api/v1/groups/{id}
 // 无需 POST body，groupID 从 URL path 获取
 ```
 
@@ -50,13 +210,15 @@
 ```go
 // 担保组织信息返回 - core.GuarGroupTable
 type GuarGroupTable struct {
-    GroupID       string            `json:"group_id"`        // 担保组织ID
-    PeerGroupID   string            `json:"peer_group_id"`   // 组织PeerID
-    AssiPeerID    string            `json:"assi_peer_id"`    // 分配节点PeerID
-    AggrPeerID    string            `json:"aggr_peer_id"`    // 聚合节点PeerID
-    GuarTable     map[string]string `json:"guar_table"`      // 担保人ID → PeerID
-    AssiPublicKey PublicKeyNew      `json:"assi_public_key"` // 分配节点公钥
-    AggrPublicKey PublicKeyNew      `json:"aggr_public_key"` // 聚合节点公钥
+    GroupID           string            `json:"group_id"`            // 担保组织ID
+    PeerGroupID       string            `json:"peer_group_id"`       // 组织PeerID
+    AssiPeerID        string            `json:"assi_peer_id"`        // 分配节点PeerID
+    AggrPeerID        string            `json:"aggr_peer_id"`        // 聚合节点PeerID
+    GuarTable         map[string]string `json:"guar_table"`          // 担保人ID → PeerID
+    AssiPublicKey     PublicKeyNew      `json:"assi_public_key"`     // 分配节点公钥
+    AggrPublicKey     PublicKeyNew      `json:"aggr_public_key"`     // 聚合节点公钥
+    AssignAPIEndpoint string            `json:"assign_api_endpoint"` // AssignNode HTTP API 地址
+    AggrAPIEndpoint   string            `json:"aggr_api_endpoint"`   // AggregationNode HTTP API 地址
     // ... 其他字段
 }
 ```
@@ -98,15 +260,18 @@ type GuarGroupTable struct {
 
 ### 3) 路由草案（对应 ForGateway 方法）
 
-| 路由 | 方法 | 功能 | 内部调用 |
-| --- | --- | --- | --- |
-| `POST /api/v1/assign/user-new-address` | POST | 用户新建子地址 | `ProcessUserNewAddressForGateway` → 返回操作结果 |
-| `POST /api/v1/assign/user-flow` | POST | 用户加入/退出担保组织 | `ProcessUserFlowApplyForGateway` → 返回 `UserFlowMsgReply` |
-| `POST /api/v1/assign/user-tx` | POST | 用户提交交易 | `ReceiveUserNewTXForGateway` → 返回受理状态 |
-| `POST /api/v1/assign/user-reonline` | POST | 用户重新上线 | `UserReOnlineForGateway` → 返回 `ReturnUserReOnlineMsg` |
-| `GET /api/v1/assign/group/{id}` | GET | 查询其他担保组织信息 | `GetGroupMsgForGateway` → 返回 `ReturnGroupBootMsg` |
-| `GET /api/v1/assign/account-update?userID=...` | GET | 轮询获取账户更新信息 | 返回 `[]AccountUpdateInfo`（增量/列表） |
-| `GET /api/v1/assign/txcer-change?userID=...` | GET | 轮询获取 TXCer 状态变动 | 返回 `[]TXCerChangeToUser`（增量/列表） |
+> **动态路由设计**：所有 AssignNode 路由采用 `/api/v1/{groupID}/assign/*` 格式，`{groupID}` 是担保组织ID，确保请求路由到正确的 AssignNode 实例。
+
+| 路由 | 方法 | 功能 | 内部调用 | 状态 |
+| --- | --- | --- | --- | --- |
+| `GET /api/v1/{groupID}/assign/health` | GET | AssignNode 健康检查 | 检查 AssignNode 是否已注册 | ✅ 已实现 |
+| `POST /api/v1/{groupID}/assign/new-address` | POST | 用户新建子地址 | `ProcessUserNewAddressForGateway` → 返回操作结果 | ✅ 已实现 |
+| `POST /api/v1/{groupID}/assign/flow-apply` | POST | 用户加入/退出担保组织 | `ProcessUserFlowApplyForGateway` → 返回 `UserFlowMsgReply` | ✅ 已实现 |
+| `POST /api/v1/{groupID}/assign/submit-tx` | POST | 用户提交交易 | `ReceiveUserNewTXForGateway` → 返回受理状态 | ✅ 已实现 |
+| `POST /api/v1/{groupID}/assign/re-online` | POST | 用户重新上线 | `UserReOnlineForGateway` → 返回 `ReturnUserReOnlineMsg` | ✅ 已实现 |
+| `GET /api/v1/{groupID}/assign/group-info` | GET | 查询担保组织信息 | `GetGroupMsgForGateway` → 返回 `ReturnGroupBootMsg` | ✅ 已实现 |
+| `GET /api/v1/{groupID}/assign/account-update?userID=...` | GET | 轮询获取账户更新信息 | 返回 `[]AccountUpdateInfo`（增量/列表） | 待实现 |
+| `GET /api/v1/{groupID}/assign/txcer-change?userID=...` | GET | 轮询获取 TXCer 状态变动 | 返回 `[]TXCerChangeToUser`（增量/列表） | 待实现 |
 
 ### 4) 数据结构说明
 
@@ -421,17 +586,21 @@ type NoGuarGroupTXResponse struct {
 
 | 节点 | 路由 | 方法 | 功能 | 状态 |
 | --- | --- | --- | --- | --- |
-| BootNode | `/health` | GET | 健康检查 | ✅ 已实现 |
-| BootNode | `/api/v1/group/{id}` | GET | 查询担保组织信息 | ✅ 已实现 |
-| AssignNode | `POST /api/v1/assign/user-new-address` | POST | 用户新建子地址 | 待实现 |
-| AssignNode | `POST /api/v1/assign/user-flow` | POST | 用户加入/退出担保组织 | 待实现 |
-| AssignNode | `POST /api/v1/assign/user-tx` | POST | 用户提交交易 | 待实现 |
-| AssignNode | `POST /api/v1/assign/user-reonline` | POST | 用户重新上线 | 待实现 |
-| AssignNode | `GET /api/v1/assign/group/{id}` | GET | 查询其他担保组织信息 | 待实现 |
-| AssignNode | `GET /api/v1/assign/account-update` | GET | 轮询获取账户更新 | 待实现 |
-| AssignNode | `GET /api/v1/assign/txcer-change` | GET | 轮询获取 TXCer 状态变动 | 待实现 |
-| AggrNode | `GET /api/v1/aggr/txcer` | GET | 拉取 TXCer 列表 | 待实现 |
-| ComNode | `POST /api/v1/com/query-address` | POST | 查询地址账户信息 | 待实现 |
-| ComNode | `POST /api/v1/com/query-address-group` | POST | 查询地址所属担保组织 | 待实现 |
-| ComNode | `POST /api/v1/com/submit-noguargroup-tx` | POST | 提交散户交易 | 待实现 |
-| ComNode | `GET /api/v1/com/utxo-change` | GET | 轮询获取 UTXO 变动通知 | 待实现 |
+| **公共** | `/health` | GET | 健康检查 | ✅ 已实现 |
+| **公共** | `/api/v1/groups` | GET | 列出已注册的担保组织（服务发现 + API 端口） | ✅ 已实现 |
+| BootNode | `/api/v1/groups/{id}` | GET | 查询担保组织详细信息（包含 API 端口） | ✅ 已实现 |
+| AssignNode | `GET /api/v1/{groupID}/assign/health` | GET | AssignNode 健康检查 | ✅ 已实现 |
+| AssignNode | `POST /api/v1/{groupID}/assign/new-address` | POST | 用户新建子地址 | ✅ 已实现 |
+| AssignNode | `POST /api/v1/{groupID}/assign/flow-apply` | POST | 用户加入/退出担保组织 | ✅ 已实现 |
+| AssignNode | `POST /api/v1/{groupID}/assign/submit-tx` | POST | 用户提交交易 | ✅ 已实现 |
+| AssignNode | `POST /api/v1/{groupID}/assign/re-online` | POST | 用户重新上线 | ✅ 已实现 |
+| AssignNode | `GET /api/v1/{groupID}/assign/group-info` | GET | 查询担保组织信息 | ✅ 已实现 |
+| AssignNode | `GET /api/v1/{groupID}/assign/account-update` | GET | 轮询获取账户更新 | 待实现 |
+| AssignNode | `GET /api/v1/{groupID}/assign/txcer-change` | GET | 轮询获取 TXCer 状态变动 | 待实现 |
+| AggrNode | `GET /api/v1/{groupID}/aggr/txcer` | GET | 拉取 TXCer 列表 | 待实现 |
+| ComNode | `POST /api/v1/{committeeID}/com/query-address` | POST | 查询地址账户信息 | 待实现 |
+| ComNode | `POST /api/v1/{committeeID}/com/query-address-group` | POST | 查询地址所属担保组织 | 待实现 |
+| ComNode | `POST /api/v1/{committeeID}/com/submit-noguargroup-tx` | POST | 提交散户交易 | 待实现 |
+| ComNode | `GET /api/v1/{committeeID}/com/utxo-change` | GET | 轮询获取 UTXO 变动通知 | 待实现 |
+
+> **注意**：所有 AssignNode/AggrNode/ComNode 路由均采用动态路由设计，`{groupID}` 和 `{committeeID}` 是路径参数，用于标识目标节点所属的担保组织或委员会。

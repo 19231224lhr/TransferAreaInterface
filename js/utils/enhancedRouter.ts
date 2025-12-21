@@ -213,18 +213,25 @@ export const publicRoutes = ['/welcome', '/login', '/new', '/import', '/profile'
 /**
  * Authentication guard
  */
+let lastAuthWarningTime = 0;
+const AUTH_WARNING_THROTTLE = 2000; // 2秒内不重复显示警告
+
 export const authGuard: RouteGuard = (to, from) => {
   const user = loadUser();
   const isProtected = protectedRoutes.includes(to.path);
   
   // If route requires auth and user is not logged in
   if (isProtected && !user) {
-    // Show warning
-    if (typeof window.PanguPay?.ui?.showWarningToast === 'function') {
-      window.PanguPay.ui.showWarningToast(
-        t('auth.loginRequired') || '请先登录',
-        t('auth.loginRequiredDesc') || '您需要登录才能访问此页面'
-      );
+    // Show warning (with throttle to prevent duplicates)
+    const now = Date.now();
+    if (now - lastAuthWarningTime > AUTH_WARNING_THROTTLE) {
+      if (typeof window.PanguPay?.ui?.showWarningToast === 'function') {
+        window.PanguPay.ui.showWarningToast(
+          t('auth.loginRequired'),
+          t('auth.loginRequiredDesc')
+        );
+      }
+      lastAuthWarningTime = now;
     }
     return '/welcome';
   }

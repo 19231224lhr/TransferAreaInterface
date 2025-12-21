@@ -23,6 +23,10 @@ export default {
   'common.collapseMore': '收起',
   'common.separator': '、',
 
+  // 认证相关
+  'auth.loginRequired': '请先登录',
+  'auth.loginRequiredDesc': '您需要登录才能访问此页面',
+
   // 密码和加密相关
   'encryption.setPassword': '设置密码',
   'encryption.enterPassword': '输入密码',

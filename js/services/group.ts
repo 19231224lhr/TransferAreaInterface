@@ -34,6 +34,8 @@ export interface GuarGroupTable {
   GuarTable?: Record<string, string>;
   AssignPublicKeyNew?: PublicKeyNew;
   AggrPublicKeyNew?: PublicKeyNew;
+  AssignAPIEndpoint?: string;  // AssignNode HTTP API 地址
+  AggrAPIEndpoint?: string;    // AggregationNode HTTP API 地址
   CreateTime?: number;
 }
 
@@ -46,6 +48,8 @@ export interface GroupInfo {
   assignNode: string;
   assignPeerID: string;
   pledgeAddress: string;
+  assignAPIEndpoint?: string;  // AssignNode API 端点
+  aggrAPIEndpoint?: string;    // AggrNode API 端点
   guarTable?: Record<string, string>;
   createTime?: number;
 }
@@ -71,6 +75,8 @@ function normalizeGroupInfo(groupId: string, raw: GuarGroupTable): GroupInfo {
     assignNode: raw.AssiID || '',
     assignPeerID: raw.AssiPeerID || '',
     pledgeAddress: raw.PledgeAddress || '',
+    assignAPIEndpoint: raw.AssignAPIEndpoint,
+    aggrAPIEndpoint: raw.AggrAPIEndpoint,
     guarTable: raw.GuarTable,
     createTime: raw.CreateTime
   };
@@ -79,6 +85,43 @@ function normalizeGroupInfo(groupId: string, raw: GuarGroupTable): GroupInfo {
 // ============================================================================
 // Public API Functions
 // ============================================================================
+
+/**
+ * Group list item for service discovery
+ */
+export interface GroupListItem {
+  group_id: string;
+  assign_api_endpoint: string;
+  aggr_api_endpoint: string;
+  assi_peer_id: string;
+  aggr_peer_id: string;
+}
+
+/**
+ * Response structure for listing all groups
+ */
+export interface GroupListResponse {
+  success: boolean;
+  groups: GroupListItem[];
+  count: number;
+  boot_node: boolean;
+}
+
+/**
+ * List all registered guarantor organizations (service discovery)
+ * @returns List of available groups with their API endpoints
+ * @throws ApiRequestError if request fails
+ */
+export async function listAllGroups(): Promise<GroupListResponse> {
+  const endpoint = API_ENDPOINTS.GROUPS_LIST;
+
+  const response = await apiClient.get<GroupListResponse>(endpoint, {
+    timeout: 10000,
+    retries: 2
+  });
+
+  return response;
+}
 
 /**
  * Query guarantor group information by ID

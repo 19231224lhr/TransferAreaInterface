@@ -23,6 +23,10 @@ export default {
   'common.collapseMore': 'Show Less',
   'common.separator': ', ',
 
+  // Authentication
+  'auth.loginRequired': 'Login Required',
+  'auth.loginRequiredDesc': 'You need to login to access this page',
+
   // Password and Encryption
   'encryption.setPassword': 'Set Password',
   'encryption.enterPassword': 'Enter Password',
