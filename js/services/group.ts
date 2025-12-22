@@ -453,45 +453,24 @@ export async function joinGuarGroup(
     };
     
     // 4. Sign the request (UserSig field will be excluded automatically)
-    // Using new signature module - synchronous call
     const signature = signStruct(
       requestBody as unknown as Record<string, unknown>,
       privHex,
       ['UserSig']
     );
-    // Add signature after signing
     requestBody.UserSig = signature;
     
     // 5. Determine API endpoint
-    // Use AssignNode URL if available, otherwise use BootNode proxy route
     let apiUrl: string;
     if (groupInfo.assignAPIEndpoint) {
       const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
       apiUrl = `${assignNodeUrl}/api/v1/${groupId}/assign/flow-apply`;
     } else {
-      // Fallback to BootNode proxy
       apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
     }
     
-    console.info(`[Group] 🚀 Joining organization ${groupId}...`);
-    console.debug(`[Group] API URL: ${apiUrl}`);
-    console.debug(`[Group] Request body (object):`, requestBody);
-    
     // 6. Send request
     const serializedBody = serializeForBackend(requestBody);
-    console.debug(`[Group] Serialized JSON (string):`, serializedBody);
-    console.debug(`[Group] Serialized JSON length:`, serializedBody.length);
-    
-    // 验证序列化结果
-    try {
-      const parsed = JSON.parse(serializedBody);
-      console.debug(`[Group] Parsed back - UserPublicKey.X type:`, typeof parsed.UserPublicKey?.X);
-      console.debug(`[Group] Parsed back - UserPublicKey.X value:`, parsed.UserPublicKey?.X);
-      console.debug(`[Group] Parsed back - UserSig.R type:`, typeof parsed.UserSig?.R);
-      console.debug(`[Group] Parsed back - UserSig.R value:`, parsed.UserSig?.R);
-    } catch (e) {
-      console.error(`[Group] Failed to parse serialized JSON:`, e);
-    }
     
     const response = await fetch(apiUrl, {
       method: 'POST',
@@ -513,14 +492,12 @@ export async function joinGuarGroup(
     }
     
     if (!responseData.result) {
-      console.warn(`[Group] ✗ Join rejected:`, responseData.message);
       return {
         success: false,
         error: responseData.message || '加入担保组织失败'
       };
     }
     
-    console.info(`[Group] ✓ Successfully joined organization ${groupId}`);
     return { success: true, data: responseData };
     
   } catch (error) {
@@ -577,80 +554,45 @@ export async function leaveGuarGroup(
     }
     
     // 2. Build request body
-    // ⚠️ 重要：根据后端权威文档 docs/Gateway/签名与序列化唯一指南（以Go后端实现为准）.md
-    // 退出时的最小示例：
-    // {
-    //   "Status": 0,
-    //   "UserID": "12345678",
-    //   "UserPeerID": "",
-    //   "GuarGroupID": "10000000",  // 实际的组织ID
-    //   "UserPublicKey": {"CurveName":"P256","X":"...","Y":"..."},  // 实际的公钥
-    //   "AddressMsg": {},  // 空对象，不是 null！
-    //   "TimeStamp": 157024800,
-    //   "UserSig": {"R":"...","S":"..."}
-    // }
+    // ⚠️ 重要：退出时 AddressMsg 必须是空对象 {}
+    // 原因：如果发送带数据的 AddressMsg，后端反序列化后会填充零值字段
+    // 导致后端重新序列化的 JSON 与前端签名的 JSON 不一致，签名验证失败
     const timestamp = getTimestamp();
+    const userPublicKey = convertPublicKeyToBackendFormat(pubXHex, pubYHex);
     
-    // 构建与后端文档一致的请求体
     const requestBody: FlowApplyRequest = {
       Status: 0, // Leave
       UserID: user.accountId,
-      UserPeerID: '',           // 空字符串
-      GuarGroupID: groupId,     // ⚠️ 实际的组织ID！
-      UserPublicKey: convertPublicKeyToBackendFormat(pubXHex, pubYHex),  // ⚠️ 实际的公钥！
-      AddressMsg: {} as AddressMsg,  // ⚠️ 空对象 {}，不是 null！
+      UserPeerID: '',
+      GuarGroupID: groupId,
+      UserPublicKey: userPublicKey,
+      AddressMsg: {},  // ⚠️ 退出时必须是空对象！
       TimeStamp: timestamp
-      // Note: UserSig will be added after signing
     };
     
-    // 3. Sign the request (UserSig field will be excluded automatically)
-    // Using new signature module - synchronous call
+    // 3. Sign the request
     const signature = signStruct(
       requestBody as unknown as Record<string, unknown>,
       privHex,
       ['UserSig']
     );
-    // Add signature after signing
     requestBody.UserSig = signature;
     
-    // 4. ⚠️ 本地验证签名（调试用）
-    // 从私钥派生公钥进行验证，确保签名正确
-    const derivedPubKey = getPublicKeyHexFromPrivate(privHex);
-    console.info('[Group] 🔍 Performing local signature verification...');
-    console.debug('[Group] Derived public key from private key:');
-    console.debug('[Group]   X:', derivedPubKey.x);
-    console.debug('[Group]   Y:', derivedPubKey.y);
-    console.debug('[Group] Stored public key:');
-    console.debug('[Group]   X:', pubXHex);
-    console.debug('[Group]   Y:', pubYHex);
-    
-    // 检查公钥是否匹配
-    const pubKeyMatch = derivedPubKey.x.toLowerCase() === pubXHex.toLowerCase() && 
-                        derivedPubKey.y.toLowerCase() === pubYHex.toLowerCase();
-    if (!pubKeyMatch) {
-      console.warn('[Group] ⚠️ Public key mismatch! Derived key differs from stored key.');
-      console.warn('[Group] This might indicate the private key does not match the account.');
+    // 4. Local verification (debug only)
+    if (process.env.NODE_ENV === 'development') {
+      const derivedPubKey = getPublicKeyHexFromPrivate(privHex);
+      const localVerifyResult = verifyStructLocal(
+        requestBody as unknown as Record<string, unknown>,
+        signature,
+        derivedPubKey.x,
+        derivedPubKey.y,
+        ['UserSig']
+      );
+      if (!localVerifyResult) {
+        console.error('[Group] ❌ Local signature verification FAILED!');
+        return { success: false, error: '本地签名验证失败！' };
+      }
     }
-    
-    // 使用派生的公钥进行本地验证
-    const localVerifyResult = verifyStructLocal(
-      requestBody as unknown as Record<string, unknown>,
-      signature,
-      derivedPubKey.x,
-      derivedPubKey.y,
-      ['UserSig']
-    );
-    
-    if (!localVerifyResult) {
-      console.error('[Group] ❌ Local signature verification FAILED!');
-      console.error('[Group] This indicates a bug in the signing logic.');
-      return {
-        success: false,
-        error: '本地签名验证失败！签名逻辑可能存在问题。'
-      };
-    }
-    
-    console.info('[Group] ✅ Local signature verification PASSED!');
     
     // 5. Determine API endpoint
     let apiUrl: string;
@@ -658,17 +600,11 @@ export async function leaveGuarGroup(
       const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
       apiUrl = `${assignNodeUrl}/api/v1/${groupId}/assign/flow-apply`;
     } else {
-      // Fallback to BootNode proxy
       apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
     }
     
-    console.info(`[Group] 🚀 Leaving organization ${groupId}...`);
-    console.debug(`[Group] API URL: ${apiUrl}`);
-    console.debug(`[Group] Request body:`, requestBody);
-    
     // 6. Send request
     const serializedBody = serializeForBackend(requestBody);
-    console.debug(`[Group] Serialized JSON (sent to backend):`, serializedBody);
     
     const response = await fetch(apiUrl, {
       method: 'POST',

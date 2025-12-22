@@ -390,12 +390,37 @@ import { getTimestamp } from '../utils/signature';
 const timestamp = getTimestamp();  // 自动使用正确纪元
 ```
 
+6. **⚠️ AddressMsg 的特殊处理（重要！）**
+
+**问题根因**：如果前端发送的 `AddressMsg` 包含部分字段（如只有 `PublicKeyNew`），后端反序列化后会填充零值字段（`Value`, `Type`, `UTXO` 等），导致重新序列化的 JSON 与前端签名的 JSON 不一致。
+
+| 操作 | AddressMsg 处理 |
+|------|----------------|
+| **加入组织** | 可以发送地址数据（只包含 `PublicKeyNew`） |
+| **退出组织** | **必须发送空对象 `{}`**，不能发送任何地址数据 |
+
+```typescript
+// ✅ 退出组织时
+const requestBody = {
+  Status: 0,  // Leave
+  // ...
+  AddressMsg: {},  // ⚠️ 必须是空对象！
+};
+
+// ❌ 错误：退出时发送地址数据
+const requestBody = {
+  Status: 0,
+  AddressMsg: { "addr1": { AddressData: { PublicKeyNew: {...} } } },  // 会导致签名验证失败！
+};
+```
+
 #### 常见错误
 
 | 错误信息 | 原因 | 解决方案 |
 |---------|------|---------|
 | `cannot unmarshal "\"123...\"" into *big.Int` | X/Y/R/S 是字符串 | 使用 `serializeForBackend()` |
-| `signature verification error` | JSON 与后端不一致 | 检查字段顺序、排除字段 |
+| `signature verification error` | JSON 与后端不一致 | 检查字段顺序、排除字段、AddressMsg 处理 |
+| `signature verification error` (退出时) | AddressMsg 不是空对象 | 退出时 `AddressMsg: {}` |
 | `timestamp expired` | 时间戳纪元错误 | 使用 `getTimestamp()` |
 
 ---
@@ -1019,6 +1044,7 @@ state.set({
     - 使用 `serializeForBackend()` 自动去引号
     - 排除字段置零值，不能删除
     - 只对 map 字段排序，不要全局排序
+    - **退出组织时 `AddressMsg` 必须是空对象 `{}`**
 
 ---
 

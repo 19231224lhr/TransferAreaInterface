@@ -126,26 +126,19 @@ export function signStruct(
   // 4. JSON 序列化，然后把 X/Y/R/S/D 的引号去掉变成 number
   let jsonStr = JSON.stringify(copy);
   jsonStr = jsonStr.replace(/"(X|Y|R|S|D)":"(\d+)"/g, '"$1":$2');
-  console.debug('[签名] JSON 数据:', jsonStr);
   
   // 5. 对 JSON UTF-8 字节数组计算 SHA-256 哈希
   const hashBytes = sha256.array(jsonStr);
-  console.debug('[签名] SHA-256 (hex):', sha256(jsonStr));
   
   // 6. 使用 ECDSA P-256 私钥对哈希字节数组签名
   const key = ec.keyFromPrivate(privateKeyHex, 'hex');
   const signature = key.sign(hashBytes);
   
   // 7. 返回签名（内部使用 bigint 存储）
-  const sig: EcdsaSignature = {
+  return {
     R: BigInt('0x' + signature.r.toString(16)),
     S: BigInt('0x' + signature.s.toString(16))
   };
-  
-  console.debug('[签名] R (decimal):', sig.R.toString(10));
-  console.debug('[签名] S (decimal):', sig.S.toString(10));
-  
-  return sig;
 }
 
 /**
