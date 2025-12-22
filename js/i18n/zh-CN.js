@@ -27,6 +27,12 @@ export default {
   'auth.loginRequired': '请先登录',
   'auth.loginRequiredDesc': '您需要登录才能访问此页面',
 
+  // Gateway 服务连接
+  'gateway.error': '服务连接失败',
+  'gateway.unavailable': '后端服务不可用，部分功能可能无法正常使用',
+  'gateway.healthCheckEndpoint': '健康检查端点: GET /health',
+  'gateway.bootNodeEndpoint': 'BootNode API: GET /api/v1/groups',
+
   // 密码和加密相关
   'encryption.setPassword': '设置密码',
   'encryption.enterPassword': '输入密码',

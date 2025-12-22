@@ -175,9 +175,18 @@ async function performGatewayHealthCheck(): Promise<void> {
     if (!isHealthy) {
       // Import toast lazily to avoid circular dependency
       const { showErrorToast } = await import('./utils/toast.js');
+      
+      // Construct detailed error message with API endpoints
+      const errorMessage = [
+        t('gateway.unavailable'),
+        '',
+        t('gateway.healthCheckEndpoint'),
+        t('gateway.bootNodeEndpoint')
+      ].join('\n');
+      
       showErrorToast(
-        t('gateway.unavailable', '后端服务不可用，部分功能可能无法正常使用'),
-        t('gateway.error', '服务连接失败')
+        errorMessage,
+        t('gateway.error')
       );
     }
   } catch (error) {

@@ -27,6 +27,12 @@ export default {
   'auth.loginRequired': 'Login Required',
   'auth.loginRequiredDesc': 'You need to login to access this page',
 
+  // Gateway Service Connection
+  'gateway.error': 'Service Connection Failed',
+  'gateway.unavailable': 'Backend service unavailable, some features may not work properly',
+  'gateway.healthCheckEndpoint': 'Health Check Endpoint: GET /health',
+  'gateway.bootNodeEndpoint': 'BootNode API: GET /api/v1/groups',
+
   // Password and Encryption
   'encryption.setPassword': 'Set Password',
   'encryption.enterPassword': 'Enter Password',
