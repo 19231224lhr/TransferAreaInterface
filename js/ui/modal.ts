@@ -344,11 +344,12 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
   if (textEl) {
     if (isError) textEl.classList.add('tip--error');
     else textEl.classList.remove('tip--error');
+    // Use textContent directly for strings to avoid lit-html issues
     if (typeof content === 'string' || content === undefined) {
-      const text = typeof content === 'string' ? content.trim() : '';
-      // Render as plain text by default (escaped). For rich content, callers should pass a TemplateResult.
-      renderInto(textEl, text ? html`${text}` : nothing);
+      textEl.textContent = typeof content === 'string' ? content.trim() : '';
     } else {
+      // For TemplateResult, clear innerHTML first then use renderInto
+      textEl.innerHTML = '';
       renderInto(textEl, content);
     }
   }
@@ -371,10 +372,15 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
  * @param cancelText - 取消按钮文本
  * @returns Promise，确认返回 true，取消返回 false
  */
+
+// Store references to current event handlers for cleanup
+let currentConfirmOkHandler: (() => void) | null = null;
+let currentConfirmCancelHandler: (() => void) | null = null;
+
 export function showConfirmModal(
-  title?: string, 
+  title?: string,
   content?: string | TemplateResult,
-  okText?: string, 
+  okText?: string,
   cancelText?: string
 ): Promise<boolean> {
   return new Promise((resolve) => {
@@ -383,42 +389,59 @@ export function showConfirmModal(
     const textEl = document.getElementById(DOM_IDS.confirmGasText);
     const okEl = document.getElementById(DOM_IDS.confirmGasOk);
     const cancelEl = document.getElementById(DOM_IDS.confirmGasCancel);
-    
+
     if (!modal || !okEl || !cancelEl) {
       resolve(true);
       return;
     }
-    
+
+    // Remove previous event handlers if they exist
+    if (currentConfirmOkHandler) {
+      okEl.removeEventListener('click', currentConfirmOkHandler);
+      currentConfirmOkHandler = null;
+    }
+    if (currentConfirmCancelHandler) {
+      cancelEl.removeEventListener('click', currentConfirmCancelHandler);
+      currentConfirmCancelHandler = null;
+    }
+
     if (titleEl) titleEl.textContent = title || t('modal.confirm') || '确认';
     if (textEl) {
       textEl.classList.remove('tip--error');
+      // Use textContent directly instead of renderInto to avoid lit-html issues
       if (typeof content === 'string' || content === undefined) {
-        const text = typeof content === 'string' ? content.trim() : '';
-        // Clear existing content first to ensure update
-        textEl.textContent = '';
-        renderInto(textEl, text ? html`${text}` : nothing);
+        textEl.textContent = typeof content === 'string' ? content.trim() : '';
       } else {
-        textEl.textContent = '';
+        // For TemplateResult, we need to use renderInto but clear the element first
+        textEl.innerHTML = '';
         renderInto(textEl, content);
       }
     }
     if (okText) okEl.textContent = okText;
     if (cancelText) cancelEl.textContent = cancelText;
-    
+
     modal.classList.remove('hidden');
-    
+
     const cleanup = (result: boolean) => {
       modal.classList.add('hidden');
-      okEl.removeEventListener('click', onOk);
-      cancelEl.removeEventListener('click', onCancel);
+      // Clean up handlers
+      if (currentConfirmOkHandler) {
+        okEl.removeEventListener('click', currentConfirmOkHandler);
+        currentConfirmOkHandler = null;
+      }
+      if (currentConfirmCancelHandler) {
+        cancelEl.removeEventListener('click', currentConfirmCancelHandler);
+        currentConfirmCancelHandler = null;
+      }
       resolve(result);
     };
-    
-    const onOk = () => cleanup(true);
-    const onCancel = () => cleanup(false);
-    
-    okEl.addEventListener('click', onOk);
-    cancelEl.addEventListener('click', onCancel);
+
+    // Create and store new handlers
+    currentConfirmOkHandler = () => cleanup(true);
+    currentConfirmCancelHandler = () => cleanup(false);
+
+    okEl.addEventListener('click', currentConfirmOkHandler);
+    cancelEl.addEventListener('click', currentConfirmCancelHandler);
   });
 }
 

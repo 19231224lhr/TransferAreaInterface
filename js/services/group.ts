@@ -190,7 +190,7 @@ export async function listAllGroups(): Promise<GroupListResponse> {
  */
 export async function queryGroupInfo(groupId: string): Promise<GroupInfo> {
   if (!groupId || !/^\d{8}$/.test(groupId)) {
-    throw new ApiRequestError('无效的组织ID格式，需要8位数字', {
+    throw new ApiRequestError(t('error.invalidGroupIdFormat'), {
       code: 'INVALID_GROUP_ID'
     });
   }
@@ -213,7 +213,7 @@ export async function queryGroupInfo(groupId: string): Promise<GroupInfo> {
  */
 export async function queryGroupInfoFromAssign(groupId: string): Promise<GroupInfo> {
   if (!groupId || !/^\d{8}$/.test(groupId)) {
-    throw new ApiRequestError('无效的组织ID格式，需要8位数字', {
+    throw new ApiRequestError(t('error.invalidGroupIdFormat'), {
       code: 'INVALID_GROUP_ID'
     });
   }
@@ -247,7 +247,7 @@ export async function queryGroupInfoSafe(groupId: string): Promise<QueryResult<G
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : t('error.unknownError')
     };
   }
 }
@@ -392,7 +392,7 @@ export async function joinGuarGroup(
     // 1. Get current user data
     const user = loadUser();
     if (!user || !user.accountId) {
-      return { success: false, error: '用户未登录' };
+      return { success: false, error: t('error.userNotLoggedIn') };
     }
     
     // Get public keys from user data
@@ -400,7 +400,7 @@ export async function joinGuarGroup(
     const pubYHex = user.pubYHex || user.keys?.pubYHex;
     
     if (!pubXHex || !pubYHex) {
-      return { success: false, error: '账户公钥信息不完整' };
+      return { success: false, error: t('error.publicKeyIncomplete') };
     }
     
     // Get decrypted private key with custom prompt for joining group
@@ -411,7 +411,7 @@ export async function joinGuarGroup(
     );
     
     if (!privHex) {
-      return { success: false, error: '未能获取私钥，操作已取消' };
+      return { success: false, error: t('error.privateKeyFetchFailed') };
     }
     
     // 2. Build AddressMsg from user's sub-addresses only
@@ -487,14 +487,14 @@ export async function joinGuarGroup(
       console.error(`[Group] ✗ Join failed:`, responseData);
       return {
         success: false,
-        error: responseData.message || `请求失败: HTTP ${response.status}`
+        error: responseData.message || `${t('error.networkError')}: HTTP ${response.status}`
       };
     }
     
     if (!responseData.result) {
       return {
         success: false,
-        error: responseData.message || '加入担保组织失败'
+        error: responseData.message || t('error.joinGroupFailed')
       };
     }
     
@@ -511,7 +511,7 @@ export async function joinGuarGroup(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : t('error.unknownError')
     };
   }
 }
@@ -531,7 +531,7 @@ export async function leaveGuarGroup(
     // 1. Get current user data
     const user = loadUser();
     if (!user || !user.accountId) {
-      return { success: false, error: '用户未登录' };
+      return { success: false, error: t('error.userNotLoggedIn') };
     }
     
     // Get public keys from user data
@@ -539,7 +539,7 @@ export async function leaveGuarGroup(
     const pubYHex = user.pubYHex || user.keys?.pubYHex;
     
     if (!pubXHex || !pubYHex) {
-      return { success: false, error: '账户公钥信息不完整' };
+      return { success: false, error: t('error.publicKeyIncomplete') };
     }
     
     // Get decrypted private key with custom prompt for leaving group
@@ -550,7 +550,7 @@ export async function leaveGuarGroup(
     );
     
     if (!privHex) {
-      return { success: false, error: '未能获取私钥，操作已取消' };
+      return { success: false, error: t('error.privateKeyFetchFailed') };
     }
     
     // 2. Build request body
@@ -590,7 +590,7 @@ export async function leaveGuarGroup(
       );
       if (!localVerifyResult) {
         console.error('[Group] ❌ Local signature verification FAILED!');
-        return { success: false, error: '本地签名验证失败！' };
+        return { success: false, error: t('error.localSignatureVerificationFailed') };
       }
     }
     
@@ -621,7 +621,7 @@ export async function leaveGuarGroup(
       console.error(`[Group] ✗ Leave failed:`, responseData);
       return {
         success: false,
-        error: responseData.message || `请求失败: HTTP ${response.status}`
+        error: responseData.message || `${t('error.networkError')}: HTTP ${response.status}`
       };
     }
     
@@ -629,7 +629,7 @@ export async function leaveGuarGroup(
       console.warn(`[Group] ✗ Leave rejected:`, responseData.message);
       return {
         success: false,
-        error: responseData.message || '退出担保组织失败'
+        error: responseData.message || t('error.leaveGroupFailed')
       };
     }
     
@@ -647,7 +647,7 @@ export async function leaveGuarGroup(
     }
     return {
       success: false,
-      error: error instanceof Error ? error.message : '未知错误'
+      error: error instanceof Error ? error.message : t('error.unknownError')
     };
   }
 }

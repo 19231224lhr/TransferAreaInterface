@@ -140,6 +140,17 @@
   }
 }
 
+/* ========================================
+   轨道环和行星 - 隐藏（设计中不使用）
+   ======================================== */
+
+/* 隐藏轨道环和行星，只保留中心 logo 旋转 */
+.inquiry-orbit,
+.inquiry-planet-track,
+.inquiry-planet {
+  display: none !important;
+}
+
 
 
 /* 中心图标 - Logo */
@@ -600,36 +611,29 @@
     height: 100px;
   }
 
-  .inquiry-orbit:nth-child(1) {
-    width: 100px;
-    height: 42px;
-  }
-
-  .inquiry-orbit:nth-child(2) {
-    width: 135px;
-    height: 55px;
-  }
-
-  .inquiry-planet {
-    width: 28px;
-    height: 28px;
-    border-radius: 9px;
-  }
-
-  .inquiry-planet svg {
-    width: 14px;
-    height: 14px;
-  }
-
   .inquiry-icon {
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+  }
+
+  .inquiry-icon .loader-logo-img {
+    width: 50px !important;
+    height: 50px !important;
+    max-width: 50px !important;
+    max-height: 50px !important;
   }
 
   .inquiry-icon svg {
-    width: 24px;
-    height: 24px;
+    width: 32px;
+    height: 32px;
+  }
+
+  /* 成功状态 - 保持圆形 */
+  .inquiry-icon.success {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
   }
 
   .inquiry-title {

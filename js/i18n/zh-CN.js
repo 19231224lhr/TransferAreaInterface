@@ -619,6 +619,14 @@ export default {
   'error.checkNetwork': '请检查网络连接后重试',
   'error.requestTimeout': '请求超时，请重试',
   'error.tryAgain': '请稍后重试',
+  'error.privateKeyFetchFailed': '未能获取私钥，操作已取消',
+  'error.publicKeyIncomplete': '账户公钥信息不完整',
+  'error.userNotLoggedIn': '用户未登录',
+  'error.localSignatureVerificationFailed': '本地签名验证失败！',
+  'error.invalidGroupIdFormat': '无效的组织ID格式，需要8位数字',
+  'error.unknownError': '未知错误',
+  'error.joinGroupFailed': '加入担保组织失败',
+  'error.leaveGroupFailed': '退出担保组织失败',
 
   // 转账相关
   'transfer.optimizedAddresses': '检测到本次转账中有 {count} 个来源地址在本次转账中未被实际使用，已自动优化',

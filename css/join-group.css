@@ -629,17 +629,22 @@
 .join-search-field {
   position: relative;
   display: flex;
-  align-items: center;
+  flex-direction: column;
   flex: 1;
 }
 
 .join-search-icon {
   position: absolute;
   left: 16px;
+  /* Use fixed top value based on input height (14px padding + half of line height) */
+  /* Input has padding: 14px, font-size: 15px, so center is approximately 14px + 10px = 24px */
+  top: 24px;
+  transform: translateY(-50%);
   width: 20px;
   height: 20px;
   color: #94a3b8;
   pointer-events: none;
+  z-index: 1;
 }
 
 .join-search-field input {
@@ -904,6 +909,18 @@
 
   .join-tabs {
     flex-direction: column;
+  }
+
+  /* Fix slider position for vertical layout */
+  .join-tabs::before {
+    width: calc(100% - 12px);
+    height: calc(50% - 6px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When second tab is active, move slider down instead of right */
+  .join-tabs[data-active="search"]::before {
+    transform: translateY(calc(100% + 6px));
   }
 
   .join-org-id {
@@ -1312,13 +1329,17 @@
     margin: 8px 0 0 0;
     height: auto;
     max-width: 100%;
+    width: 100%;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
     animation: inlineErrorFadeInMobile 0.25s ease both;
   }
-  
+
   .join-search-field:has(.field-error) input {
     padding-right: 48px;
   }
-  
+
   @keyframes inlineErrorFadeInMobile {
     from {
       opacity: 0;

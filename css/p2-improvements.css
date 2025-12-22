@@ -519,6 +519,42 @@ button.is-loading .loading-spinner {
   color: #f1f5f9;
 }
 
+/* Password prompt modal - mobile portrait fix */
+@media (max-width: 480px) and (orientation: portrait) {
+  .modal:has(.password-prompt-modal) {
+    align-items: flex-start;
+    padding-top: 15vh;
+  }
+
+  .password-prompt-modal {
+    max-width: calc(100% - 32px);
+    margin: 0 16px;
+  }
+}
+
+/* Fallback for browsers without :has() support */
+@supports not selector(:has(*)) {
+  @media (max-width: 480px) and (orientation: portrait) {
+    #passwordPromptModal {
+      align-items: flex-start;
+      padding-top: 15vh;
+    }
+
+    #passwordPromptModal .password-prompt-modal {
+      max-width: calc(100% - 32px);
+      margin: 0 16px;
+    }
+  }
+}
+
+/* Password prompt modal - keep all corners rounded on mobile */
+@media (max-width: 768px) {
+  .password-prompt-modal {
+    border-radius: 24px !important;
+    margin-top: 0;
+  }
+}
+
 /* ========================================
    Focus Visible Improvements
    ======================================== */

@@ -1749,14 +1749,11 @@ pre code {
 
 /* 错误状态的文本样式 */
 .unified-success.error-mode .success-text {
-  background: rgba(239, 68, 68, 0.08);
   color: #dc2626;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border-left: 3px solid #ef4444;
-  font-size: 13px;
-  text-align: left;
+  font-size: 14px;
+  text-align: center;
   margin: 8px 0 20px;
+  line-height: 1.5;
 }
 
 .unified-success h3,

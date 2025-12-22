@@ -619,6 +619,14 @@ export default {
   'error.checkNetwork': 'Please check your network connection and try again',
   'error.requestTimeout': 'Request timed out, please try again',
   'error.tryAgain': 'Please try again later',
+  'error.privateKeyFetchFailed': 'Failed to retrieve private key, operation cancelled',
+  'error.publicKeyIncomplete': 'Account public key information is incomplete',
+  'error.userNotLoggedIn': 'User not logged in',
+  'error.localSignatureVerificationFailed': 'Local signature verification failed!',
+  'error.invalidGroupIdFormat': 'Invalid organization ID format, must be 8 digits',
+  'error.unknownError': 'Unknown error',
+  'error.joinGroupFailed': 'Failed to join guarantor organization',
+  'error.leaveGroupFailed': 'Failed to leave guarantor organization',
 
   // Transfer related
   'transfer.optimizedAddresses': 'Detected {count} source addresses not used in this transfer, automatically optimized',
