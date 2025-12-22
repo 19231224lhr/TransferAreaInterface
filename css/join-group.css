@@ -500,6 +500,18 @@
   border: 1px solid #e2e8f0;
 }
 
+.join-org-detail .detail-content span.detail-port {
+  font-size: 12px;
+  font-weight: 500;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 8px;
+  border-radius: 6px;
+  margin-left: 8px;
+  border: none;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+}
+
 .join-org-detail .detail-content span.mono {
   font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
   font-size: 13px;
@@ -1052,6 +1064,11 @@
   color: var(--color-text-primary);
   background: var(--color-bg-tertiary);
   border-color: var(--color-border);
+}
+
+[data-theme="dark"] .join-org-detail .detail-content span.detail-port {
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
 }
 
 /* 旧样式兼容 */

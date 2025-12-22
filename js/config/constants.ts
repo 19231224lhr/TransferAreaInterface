@@ -18,6 +18,8 @@ export interface GuarantorGroup {
   aggreNode: string;
   assignNode: string;
   pledgeAddress: string;
+  assignAPIEndpoint?: string;  // AssignNode HTTP API 端口 (如 ":8081")
+  aggrAPIEndpoint?: string;    // AggrNode HTTP API 端口 (如 ":8082")
 }
 
 /** Coin information */
@@ -56,7 +58,9 @@ export const DEFAULT_GROUP: GuarantorGroup = {
   groupID: '10000000',
   aggreNode: '39012088',
   assignNode: '17770032',
-  pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09'
+  pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09',
+  assignAPIEndpoint: ':8081',  // 固定端口号
+  aggrAPIEndpoint: ':8082'     // 固定端口号
 };
 
 /** List of available guarantor organizations */

@@ -1472,3 +1472,147 @@ async function handleJoin() {
 - ✅ **类型安全**: 集中定义类型，避免重复
 - ✅ **易于测试**: 可以单独测试业务模块
 - ✅ **易于维护**: API 变更只需修改一处
+
+
+---
+
+## ECDSA Signature & JSON Serialization (签名与序列化规范) 🆕
+
+### Overview
+
+前端与后端 Go 服务通信时，涉及 ECDSA P-256 签名的 API（如 `flow-apply`、`new-address`、`submit-tx` 等）必须严格遵循后端的序列化规范。
+
+**权威文档**: `docs/Gateway/签名与序列化唯一指南（以Go后端实现为准）.md`
+
+### Core File
+
+`js/utils/signature.ts` - 签名工具库
+
+### 关键规则（必须严格遵守）
+
+#### 1. X/Y/R/S/D 必须是 JSON number（不带引号）
+
+Go 的 `*big.Int` 序列化为 JSON 时是**数字字面量**，不是字符串：
+
+```json
+// ✅ 正确
+{"X":47699043193711063099439414109189766071675238814804702569610584135532027314528}
+
+// ❌ 错误（带引号的字符串）
+{"X":"47699043193711063099439414109189766071675238814804702569610584135532027314528"}
+```
+
+**解决方案**：使用正则表达式去掉引号
+
+```typescript
+// js/utils/signature.ts
+export function serializeForBackend(obj: unknown): string {
+  // 1. 先用 JSON.stringify 把 bigint 转成十进制字符串
+  let json = JSON.stringify(obj, bigintReplacer);
+  
+  // 2. 用正则表达式把 X/Y/R/S/D 字段的引号去掉
+  json = json.replace(/"(X|Y|R|S|D)":"(\d+)"/g, '"$1":$2');
+  
+  return json;
+}
+```
+
+#### 2. 排除字段必须置零值，不能删除
+
+后端使用 `reflect.Zero()` 置零，不是删除字段：
+
+```typescript
+// ✅ 正确：签名字段置为 {R: null, S: null}
+obj.UserSig = { R: null, S: null };
+
+// ❌ 错误：删除字段
+delete obj.UserSig;
+```
+
+#### 3. 不要全局排序 key，只对 map 字段排序
+
+Go 的 `json.Marshal` 对 struct 按字段定义顺序输出，对 map 按 key 排序：
+
+```typescript
+// ✅ 正确：只对 map 字段（如 AddressMsg）排序
+function sortMapFieldsOnly(obj: Record<string, unknown>): void {
+  const mapFields = ['AddressMsg', 'GuarTable'];
+  for (const field of mapFields) {
+    if (obj[field] && typeof obj[field] === 'object') {
+      const sorted = Object.keys(obj[field]).sort().reduce((acc, k) => {
+        acc[k] = obj[field][k];
+        return acc;
+      }, {});
+      obj[field] = sorted;
+    }
+  }
+}
+
+// ❌ 错误：全局排序所有 key（会改变 struct 字段顺序）
+const sorted = Object.keys(obj).sort().reduce(...);
+```
+
+#### 4. 时间戳使用自定义纪元（2020-01-01 UTC）
+
+```typescript
+const CUSTOM_START_TIME = new Date('2020-01-01T00:00:00Z').getTime();
+
+export function getTimestamp(): number {
+  return Math.floor((Date.now() - CUSTOM_START_TIME) / 1000);
+}
+```
+
+### 签名流程
+
+```typescript
+import { signStruct, serializeForBackend } from '../utils/signature';
+
+// 1. 构建请求体（X/Y 使用 bigint）
+const requestBody = {
+  Status: 1,
+  UserID: '12345678',
+  UserPublicKey: {
+    CurveName: 'P256',
+    X: BigInt('0x' + pubXHex),
+    Y: BigInt('0x' + pubYHex)
+  },
+  AddressMsg: addressMsg,
+  TimeStamp: getTimestamp()
+};
+
+// 2. 签名（排除 UserSig 字段）
+const signature = signStruct(requestBody, privateKeyHex, ['UserSig']);
+requestBody.UserSig = signature;
+
+// 3. 序列化发送（X/Y/R/S 去引号变成 number）
+const body = serializeForBackend(requestBody);
+await fetch(apiUrl, { method: 'POST', body });
+```
+
+### 常见错误排查
+
+| 错误信息 | 原因 | 解决方案 |
+|---------|------|---------|
+| `cannot unmarshal "\"123...\"" into *big.Int` | X/Y/R/S 是字符串（带引号） | 使用 `serializeForBackend` 去引号 |
+| `signature verification error` | 签名计算的 JSON 与后端不一致 | 检查字段顺序、排除字段是否置零 |
+| `timestamp expired` | 时间戳纪元不对或超过 5 分钟 | 使用 2020-01-01 UTC 纪元 |
+| `invalid request body` | JSON 格式错误 | 检查 null 值、字段名大小写 |
+
+### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `signStruct(data, privateKey, excludeFields)` | 对结构体签名 |
+| `verifyStruct(data, signature, pubX, pubY, excludeFields)` | 本地验证签名 |
+| `serializeForBackend(obj)` | 序列化为后端可接受的 JSON |
+| `convertHexToPublicKey(pubXHex, pubYHex)` | 将 hex 公钥转为 bigint 格式 |
+| `getTimestamp()` | 获取自定义纪元时间戳 |
+| `getPublicKeyHexFromPrivate(privateKeyHex)` | 从私钥派生公钥 |
+
+### 调试技巧
+
+1. **打印签名用的 JSON**：查看 `[签名] JSON 数据:` 日志
+2. **本地验证签名**：使用 `verifyStruct` 在发送前验证
+3. **检查 Network 面板**：确认 Request Payload 中 X/Y/R/S 是数字不是字符串
+4. **对比后端日志**：让后端打印收到的 JSON 和计算的哈希
+

@@ -6,11 +6,12 @@
 
 import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/storage';
 import { t } from '../i18n/index.js';
-import { showModalTip, showConfirmModal } from '../ui/modal';
+import { showModalTip, showConfirmModal, showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
 import { showMiniToast } from '../utils/toast.js';
 import { routeTo } from '../router';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { leaveGuarGroup } from '../services/group';
 
 /**
  * Update group detail page display
@@ -42,32 +43,89 @@ export function updateGroupDetailDisplay() {
 }
 
 /**
- * Handle leaving organization
+ * Handle leaving organization (with real API call)
  */
-export function handleLeaveOrg() {
+export async function handleLeaveOrg() {
   const u = loadUser();
-  if (u && u.accountId) {
-    saveUser({ accountId: u.accountId, orgNumber: '', guarGroup: null });
+  if (!u || !u.accountId) {
+    showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true);
+    return;
   }
   
-  clearGuarChoice();
-  
-  // Update UI
-  if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
-    window.PanguPay.wallet.updateWalletBrief();
-  }
-  if (typeof window.PanguPay?.wallet?.refreshOrgPanel === 'function') {
-    window.PanguPay.wallet.refreshOrgPanel();
-  }
-  if (typeof window.updateOrgDisplay === 'function') {
-    window.updateOrgDisplay();
+  // Get current group info
+  const group = getJoinedGroup();
+  if (!group || !group.groupID) {
+    showModalTip(t('toast.notInOrg') || '未加入组织', t('toast.notInOrgDesc') || '您当前未加入任何担保组织', true);
+    return;
   }
   
-  showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
-  
-  // Navigate back to main
-  if (typeof window.PanguPay?.router?.routeTo === 'function') {
-    window.PanguPay.router.routeTo('#/main');
+  try {
+    // Show loading animation
+    showUnifiedLoading(t('join.leavingOrg') || '正在退出组织...');
+    
+    console.info(`[GroupDetail] 🚀 Attempting to leave organization ${group.groupID}...`);
+    
+    // Build GroupInfo for API call
+    const groupInfo = {
+      groupID: group.groupID,
+      peerGroupID: '',
+      aggreNode: group.aggreNode || '',
+      aggrePeerID: '',
+      assignNode: group.assignNode || '',
+      assignPeerID: '',
+      pledgeAddress: group.pledgeAddress || '',
+      assignAPIEndpoint: group.assignAPIEndpoint,
+      aggrAPIEndpoint: group.aggrAPIEndpoint
+    };
+    
+    // Call leave API
+    const result = await leaveGuarGroup(group.groupID, groupInfo);
+    
+    // Hide loading
+    hideUnifiedOverlay();
+    
+    if (!result.success) {
+      console.error(`[GroupDetail] ✗ Failed to leave organization:`, result.error);
+      showUnifiedError(
+        t('join.leaveFailed') || '退出失败',
+        result.error || t('join.leaveFailedDesc') || '退出担保组织失败，请稍后重试'
+      );
+      return;
+    }
+    
+    console.info(`[GroupDetail] ✓ Successfully left organization ${group.groupID}`);
+    
+    // Clear local storage
+    if (u.accountId) {
+      saveUser({ accountId: u.accountId, orgNumber: '', guarGroup: null });
+    }
+    clearGuarChoice();
+    
+    // Update UI
+    if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+      window.PanguPay.wallet.updateWalletBrief();
+    }
+    if (typeof window.PanguPay?.wallet?.refreshOrgPanel === 'function') {
+      window.PanguPay.wallet.refreshOrgPanel();
+    }
+    if (typeof window.updateOrgDisplay === 'function') {
+      window.updateOrgDisplay();
+    }
+    
+    showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
+    
+    // Navigate back to main
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/main');
+    }
+    
+  } catch (error) {
+    console.error(`[GroupDetail] ✗ Unexpected error:`, error);
+    hideUnifiedOverlay();
+    showUnifiedError(
+      t('join.leaveFailed') || '退出失败',
+      error instanceof Error ? error.message : '未知错误'
+    );
   }
 }
 
@@ -178,35 +236,8 @@ function initGroupDetailButtons() {
       );
       if (!confirmed) return;
       
-      const ov = document.getElementById(DOM_IDS.actionOverlay);
-      const ovt = document.getElementById(DOM_IDS.actionOverlayText);
-      if (ovt) ovt.textContent = t('join.leavingOrg');
-      if (ov) ov.classList.remove('hidden');
-      await wait(2000);
-      if (ov) ov.classList.add('hidden');
-      
-      const latest = loadUser();
-      if (latest && latest.accountId) {
-        try {
-          localStorage.removeItem('guarChoice');
-        } catch { }
-        saveUser({ accountId: latest.accountId, orgNumber: '', guarGroup: null });
-      }
-      
-      if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
-        window.PanguPay.wallet.updateWalletBrief();
-      }
-      if (typeof window.PanguPay?.wallet?.refreshOrgPanel === 'function') {
-        window.PanguPay.wallet.refreshOrgPanel();
-      }
-      if (typeof window.updateOrgDisplay === 'function') {
-        window.updateOrgDisplay();
-      }
-      
-      showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
-      
-      // Refresh current page state
-      routeTo('#/group-detail');
+      // Call the API-backed leave function
+      await handleLeaveOrg();
     });
     groupExitBtn.dataset._bind = '1';
   }

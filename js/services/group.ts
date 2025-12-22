@@ -1,12 +1,29 @@
 /**
  * Group/Organization Service Module
  * 
- * Provides guarantor organization query functions.
- * Handles group information retrieval from backend Gateway API.
+ * Provides guarantor organization query functions and join/leave operations.
+ * Handles group information retrieval and flow-apply API calls.
  */
 
 import { apiClient, ApiRequestError } from './api';
-import { API_ENDPOINTS } from '../config/api';
+import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
+import { loadUser, saveUser } from '../utils/storage';
+import { getDecryptedPrivateKey, getDecryptedPrivateKeyWithPrompt } from '../utils/keyEncryptionUI';
+import { t } from '../i18n/index.js';
+
+// 导入新的签名工具库
+import {
+  signStruct as signStructCore,
+  verifyStruct as verifyStructCore,
+  serializeForBackend,
+  convertHexToPublicKey,
+  getTimestamp as getUnixTimestamp,
+  hexToBigInt,
+  bigIntToHex,
+  getPublicKeyHexFromPrivate,
+  type PublicKeyNew as SigPublicKeyNew,
+  type EcdsaSignature as SigEcdsaSignature
+} from '../utils/signature';
 
 // ============================================================================
 // Types
@@ -14,9 +31,45 @@ import { API_ENDPOINTS } from '../config/api';
 
 /** Public key structure from backend (Go: PublicKeyNew) */
 export interface PublicKeyNew {
-  X?: string;
-  Y?: string;
-  Curve?: string;
+  CurveName?: string;  // Backend uses CurveName
+  Curve?: string;      // Frontend compatibility
+  X?: string | bigint; // Big integer as decimal string or bigint
+  Y?: string | bigint; // Big integer as decimal string or bigint
+}
+
+/** ECDSA signature structure (Go format with PascalCase) */
+export interface EcdsaSignature {
+  R: string | bigint;  // Big integer as decimal string or bigint
+  S: string | bigint;  // Big integer as decimal string or bigint
+}
+
+/** Address data for flow-apply request */
+export interface AddressData {
+  PublicKeyNew: PublicKeyNew | SigPublicKeyNew;
+}
+
+/** AddressMsg mapping: address -> AddressData */
+export type AddressMsg = Record<string, { AddressData: AddressData }>;
+
+/** Flow apply request body (Go: FlowApply) */
+export interface FlowApplyRequest {
+  Status: number;           // 1=join, 0=leave
+  UserID: string;           // 8-digit user ID
+  UserPeerID: string;       // P2P peer ID (empty for HTTP)
+  GuarGroupID: string;      // Target organization ID
+  UserPublicKey: PublicKeyNew | SigPublicKeyNew | { CurveName: string; X: null; Y: null };  // User's account public key (can be zero value for leave)
+  AddressMsg: AddressMsg | null;   // Address info (required for join, null for leave - Go map zero value is nil)
+  TimeStamp: number;        // Custom timestamp (seconds since 2020-01-01)
+  UserSig?: EcdsaSignature | SigEcdsaSignature;  // Account private key signature (optional, added after signing)
+}
+
+/** Flow apply response */
+export interface FlowApplyResponse {
+  status: number;
+  user_id: string;
+  guar_group_id: string;
+  result: boolean;
+  message: string;
 }
 
 /**
@@ -34,8 +87,8 @@ export interface GuarGroupTable {
   GuarTable?: Record<string, string>;
   AssignPublicKeyNew?: PublicKeyNew;
   AggrPublicKeyNew?: PublicKeyNew;
-  AssignAPIEndpoint?: string;  // AssignNode HTTP API 地址
-  AggrAPIEndpoint?: string;    // AggregationNode HTTP API 地址
+  AssignAPIEndpoint?: string;  // AssignNode HTTP API 端口 (如 ":8081")
+  AggrAPIEndpoint?: string;    // AggregationNode HTTP API 端口 (如 ":8082")
   CreateTime?: number;
 }
 
@@ -48,10 +101,16 @@ export interface GroupInfo {
   assignNode: string;
   assignPeerID: string;
   pledgeAddress: string;
-  assignAPIEndpoint?: string;  // AssignNode API 端点
-  aggrAPIEndpoint?: string;    // AggrNode API 端点
+  assignAPIEndpoint?: string;  // AssignNode API 端口 (如 ":8081")
+  aggrAPIEndpoint?: string;    // AggrNode API 端口 (如 ":8082")
   guarTable?: Record<string, string>;
   createTime?: number;
+}
+
+/** Extended group info with API endpoints for storage */
+export interface GroupInfoWithEndpoints extends GroupInfo {
+  assignNodeUrl?: string;   // Complete AssignNode URL (如 "http://localhost:8081")
+  aggrNodeUrl?: string;     // Complete AggrNode URL (如 "http://localhost:8082")
 }
 
 /** Result type for operations that can fail */
@@ -179,6 +238,470 @@ export async function queryGroupInfoSafe(groupId: string): Promise<QueryResult<G
     const data = await queryGroupInfo(groupId);
     return { success: true, data };
   } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return {
+        success: false,
+        error: error.message,
+        notFound: error.status === 404
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知错误'
+    };
+  }
+}
+
+// ============================================================================
+// Timestamp & Signing Utilities
+// ============================================================================
+
+/**
+ * Custom start time for timestamps (2020-01-01 00:00:00 UTC)
+ * Matches backend Go: time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
+ */
+const CUSTOM_START_TIME = new Date('2020-01-01T00:00:00Z').getTime();
+
+/**
+ * Get custom timestamp (seconds since 2020-01-01 UTC)
+ * Matches backend Go: GetTimestamp()
+ */
+export function getTimestamp(): number {
+  const currentTime = Date.now();
+  return Math.floor((currentTime - CUSTOM_START_TIME) / 1000);
+}
+
+/**
+ * Convert public key from hex format to backend format (bigint)
+ * @param pubXHex - X coordinate in hex
+ * @param pubYHex - Y coordinate in hex
+ * @returns PublicKeyNew in backend format
+ */
+export function convertPublicKeyToBackendFormat(pubXHex: string, pubYHex: string): SigPublicKeyNew {
+  return convertHexToPublicKey(pubXHex, pubYHex);
+}
+
+/**
+ * Sign a structure using ECDSA P-256 (matches backend SignStruct)
+ * 
+ * This is a wrapper around the core signStruct function from signature.ts
+ * that provides the same interface as before but uses the new implementation.
+ * 
+ * ⚠️ Important: Excluded fields are set to zero values, not deleted!
+ * This matches the backend's reflect.Zero() behavior.
+ * 
+ * @param data - Object to sign
+ * @param privateKeyHex - Private key in hex format
+ * @param excludeFields - Fields to exclude from signature (will be set to zero values)
+ * @returns ECDSA signature in backend format (bigint)
+ */
+export function signStruct(
+  data: Record<string, unknown>,
+  privateKeyHex: string,
+  excludeFields: string[]
+): SigEcdsaSignature {
+  console.debug('[Group] 🔐 Calling signStruct with excludeFields:', excludeFields);
+  const signature = signStructCore(data, privateKeyHex, excludeFields);
+  console.debug('[Group] ✓ Signature generated:', { R: signature.R.toString(), S: signature.S.toString() });
+  return signature;
+}
+
+/**
+ * Verify a structure signature locally (matches backend VerifyStructSig)
+ * 
+ * This function verifies the signature using the same logic as the backend,
+ * allowing us to debug signature issues before sending to the server.
+ * 
+ * @param data - Object that was signed
+ * @param signature - The signature to verify
+ * @param pubXHex - Public key X coordinate in hex format
+ * @param pubYHex - Public key Y coordinate in hex format
+ * @param excludeFields - Fields that were excluded from signature
+ * @returns true if signature is valid, false otherwise
+ */
+export function verifyStructLocal(
+  data: Record<string, unknown>,
+  signature: SigEcdsaSignature,
+  pubXHex: string,
+  pubYHex: string,
+  excludeFields: string[]
+): boolean {
+  console.debug('[Group] 🔍 Verifying signature locally...');
+  console.debug('[Group] Public key X:', pubXHex);
+  console.debug('[Group] Public key Y:', pubYHex);
+  
+  const result = verifyStructCore(data, signature, pubXHex, pubYHex, excludeFields);
+  
+  if (result) {
+    console.info('[Group] ✅ Local signature verification PASSED');
+  } else {
+    console.error('[Group] ❌ Local signature verification FAILED');
+  }
+  
+  return result;
+}
+
+// ============================================================================
+// Join/Leave Organization API
+// ============================================================================
+
+/**
+ * Build AssignNode URL from base host and endpoint
+ * @param assignEndpoint - Port string like ":8081"
+ * @returns Full URL like "http://localhost:8081"
+ */
+export function buildAssignNodeUrl(assignEndpoint: string): string {
+  // Extract host from API_BASE_URL
+  const baseUrl = new URL(API_BASE_URL);
+  const host = baseUrl.hostname;
+  const protocol = baseUrl.protocol;
+  
+  // assignEndpoint is like ":8081", extract port
+  const port = assignEndpoint.startsWith(':') ? assignEndpoint.slice(1) : assignEndpoint;
+  
+  return `${protocol}//${host}:${port}`;
+}
+
+/**
+ * Build AggrNode URL from base host and endpoint
+ * @param aggrEndpoint - Port string like ":8082"
+ * @returns Full URL like "http://localhost:8082"
+ */
+export function buildAggrNodeUrl(aggrEndpoint: string): string {
+  const baseUrl = new URL(API_BASE_URL);
+  const host = baseUrl.hostname;
+  const protocol = baseUrl.protocol;
+  
+  const port = aggrEndpoint.startsWith(':') ? aggrEndpoint.slice(1) : aggrEndpoint;
+  
+  return `${protocol}//${host}:${port}`;
+}
+
+/**
+ * Join a guarantor organization
+ * 
+ * @param groupId - Target organization ID
+ * @param groupInfo - Organization info with API endpoints
+ * @returns Join result
+ */
+export async function joinGuarGroup(
+  groupId: string,
+  groupInfo: GroupInfo
+): Promise<QueryResult<FlowApplyResponse>> {
+  try {
+    // 1. Get current user data
+    const user = loadUser();
+    if (!user || !user.accountId) {
+      return { success: false, error: '用户未登录' };
+    }
+    
+    // Get public keys from user data
+    const pubXHex = user.pubXHex || user.keys?.pubXHex;
+    const pubYHex = user.pubYHex || user.keys?.pubYHex;
+    
+    if (!pubXHex || !pubYHex) {
+      return { success: false, error: '账户公钥信息不完整' };
+    }
+    
+    // Get decrypted private key with custom prompt for joining group
+    const privHex = await getDecryptedPrivateKeyWithPrompt(
+      user.accountId,
+      t('encryption.unlockForSigning', '解锁私钥进行签名'),
+      t('encryption.unlockForJoinGroup', '加入担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。')
+    );
+    
+    if (!privHex) {
+      return { success: false, error: '未能获取私钥，操作已取消' };
+    }
+    
+    // 2. Build AddressMsg from user's sub-addresses only
+    // ⚠️ IMPORTANT: user.address is the account address (not a wallet address)
+    // Only wallet.addressMsg contains actual usable wallet addresses
+    const addressMsg: AddressMsg = {};
+    
+    // Add sub-addresses from wallet (these are the actual usable addresses)
+    if (user.wallet?.addressMsg) {
+      for (const [addr, data] of Object.entries(user.wallet.addressMsg)) {
+        if (data.pubXHex && data.pubYHex) {
+          addressMsg[addr] = {
+            AddressData: {
+              PublicKeyNew: convertPublicKeyToBackendFormat(data.pubXHex, data.pubYHex)
+            }
+          };
+        }
+      }
+    }
+    
+    if (Object.keys(addressMsg).length === 0) {
+      return { 
+        success: false, 
+        error: t('join.noSubAddressDesc', '加入担保组织前需要至少一个钱包子地址。请先在"我的钱包"页面创建子地址。')
+      };
+    }
+    
+    // 3. Build request body (without signature first)
+    const timestamp = getTimestamp();
+    const requestBody: FlowApplyRequest = {
+      Status: 1, // Join
+      UserID: user.accountId,
+      UserPeerID: '', // Empty for HTTP calls
+      GuarGroupID: groupId,
+      UserPublicKey: convertPublicKeyToBackendFormat(pubXHex, pubYHex),
+      AddressMsg: addressMsg,
+      TimeStamp: timestamp
+      // Note: UserSig will be added after signing
+    };
+    
+    // 4. Sign the request (UserSig field will be excluded automatically)
+    // Using new signature module - synchronous call
+    const signature = signStruct(
+      requestBody as unknown as Record<string, unknown>,
+      privHex,
+      ['UserSig']
+    );
+    // Add signature after signing
+    requestBody.UserSig = signature;
+    
+    // 5. Determine API endpoint
+    // Use AssignNode URL if available, otherwise use BootNode proxy route
+    let apiUrl: string;
+    if (groupInfo.assignAPIEndpoint) {
+      const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
+      apiUrl = `${assignNodeUrl}/api/v1/${groupId}/assign/flow-apply`;
+    } else {
+      // Fallback to BootNode proxy
+      apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
+    }
+    
+    console.info(`[Group] 🚀 Joining organization ${groupId}...`);
+    console.debug(`[Group] API URL: ${apiUrl}`);
+    console.debug(`[Group] Request body (object):`, requestBody);
+    
+    // 6. Send request
+    const serializedBody = serializeForBackend(requestBody);
+    console.debug(`[Group] Serialized JSON (string):`, serializedBody);
+    console.debug(`[Group] Serialized JSON length:`, serializedBody.length);
+    
+    // 验证序列化结果
+    try {
+      const parsed = JSON.parse(serializedBody);
+      console.debug(`[Group] Parsed back - UserPublicKey.X type:`, typeof parsed.UserPublicKey?.X);
+      console.debug(`[Group] Parsed back - UserPublicKey.X value:`, parsed.UserPublicKey?.X);
+      console.debug(`[Group] Parsed back - UserSig.R type:`, typeof parsed.UserSig?.R);
+      console.debug(`[Group] Parsed back - UserSig.R value:`, parsed.UserSig?.R);
+    } catch (e) {
+      console.error(`[Group] Failed to parse serialized JSON:`, e);
+    }
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: serializedBody
+    });
+    
+    const responseData = await response.json() as FlowApplyResponse;
+    
+    if (!response.ok) {
+      console.error(`[Group] ✗ Join failed:`, responseData);
+      return {
+        success: false,
+        error: responseData.message || `请求失败: HTTP ${response.status}`
+      };
+    }
+    
+    if (!responseData.result) {
+      console.warn(`[Group] ✗ Join rejected:`, responseData.message);
+      return {
+        success: false,
+        error: responseData.message || '加入担保组织失败'
+      };
+    }
+    
+    console.info(`[Group] ✓ Successfully joined organization ${groupId}`);
+    return { success: true, data: responseData };
+    
+  } catch (error) {
+    console.error(`[Group] ✗ Join error:`, error);
+    if (error instanceof ApiRequestError) {
+      return {
+        success: false,
+        error: error.message,
+        notFound: error.status === 404
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '未知错误'
+    };
+  }
+}
+
+/**
+ * Leave a guarantor organization
+ * 
+ * @param groupId - Target organization ID
+ * @param groupInfo - Organization info with API endpoints
+ * @returns Leave result
+ */
+export async function leaveGuarGroup(
+  groupId: string,
+  groupInfo: GroupInfo | null
+): Promise<QueryResult<FlowApplyResponse>> {
+  try {
+    // 1. Get current user data
+    const user = loadUser();
+    if (!user || !user.accountId) {
+      return { success: false, error: '用户未登录' };
+    }
+    
+    // Get public keys from user data
+    const pubXHex = user.pubXHex || user.keys?.pubXHex;
+    const pubYHex = user.pubYHex || user.keys?.pubYHex;
+    
+    if (!pubXHex || !pubYHex) {
+      return { success: false, error: '账户公钥信息不完整' };
+    }
+    
+    // Get decrypted private key with custom prompt for leaving group
+    const privHex = await getDecryptedPrivateKeyWithPrompt(
+      user.accountId,
+      t('encryption.unlockForSigning', '解锁私钥进行签名'),
+      t('encryption.unlockForLeaveGroup', '退出担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。')
+    );
+    
+    if (!privHex) {
+      return { success: false, error: '未能获取私钥，操作已取消' };
+    }
+    
+    // 2. Build request body
+    // ⚠️ 重要：根据后端权威文档 docs/Gateway/签名与序列化唯一指南（以Go后端实现为准）.md
+    // 退出时的最小示例：
+    // {
+    //   "Status": 0,
+    //   "UserID": "12345678",
+    //   "UserPeerID": "",
+    //   "GuarGroupID": "10000000",  // 实际的组织ID
+    //   "UserPublicKey": {"CurveName":"P256","X":"...","Y":"..."},  // 实际的公钥
+    //   "AddressMsg": {},  // 空对象，不是 null！
+    //   "TimeStamp": 157024800,
+    //   "UserSig": {"R":"...","S":"..."}
+    // }
+    const timestamp = getTimestamp();
+    
+    // 构建与后端文档一致的请求体
+    const requestBody: FlowApplyRequest = {
+      Status: 0, // Leave
+      UserID: user.accountId,
+      UserPeerID: '',           // 空字符串
+      GuarGroupID: groupId,     // ⚠️ 实际的组织ID！
+      UserPublicKey: convertPublicKeyToBackendFormat(pubXHex, pubYHex),  // ⚠️ 实际的公钥！
+      AddressMsg: {} as AddressMsg,  // ⚠️ 空对象 {}，不是 null！
+      TimeStamp: timestamp
+      // Note: UserSig will be added after signing
+    };
+    
+    // 3. Sign the request (UserSig field will be excluded automatically)
+    // Using new signature module - synchronous call
+    const signature = signStruct(
+      requestBody as unknown as Record<string, unknown>,
+      privHex,
+      ['UserSig']
+    );
+    // Add signature after signing
+    requestBody.UserSig = signature;
+    
+    // 4. ⚠️ 本地验证签名（调试用）
+    // 从私钥派生公钥进行验证，确保签名正确
+    const derivedPubKey = getPublicKeyHexFromPrivate(privHex);
+    console.info('[Group] 🔍 Performing local signature verification...');
+    console.debug('[Group] Derived public key from private key:');
+    console.debug('[Group]   X:', derivedPubKey.x);
+    console.debug('[Group]   Y:', derivedPubKey.y);
+    console.debug('[Group] Stored public key:');
+    console.debug('[Group]   X:', pubXHex);
+    console.debug('[Group]   Y:', pubYHex);
+    
+    // 检查公钥是否匹配
+    const pubKeyMatch = derivedPubKey.x.toLowerCase() === pubXHex.toLowerCase() && 
+                        derivedPubKey.y.toLowerCase() === pubYHex.toLowerCase();
+    if (!pubKeyMatch) {
+      console.warn('[Group] ⚠️ Public key mismatch! Derived key differs from stored key.');
+      console.warn('[Group] This might indicate the private key does not match the account.');
+    }
+    
+    // 使用派生的公钥进行本地验证
+    const localVerifyResult = verifyStructLocal(
+      requestBody as unknown as Record<string, unknown>,
+      signature,
+      derivedPubKey.x,
+      derivedPubKey.y,
+      ['UserSig']
+    );
+    
+    if (!localVerifyResult) {
+      console.error('[Group] ❌ Local signature verification FAILED!');
+      console.error('[Group] This indicates a bug in the signing logic.');
+      return {
+        success: false,
+        error: '本地签名验证失败！签名逻辑可能存在问题。'
+      };
+    }
+    
+    console.info('[Group] ✅ Local signature verification PASSED!');
+    
+    // 5. Determine API endpoint
+    let apiUrl: string;
+    if (groupInfo?.assignAPIEndpoint) {
+      const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
+      apiUrl = `${assignNodeUrl}/api/v1/${groupId}/assign/flow-apply`;
+    } else {
+      // Fallback to BootNode proxy
+      apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
+    }
+    
+    console.info(`[Group] 🚀 Leaving organization ${groupId}...`);
+    console.debug(`[Group] API URL: ${apiUrl}`);
+    console.debug(`[Group] Request body:`, requestBody);
+    
+    // 6. Send request
+    const serializedBody = serializeForBackend(requestBody);
+    console.debug(`[Group] Serialized JSON (sent to backend):`, serializedBody);
+    
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: serializedBody
+    });
+    
+    const responseData = await response.json() as FlowApplyResponse;
+    
+    if (!response.ok) {
+      console.error(`[Group] ✗ Leave failed:`, responseData);
+      return {
+        success: false,
+        error: responseData.message || `请求失败: HTTP ${response.status}`
+      };
+    }
+    
+    if (!responseData.result) {
+      console.warn(`[Group] ✗ Leave rejected:`, responseData.message);
+      return {
+        success: false,
+        error: responseData.message || '退出担保组织失败'
+      };
+    }
+    
+    console.info(`[Group] ✓ Successfully left organization ${groupId}`);
+    return { success: true, data: responseData };
+    
+  } catch (error) {
+    console.error(`[Group] ✗ Leave error:`, error);
     if (error instanceof ApiRequestError) {
       return {
         success: false,

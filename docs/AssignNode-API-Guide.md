@@ -95,10 +95,12 @@ http://localhost{AssignAPIEndpoint}/api/v1/{groupID}/assign/xxx
 ```json
 {
     "CurveName": "P256",
-    "X": "大整数（big.Int）",
-    "Y": "大整数（big.Int）"
+    "X": 12345678901234567890,
+    "Y": 98765432109876543210
 }
 ```
+
+⚠️ **重要**：`X` 和 `Y` 必须是**数字格式**（不带引号），不能是字符串！
 
 **Hex 字符串格式**：`{X的hex}&{Y的hex}`
 
@@ -111,9 +113,12 @@ http://localhost{AssignAPIEndpoint}/api/v1/{groupID}/assign/xxx
 
 ```json
 {
-    "R": "大整数（big.Int）",
-    "S": "大整数（big.Int）"
+    "R": 12345678901234567890,
+    "S": 98765432109876543210
 }
+```
+
+⚠️ **重要**：`R` 和 `S` 必须是**数字格式**（不带引号），不能是字符串！
 ```
 
 ### 签名流程（核心！）
@@ -678,6 +683,18 @@ function generateAddress(publicKey: PublicKeyNew): string {
     
     // 取前 40 字符（20 字节）
     return hash.slice(0, 40);
+}
+
+/**
+ * ⚠️ 重要：大整数 JSON 序列化
+ * 后端 Go 的 big.Int 需要数字格式（不带引号），但 JS 的 JSON.stringify 
+ * 会将大整数转为字符串。此函数移除 X/Y/R/S/D 字段值的引号。
+ */
+function serializeForBackend(obj: any): string {
+    let json = JSON.stringify(obj);
+    // 将 "X": "123..." 替换为 "X": 123...（移除大整数的引号）
+    json = json.replace(/"(X|Y|R|S|D)":\s*"(\d+)"/g, '"$1":$2');
+    return json;
 }
 ```
 

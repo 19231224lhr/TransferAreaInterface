@@ -270,6 +270,47 @@ export async function getDecryptedPrivateKey(accountId: string): Promise<string 
 }
 
 /**
+ * Get decrypted private key with custom prompt message
+ * @param accountId - Account identifier
+ * @param title - Custom title for password prompt
+ * @param description - Custom description for password prompt
+ * @returns Decrypted private key or null
+ */
+export async function getDecryptedPrivateKeyWithPrompt(
+  accountId: string,
+  title: string,
+  description: string
+): Promise<string | null> {
+  // Check if we have encrypted key
+  if (!hasEncryptedKey(accountId)) {
+    // Check legacy storage
+    const user = loadUser();
+    if (user && hasLegacyKey(user)) {
+      // Return legacy key directly (not encrypted)
+      return user.keys?.privHex || user.privHex || null;
+    }
+    return null;
+  }
+  
+  // Prompt for password with custom message
+  const password = await showPasswordPrompt({
+    title: title,
+    description: description
+  });
+  
+  if (!password) {
+    return null;
+  }
+  
+  try {
+    return await getPrivateKey(accountId, password);
+  } catch (err) {
+    showErrorToast(t('encryption.decryptFailed'));
+    return null;
+  }
+}
+
+/**
  * Check and prompt for migration if needed
  * Should be called on app initialization or login
  * @returns Whether migration was completed

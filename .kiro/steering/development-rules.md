@@ -335,6 +335,69 @@ async function loadAddressList() {
 }
 ```
 
+### 12. Signature Serialization (签名序列化规范) 🆕
+
+**与后端 Go 服务通信时，涉及 ECDSA 签名的 API 必须严格遵循序列化规范**
+
+权威文档：`docs/Gateway/签名与序列化唯一指南（以Go后端实现为准）.md`
+
+#### 核心规则
+
+1. **X/Y/R/S/D 必须是 JSON number（不带引号）**
+
+```typescript
+// ✅ 正确：数字字面量
+{"X":47699043193711063099439414109189766071675238814804702569610584135532027314528}
+
+// ❌ 错误：字符串（带引号）
+{"X":"47699043193711063099439414109189766071675238814804702569610584135532027314528"}
+```
+
+2. **使用 `serializeForBackend()` 自动去引号**
+
+```typescript
+import { serializeForBackend } from '../utils/signature';
+
+// 自动把 X/Y/R/S/D 的引号去掉
+const body = serializeForBackend(requestBody);
+await fetch(apiUrl, { method: 'POST', body });
+```
+
+3. **排除字段必须置零值，不能删除**
+
+```typescript
+// ✅ 正确：置零值
+obj.UserSig = { R: null, S: null };
+
+// ❌ 错误：删除字段
+delete obj.UserSig;
+```
+
+4. **只对 map 字段排序，不要全局排序**
+
+```typescript
+// ✅ 正确：只对 AddressMsg 等 map 字段排序
+sortMapFieldsOnly(copy);  // 内部只处理 AddressMsg, GuarTable
+
+// ❌ 错误：全局排序所有 key（会改变 struct 字段顺序）
+const sorted = Object.keys(obj).sort().reduce(...);
+```
+
+5. **时间戳使用 2020-01-01 UTC 纪元**
+
+```typescript
+import { getTimestamp } from '../utils/signature';
+const timestamp = getTimestamp();  // 自动使用正确纪元
+```
+
+#### 常见错误
+
+| 错误信息 | 原因 | 解决方案 |
+|---------|------|---------|
+| `cannot unmarshal "\"123...\"" into *big.Int` | X/Y/R/S 是字符串 | 使用 `serializeForBackend()` |
+| `signature verification error` | JSON 与后端不一致 | 检查字段顺序、排除字段 |
+| `timestamp expired` | 时间戳纪元错误 | 使用 `getTimestamp()` |
+
 ---
 
 ## 📁 文件创建规则
@@ -950,6 +1013,12 @@ state.set({
 12. 🔍 **提交前 = 类型检查**
     - 运行 `npm run typecheck`
     - 修复所有错误
+
+13. ✍️ **签名序列化 = 去引号 number** 🆕
+    - X/Y/R/S/D 必须是 JSON number（不带引号）
+    - 使用 `serializeForBackend()` 自动去引号
+    - 排除字段置零值，不能删除
+    - 只对 map 字段排序，不要全局排序
 
 ---
 

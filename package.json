@@ -19,10 +19,15 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
+    "@types/elliptic": "^6.4.18",
     "typescript": "^5.9.3",
     "vite": "^5.4.21"
   },
   "dependencies": {
+    "crypto-js": "^4.2.0",
+    "elliptic": "^6.6.1",
+    "js-sha256": "^0.11.1",
     "lit-html": "^3.3.1"
   }
 }

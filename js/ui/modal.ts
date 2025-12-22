@@ -242,6 +242,20 @@ export function showUnifiedSuccess(
 }
 
 /**
+ * 显示统一错误模态框
+ * @param title - 错误标题
+ * @param text - 错误描述
+ * @param onOk - 确定按钮回调
+ */
+export function showUnifiedError(
+  title?: string,
+  text?: string,
+  onOk?: () => void
+): void {
+  showUnifiedSuccess(title, text, onOk, undefined, true);
+}
+
+/**
  * 隐藏统一模态框
  */
 export function hideUnifiedOverlay(): void {
@@ -380,8 +394,11 @@ export function showConfirmModal(
       textEl.classList.remove('tip--error');
       if (typeof content === 'string' || content === undefined) {
         const text = typeof content === 'string' ? content.trim() : '';
+        // Clear existing content first to ensure update
+        textEl.textContent = '';
         renderInto(textEl, text ? html`${text}` : nothing);
       } else {
+        textEl.textContent = '';
         renderInto(textEl, content);
       }
     }

@@ -15,7 +15,13 @@ import { t } from '../i18n/index.js';
 import { DEFAULT_GROUP } from '../config/constants';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
 import { DOM_IDS, idSelector } from '../config/domIds';
-import { queryGroupInfoSafe, type GroupInfo } from '../services/group';
+import { 
+  queryGroupInfoSafe, 
+  joinGuarGroup,
+  buildAssignNodeUrl,
+  buildAggrNodeUrl,
+  type GroupInfo 
+} from '../services/group';
 import {
   createReactiveState,
   type ReactiveState
@@ -57,12 +63,16 @@ interface JoinGroupPageState {
   recAggre: string;
   recAssign: string;
   recPledge: string;
+  recAssignPort: string;   // AssignNode 端口号
+  recAggrPort: string;     // AggrNode 端口号
   
   // 搜索结果组织信息
   srGroupID: string;
   srAggre: string;
   srAssign: string;
   srPledge: string;
+  srAssignPort: string;    // AssignNode 端口号
+  srAggrPort: string;      // AggrNode 端口号
 }
 
 // ============================================================================
@@ -82,10 +92,14 @@ const initialState: JoinGroupPageState = {
   recAggre: DEFAULT_GROUP.aggreNode,
   recAssign: DEFAULT_GROUP.assignNode,
   recPledge: DEFAULT_GROUP.pledgeAddress,
+  recAssignPort: DEFAULT_GROUP.assignAPIEndpoint || ':8081',
+  recAggrPort: DEFAULT_GROUP.aggrAPIEndpoint || ':8082',
   srGroupID: '',
   srAggre: '',
   srAssign: '',
-  srPledge: ''
+  srPledge: '',
+  srAssignPort: '',
+  srAggrPort: ''
 };
 
 /**
@@ -107,6 +121,12 @@ const stateBindings = {
   recPledge: [
     { selector: '#recPledge', type: 'text' as const }
   ],
+  recAssignPort: [
+    { selector: '#recAssignPort', type: 'text' as const }
+  ],
+  recAggrPort: [
+    { selector: '#recAggrPort', type: 'text' as const }
+  ],
   srGroupID: [
     { selector: '#srGroupID', type: 'text' as const }
   ],
@@ -118,6 +138,12 @@ const stateBindings = {
   ],
   srPledge: [
     { selector: '#srPledge', type: 'text' as const }
+  ],
+  srAssignPort: [
+    { selector: '#srAssignPort', type: 'text' as const }
+  ],
+  srAggrPort: [
+    { selector: '#srAggrPort', type: 'text' as const }
   ]
 };
 
@@ -445,7 +471,9 @@ function showGroupInfo(group: GroupInfo): void {
       srGroupID: group.groupID,
       srAggre: group.aggreNode,
       srAssign: group.assignNode,
-      srPledge: group.pledgeAddress
+      srPledge: group.pledgeAddress,
+      srAssignPort: group.assignAPIEndpoint || '-',
+      srAggrPort: group.aggrAPIEndpoint || '-'
     });
   }
   
@@ -588,7 +616,7 @@ function handleSearchBtnClick(): void {
 /**
  * 处理加入推荐组织
  */
-function handleJoinRecClick(): void {
+async function handleJoinRecClick(): Promise<void> {
   // 使用默认组织
   const defaultGroup: GroupInfo = {
     groupID: DEFAULT_GROUP.groupID,
@@ -597,9 +625,11 @@ function handleJoinRecClick(): void {
     aggrePeerID: '',
     assignNode: DEFAULT_GROUP.assignNode,
     assignPeerID: '',
-    pledgeAddress: DEFAULT_GROUP.pledgeAddress
+    pledgeAddress: DEFAULT_GROUP.pledgeAddress,
+    assignAPIEndpoint: DEFAULT_GROUP.assignAPIEndpoint,
+    aggrAPIEndpoint: DEFAULT_GROUP.aggrAPIEndpoint
   };
-  handleJoinGroup(defaultGroup);
+  await handleJoinGroupWithAPI(defaultGroup);
 }
 
 /**
@@ -607,59 +637,108 @@ function handleJoinRecClick(): void {
  */
 async function handleJoinSearchClick(): Promise<void> {
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
-  const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
   
   if (joinSearchBtn?.disabled) return;
   if (!currentSelectedGroup) return;
   
-  const g = currentSelectedGroup;
+  await handleJoinGroupWithAPI(currentSelectedGroup);
+}
+
+/**
+ * 处理加入组织（调用真实 API）
+ */
+async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
+  if (!group || !group.groupID) return;
+  
+  const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
+  const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
   
   try {
-    // 显示加载状态
-    const { showUnifiedLoading, hideUnifiedOverlay } = await import('../ui/modal.js');
-    const { wait } = await import('../utils/helpers.js');
+    // 显示加载动画
+    const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
     
     showUnifiedLoading(t('join.joiningOrg'));
     if (joinRecBtn) joinRecBtn.disabled = true;
     if (joinSearchBtn) joinSearchBtn.disabled = true;
     
-    await wait(2000);
-  } finally {
-    const { hideUnifiedOverlay } = await import('../ui/modal.js');
+    console.info(`[JoinGroup] 🚀 Attempting to join organization ${group.groupID}...`);
+    
+    // 调用真实 API 加入组织
+    const result = await joinGuarGroup(group.groupID, group);
+    
+    // 隐藏加载动画
     hideUnifiedOverlay();
+    
+    if (!result.success) {
+      console.error(`[JoinGroup] ✗ Failed to join organization:`, result.error);
+      showUnifiedError(
+        t('join.joinFailed') || '加入失败',
+        result.error || t('join.joinFailedDesc') || '加入担保组织失败，请稍后重试'
+      );
+      return;
+    }
+    
+    console.info(`[JoinGroup] ✓ Successfully joined organization ${group.groupID}`);
+    
+    // 构建完整的节点 URL
+    let assignNodeUrl: string | undefined;
+    let aggrNodeUrl: string | undefined;
+    
+    if (group.assignAPIEndpoint) {
+      assignNodeUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
+    }
+    if (group.aggrAPIEndpoint) {
+      aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
+    }
+    
+    // 保存到 localStorage
+    try {
+      localStorage.setItem('guarChoice', JSON.stringify({
+        type: 'join',
+        groupID: group.groupID,
+        aggreNode: group.aggreNode,
+        assignNode: group.assignNode,
+        pledgeAddress: group.pledgeAddress,
+        assignAPIEndpoint: group.assignAPIEndpoint,
+        aggrAPIEndpoint: group.aggrAPIEndpoint,
+        assignNodeUrl: assignNodeUrl,
+        aggrNodeUrl: aggrNodeUrl
+      }));
+    } catch { /* ignore */ }
+    
+    // 保存到用户账户
+    const u = loadUser();
+    if (u?.accountId) {
+      saveUser({
+        accountId: u.accountId,
+        orgNumber: group.groupID,
+        guarGroup: {
+          groupID: group.groupID,
+          aggreNode: group.aggreNode,
+          assignNode: group.assignNode,
+          pledgeAddress: group.pledgeAddress,
+          assignAPIEndpoint: group.assignAPIEndpoint,
+          aggrAPIEndpoint: group.aggrAPIEndpoint
+        }
+      });
+    }
+    
+    // 导航到询问页面（显示成功动画后跳转到 main）
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/inquiry-main');
+    }
+    
+  } catch (error) {
+    console.error(`[JoinGroup] ✗ Unexpected error:`, error);
+    const { hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+    hideUnifiedOverlay();
+    showUnifiedError(
+      t('join.joinFailed') || '加入失败',
+      error instanceof Error ? error.message : '未知错误'
+    );
+  } finally {
     if (joinRecBtn) joinRecBtn.disabled = false;
     if (joinSearchBtn) joinSearchBtn.disabled = false;
-  }
-  
-  // 保存到 localStorage
-  try {
-    localStorage.setItem('guarChoice', JSON.stringify({
-      type: 'join',
-      groupID: g.groupID,
-      aggreNode: g.aggreNode,
-      assignNode: g.assignNode,
-      pledgeAddress: g.pledgeAddress
-    }));
-  } catch { /* ignore */ }
-  
-  // 保存到用户账户
-  const u = loadUser();
-  if (u?.accountId) {
-    saveUser({
-      accountId: u.accountId,
-      orgNumber: g.groupID,
-      guarGroup: {
-        groupID: g.groupID,
-        aggreNode: g.aggreNode,
-        assignNode: g.assignNode,
-        pledgeAddress: g.pledgeAddress
-      }
-    });
-  }
-  
-  // 导航到询问页面
-  if (typeof window.PanguPay?.router?.routeTo === 'function') {
-    window.PanguPay.router.routeTo('#/inquiry-main');
   }
 }
 
@@ -745,7 +824,8 @@ function resetTabsAndPanes(): void {
 }
 
 /**
- * 处理加入组织
+ * 处理加入组织（兼容旧 API，直接导航）
+ * @deprecated Use handleJoinGroupWithAPI instead for real API calls
  */
 export function handleJoinGroup(group: GroupInfo): void {
   if (!group || !group.groupID) return;
@@ -763,7 +843,9 @@ export function handleJoinGroup(group: GroupInfo): void {
         groupID: group.groupID,
         aggreNode: group.aggreNode,
         assignNode: group.assignNode,
-        pledgeAddress: group.pledgeAddress
+        pledgeAddress: group.pledgeAddress,
+        assignAPIEndpoint: group.assignAPIEndpoint,
+        aggrAPIEndpoint: group.aggrAPIEndpoint
       }
     });
   }
@@ -788,7 +870,7 @@ function cleanupEvents(): void {
 function addEvent<K extends keyof HTMLElementEventMap>(
   element: HTMLElement | null,
   event: K,
-  handler: (e: HTMLElementEventMap[K]) => void
+  handler: (e: HTMLElementEventMap[K]) => void | Promise<void>
 ): void {
   if (!element) return;
   
@@ -901,6 +983,8 @@ export function initJoinGroupPage(): void {
     recAggre: DEFAULT_GROUP.aggreNode,
     recAssign: DEFAULT_GROUP.assignNode,
     recPledge: DEFAULT_GROUP.pledgeAddress,
+    recAssignPort: DEFAULT_GROUP.assignAPIEndpoint || ':8081',
+    recAggrPort: DEFAULT_GROUP.aggrAPIEndpoint || ':8082',
     searchBtnDisabled: true
   });
   
