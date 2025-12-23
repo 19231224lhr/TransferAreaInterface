@@ -43,7 +43,7 @@ export interface ThemeNamespace {
 export interface AccountNamespace {
   newUser: () => Promise<any>;
   importFromPrivHex: (privHex: string) => Promise<any>;
-  addNewSubWallet: () => Promise<void>;
+  addNewSubWallet: (type?: number) => Promise<void>;
   handleCreate: () => Promise<void>;
 }
 

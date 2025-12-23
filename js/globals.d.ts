@@ -39,7 +39,7 @@ declare global {
     handleCreate: () => Promise<void>;
     newUser: () => Promise<any>;
     importFromPrivHex: (privHex: string) => Promise<any>;
-    addNewSubWallet: (type: number) => Promise<any>;
+    addNewSubWallet: (type?: number) => Promise<void>;
 
     // Storage functions
     loadUser: () => any;

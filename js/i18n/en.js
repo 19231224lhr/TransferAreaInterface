@@ -47,6 +47,7 @@ export default {
   'encryption.unlockForSigning': 'Unlock private key for signing',
   'encryption.unlockForJoinGroup': 'Joining a guarantor organization requires signing with your account private key. Please enter password to unlock it.',
   'encryption.unlockForLeaveGroup': 'Leaving a guarantor organization requires signing with your account private key. Please enter password to unlock it.',
+  'encryption.unlockForNewAddress': 'Creating a new address requires signing with your account private key. Please enter password to unlock it.',
   'encryption.migrationTitle': 'Security Upgrade',
   'encryption.migrationDesc': 'Unencrypted private key detected. Please set a password to encrypt it.',
   'encryption.encryptSuccess': 'Private key encrypted successfully',
@@ -503,6 +504,8 @@ export default {
   'address.confirmDeleteDesc': 'and its local data?',
   'address.deleteConfirm': 'Confirm',
   'address.deleteCancel': 'Cancel',
+  'address.backendSyncFailed': 'Backend sync failed, address created locally',
+  'address.createFailed': 'Failed to create address',
 
   // Loading Stages
   'loading.initializing': 'Initializing',

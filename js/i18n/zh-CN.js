@@ -47,6 +47,7 @@ export default {
   'encryption.unlockForSigning': '解锁私钥进行签名',
   'encryption.unlockForJoinGroup': '加入担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.unlockForLeaveGroup': '退出担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
+  'encryption.unlockForNewAddress': '创建新地址需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.migrationTitle': '安全升级',
   'encryption.migrationDesc': '检测到未加密的私钥，请设置密码以加密存储',
   'encryption.encryptSuccess': '私钥已加密保存',
@@ -503,6 +504,8 @@ export default {
   'address.confirmDeleteDesc': '及其本地数据？',
   'address.deleteConfirm': '确认',
   'address.deleteCancel': '取消',
+  'address.backendSyncFailed': '后端同步失败，地址已本地创建',
+  'address.createFailed': '创建地址失败',
 
   // 加载阶段
   'loading.initializing': '正在初始化',

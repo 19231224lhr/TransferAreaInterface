@@ -9,7 +9,7 @@ import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { setUser } from '../utils/store.js';
 import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
-import { showSuccessToast } from '../utils/toast.js';
+import { showSuccessToast, showMiniToast, showErrorToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
@@ -280,8 +280,16 @@ export async function importFromPrivHex(privHex: string): Promise<AccountData> {
 
 /**
  * Add a new sub-wallet address to the current account
+ * 
+ * This function:
+ * 1. Generates a new ECDSA P-256 keypair locally
+ * 2. Computes the address from the public key
+ * 3. If user is in a guarantor organization, syncs with backend AssignNode first
+ * 4. Only saves to local storage after backend confirms (if in organization)
+ * 
+ * @param addressType - Address type (0=PGC, 1=BTC, 2=ETH), defaults to 0
  */
-export async function addNewSubWallet(): Promise<void> {
+export async function addNewSubWallet(addressType: number = 0): Promise<void> {
   const u = loadUser();
   if (!u || !u.accountId) {
     alert(t('modal.pleaseLoginFirst'));
@@ -318,20 +326,47 @@ export async function addNewSubWallet(): Promise<void> {
     uncompressed.set(xBytes, 1);
     uncompressed.set(yBytes, 1 + xBytes.length);
     
-    // Generate address
+    // Generate address (SHA-256 of uncompressed public key, first 20 bytes)
     const sha = await crypto.subtle.digest('SHA-256', uncompressed);
     const addr = bytesToHex(new Uint8Array(sha).slice(0, 20));
     
-    // Ensure minimum loading time for UX
-    const elapsed = Date.now() - t0;
-    if (elapsed < 800) {
-      await wait(800 - elapsed);
+    console.info(`[Account] Generated new address: ${addr}`);
+    
+    // Import address service dynamically to avoid circular dependency
+    const { createNewAddressOnBackend, isUserInOrganization } = await import('./address');
+    
+    // If user is in organization, must sync with backend first
+    if (isUserInOrganization()) {
+      console.info('[Account] User is in organization, syncing address with backend...');
+      
+      // Hide loading temporarily to show password prompt if needed
+      hideUnifiedOverlay();
+      
+      const result = await createNewAddressOnBackend(addr, pubXHex, pubYHex, addressType);
+      
+      // Show loading again
+      showUnifiedLoading(t('modal.addingWalletAddress'));
+      
+      if (!result.success) {
+        // Backend failed - do NOT save locally, show error
+        console.error('[Account] ✗ Backend sync failed:', result.error);
+        hideUnifiedOverlay();
+        showErrorToast(
+          t('address.createFailed', '创建地址失败'),
+          result.error || t('error.unknownError')
+        );
+        return; // Exit without saving locally
+      }
+      
+      console.info('[Account] ✓ Address synced with backend successfully');
+    } else {
+      console.info('[Account] User not in organization, creating address locally only');
     }
     
-    // Update account with new address
+    // Backend succeeded (or user not in org) - now save locally
     const acc = toAccount({ accountId: u.accountId, address: u.address }, u);
     acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
-      type: 0,
+      type: addressType,
       utxos: {},
       txCers: {},
       value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
@@ -343,10 +378,17 @@ export async function addNewSubWallet(): Promise<void> {
     addrData.privHex = privHex;
     addrData.pubXHex = pubXHex;
     addrData.pubYHex = pubYHex;
+    addrData.type = addressType;
     
     // Single Source of Truth: Update Store first, let subscriptions handle UI
     setUser(acc);
     saveUser(acc);
+    
+    // Ensure minimum loading time for UX
+    const elapsed = Date.now() - t0;
+    if (elapsed < 800) {
+      await wait(800 - elapsed);
+    }
     
     // P0-1 Fix: Prompt user to encrypt the new sub-wallet private key
     // Note: Sub-wallet keys are stored per-address, encryption is optional
@@ -379,7 +421,10 @@ export async function addNewSubWallet(): Promise<void> {
     
   } catch (e: any) {
     hideUnifiedOverlay();
-    alert('Failed to add address: ' + (e && e.message ? e.message : e));
+    showErrorToast(
+      t('address.createFailed', '创建地址失败'),
+      e && e.message ? e.message : String(e)
+    );
     console.error(e);
   }
 }
