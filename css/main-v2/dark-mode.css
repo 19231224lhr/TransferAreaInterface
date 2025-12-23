@@ -193,6 +193,28 @@
   color: var(--color-text-secondary);
 }
 
+[data-theme="dark"] .unified-success .success-text code {
+  color: var(--color-text-primary) !important;
+}
+
+[data-theme="dark"] .success-copy-btn {
+  background: linear-gradient(135deg, var(--color-bg-tertiary), var(--color-bg-secondary));
+  border-color: var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .success-copy-btn:hover {
+  background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-bg-hover));
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .success-copy-btn.copied {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+
 [data-theme="dark"] .unified-btn--secondary {
   background: var(--color-bg-tertiary);
   border-color: var(--color-border);

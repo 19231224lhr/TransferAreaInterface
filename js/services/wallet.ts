@@ -615,23 +615,70 @@ export function handleExportPrivateKey(address: string): void {
   
   const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
   
+  const keyRow = document.getElementById(DOM_IDS.successKeyRow);
+  const keyCode = document.getElementById(DOM_IDS.successKeyCode);
+  const copyBtn = document.getElementById(DOM_IDS.successCopyBtn);
+  
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
+    // 隐藏普通文本，显示私钥行
     if (text) {
+      text.classList.add('hidden');
       text.classList.remove('tip--error');
-      const code = document.createElement('code');
-      code.className = 'break';
-      code.textContent = priv;
-      text.replaceChildren(code);
+    }
+    
+    // 显示私钥行
+    if (keyRow) keyRow.classList.remove('hidden');
+    if (keyCode) keyCode.textContent = priv;
+    
+    if (copyBtn) {
+      copyBtn.classList.remove('copied');
+      
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(priv).then(() => {
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        }).catch(() => {
+          const textarea = document.createElement('textarea');
+          textarea.value = priv;
+          textarea.style.position = 'fixed';
+          textarea.style.opacity = '0';
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          copyBtn.classList.add('copied');
+          setTimeout(() => {
+            copyBtn.classList.remove('copied');
+          }, 2000);
+        });
+      };
     }
   } else {
     if (title) title.textContent = t('wallet.exportFailed');
-    if (text) { text.classList.add('tip--error'); text.textContent = t('wallet.noPrivateKey'); }
+    if (text) {
+      text.classList.remove('hidden');
+      text.classList.add('tip--error');
+      text.textContent = t('wallet.noPrivateKey');
+    }
+    if (keyRow) keyRow.classList.add('hidden');
   }
   
   if (modal) modal.classList.remove('hidden');
   
-  const handler = () => { modal?.classList.add('hidden'); ok?.removeEventListener('click', handler); };
+  const handler = () => { 
+    modal?.classList.add('hidden'); 
+    ok?.removeEventListener('click', handler); 
+    // 重置状态
+    if (keyRow) keyRow.classList.add('hidden');
+    if (text) text.classList.remove('hidden');
+    if (copyBtn) {
+      copyBtn.classList.remove('copied');
+      copyBtn.onclick = null;
+    }
+  };
   ok?.addEventListener('click', handler);
 }
 

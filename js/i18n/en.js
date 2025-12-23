@@ -317,6 +317,7 @@ export default {
   'wallet.deleteSuccessDesc': 'Address and related local data have been deleted',
   'wallet.exportFailed': 'Export Failed',
   'wallet.noPrivateKey': 'No private key available for this address',
+  'wallet.copy': 'Copy',
   'wallet.copied': 'Copied!',
   'wallet.syncing': 'Syncing...',
 

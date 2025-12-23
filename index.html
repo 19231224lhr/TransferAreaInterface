@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="zh-CN">
 
 <head>
@@ -301,7 +301,21 @@
             </svg>
           </div>
           <h3 class="success-title" id="unifiedTitle">操作成功</h3>
-          <p class="success-text" id="unifiedText">已完成本次操作</p>
+          <div class="success-content-wrapper" id="successContentWrapper">
+            <div class="success-key-row hidden" id="successKeyRow">
+              <code class="success-key-code" id="successKeyCode"></code>
+              <button class="success-copy-btn" id="successCopyBtn" title="复制私钥">
+                <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <svg class="copy-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+              </button>
+            </div>
+            <p class="success-text" id="unifiedText">已完成本次操作</p>
+          </div>
           <div class="success-actions">
             <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden" data-i18n="modal.cancel">取消</button>
             <button id="unifiedOkBtn" class="unified-btn unified-btn--primary" data-i18n="modal.ok">好的</button>

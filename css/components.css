@@ -1770,6 +1770,109 @@ pre code {
   color: #64748b;
   margin: 0 0 20px;
   line-height: 1.5;
+  padding: 0;
+}
+
+.unified-success .success-text code {
+  display: block !important;
+  font-size: 16px !important;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace !important;
+  color: #0f172a !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  word-break: break-all !important;
+  line-height: 1.6 !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* 成功内容包装器 - 用于导出私钥等场景 */
+.success-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* 私钥行 - 私钥和复制按钮在同一行 */
+.success-key-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.success-key-row.hidden {
+  display: none;
+}
+
+.success-key-code {
+  flex: 1;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  color: inherit;
+  word-break: break-all;
+  text-align: center;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+
+.success-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 8px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.success-copy-btn:hover {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.success-copy-btn:active {
+  transform: scale(0.98);
+}
+
+.success-copy-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: all 0.3s ease;
+}
+
+.success-copy-btn .copy-success-icon {
+  color: #10b981;
+  display: none;
+}
+
+.success-copy-btn.copied {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.success-copy-btn.copied .copy-icon {
+  display: none;
+}
+
+.success-copy-btn.copied .copy-success-icon {
+  display: block;
 }
 
 /* 成功状态按钮 */

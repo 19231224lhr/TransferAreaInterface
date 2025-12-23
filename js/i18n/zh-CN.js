@@ -317,6 +317,7 @@ export default {
   'wallet.deleteSuccessDesc': '已删除该地址及其相关本地数据',
   'wallet.exportFailed': '导出失败',
   'wallet.noPrivateKey': '该地址无可导出私钥',
+  'wallet.copy': '复制',
   'wallet.copied': '已复制！',
   'wallet.syncing': '同步中...',
 
