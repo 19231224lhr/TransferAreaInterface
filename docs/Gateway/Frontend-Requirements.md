@@ -8,19 +8,19 @@
 
 | 功能编号 | 功能名称 | 调用方式 | 后端节点 | 后端接口 | 前端处理方法 |
 | --- | --- | --- | --- | --- | --- |
-| F01 | 用户登录/重登 | POST | AssignNode | `/api/v1/assign/user-reonline` | `LoginHandle` → `LoginExecutor` |
-| F02 | 加入担保组织 | POST | AssignNode | `/api/v1/assign/user-flow` | `JoinGuarGroup` → `ReceiveJoinReply` |
-| F03 | 退出担保组织 | POST | AssignNode | `/api/v1/assign/user-flow` | `ExitGuarGroup` |
-| F04 | 新建子地址 | POST | AssignNode | `/api/v1/assign/user-new-address` | `NewSubAddress` |
-| F05 | 发送交易（组内） | POST | AssignNode | `/api/v1/assign/user-tx` | `SendNewTXFunction` |
+| F01 | 用户登录/重登 | POST | BootNode(Gateway) | `/api/v1/re-online` | `LoginHandle` → `LoginExecutor` |
+| F02 | 加入担保组织 | POST | AssignNode(Gateway) | `/api/v1/{groupID}/assign/flow-apply` | `JoinGuarGroup` → `ReceiveJoinReply` |
+| F03 | 退出担保组织 | POST | AssignNode(Gateway) | `/api/v1/{groupID}/assign/flow-apply` | `ExitGuarGroup` |
+| F04 | 新建子地址 | POST | AssignNode(Gateway) | `/api/v1/{groupID}/assign/new-address` | `NewSubAddress` |
+| F05 | 发送交易（组内） | POST | AssignNode(Gateway) | `/api/v1/{groupID}/assign/submit-tx` | `SendNewTXFunction` |
 | F06 | 发送交易（散户） | POST | ComNode | `/api/v1/com/submit-noguargroup-tx` | `SendNewTXFunction`（散户分支） |
-| F07 | 查询担保组织信息（未入组） | GET | BootNode | `/api/v1/group/{id}` | `FindGuarGroup` → `AddGroupBootMsg` |
-| F08 | 查询担保组织信息（已入组） | GET | AssignNode | `/api/v1/assign/group/{id}` | `FindGuarGroup` → `AddGroupBootMsg` |
+| F07 | 查询担保组织信息（未入组） | GET | BootNode | `/api/v1/groups/{id}` | `FindGuarGroup` → `AddGroupBootMsg` |
+| F08 | 查询担保组织信息（已入组/组内查询） | GET | AssignNode(Gateway) | `/api/v1/{groupID}/assign/group-info` | `FindGuarGroup` → `AddGroupBootMsg` |
 | F09 | 查询账户信息 | POST | ComNode | `/api/v1/com/query-address` | `GetAddressData` → `ReceiveAddressData` |
 | F10 | 查询地址所属担保组织 | POST | ComNode | `/api/v1/com/query-address-group` | `ReceiveUserQueryAddressGuarGroup` |
-| F11 | 轮询账户更新 | GET | AssignNode | `/api/v1/assign/account-update` | `UpdateAccountWallet` |
+| F11 | 轮询账户更新 | GET | AssignNode(Gateway) | `/api/v1/{groupID}/assign/account-update` | `UpdateAccountWallet` |
 | F12 | 轮询接收 TXCer | GET | AggrNode | `/api/v1/aggr/txcer` | `ReceiveTXCer` |
-| F13 | 轮询 TXCer 状态变动 | GET | AssignNode | `/api/v1/assign/txcer-change` | `UpdateAccountTXCerTable` |
+| F13 | 轮询 TXCer 状态变动 | GET | AssignNode(Gateway) | `/api/v1/{groupID}/assign/txcer-change` | `UpdateAccountTXCerTable` |
 | F14 | 轮询 UTXO 变动（TXCer兑换） | GET | ComNode | `/api/v1/com/utxo-change` | `PrintAddressUTXOChange` |
 
 ---
@@ -33,8 +33,8 @@
 
 **调用流程**：
 1. 前端构造 `UserReOnlineMsg` 结构体（包含 `UserID`, `Address[]`, `Sig`）
-2. 调用 `POST /api/v1/assign/user-reonline`
-3. 后端 AssignNode 调用 `UserReOnlineForGateway` 处理
+2. 调用 **BootNode 统一入口**：`POST /api/v1/re-online`
+3. BootNode 根据 `UserID -> GuarGroupID` 路由表转发到对应担保组织的 AssignNode：`POST /api/v1/{groupID}/assign/re-online`（必要时 fallback 探测并缓存）
 4. 前端收到 `ReturnUserReOnlineMsg`，处理登录结果
 
 **Go 后端代码参考**：
@@ -80,7 +80,7 @@ async function login(userId, addresses, privateKey) {
     };
     
     // 2. 发送登录请求
-    const response = await fetch('/api/v1/assign/user-reonline', {
+    const response = await fetch('/api/v1/re-online', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -130,9 +130,9 @@ function syncWalletData(walletData, inputAddresses) {
 **场景**：用户选择加入某个担保组织以享受快速转账服务。
 
 **调用流程**：
-1. 前端先调用 `GET /api/v1/group/{id}` 查询目标担保组织信息
+1. 前端先调用 `GET /api/v1/groups/{id}` 查询目标担保组织信息
 2. 前端构造 `UserFlowMsg`（`Status=1` 表示加入）
-3. 调用 `POST /api/v1/assign/user-flow`
+3. 调用 `POST /api/v1/{groupID}/assign/flow-apply`
 4. 后端 AssignNode 调用 `ProcessUserFlowApplyForGateway` 处理
 5. 前端收到 `UserFlowMsgReply`，处理结果
 
@@ -179,7 +179,7 @@ async function joinGuarGroup(groupId, addresses, userPublicKey, privateKey) {
     }
     
     // 2. 查询担保组织信息
-    const groupInfo = await fetch(`/api/v1/group/${groupId}`).then(r => r.json());
+    const groupInfo = await fetch(`/api/v1/groups/${groupId}`).then(r => r.json());
     console.log('担保组织信息:', groupInfo);
     
     // 3. 构造地址信息
@@ -210,7 +210,7 @@ async function joinGuarGroup(groupId, addresses, userPublicKey, privateKey) {
     };
     
     // 5. 发送请求
-    const response = await fetch('/api/v1/assign/user-flow', {
+    const response = await fetch(`/api/v1/${groupId}/assign/flow-apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -243,7 +243,7 @@ async function joinGuarGroup(groupId, addresses, userPublicKey, privateKey) {
 
 **调用流程**：
 1. 前端构造 `UserFlowMsg`（`Status=0` 表示退出）
-2. 调用 `POST /api/v1/assign/user-flow`
+2. 调用 `POST /api/v1/{groupID}/assign/flow-apply`
 3. 后端处理并返回结果
 
 **Go 后端代码参考**：
@@ -274,7 +274,7 @@ async function exitGuarGroup(privateKey) {
         user_sig: signMessage({ status: 0, user_id: userId, guar_group_id: currentGuarGroupId }, privateKey)
     };
     
-    const response = await fetch('/api/v1/assign/user-flow', {
+    const response = await fetch(`/api/v1/${currentGuarGroupId}/assign/flow-apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -301,7 +301,7 @@ async function exitGuarGroup(privateKey) {
 1. 前端本地生成新的公私钥对
 2. 前端计算地址（SHA256 公钥取前 20 字节的 hex）
 3. 构造 `UserNewAddressInfo` 并签名
-4. 调用 `POST /api/v1/assign/user-new-address`
+4. 调用 `POST /api/v1/{groupID}/assign/new-address`
 5. 后端验证并存储
 
 **Go 后端代码参考**：
@@ -354,7 +354,7 @@ async function createNewAddress(type, userPrivateKey) {
     };
     
     // 4. 发送到后端
-    const response = await fetch('/api/v1/assign/user-new-address', {
+    const response = await fetch(`/api/v1/${currentGuarGroupId}/assign/new-address`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(request)
@@ -389,7 +389,7 @@ async function createNewAddress(type, userPrivateKey) {
 **场景**：用户发起转账交易。
 
 **调用流程**：
-- **组内用户（F05）**：调用 `POST /api/v1/assign/user-tx`（AssignNode 处理）
+- **组内用户（F05）**：调用 `POST /api/v1/{groupID}/assign/submit-tx`（AssignNode 处理）
 - **散户用户（F06）**：调用 `POST /api/v1/com/submit-noguargroup-tx`（ComNode 处理）
 
 **Go 后端代码参考**：
@@ -449,7 +449,7 @@ async function sendTransaction(fromAddresses, toAddress, amount) {
     
     if (currentGuarGroupId) {
         // 组内用户
-        endpoint = '/api/v1/assign/user-tx';
+        endpoint = `/api/v1/${currentGuarGroupId}/assign/submit-tx`;
         payload = { tx: tx, user_id: userId };
     } else {
         // 散户用户
@@ -484,8 +484,8 @@ async function sendTransaction(fromAddresses, toAddress, amount) {
 **场景**：用户查询某个担保组织的详细信息。
 
 **调用流程**：
-- **未入组用户（F07）**：调用 `GET /api/v1/group/{id}`（BootNode 处理）
-- **已入组用户（F08）**：调用 `GET /api/v1/assign/group/{id}`（AssignNode 处理）
+- **未入组用户（F07）**：调用 `GET /api/v1/groups/{id}`（BootNode 处理）
+- **已入组用户（F08）**：调用 `GET /api/v1/{groupID}/assign/group-info`（AssignNode 处理）
 
 **Go 后端代码参考**：
 - 前端发送逻辑参考：`wallet/handle.go` 395-407（`findgroup` 命令）
@@ -504,7 +504,9 @@ async function sendTransaction(fromAddresses, toAddress, amount) {
         "guar2": "peerid2"
     },
     "assi_public_key": {...},
-    "aggr_public_key": {...}
+    "aggr_public_key": {...},
+    "assign_api_endpoint": ":8081",
+    "aggr_api_endpoint": ":8082"
 }
 ```
 
@@ -512,9 +514,9 @@ async function sendTransaction(fromAddresses, toAddress, amount) {
 ```javascript
 async function findGuarGroup(groupId) {
     // 根据是否已入组选择不同接口
-    const endpoint = currentGuarGroupId 
-        ? `/api/v1/assign/group/${groupId}`
-        : `/api/v1/group/${groupId}`;
+    const endpoint = currentGuarGroupId
+        ? `/api/v1/${currentGuarGroupId}/assign/group-info`
+        : `/api/v1/groups/${groupId}`;
     
     const response = await fetch(endpoint);
     
@@ -531,7 +533,11 @@ async function findGuarGroup(groupId) {
     // 本地缓存
     saveOtherGroupInfo(groupId, groupInfo);
     
+    // 可以获取该组织的 API 端点信息
     console.log('担保组织信息:', groupInfo);
+    console.log('AssignNode API:', groupInfo.assign_api_endpoint);
+    console.log('AggrNode API:', groupInfo.aggr_api_endpoint);
+    
     return groupInfo;
 }
 ```
@@ -684,9 +690,9 @@ async function queryAddressGroups(addresses) {
 
 | 功能 | 接口 | 轮询间隔 | 数据结构 | 前端处理参考 |
 | --- | --- | --- | --- | --- |
-| F11 账户更新 | `GET /api/v1/assign/account-update?userID=...` | 3-5秒 | `AccountUpdateInfo[]` | `wallet/handle.go` 167-178 |
+| F11 账户更新 | `GET /api/v1/{groupID}/assign/account-update?userID=...` | 3-5秒 | `AccountUpdateInfo[]` | `wallet/handle.go` 167-178 |
 | F12 接收 TXCer | `GET /api/v1/aggr/txcer?address=...` | 3-5秒 | `TXCerToUser[]` | `wallet/handle.go` 138-154 |
-| F13 TXCer 状态变动 | `GET /api/v1/assign/txcer-change?userID=...` | 3-5秒 | `TXCerChangeToUser[]` | `wallet/handle.go` 155-166 |
+| F13 TXCer 状态变动 | `GET /api/v1/{groupID}/assign/txcer-change?userID=...` | 3-5秒 | `TXCerChangeToUser[]` | `wallet/handle.go` 155-166 |
 | F14 UTXO 变动通知 | `GET /api/v1/com/utxo-change?address=...` | 5-10秒 | `AddressUTXOChange[]` | `wallet/handle.go` 191-207 |
 
 ---
@@ -824,7 +830,7 @@ class PollingManager {
     async pollAccountUpdate() {
         try {
             const updates = await fetch(
-                `/api/v1/assign/account-update?userID=${this.userId}`
+                `/api/v1/${currentGuarGroupId}/assign/account-update?userID=${this.userId}`
             ).then(r => r.json());
             
             for (const update of updates) {
@@ -870,7 +876,7 @@ class PollingManager {
     async pollTXCerChange() {
         try {
             const changes = await fetch(
-                `/api/v1/assign/txcer-change?userID=${this.userId}`
+                `/api/v1/${currentGuarGroupId}/assign/txcer-change?userID=${this.userId}`
             ).then(r => r.json());
             
             for (const change of changes) {
@@ -940,18 +946,18 @@ window.addEventListener('beforeunload', () => polling.stop());
 
 | 前端功能 | 后端节点 | 后端 ForGateway 方法 | HTTP 接口 |
 | --- | --- | --- | --- |
-| 用户登录 | AssignNode | `UserReOnlineForGateway` | `POST /api/v1/assign/user-reonline` |
-| 加入/退出组织 | AssignNode | `ProcessUserFlowApplyForGateway` | `POST /api/v1/assign/user-flow` |
-| 新建子地址 | AssignNode | `ProcessUserNewAddressForGateway` | `POST /api/v1/assign/user-new-address` |
-| 发送交易（组内） | AssignNode | `ReceiveUserNewTXForGateway` | `POST /api/v1/assign/user-tx` |
+| 用户登录 | BootNode(Gateway) | （BootNode 转发） | `POST /api/v1/re-online` |
+| 加入/退出组织 | AssignNode(Gateway) | `ProcessUserFlowApplyForGateway` | `POST /api/v1/{groupID}/assign/flow-apply` |
+| 新建子地址 | AssignNode(Gateway) | `ProcessUserNewAddressForGateway` | `POST /api/v1/{groupID}/assign/new-address` |
+| 发送交易（组内） | AssignNode(Gateway) | `ReceiveUserNewTXForGateway` | `POST /api/v1/{groupID}/assign/submit-tx` |
 | 发送交易（散户） | ComNode | `ReceiveNoGuarGroupTXForGateway` | `POST /api/v1/com/submit-noguargroup-tx` |
-| 查询组织（未入组） | BootNode | `ReturnGroupInfoForGateway` | `GET /api/v1/group/{id}` |
-| 查询组织（已入组） | AssignNode | `GetGroupMsgForGateway` | `GET /api/v1/assign/group/{id}` |
+| 查询组织（未入组） | BootNode | `ReturnGroupInfoForGateway` | `GET /api/v1/groups/{id}` |
+| 查询组织（已入组） | AssignNode(Gateway) | `GetGroupMsgForGateway` | `GET /api/v1/{groupID}/assign/group-info` |
 | 查询账户信息 | ComNode | `GetNodeAddressMsgRequestForGateway` | `POST /api/v1/com/query-address` |
 | 查询地址所属组织 | ComNode | `GetAddressGuarGroupForGateway` | `POST /api/v1/com/query-address-group` |
-| 轮询账户更新 | AssignNode | - | `GET /api/v1/assign/account-update` |
+| 轮询账户更新 | AssignNode(Gateway) | - | `GET /api/v1/{groupID}/assign/account-update` |
 | 轮询 TXCer | AggrNode | - | `GET /api/v1/aggr/txcer` |
-| 轮询 TXCer 变动 | AssignNode | - | `GET /api/v1/assign/txcer-change` |
+| 轮询 TXCer 变动 | AssignNode(Gateway) | - | `GET /api/v1/{groupID}/assign/txcer-change` |
 | 轮询 UTXO 变动 | ComNode | - | `GET /api/v1/com/utxo-change` |
 
 ---

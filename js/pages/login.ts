@@ -412,13 +412,166 @@ function handleBackClick(): void {
 /**
  * 处理下一步按钮
  */
-function handleNextClick(): void {
-  (window as unknown as Record<string, unknown>).__skipExitConfirm = true;
-  if (typeof window.PanguPay?.router?.routeTo === 'function') {
-    window.PanguPay.router.routeTo('#/entry');
+async function handleNextClick(): Promise<void> {
+  // Import auth service dynamically to avoid circular dependencies
+  const { userReOnline } = await import('../services/auth.js');
+  const { loadUser, saveUser } = await import('../utils/storage.js');
+  
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    window.PanguPay?.ui?.showErrorToast?.(
+      t('modal.pleaseLoginFirst', '请先登录'),
+      t('modal.loginFailed', '登录失败')
+    );
+    return;
   }
-  if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
-    window.PanguPay.wallet.updateWalletBrief();
+  
+  // Show loading
+  const loadingId = showLoading(t('login.connectingToBackend', '正在连接后端...'));
+  const nextBtn = document.getElementById(DOM_IDS.loginNextBtn) as HTMLButtonElement | null;
+  if (nextBtn) {
+    nextBtn.disabled = true;
+    showElementLoading(nextBtn, t('common.processing') || '处理中...');
+  }
+  
+  try {
+    // Get all addresses from wallet
+    const addresses = user.wallet ? Object.keys(user.wallet.addressMsg || {}) : [];
+    
+    // If user has no addresses yet, use the primary address
+    if (addresses.length === 0 && user.address) {
+      addresses.push(user.address);
+    }
+    
+    // Get private key (try encrypted first, fallback to plaintext)
+    let privHex = '';
+    try {
+      const { getDecryptedPrivateKey } = await import('../utils/keyEncryptionUI.js');
+      privHex = await getDecryptedPrivateKey(user.accountId);
+    } catch (e) {
+      // Fallback to legacy plaintext key
+      privHex = user.privHex || '';
+    }
+    
+    if (!privHex) {
+      throw new Error(t('modal.privateKeyNotFound', '未找到私钥'));
+    }
+    
+    // Call re-online API
+    const result = await userReOnline(
+      user.accountId,
+      addresses,
+      privHex,
+      user.pubXHex,
+      user.pubYHex
+    );
+    
+    // Update user data with re-online response
+    const updatedUser = {
+      ...user,
+      orgNumber: result.IsInGroup ? result.GuarantorGroupID : '',
+      isInGroup: result.IsInGroup,
+      entrySource: 'login', // 标记用户通过登录进入
+      guarGroupBootMsg: result.GuarGroupBootMsg || null // 保存完整的担保组织信息
+    };
+    
+    // Merge wallet data from backend
+    if (result.UserWalletData && result.UserWalletData.SubAddressMsg) {
+      // Initialize wallet if not exists
+      if (!updatedUser.wallet) {
+        updatedUser.wallet = {
+          addressMsg: {},
+          value: 0
+        };
+      }
+      
+      // Merge backend address data
+      for (const [addr, addrData] of Object.entries(result.UserWalletData.SubAddressMsg)) {
+        if (!updatedUser.wallet.addressMsg[addr]) {
+          // 新地址：标记为外部导入且未解锁
+          updatedUser.wallet.addressMsg[addr] = {
+            type: (addrData as any).Type || 0,
+            utxos: (addrData as any).UTXO || {},
+            txCers: (addrData as any).TXCers || {},
+            value: { 
+              totalValue: (addrData as any).Value?.TotalValue || 0, 
+              utxoValue: (addrData as any).Value?.UTXOValue || 0, 
+              txCerValue: (addrData as any).Value?.TXCerValue || 0 
+            },
+            estInterest: (addrData as any).EstInterest || 0,
+            origin: 'external', // 标记为外部导入
+            locked: true, // 标记为未解锁（没有私钥）
+            publicKeyNew: (addrData as any).PublicKeyNew || null // 保存公钥信息
+          };
+        } else {
+          // 已存在的地址：合并数据但保留私钥
+          Object.assign(updatedUser.wallet.addressMsg[addr], {
+            type: (addrData as any).Type || updatedUser.wallet.addressMsg[addr].type,
+            utxos: (addrData as any).UTXO || updatedUser.wallet.addressMsg[addr].utxos,
+            txCers: (addrData as any).TXCers || updatedUser.wallet.addressMsg[addr].txCers,
+            value: { 
+              totalValue: (addrData as any).Value?.TotalValue || 0, 
+              utxoValue: (addrData as any).Value?.UTXOValue || 0, 
+              txCerValue: (addrData as any).Value?.TXCerValue || 0 
+            },
+            estInterest: (addrData as any).EstInterest || updatedUser.wallet.addressMsg[addr].estInterest,
+            publicKeyNew: (addrData as any).PublicKeyNew || updatedUser.wallet.addressMsg[addr].publicKeyNew
+          });
+        }
+      }
+      
+      // Update total value
+      updatedUser.wallet.value = result.UserWalletData.Value || 0;
+    }
+    
+    // Save updated user data
+    saveUser(updatedUser);
+    
+    // Store group info if user is in a group
+    if (result.IsInGroup && result.GuarGroupBootMsg) {
+      // Store in session storage for quick access
+      try {
+        sessionStorage.setItem(
+          `group_${result.GuarantorGroupID}`,
+          JSON.stringify(result.GuarGroupBootMsg)
+        );
+      } catch (e) {
+        console.warn('Failed to store group info:', e);
+      }
+    }
+    
+    // Show success toast
+    if (result.IsInGroup) {
+      window.PanguPay?.ui?.showSuccessToast?.(
+        t('login.reOnlineSuccessInGroup', { gid: String(result.GuarantorGroupID) }),
+        t('toast.login.success', '登录成功')
+      );
+    } else {
+      window.PanguPay?.ui?.showInfoToast?.(
+        t('login.reOnlineSuccessNoGroup', '已连接，当前为散户模式'),
+        t('toast.login.success', '登录成功')
+      );
+    }
+    
+    // Navigate to entry page
+    (window as unknown as Record<string, unknown>).__skipExitConfirm = true;
+    if (typeof window.PanguPay?.router?.routeTo === 'function') {
+      window.PanguPay.router.routeTo('#/entry');
+    }
+    // Entry page will initialize itself via router
+    
+  } catch (error) {
+    console.error('Re-online failed:', error);
+    window.PanguPay?.ui?.showErrorToast?.(
+      (error as Error).message || t('login.reOnlineFailed', '连接后端失败'),
+      t('modal.loginFailed', '登录失败')
+    );
+  } finally {
+    hideLoading(loadingId);
+    if (nextBtn) {
+      nextBtn.disabled = false;
+      hideElementLoading(nextBtn);
+    }
   }
 }
 

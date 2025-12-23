@@ -193,7 +193,10 @@ func (a *AssignNode) AssignNodeOut() {
 | --- | --- | --- | --- | --- |
 | `/api/v1/groups` | GET | 列出所有担保组织（简要信息 + API 端口） | `GetAllGroupsWithAPI` → 返回组织列表 | ✅ 已实现 |
 | `/api/v1/groups/{id}` | GET | 查询指定担保组织详细信息（包含 API 端口） | `ReturnGroupInfoForGateway` → 返回 `GuarGroupTable` | ✅ 已实现 |
+| `/api/v1/re-online` | POST | **用户登录/重登（BootNode 统一入口）** | BootNode 根据 `UserID -> GuarGroupID` 路由表转发到 `POST /api/v1/{groupID}/assign/re-online`（必要时 fallback 探测） | ✅ 已实现 |
 | `/health` | GET | 健康检查 | - | ✅ 已实现 |
+
+> 说明：`/api/v1/{groupID}/assign/re-online` 仍保留为兼容/调试入口；推荐前端统一调用 BootNode 入口 `/api/v1/re-online`。
 
 ### 3) 数据结构说明
 
@@ -254,9 +257,9 @@ type GuarGroupTable struct {
 
 | 场景 | 输出结构 | 原发送端参考 | Gateway 方案 |
 | --- | --- | --- | --- |
-| 账户/余额/UTXO/TXCer 更新 | `AccountUpdateInfo` | `assignnode.go` 800-838 | 提供轮询接口 `GET /api/v1/assign/account-update?userID=...`，原 P2P 单播保留 |
+| 账户/余额/UTXO/TXCer 更新 | `AccountUpdateInfo` | `assignnode.go` 800-838 | 提供轮询接口 `GET /api/v1/{groupID}/assign/account-update?userID=...`，原 P2P 单播保留 |
 | 仅区块高度更新 | `AccountUpdateInfo`（`IsNoWalletChange=true`） | `assignnode.go` 854-886 | 同上，复用轮询接口 |
-| TXCer 状态变动通知 | `TXCerChangeToUser` | `txcertable.go` 178-191 | 提供轮询接口 `GET /api/v1/assign/txcer-change?userID=...`，原 P2P 单播保留 |
+| TXCer 状态变动通知 | `TXCerChangeToUser` | `txcertable.go` 178-191 | 提供轮询接口 `GET /api/v1/{groupID}/assign/txcer-change?userID=...`，原 P2P 单播保留 |
 
 ### 3) 路由草案（对应 ForGateway 方法）
 
@@ -405,6 +408,18 @@ type TXCerChangeToUser struct {
 3. 实现账户更新和 TXCer 变动轮询接口。
 
 4. 在 AssignNode 启动时初始化 Gateway 并绑定自身。
+
+---
+
+## 登录路由重构说明（新增）
+
+为了支持“前端登录时不知道用户所属担保组织”的场景，系统新增了 BootNode 统一登录入口：
+
+- **前端推荐入口**：`POST /api/v1/re-online`
+  - BootNode 会根据 `UserID -> GuarGroupID` 路由表直接转发到目标组织的 `POST /api/v1/{groupID}/assign/re-online`
+  - 若路由未命中，BootNode 会 fallback 探测所有已注册 `AssignAPIEndpoint` 的担保组织，并缓存命中结果
+
+同时，AssignNode 在用户加入/退出担保组织成功后，会通知 BootNode 更新路由表，确保后续登录可以直接命中路由（避免“群发探测”成为常态）。
 
 ---
 
@@ -573,9 +588,9 @@ type NoGuarGroupTXResponse struct {
 
 - 保留链内/组内的 P2P 广播/群发逻辑不变。
 - 对"原本单播给用户"的场景，新增 Gateway 拉取接口（前端轮询）：
-  - 账户更新：`GET /api/v1/assign/account-update?userID=...`
+  - 账户更新：`GET /api/v1/{groupID}/assign/account-update?userID=...`
   - TXCer 群发：`GET /api/v1/aggr/txcer?address=...`
-  - TXCer 变动：`GET /api/v1/assign/txcer-change?userID=...`
+  - TXCer 变动：`GET /api/v1/{groupID}/assign/txcer-change?userID=...`
   - UTXO 变动：`GET /api/v1/com/utxo-change?address=...`
 - 如需低时延推送，可后续扩展 WebSocket/SSE。
 - 去重/幂等建议：前端按业务唯一键（如 `TXCerID`）去重。

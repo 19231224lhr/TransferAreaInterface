@@ -91,6 +91,54 @@
           <p class="entry-header-desc" id="entryImportSuggest" data-i18n="entry.selectActionDesc">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
         </div>
 
+        <!-- 用户状态信息区 (新增) -->
+        <div class="entry-user-status" id="entryUserStatus" style="display: none;">
+          <div class="entry-status-card">
+            <div class="entry-status-header">
+              <div class="entry-status-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              </div>
+              <div class="entry-status-info">
+                <h4 data-i18n="entry.userStatus">用户状态</h4>
+              </div>
+            </div>
+            <div class="entry-status-body">
+              <!-- 组织信息 -->
+              <div class="entry-status-item">
+                <span class="entry-status-label" data-i18n="entry.orgStatus">组织状态:</span>
+                <span class="entry-status-value" id="entryOrgStatus">
+                  <span class="entry-status-badge entry-status-badge--loading">
+                    <svg class="entry-status-spinner" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.48 8.48l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.48-8.48l2.83-2.83" />
+                    </svg>
+                    <span data-i18n="common.loading">加载中...</span>
+                  </span>
+                </span>
+              </div>
+              <!-- 组织ID (仅在已加入时显示) -->
+              <div class="entry-status-item" id="entryOrgIdItem" style="display: none;">
+                <span class="entry-status-label" data-i18n="entry.orgId">组织ID:</span>
+                <span class="entry-status-value" id="entryOrgId">-</span>
+              </div>
+              <!-- 钱包地址数量 -->
+              <div class="entry-status-item">
+                <span class="entry-status-label" data-i18n="entry.addressCount">钱包地址:</span>
+                <span class="entry-status-value" id="entryAddressCount">0</span>
+              </div>
+              <!-- 总余额 -->
+              <div class="entry-status-item">
+                <span class="entry-status-label" data-i18n="entry.totalBalance">总余额:</span>
+                <span class="entry-status-value" id="entryTotalBalance">0.00</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 操作按钮区 -->
         <div class="entry-action-cards">
           <button id="createWalletBtn" class="entry-action-card entry-action-card--create">

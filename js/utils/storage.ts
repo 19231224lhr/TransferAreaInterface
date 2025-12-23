@@ -48,6 +48,14 @@ export interface AddressData {
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
+  /** Whether address is locked (external import without private key) */
+  locked?: boolean;
+  /** Public key from backend (for external addresses) */
+  publicKeyNew?: {
+    CurveName: string;
+    X: number;
+    Y: number;
+  };
 }
 
 /** Wallet history record */
@@ -82,6 +90,12 @@ export interface User {
   pubYHex?: string;
   /** Guarantor group info - undefined means not joined */
   guarGroup?: GuarantorGroup;
+  /** Entry source: 'login' | 'new' - tracks how user entered the app */
+  entrySource?: string;
+  /** Whether user is in a guarantor group */
+  isInGroup?: boolean;
+  /** Complete guarantor group boot message from backend */
+  guarGroupBootMsg?: any;
 }
 
 /** User profile structure */
@@ -117,6 +131,17 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
 
   if (basic.guarGroup !== undefined) {
     acc.guarGroup = basic.guarGroup;
+  }
+  
+  // Handle new fields for login tracking
+  if (basic.entrySource !== undefined) {
+    acc.entrySource = basic.entrySource;
+  }
+  if (basic.isInGroup !== undefined) {
+    acc.isInGroup = basic.isInGroup;
+  }
+  if (basic.guarGroupBootMsg !== undefined) {
+    acc.guarGroupBootMsg = basic.guarGroupBootMsg;
   }
   
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };

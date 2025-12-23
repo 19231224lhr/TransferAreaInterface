@@ -361,7 +361,7 @@ export async function router(): Promise<void> {
 
     case '/entry':
       showCard(pageElement);
-      void callPageFn('/entry', 'initEntryPage', 'updateWalletBrief');
+      void callPageFn('/entry', 'initEntryPage');
       break;
 
     case '/login':

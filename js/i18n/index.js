@@ -131,8 +131,16 @@ export function setLanguage(lang) {
  * @returns {string} Translated text
  */
 export function t(key, paramsOrDefault) {
-  const dict = translations[currentLanguage] || translations['zh-CN'];
-  let text = dict[key] || translations['zh-CN'][key];
+  const dict = translations[currentLanguage] || {};
+  let text = dict[key];
+
+  // Fallback strategy:
+  // - If currentLanguage is zh-CN, fall back to English (better than showing raw keys).
+  // - If currentLanguage is NOT zh-CN (e.g. English), NEVER fall back to Chinese.
+  //   Instead, prefer provided default value or the key itself.
+  if (!text && currentLanguage === 'zh-CN') {
+    text = translations['en']?.[key];
+  }
   
   // If no translation found, use default value (if string) or key
   if (!text) {
