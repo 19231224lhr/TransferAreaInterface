@@ -252,6 +252,95 @@ export async function queryGroupInfoSafe(groupId: string): Promise<QueryResult<G
   }
 }
 
+/**
+ * Query group info via AssignNode (for users already in a group)
+ * Uses the AssignNode's group-info endpoint: GET /api/v1/{groupID}/assign/group-info
+ * 
+ * @param targetGroupId - The group ID to query
+ * @param currentGroupInfo - Current user's group info (for API endpoint)
+ * @returns Normalized group information
+ * @throws ApiRequestError if request fails
+ */
+export async function queryGroupInfoViaAssignNode(
+  targetGroupId: string,
+  currentGroupInfo: GroupInfo
+): Promise<GroupInfo> {
+  if (!targetGroupId || !/^\d{8}$/.test(targetGroupId)) {
+    throw new ApiRequestError(t('error.invalidGroupIdFormat'), {
+      code: 'INVALID_GROUP_ID'
+    });
+  }
+
+  // Build the AssignNode URL
+  let apiUrl: string;
+  if (currentGroupInfo.assignAPIEndpoint) {
+    const assignNodeUrl = buildAssignNodeUrl(currentGroupInfo.assignAPIEndpoint);
+    apiUrl = `${assignNodeUrl}/api/v1/${currentGroupInfo.groupID}/assign/group-info?groupId=${targetGroupId}`;
+  } else {
+    // Fallback to default API base URL
+    apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_GROUP_INFO(currentGroupInfo.groupID)}?groupId=${targetGroupId}`;
+  }
+
+  console.debug(`[Group] Querying group info via AssignNode: ${apiUrl}`);
+
+  const response = await fetch(apiUrl, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!response.ok) {
+    if (response.status === 404) {
+      throw new ApiRequestError(t('groupDetail.orgNotFound'), {
+        code: 'GROUP_NOT_FOUND',
+        status: 404
+      });
+    }
+    throw new ApiRequestError(`${t('error.networkError')}: HTTP ${response.status}`, {
+      code: 'NETWORK_ERROR',
+      status: response.status
+    });
+  }
+
+  // The response is ReturnGroupBootMsg: { guar_group_id, group_msg: GuarGroupTable }
+  const data = await response.json();
+  
+  // Handle both direct GuarGroupTable and wrapped ReturnGroupBootMsg formats
+  const raw: GuarGroupTable = data.group_msg || data.GroupMsg || data;
+  const groupId = data.guar_group_id || data.GuarGroupID || targetGroupId;
+
+  return normalizeGroupInfo(groupId, raw);
+}
+
+/**
+ * Safely query group info via AssignNode without throwing errors
+ * @param targetGroupId - The group ID to query
+ * @param currentGroupInfo - Current user's group info
+ * @returns Query result with success flag and data or error
+ */
+export async function queryGroupInfoViaAssignNodeSafe(
+  targetGroupId: string,
+  currentGroupInfo: GroupInfo
+): Promise<QueryResult<GroupInfo>> {
+  try {
+    const data = await queryGroupInfoViaAssignNode(targetGroupId, currentGroupInfo);
+    return { success: true, data };
+  } catch (error) {
+    if (error instanceof ApiRequestError) {
+      return {
+        success: false,
+        error: error.message,
+        notFound: error.status === 404
+      };
+    }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : t('error.unknownError')
+    };
+  }
+}
+
 // ============================================================================
 // Timestamp & Signing Utilities
 // ============================================================================

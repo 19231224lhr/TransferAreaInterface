@@ -937,3 +937,526 @@
 [data-theme="dark"] .info-icon svg {
   color: #10b981;
 }
+
+
+/* ========================================
+   标签页切换 - 带滑块特效
+   ======================================== */
+
+.group-tabs {
+  position: relative;
+  display: flex;
+  gap: 0;
+  padding: 6px;
+  background: #f1f5f9;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+/* 滑块背景 */
+.group-tabs::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: calc(50% - 6px);
+  height: calc(100% - 12px);
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 0;
+  will-change: transform;
+}
+
+/* 当第二个标签激活时，滑块移动到右侧 */
+.group-tabs[data-active="search"]::before {
+  transform: translateX(100%);
+}
+
+.group-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+}
+
+.group-tab svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.group-tab:hover:not(.group-tab--active) {
+  color: #334155;
+}
+
+.group-tab:hover svg {
+  transform: scale(1.1);
+}
+
+.group-tab--active {
+  color: #0d9488;
+}
+
+/* ========================================
+   面板样式
+   ======================================== */
+
+.group-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.group-panel.hidden {
+  display: none;
+}
+
+.group-panel-header {
+  margin-bottom: 24px;
+}
+
+.group-panel-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 8px;
+}
+
+.group-panel-desc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========================================
+   搜索区域
+   ======================================== */
+
+.group-search-area {
+  position: relative;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.group-search-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.group-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 24px;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: #94a3b8;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.group-search-field input {
+  width: 100%;
+  padding: 14px 16px 14px 48px;
+  font-size: 15px;
+  color: #1e293b;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.group-search-field input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.1);
+}
+
+.group-search-field input::placeholder {
+  color: #94a3b8;
+}
+
+.group-search-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  font-size: 15px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+}
+
+.group-search-action-btn svg {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.2s ease;
+}
+
+.group-search-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(20, 184, 166, 0.35);
+}
+
+.group-search-action-btn:hover:not(:disabled) svg {
+  transform: scale(1.1);
+}
+
+.group-search-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #cbd5e1;
+}
+
+.group-search-action-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.2);
+}
+
+/* ========================================
+   搜索状态样式
+   ======================================== */
+
+/* Loading state */
+.group-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #64748b;
+  text-align: center;
+}
+
+.group-loading-state.hidden {
+  display: none;
+}
+
+.group-loader-logo {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+  position: relative;
+}
+
+.group-loader-logo .loader-logo-img {
+  width: 48px !important;
+  height: 48px !important;
+  object-fit: contain;
+  animation: logoRotate 1.2s linear infinite;
+  filter: drop-shadow(0 2px 12px rgba(20, 184, 166, 0.25));
+  will-change: transform;
+}
+
+@keyframes logoRotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.group-loading-state p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Not found state */
+.group-not-found-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.05), rgba(239, 68, 68, 0.05));
+  border: 1.5px solid rgba(251, 146, 60, 0.2);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  animation: notFoundFadeIn 0.3s ease-out both;
+}
+
+.group-not-found-state.hidden {
+  display: none;
+}
+
+@keyframes notFoundFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-not-found-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.15), rgba(239, 68, 68, 0.1));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.group-not-found-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #f97316;
+}
+
+.group-not-found-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #c2410c;
+  margin: 0 0 8px;
+}
+
+.group-not-found-desc {
+  font-size: 14px;
+  color: #9a3412;
+  margin: 0;
+  opacity: 0.8;
+}
+
+/* 搜索结果卡片 */
+.group-search-result-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
+  animation: cardEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.group-search-result-card.hidden {
+  display: none;
+}
+
+/* 空状态 */
+.group-search-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 16px;
+  border: 2px dashed #e2e8f0;
+  margin-bottom: 24px;
+}
+
+.group-search-empty-state.hidden {
+  display: none;
+}
+
+.group-empty-icon {
+  width: 56px;
+  height: 56px;
+  background: #e2e8f0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.group-empty-icon svg {
+  width: 28px;
+  height: 28px;
+  color: #94a3b8;
+}
+
+.group-search-empty-state p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ========================================
+   深色模式 - 标签页和搜索面板
+   ======================================== */
+
+/* 标签页切换 - 深色模式 */
+[data-theme="dark"] .group-tabs {
+  background: rgba(30, 41, 59, 0.6);
+  border: 1px solid var(--color-border);
+}
+
+/* 滑块背景 - 深色模式 */
+[data-theme="dark"] .group-tabs::before {
+  background: linear-gradient(135deg, rgba(13, 148, 136, 0.25), rgba(20, 184, 166, 0.2));
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(20, 184, 166, 0.3);
+  backdrop-filter: blur(8px);
+}
+
+[data-theme="dark"] .group-tab {
+  color: var(--color-text-secondary);
+}
+
+[data-theme="dark"] .group-tab:hover:not(.group-tab--active) {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .group-tab--active {
+  color: #2dd4bf;
+}
+
+/* 面板标题 */
+[data-theme="dark"] .group-panel-title {
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .group-panel-desc {
+  color: var(--color-text-secondary);
+}
+
+/* 搜索区域 */
+[data-theme="dark"] .group-search-field input {
+  background: var(--color-input-bg);
+  border-color: var(--color-border);
+  color: var(--color-text-primary);
+}
+
+[data-theme="dark"] .group-search-field input:focus {
+  border-color: #14b8a6;
+  box-shadow: 0 0 0 4px rgba(20, 184, 166, 0.15);
+}
+
+[data-theme="dark"] .group-search-field input::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .group-search-icon {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .group-search-action-btn {
+  background: linear-gradient(135deg, #065f46 0%, #0d9488 100%);
+  box-shadow: 0 2px 8px rgba(6, 95, 70, 0.3);
+}
+
+[data-theme="dark"] .group-search-action-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
+  box-shadow: 0 4px 16px rgba(6, 95, 70, 0.4);
+}
+
+[data-theme="dark"] .group-search-action-btn:disabled {
+  background: #475569;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 搜索结果卡片 */
+[data-theme="dark"] .group-search-result-card {
+  background: var(--bg-card-solid);
+  border-color: var(--neutral-200);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+}
+
+/* 空状态 */
+[data-theme="dark"] .group-search-empty-state {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .group-empty-icon {
+  background: var(--color-bg-secondary);
+}
+
+[data-theme="dark"] .group-empty-icon svg {
+  color: var(--color-text-tertiary);
+}
+
+[data-theme="dark"] .group-search-empty-state p {
+  color: var(--color-text-secondary);
+}
+
+/* Not found state - 深色模式 */
+[data-theme="dark"] .group-not-found-state {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.08), rgba(239, 68, 68, 0.08));
+  border-color: rgba(251, 146, 60, 0.25);
+}
+
+[data-theme="dark"] .group-not-found-icon {
+  background: linear-gradient(135deg, rgba(251, 146, 60, 0.2), rgba(239, 68, 68, 0.15));
+}
+
+[data-theme="dark"] .group-not-found-title {
+  color: #fb923c;
+}
+
+[data-theme="dark"] .group-not-found-desc {
+  color: #fdba74;
+}
+
+/* Loading state - 深色模式 */
+[data-theme="dark"] .group-loading-state {
+  color: var(--color-text-secondary);
+}
+
+/* ========================================
+   响应式适配 - 标签页和搜索
+   ======================================== */
+
+@media (max-width: 600px) {
+  .group-tabs {
+    flex-direction: column;
+  }
+
+  /* Fix slider position for vertical layout */
+  .group-tabs::before {
+    width: calc(100% - 12px);
+    height: calc(50% - 6px);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* When second tab is active, move slider down instead of right */
+  .group-tabs[data-active="search"]::before {
+    transform: translateY(100%);
+  }
+
+  .group-search-area {
+    flex-direction: column;
+  }
+
+  .group-search-action-btn {
+    width: 100%;
+  }
+}

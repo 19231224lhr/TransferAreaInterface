@@ -1,7 +1,10 @@
 /**
  * Group Detail Page Module
  * 
- * Handles the group detail page logic.
+ * Handles the group detail page logic including:
+ * - Tab switching between "My Organization" and "Search Organization"
+ * - Organization search functionality
+ * - Leave organization functionality
  */
 
 import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/storage';
@@ -11,7 +14,10 @@ import { copyToClipboard, wait } from '../utils/helpers.js';
 import { showMiniToast } from '../utils/toast.js';
 import { routeTo } from '../router';
 import { DOM_IDS, idSelector } from '../config/domIds';
-import { leaveGuarGroup } from '../services/group';
+import { leaveGuarGroup, queryGroupInfoSafe } from '../services/group';
+
+// Current active tab
+let currentTab = 'myorg';
 
 /**
  * Update group detail page display
@@ -39,6 +45,149 @@ export function updateGroupDetailDisplay() {
   } else {
     if (groupJoinedPane) groupJoinedPane.classList.add('hidden');
     if (groupEmptyPane) groupEmptyPane.classList.remove('hidden');
+  }
+}
+
+/**
+ * Switch between tabs
+ */
+function switchTab(tabName) {
+  currentTab = tabName;
+  
+  const tabs = document.getElementById(DOM_IDS.groupTabs);
+  const myOrgPane = document.getElementById(DOM_IDS.groupMyOrgPane);
+  const searchPane = document.getElementById(DOM_IDS.groupSearchPane);
+  
+  // Update tabs data attribute for slider animation
+  if (tabs) {
+    tabs.dataset.active = tabName;
+  }
+  
+  // Update tab button states
+  const tabButtons = document.querySelectorAll(`${idSelector(DOM_IDS.groupTabs)} .group-tab`);
+  tabButtons.forEach(btn => {
+    if (btn.dataset.tab === tabName) {
+      btn.classList.add('group-tab--active');
+    } else {
+      btn.classList.remove('group-tab--active');
+    }
+  });
+  
+  // Show/hide panels
+  if (tabName === 'myorg') {
+    if (myOrgPane) myOrgPane.classList.remove('hidden');
+    if (searchPane) searchPane.classList.add('hidden');
+  } else if (tabName === 'search') {
+    if (myOrgPane) myOrgPane.classList.add('hidden');
+    if (searchPane) searchPane.classList.remove('hidden');
+  }
+}
+
+/**
+ * Handle organization search
+ * Always uses BootNode API to query other organizations
+ * (AssignNode's group-info endpoint only returns current group info)
+ */
+async function handleSearch() {
+  const searchInput = document.getElementById(DOM_IDS.groupDetailSearch);
+  const searchBtn = document.getElementById(DOM_IDS.groupDetailSearchBtn);
+  const loadingEl = document.getElementById(DOM_IDS.groupSearchLoading);
+  const notFoundEl = document.getElementById(DOM_IDS.groupSearchNotFound);
+  const resultEl = document.getElementById(DOM_IDS.groupSearchResult);
+  const emptyEl = document.getElementById(DOM_IDS.groupSearchEmpty);
+  
+  const groupId = searchInput?.value?.trim();
+  if (!groupId) return;
+  
+  // Validate input (8 digits)
+  if (!/^\d{8}$/.test(groupId)) {
+    showMiniToast(t('groupDetail.invalidOrgId') || '请输入8位数字组织编号', 'error');
+    return;
+  }
+  
+  // Show loading state
+  if (loadingEl) loadingEl.classList.remove('hidden');
+  if (notFoundEl) notFoundEl.classList.add('hidden');
+  if (resultEl) resultEl.classList.add('hidden');
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (searchBtn) searchBtn.disabled = true;
+  
+  try {
+    // Always use BootNode API to query other organizations
+    // AssignNode's group-info endpoint only returns current group info, not other groups
+    console.debug(`[GroupDetail] Querying group ${groupId} via BootNode API`);
+    const result = await queryGroupInfoSafe(groupId);
+    
+    // Hide loading
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (searchBtn) searchBtn.disabled = false;
+    
+    if (result.success && result.data) {
+      // Show result
+      if (resultEl) resultEl.classList.remove('hidden');
+      
+      const idEl = document.getElementById(DOM_IDS.groupSearchResultID);
+      const aggreEl = document.getElementById(DOM_IDS.groupSearchResultAggre);
+      const assignEl = document.getElementById(DOM_IDS.groupSearchResultAssign);
+      const aggrAPIEl = document.getElementById(DOM_IDS.groupSearchResultAggrAPI);
+      const assignAPIEl = document.getElementById(DOM_IDS.groupSearchResultAssignAPI);
+      const pledgeEl = document.getElementById(DOM_IDS.groupSearchResultPledge);
+      
+      if (idEl) idEl.textContent = result.data.groupID || groupId;
+      if (aggreEl) aggreEl.textContent = result.data.aggreNode || '-';
+      if (assignEl) assignEl.textContent = result.data.assignNode || '-';
+      if (aggrAPIEl) aggrAPIEl.textContent = (result.data.aggrAPIEndpoint || '-').replace(/^:/, '');
+      if (assignAPIEl) assignAPIEl.textContent = (result.data.assignAPIEndpoint || '-').replace(/^:/, '');
+      if (pledgeEl) pledgeEl.textContent = result.data.pledgeAddress || '-';
+    } else {
+      // Show not found
+      if (notFoundEl) notFoundEl.classList.remove('hidden');
+    }
+  } catch (error) {
+    console.error('[GroupDetail] Search error:', error);
+    if (loadingEl) loadingEl.classList.add('hidden');
+    if (searchBtn) searchBtn.disabled = false;
+    if (notFoundEl) notFoundEl.classList.remove('hidden');
+  }
+}
+
+/**
+ * Handle search input change
+ * Validates input format (8 digits only)
+ */
+function handleSearchInputChange() {
+  const searchInput = document.getElementById(DOM_IDS.groupDetailSearch);
+  const searchBtn = document.getElementById(DOM_IDS.groupDetailSearchBtn);
+  const emptyEl = document.getElementById(DOM_IDS.groupSearchEmpty);
+  const notFoundEl = document.getElementById(DOM_IDS.groupSearchNotFound);
+  const resultEl = document.getElementById(DOM_IDS.groupSearchResult);
+  
+  let value = searchInput?.value || '';
+  
+  // Only allow digits, remove any non-digit characters
+  const digitsOnly = value.replace(/\D/g, '');
+  
+  // Limit to 8 digits
+  const limitedValue = digitsOnly.slice(0, 8);
+  
+  // Update input value if it was modified
+  if (searchInput && value !== limitedValue) {
+    searchInput.value = limitedValue;
+    value = limitedValue;
+  }
+  
+  // Enable button only when exactly 8 digits
+  const isValid = /^\d{8}$/.test(value);
+  
+  if (searchBtn) {
+    searchBtn.disabled = !isValid;
+  }
+  
+  // Reset states when input changes
+  if (value.length === 0) {
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (notFoundEl) notFoundEl.classList.add('hidden');
+    if (resultEl) resultEl.classList.add('hidden');
   }
 }
 
@@ -135,6 +284,37 @@ export async function handleLeaveOrg() {
 export function initGroupDetailPage() {
   updateGroupDetailDisplay();
   
+  // Initialize tab switching
+  const tabButtons = document.querySelectorAll(`${idSelector(DOM_IDS.groupTabs)} .group-tab`);
+  tabButtons.forEach(btn => {
+    if (!btn.dataset._groupBind) {
+      btn.dataset._groupBind = 'true';
+      btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        if (tab) switchTab(tab);
+      });
+    }
+  });
+  
+  // Initialize search functionality
+  const searchInput = document.getElementById(DOM_IDS.groupDetailSearch);
+  const searchBtn = document.getElementById(DOM_IDS.groupDetailSearchBtn);
+  
+  if (searchInput && !searchInput.dataset._groupBind) {
+    searchInput.dataset._groupBind = 'true';
+    searchInput.addEventListener('input', handleSearchInputChange);
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !searchBtn?.disabled) {
+        handleSearch();
+      }
+    });
+  }
+  
+  if (searchBtn && !searchBtn.dataset._groupBind) {
+    searchBtn.dataset._groupBind = 'true';
+    searchBtn.addEventListener('click', handleSearch);
+  }
+  
   // Bind leave button event
   const leaveBtn = document.getElementById(DOM_IDS.groupLeaveBtn);
   if (leaveBtn && !leaveBtn.dataset._groupBind) {
@@ -173,10 +353,10 @@ export function initGroupDetailPage() {
     if (!btn.dataset._groupBind) {
       btn.dataset._groupBind = 'true';
       btn.addEventListener('click', async () => {
-        const target = btn.dataset.target;
+        const target = btn.dataset.copy;
         const el = target ? document.getElementById(target) : null;
         const text = el ? el.textContent : '';
-        if (text) {
+        if (text && text !== '-') {
           const ok = await copyToClipboard(text);
           if (ok) {
             showMiniToast(t('wallet.copied'), 'success');

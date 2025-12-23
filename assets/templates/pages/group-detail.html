@@ -85,22 +85,219 @@
     <!-- 右侧：详情区域 -->
     <main class="group-main">
       <div class="group-main-content">
-        <!-- 已加入状态 -->
-        <div id="groupJoinedPane" class="group-pane">
-          <!-- 页面头部 -->
-          <div class="group-pane-header">
-            <div class="group-pane-title">
-              <h2 data-i18n="groupDetail.orgDetails">组织详情</h2>
-              <p data-i18n="groupDetail.orgDetailsDesc">您当前加入的担保组织信息</p>
+        <!-- 标签页切换 -->
+        <div class="group-tabs" id="groupTabs" data-active="myorg">
+          <button class="group-tab group-tab--active" data-tab="myorg">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            <span data-i18n="groupDetail.myOrg">本组织信息</span>
+          </button>
+          <button class="group-tab" data-tab="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <span data-i18n="groupDetail.searchOrg">查询组织</span>
+          </button>
+        </div>
+
+        <!-- 本组织信息面板 -->
+        <div class="group-panel group-panel--myorg" id="groupMyOrgPane">
+          <!-- 已加入状态 -->
+          <div id="groupJoinedPane" class="group-pane">
+            <!-- 页面头部 -->
+            <div class="group-pane-header">
+              <div class="group-pane-title">
+                <p data-i18n="groupDetail.orgDetailsDesc">您当前加入的担保组织信息</p>
+              </div>
+              <div class="group-status-badge group-status-badge--active">
+                <span class="status-dot"></span>
+                <span data-i18n="groupDetail.joined">已加入</span>
+              </div>
             </div>
-            <div class="group-status-badge group-status-badge--active">
-              <span class="status-dot"></span>
-              <span data-i18n="groupDetail.joined">已加入</span>
+
+            <!-- 组织信息卡片 -->
+            <div class="group-info-card">
+              <div class="group-info-header">
+                <div class="group-info-avatar">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                </div>
+                <div class="group-info-identity">
+                  <span class="group-info-id" id="groupDetailID">-</span>
+                  <span class="group-info-type" data-i18n="groupDetail.guarantorOrg">担保组织</span>
+                </div>
+                <div class="group-info-status">
+                  <span class="status-dot"></span>
+                  <span>在线</span>
+                </div>
+              </div>
+
+              <!-- 详细信息网格 -->
+              <div class="group-info-grid">
+                <div class="group-info-item">
+                  <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="3" />
+                      <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    </svg>
+                  </div>
+                  <div class="info-content">
+                    <label>AggreNode</label>
+                    <span id="groupDetailAggre">-</span>
+                  </div>
+                  <button class="info-copy-btn" data-copy="groupDetailAggre" title="复制">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="group-info-item">
+                  <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" />
+                    </svg>
+                  </div>
+                  <div class="info-content">
+                    <label>AssignNode</label>
+                    <span id="groupDetailAssign">-</span>
+                  </div>
+                  <button class="info-copy-btn" data-copy="groupDetailAssign" title="复制">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="group-info-item group-info-item--full">
+                  <div class="info-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                      <path d="M7 11V7a5 5 0 0110 0v4" />
+                    </svg>
+                  </div>
+                  <div class="info-content">
+                    <label>PledgeAddress</label>
+                    <span id="groupDetailPledge" class="info-value--mono">-</span>
+                  </div>
+                  <button class="info-copy-btn" data-copy="groupDetailPledge" title="复制">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="group-actions">
+              <button id="groupExitBtn" class="group-action-btn group-action-btn--exit">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+                <span data-i18n="groupDetail.leaveOrg">退出担保组织</span>
+              </button>
+              <button id="groupBackBtn" class="group-action-btn group-action-btn--back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="19" y1="12" x2="5" y2="12" />
+                  <polyline points="12 19 5 12 12 5" />
+                </svg>
+                <span data-i18n="groupDetail.backToMain">返回主页</span>
+              </button>
             </div>
           </div>
 
-          <!-- 组织信息卡片 -->
-          <div class="group-info-card">
+          <!-- 未加入状态 -->
+          <div id="groupEmptyPane" class="group-pane group-pane--empty hidden">
+            <div class="group-empty-content">
+              <div class="group-empty-visual">
+                <div class="empty-icon-wrapper">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                  <div class="empty-icon-pulse"></div>
+                </div>
+              </div>
+              <h2 class="group-empty-title" data-i18n="groupDetail.notJoinedTitle">您尚未加入担保组织</h2>
+              <p class="group-empty-desc" data-i18n="groupDetail.notJoinedDesc">
+                加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。
+              </p>
+              <div class="group-empty-actions">
+                <button id="groupJoinBtn" class="group-action-btn group-action-btn--join">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="8.5" cy="7" r="4" />
+                    <line x1="20" y1="8" x2="20" y2="14" />
+                    <line x1="23" y1="11" x2="17" y2="11" />
+                  </svg>
+                  <span data-i18n="groupDetail.joinNow">立即加入组织</span>
+                </button>
+                <button id="groupEmptyBackBtn" class="group-action-btn group-action-btn--secondary">
+                  <span data-i18n="groupDetail.backToMain">返回主页</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 查询组织面板 -->
+        <div class="group-panel group-panel--search hidden" id="groupSearchPane">
+          <div class="group-panel-header">
+            <h2 class="group-panel-title" data-i18n="groupDetail.searchGuarantorOrg">查询担保组织</h2>
+            <p class="group-panel-desc" data-i18n="groupDetail.searchOrgDesc">输入组织编号查找特定担保组织信息</p>
+          </div>
+
+          <div class="group-search-area">
+            <div class="group-search-field">
+              <svg class="group-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <input id="groupDetailSearch" type="text" data-i18n-placeholder="groupDetail.enterOrgNumber" placeholder="输入担保组织编号..." autocomplete="off" />
+            </div>
+            <button id="groupDetailSearchBtn" class="group-search-action-btn" disabled>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+              </svg>
+              <span data-i18n="join.search">搜索</span>
+            </button>
+          </div>
+
+          <!-- 搜索中状态 -->
+          <div id="groupSearchLoading" class="group-loading-state hidden">
+            <div class="group-loader-logo">
+              <img src="assets/logo.png" alt="Logo" class="loader-logo-img" width="48" height="48" />
+            </div>
+            <p data-i18n="groupDetail.searching">正在查询...</p>
+          </div>
+
+          <!-- 组织不存在状态 -->
+          <div id="groupSearchNotFound" class="group-not-found-state hidden">
+            <div class="group-not-found-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                <path d="M11 7v4" />
+                <circle cx="11" cy="15" r="0.5" fill="currentColor" />
+              </svg>
+            </div>
+            <h3 class="group-not-found-title" data-i18n="groupDetail.orgNotFound">未找到该担保组织</h3>
+            <p class="group-not-found-desc" data-i18n="groupDetail.orgNotFoundDesc">请检查组织编号是否正确，或稍后再试</p>
+          </div>
+
+          <!-- 搜索结果 -->
+          <div id="groupSearchResult" class="group-search-result-card hidden">
+            <!-- 组织头部 -->
             <div class="group-info-header">
               <div class="group-info-avatar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -111,7 +308,7 @@
                 </svg>
               </div>
               <div class="group-info-identity">
-                <span class="group-info-id" id="groupDetailID">-</span>
+                <span class="group-info-id" id="groupSearchResultID"></span>
                 <span class="group-info-type" data-i18n="groupDetail.guarantorOrg">担保组织</span>
               </div>
               <div class="group-info-status">
@@ -119,27 +316,19 @@
                 <span>在线</span>
               </div>
             </div>
-
-            <!-- 详细信息网格 -->
+            <!-- 组织详情 -->
             <div class="group-info-grid">
               <div class="group-info-item">
                 <div class="info-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="3" />
-                    <path
-                      d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
                   </svg>
                 </div>
                 <div class="info-content">
                   <label>AggreNode</label>
-                  <span id="groupDetailAggre">-</span>
+                  <span id="groupSearchResultAggre">-</span>
                 </div>
-                <button class="info-copy-btn" data-copy="groupDetailAggre" title="复制">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
-                </button>
               </div>
               <div class="group-info-item">
                 <div class="info-icon">
@@ -149,14 +338,36 @@
                 </div>
                 <div class="info-content">
                   <label>AssignNode</label>
-                  <span id="groupDetailAssign">-</span>
+                  <span id="groupSearchResultAssign">-</span>
                 </div>
-                <button class="info-copy-btn" data-copy="groupDetailAssign" title="复制">
+              </div>
+              <div class="group-info-item">
+                <div class="info-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                    <line x1="6" y1="6" x2="6.01" y2="6" />
+                    <line x1="6" y1="18" x2="6.01" y2="18" />
                   </svg>
-                </button>
+                </div>
+                <div class="info-content">
+                  <label>AggrNode API</label>
+                  <span id="groupSearchResultAggrAPI" class="info-value--mono">-</span>
+                </div>
+              </div>
+              <div class="group-info-item">
+                <div class="info-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />
+                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2" />
+                    <line x1="6" y1="6" x2="6.01" y2="6" />
+                    <line x1="6" y1="18" x2="6.01" y2="18" />
+                  </svg>
+                </div>
+                <div class="info-content">
+                  <label>AssignNode API</label>
+                  <span id="groupSearchResultAssignAPI" class="info-value--mono">-</span>
+                </div>
               </div>
               <div class="group-info-item group-info-item--full">
                 <div class="info-icon">
@@ -167,67 +378,21 @@
                 </div>
                 <div class="info-content">
                   <label>PledgeAddress</label>
-                  <span id="groupDetailPledge" class="info-value--mono">-</span>
+                  <span id="groupSearchResultPledge" class="info-value--mono">-</span>
                 </div>
-                <button class="info-copy-btn" data-copy="groupDetailPledge" title="复制">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                  </svg>
-                </button>
               </div>
             </div>
           </div>
 
-          <!-- 操作按钮 -->
-          <div class="group-actions">
-            <button id="groupExitBtn" class="group-action-btn group-action-btn--exit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-                <polyline points="16 17 21 12 16 7" />
-                <line x1="21" y1="12" x2="9" y2="12" />
+          <!-- 空状态 -->
+          <div id="groupSearchEmpty" class="group-search-empty-state">
+            <div class="group-empty-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" y1="21" x2="16.65" y2="16.65" />
               </svg>
-              <span data-i18n="groupDetail.leaveOrg">退出担保组织</span>
-            </button>
-            <button id="groupBackBtn" class="group-action-btn group-action-btn--back">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="19" y1="12" x2="5" y2="12" />
-                <polyline points="12 19 5 12 12 5" />
-              </svg>
-              <span data-i18n="groupDetail.backToMain">返回主页</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 未加入状态 -->
-        <div id="groupEmptyPane" class="group-pane group-pane--empty hidden">
-          <div class="group-empty-content">
-            <div class="group-empty-visual">
-              <div class="empty-icon-wrapper">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                </svg>
-                <div class="empty-icon-pulse"></div>
-              </div>
             </div>
-            <h2 class="group-empty-title" data-i18n="groupDetail.notJoinedTitle">您尚未加入担保组织</h2>
-            <p class="group-empty-desc" data-i18n="groupDetail.notJoinedDesc">
-              加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。
-            </p>
-            <div class="group-empty-actions">
-              <button id="groupJoinBtn" class="group-action-btn group-action-btn--join">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M16 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
-                  <circle cx="8.5" cy="7" r="4" />
-                  <line x1="20" y1="8" x2="20" y2="14" />
-                  <line x1="23" y1="11" x2="17" y2="11" />
-                </svg>
-                <span data-i18n="groupDetail.joinNow">立即加入组织</span>
-              </button>
-              <button id="groupEmptyBackBtn" class="group-action-btn group-action-btn--secondary">
-                <span data-i18n="groupDetail.backToMain">返回主页</span>
-              </button>
-            </div>
+            <p data-i18n="groupDetail.startSearch">输入组织编号开始搜索</p>
           </div>
         </div>
       </div>
