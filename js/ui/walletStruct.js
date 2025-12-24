@@ -96,14 +96,26 @@ export function initTxDetailModal() {
   if (!modal) return;
   
   const showTxDetail = (title, data) => {
-    if (titleEl) titleEl.textContent = title;
+    if (titleEl) {
+      titleEl.textContent = title;
+    }
     if (contentEl) {
+      // 先格式化 JSON，再应用语法高亮
+      let formattedJson = data;
+      try {
+        const parsed = JSON.parse(data);
+        formattedJson = JSON.stringify(parsed, null, 2);
+      } catch {
+        // 如果解析失败，保持原样
+      }
+      
       // Syntax highlight JSON using lit-html with unsafeHTML for trusted content
-      const highlighted = data
+      const highlighted = formattedJson
         .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
         .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
         .replace(/: (\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
-        .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>');
+        .replace(/: (true|false)/g, ': <span class="json-boolean">$1</span>')
+        .replace(/: (null)/g, ': <span class="json-null">$1</span>');
       const template = viewHtml`${unsafeHTML(highlighted)}`;
       renderInto(contentEl, template);
     }

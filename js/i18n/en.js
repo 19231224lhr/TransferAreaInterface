@@ -53,6 +53,8 @@ export default {
   'encryption.migrationDesc': 'Unencrypted private key detected. Please set a password to encrypt it.',
   'encryption.encryptSuccess': 'Private key encrypted successfully',
   'encryption.decryptFailed': 'Decryption failed, please check your password',
+  'encryption.decryptForTx': 'Building a transaction requires signing with your account private key. Please enter password to unlock it.',
+  'encryption.passwordPlaceholder': 'Enter your password',
 
   // Page Title
   'page.title': 'PanguPay - Pangu Payment',
@@ -486,11 +488,29 @@ export default {
   'toast.buildTxSuccess': 'Transaction Built Successfully',
   'toast.buildTxSuccessDesc': 'Transaction structure created successfully. Click below to view details.',
   'toast.buildTxFailed': 'Build Failed',
+  'toast.submitTxSuccess': 'Transaction Submitted Successfully',
+  'toast.submitTxFailed': 'Transaction Submission Failed',
   'toast.importFailed': 'Import Failed',
   'toast.importSuccess': 'Import Successful',
   'toast.importSuccessDesc': 'Address has been successfully imported to current wallet',
   'toast.cannotParseAddress': 'Cannot parse address',
   'toast.addressExists': 'Address already exists, cannot import duplicate',
+
+  // Transaction Builder Errors
+  'txBuilder.notInGroup': 'User has not joined a guarantor organization',
+  'txBuilder.noGuarGroup': 'User has not joined a guarantor organization',
+  'txBuilder.noUserId': 'User ID does not exist',
+  'txBuilder.noAccountPrivKey': 'Account private key does not exist',
+  'txBuilder.noAddressPrivKey': 'Address is missing private key',
+  'txBuilder.insufficientBalance': 'Insufficient balance',
+  'txBuilder.noChangeAddress': 'Missing change address',
+  'txBuilder.changeAddressNotFound': 'Change address does not exist',
+  'txBuilder.changeAddressNoPublicKey': 'Change address is missing public key',
+  'txBuilder.cannotGetUtxoOutput': 'Cannot get original UTXO output data',
+  'txBuilder.noWalletData': 'Wallet data is empty, please add an address first',
+  'txBuilder.noFromAddress': 'No sending address selected',
+  'txBuilder.addressNotFound': 'Address not found',
+  'txBuilder.utxoDataError': 'UTXO data error',
 
   // Validation Messages
   'validation.nickname.empty': 'Nickname cannot be empty',

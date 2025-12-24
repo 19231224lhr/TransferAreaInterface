@@ -130,7 +130,6 @@ export function initNamespace(): PanguPayNamespace {
         buildNewTX: async () => null,
         exchangeRate: 1,
         initTransferSubmit: () => {},
-        initBuildTransaction: () => {},
       },
       
       // Crypto

@@ -6,7 +6,7 @@
 
 import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.ts';
 import { renderWallet, refreshOrgPanel, initAddressModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions, showWalletSkeletons } from '../services/wallet';
-import { initTransferSubmit, initBuildTransaction } from '../services/transfer.ts';
+import { initTransferSubmit } from '../services/transfer.ts';
 import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
 import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
@@ -74,9 +74,8 @@ export function handleMainRoute() {
   // Restore transfer draft after UI is ready (best-effort)
   restoreTransferDraft().catch(() => {});
   
-  // Initialize transfer submit and build transaction
+  // Initialize transfer submit (构造交易功能已合并)
   initTransferSubmit();
-  initBuildTransaction();
 
   // Start transfer draft auto-save
   try {

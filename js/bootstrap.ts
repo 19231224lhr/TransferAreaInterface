@@ -42,6 +42,7 @@ import { cleanupNetworkChart } from './ui/networkChart.js';
 import { initFooter, cleanupFooter } from './ui/footer.js';
 
 import { html as viewHtml, renderInto } from './utils/view';
+import { updateAllAddressCardBalances } from './services/wallet';
 
 import {
   initScreenLock,
@@ -413,6 +414,9 @@ function init(): void {
 
       // Charts
       try { pp?.charts?.updateWalletChart?.(u); } catch { }
+      
+      // Address card balances (实时更新地址卡片余额)
+      try { updateAllAddressCardBalances(u); } catch { }
       
       // Note: We intentionally do NOT call renderWallet() here because:
       // 1. It would re-render the entire address list, collapsing expanded cards

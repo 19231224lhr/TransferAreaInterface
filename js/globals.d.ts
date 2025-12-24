@@ -121,7 +121,6 @@ declare global {
     buildNewTX: (buildTXInfo: any, userAccount: any) => Promise<any>;
     exchangeRate: (amount: number, fromType: number, toType: number) => number;
     initTransferSubmit: () => void;
-    initBuildTransaction: () => void;
 
     // Crypto functions
     bytesToHex: (bytes: Uint8Array) => string;

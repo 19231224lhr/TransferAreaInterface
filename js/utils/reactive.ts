@@ -154,13 +154,9 @@ export function createReactiveState<T extends object>(
    */
   function setHtmlContent(el: Element, raw: unknown): void {
     const htmlStr = String(raw ?? '');
-    if (!htmlStr) {
-      el.replaceChildren();
-      return;
-    }
-    // Use lit-html with unsafeHTML for dynamic HTML content
-    // Note: Caller is responsible for sanitizing user input
-    const template = viewHtml`${unsafeHTML(htmlStr)}`;
+    // 始终使用 lit-html 渲染，即使是空字符串
+    // 避免使用 replaceChildren() 破坏 lit-html 的标记节点
+    const template = htmlStr ? viewHtml`${unsafeHTML(htmlStr)}` : viewHtml``;
     renderInto(el, template);
   }
 

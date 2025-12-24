@@ -9,13 +9,17 @@ import { loadUser, User, AddressData } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
 import { html as viewHtml } from '../utils/view';
-import { buildNewTX, BuildTXInfo } from './transaction';
+import { BuildTXInfo } from './transaction';
+import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX } from './txBuilder';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
 import { clearTransferDraft } from './transferDraft';
 import { getCoinName, COIN_TO_PGC_RATES, CoinTypeId } from '../config/constants';
 import { showLoading, hideLoading } from '../utils/loading';
+import { showToast } from '../utils/toast';
 import { DOM_IDS } from '../config/domIds';
+import { hasEncryptedKey, getPrivateKey } from '../utils/keyEncryption';
+import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 
 // ========================================
 // Type Definitions
@@ -166,11 +170,9 @@ export function initTransferSubmit(): void {
     const txResultActions = document.getElementById(DOM_IDS.txResultActions);
     const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
     const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
-    const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn);
     const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
     const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
     const snapViewBuild = viewBuildInfoBtn ? createDOMSnapshot(viewBuildInfoBtn) : null;
-    const snapBuildBtn = buildTxBtn ? createDOMSnapshot(buildTxBtn) : null;
 
     try {
       const { walletMap, walletGasTotal } = getWalletSnapshot();
@@ -324,7 +326,7 @@ export function initTransferSubmit(): void {
       }
       
       const typeBalances: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
-      const availableGas = walletGasTotal;
+      let availableGas = 0; // 只计算已选择源地址的 Gas
       
       sel.forEach((addr) => {
         const meta = getAddrMeta(addr);
@@ -334,6 +336,8 @@ export function initTransferSubmit(): void {
         if (typeBalances[type] !== undefined) {
           typeBalances[type] += val;
         }
+        // 累加选中地址的 Gas（interest）
+        availableGas += readAddressInterest(meta);
       });
       
       const ensureChangeAddrValid = (typeId: number): boolean => {
@@ -433,14 +437,13 @@ export function initTransferSubmit(): void {
       }
       
       if (removedAddrs.length) {
-        const raw = t('transfer.optimizedAddresses', { count: String(removedAddrs.length) });
-        const marker = '__COUNT__MARKER__';
-        const withMarker = raw.replace('{count}', marker);
-        const parts = withMarker.split(marker);
-        const tipContent = parts.length === 2
-          ? viewHtml`${parts[0]}<strong>${removedAddrs.length}</strong>${parts[1]}`
-          : viewHtml`${raw} <strong>${removedAddrs.length}</strong>`;
-        showModalTip(t('toast.addressOptimized'), tipContent, false);
+        // 使用 toast 提示，避免挡住后续的确认对话框
+        // showToast(message, type, title, duration)
+        showToast(
+          t('transfer.optimizedAddresses', { count: String(removedAddrs.length) }),
+          'info',
+          t('toast.addressOptimized')
+        );
       }
       
       if (extraPGC > 0) {
@@ -497,18 +500,129 @@ export function initTransferSubmit(): void {
         }
       }
 
-      // Show "Build Transaction" button and save BuildTXInfo
-      if (buildTxBtn) {
-        buildTxBtn.classList.remove('hidden');
-        buildTxBtn.dataset.buildInfo = JSON.stringify(build);
+      // ========== 直接构造交易（合并原 buildTxBtn 的功能）==========
+      console.log('[构造交易] ========== 开始构造 ==========');
+      
+      const user = loadUser();
+      if (!user) {
+        const errMsg = '用户数据不存在，请先登录';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('common.notLoggedIn'), errMsg, true);
+        return;
       }
+
+      if (!user.accountId) {
+        const errMsg = '账户 ID 不存在，请重新登录';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('common.notLoggedIn'), errMsg, true);
+        return;
+      }
+
+      // 检查必要条件
+      if (!user.orgNumber && !user.guarGroup?.groupID) {
+        const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        return;
+      }
+
+      // 检查账户私钥（支持加密私钥）
+      let accountPrivKey = user.keys?.privHex || user.privHex || '';
+      
+      // 如果没有明文私钥，检查是否有加密私钥
+      if (!accountPrivKey && user.accountId && hasEncryptedKey(user.accountId)) {
+        console.log('[构造交易] 检测到加密私钥，需要密码解密');
+        hideLoading(loadingId);
+        
+        const password = await showPasswordPrompt({
+          title: t('encryption.enterPassword') || '请输入密码',
+          description: t('encryption.decryptForTx') || '需要密码解密私钥以签署交易',
+          placeholder: t('encryption.passwordPlaceholder') || '请输入您的密码'
+        });
+        
+        if (!password) {
+          console.log('[构造交易] 用户取消密码输入');
+          return;
+        }
+        
+        const newLoadingId = showLoading(t('toast.buildingTx'));
+        
+        try {
+          accountPrivKey = await getPrivateKey(user.accountId, password);
+          console.log('[构造交易] 私钥解密成功');
+          if (!user.keys) user.keys = { privHex: '', pubXHex: '', pubYHex: '' };
+          user.keys.privHex = accountPrivKey;
+        } catch (decryptErr) {
+          hideLoading(newLoadingId);
+          const errMsg = t('encryption.wrongPassword') || '密码错误，无法解密私钥';
+          console.error('[构造交易] 私钥解密失败:', decryptErr);
+          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          return;
+        }
+      } else if (!accountPrivKey) {
+        const errMsg = t('txBuilder.noAccountPrivKey') || '账户私钥不存在';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        return;
+      }
+
+      // 检查钱包数据
+      const walletData = user.wallet?.addressMsg || {};
+      if (Object.keys(walletData).length === 0) {
+        const errMsg = t('txBuilder.noWalletData') || '钱包数据为空';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        return;
+      }
+
+      // 检查发送地址
+      const fromAddresses = build.UserAddress || [];
+      if (fromAddresses.length === 0) {
+        const errMsg = t('txBuilder.noFromAddress') || '未选择发送地址';
+        console.error('[构造交易] 错误:', errMsg);
+        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        return;
+      }
+
+      // 检查每个发送地址是否有私钥
+      for (const addr of fromAddresses) {
+        const addrData = walletData[addr];
+        if (!addrData) {
+          const errMsg = (t('txBuilder.addressNotFound') || '地址不存在: ') + addr.slice(0, 16) + '...';
+          console.error('[构造交易] 错误:', errMsg);
+          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          return;
+        }
+        if (!addrData.privHex) {
+          const errMsg = (t('txBuilder.noAddressPrivKey') || '地址缺少私钥: ') + addr.slice(0, 16) + '...';
+          console.error('[构造交易] 错误:', errMsg);
+          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          return;
+        }
+      }
+
+      // 使用新的交易构造器
+      const userNewTX = await buildTransactionFromLegacy(build, user);
+      console.log('[构造交易] 交易构造成功');
+      console.log('[构造交易] TXID:', userNewTX.TX.TXID);
+
+      // Save transaction data and show view button
+      const txInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
+      if (txInfoBtn) {
+        txInfoBtn.dataset.txData = serializeUserNewTX(userNewTX);
+        txInfoBtn.classList.remove('hidden');
+      }
+
+      showModalTip(t('toast.buildTxSuccess'), t('toast.buildTxSuccessDesc'), false);
+      
+      // 清除草稿
+      try { clearTransferDraft(); } catch (_) { }
     } catch (err: any) {
       // Restore stable UI state and storage snapshot
       try { if (snapTxErr) restoreFromSnapshot(snapTxErr); } catch (_) { }
       try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
       try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
       try { if (snapViewBuild) restoreFromSnapshot(snapViewBuild); } catch (_) { }
-      try { if (snapBuildBtn) restoreFromSnapshot(snapBuildBtn); } catch (_) { }
       try { restoreCheckpoint(checkpointId); } catch (_) { }
 
       const msg = err?.message || String(err);
@@ -530,56 +644,4 @@ export function initTransferSubmit(): void {
   tfBtn.dataset._bind = '1';
 }
 
-/**
- * Initialize build transaction button
- */
-export function initBuildTransaction(): void {
-  const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn) as HTMLButtonElement | null;
-  if (!buildTxBtn || buildTxBtn.dataset._buildBind) return;
-  
-  buildTxBtn.addEventListener('click', async () => {
-    const checkpointId = `transfer-build-${Date.now()}`;
-    createCheckpoint(checkpointId, ['auto-save-transfer-v1', 'form-draft-transfer-v1']);
-    const txResultActions = document.getElementById(DOM_IDS.txResultActions);
-    const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
-    const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
-    const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
-    const loadingId = showLoading(t('toast.buildingTx'));
-
-    try {
-      const buildInfoStr = buildTxBtn.dataset.buildInfo || '{}';
-      const buildInfo: BuildTXInfo = JSON.parse(buildInfoStr);
-      const user = loadUser();
-
-      if (!user || !user.accountId) {
-        showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true);
-        return;
-      }
-
-      // Call buildNewTX to construct transaction
-      const transaction = await buildNewTX(buildInfo, user);
-
-      // Save transaction data and show view button
-      const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
-      if (viewTxInfoBtn) {
-        viewTxInfoBtn.dataset.txData = JSON.stringify(transaction, null, 2);
-        viewTxInfoBtn.classList.remove('hidden');
-      }
-
-      showModalTip(t('toast.buildTxSuccess'), t('toast.buildTxSuccessDesc'), false);
-
-      // On successful build, clear drafts to reduce confusion and stale restores.
-      clearTransferDraft();
-    } catch (err: any) {
-      const errMsg = err.message || String(err);
-      try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
-      try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
-      try { restoreCheckpoint(checkpointId); } catch (_) { }
-      showModalTip(t('toast.buildTxFailed'), errMsg, true);
-    } finally {
-      hideLoading(loadingId);
-    }
-  });
-  
-  buildTxBtn.dataset._buildBind = '1';
-}
+// initBuildTransaction 已合并到 initTransferSubmit 中，不再需要单独的函数

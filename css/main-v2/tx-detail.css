@@ -180,6 +180,11 @@
   color: #f472b6;
 }
 
+.tx-detail-code .json-null {
+  color: #94a3b8;
+  font-style: italic;
+}
+
 .tx-detail-footer {
   display: flex;
   align-items: center;

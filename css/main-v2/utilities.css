@@ -74,6 +74,12 @@
   display: none !important;
 }
 
+/* 模态框错误文本需要显示 */
+.unified-success .success-text.tip--error {
+  display: block !important;
+  color: #dc2626;
+}
+
 .result {
   margin: 12px 24px 20px;
 }

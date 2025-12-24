@@ -120,7 +120,6 @@ export interface TransactionNamespace {
   buildNewTX: (params: any) => Promise<any>;
   exchangeRate: number;
   initTransferSubmit: () => void;
-  initBuildTransaction: () => void;
 }
 
 /** Crypto namespace */

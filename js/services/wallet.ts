@@ -170,12 +170,6 @@ export function resetWalletBindings(): void {
     delete tfSendBtn.dataset._bind;
   }
   
-  // Reset build transaction button binding
-  const buildTxBtn = document.getElementById(DOM_IDS.buildTxBtn) as HTMLElement | null;
-  if (buildTxBtn) {
-    delete buildTxBtn.dataset._buildBind;
-  }
-  
   // Reset recipient list binding
   const billList = document.getElementById(DOM_IDS.billList) as HTMLElement | null;
   if (billList) {
@@ -802,7 +796,28 @@ if (typeof window !== 'undefined') {
 // ============================================================================
 
 /**
+ * 生成随机十六进制字符串
+ */
+function generateRandomHex(length: number): string {
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * 生成模拟的 ECDSA 签名 (用于测试数据)
+ */
+function generateMockSignature(): { R: string; S: string } {
+  // 生成64位十六进制的 R 和 S 值 (模拟256位大整数)
+  return {
+    R: generateRandomHex(32),
+    S: generateRandomHex(32)
+  };
+}
+
+/**
  * Handle add balance to address
+ * 创建逼真的测试 UTXO 数据，包含完整的交易结构
  */
 export function handleAddToAddress(address: string): void {
   const current = getCurrentUser();
@@ -820,29 +835,92 @@ export function handleAddToAddress(address: string): void {
   found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
   found.utxos = found.utxos || {};
 
-  // Construct SubATX
-  const randomBytes = new Uint8Array(8);
-  crypto.getRandomValues(randomBytes);
-  const txid = Array.from(randomBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+  // 获取地址公钥用于构造 TXOutput
+  const pubXHex = found.pubXHex || '';
+  const pubYHex = found.pubYHex || '';
+  const guarGroupID = u.orgNumber || u.guarGroup?.groupID || '';
 
-  // Construct UTXOData with strict typing
+  // 生成逼真的交易数据
+  const txid = generateRandomHex(8); // 16字符的TXID
+  const prevTxid = generateRandomHex(8); // 模拟前置交易ID
+  
+  // 模拟逼真的区块位置 (随机生成合理范围内的值)
+  const blockNum = Math.floor(Math.random() * 10000) + 1000; // 区块号 1000-11000
+  const indexX = Math.floor(Math.random() * 50); // 担保交易序号 0-49
+  const indexY = Math.floor(Math.random() * 10); // 内部序号 0-9
+  
+  // 模拟时间戳 (最近7天内的随机时间)
+  const now = Date.now();
+  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const randomTime = Math.floor(Math.random() * (now - sevenDaysAgo)) + sevenDaysAgo;
+
+  // 构造逼真的 TXOutput
+  const txOutput = {
+    ToAddress: key,
+    ToValue: inc,
+    ToGuarGroupID: guarGroupID,
+    ToPublicKey: {
+      Curve: 'P256',
+      X: pubXHex ? BigInt('0x' + pubXHex).toString() : '0',
+      Y: pubYHex ? BigInt('0x' + pubYHex).toString() : '0',
+      XHex: pubXHex,
+      YHex: pubYHex
+    },
+    ToInterest: Math.random() * 0.5, // 随机小额利息
+    Type: typeId,
+    ToCoinType: typeId,
+    ToPeerID: '',
+    IsPayForGas: false,
+    IsGuarMake: false,
+    IsCrossChain: false
+  };
+
+  // 构造逼真的 TXInputNormal (模拟这笔 UTXO 的来源)
+  const mockInput = {
+    FromTXID: prevTxid,
+    FromTxPosition: {
+      Blocknum: blockNum - Math.floor(Math.random() * 100) - 1,
+      IndexX: Math.floor(Math.random() * 30),
+      IndexY: Math.floor(Math.random() * 5),
+      IndexZ: 0
+    },
+    FromAddress: generateRandomHex(20), // 模拟来源地址
+    IsGuarMake: false,
+    IsCommitteeMake: false,
+    IsCrossChain: false,
+    InputSignature: generateMockSignature(),
+    TXOutputHash: generateRandomHex(32) // 32字节哈希
+  };
+
+  // 构造完整的 UTXOData
   const utxoKey = `${txid}_0`;
   const utxoData: UTXOData = {
     UTXO: { 
       TXID: txid, 
       TXType: 0,
-      TXInputsNormal: [],
+      TXInputsNormal: [mockInput],
       TXInputsCertificate: [],
-      TXOutputs: [],
-      InterestAssign: { Gas: 0, Output: 0, BackAssign: {} },
+      TXOutputs: [txOutput],
+      InterestAssign: { 
+        Gas: 0.1, // 模拟Gas费
+        Output: 0, 
+        BackAssign: { [key]: 1.0 } // 利息回退给当前地址
+      },
       ExTXCerID: [],
       Data: []
     },
+    TXID: txid, // 兼容旧字段
     Value: inc,
     Type: typeId,
-    Time: Date.now(),
-    Position: { Blocknum: 0, IndexX: 0, IndexY: 0, IndexZ: 0 },
-    IsTXCerUTXO: false
+    Time: randomTime,
+    Position: { 
+      Blocknum: blockNum, 
+      IndexX: indexX, 
+      IndexY: indexY, 
+      IndexZ: 0 
+    },
+    IsTXCerUTXO: false,
+    TXOutputHash: generateRandomHex(32) // 输出哈希
   };
 
   // Add to UTXOs (no type assertion needed)
@@ -997,6 +1075,21 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   });
 }
 
+
+/**
+ * Update all address card balances from current user data
+ * 用于 store 订阅时实时更新地址卡片余额
+ */
+export function updateAllAddressCardBalances(u: User | null): void {
+  if (!u?.wallet?.addressMsg) return;
+  
+  const addressMsg = u.wallet.addressMsg;
+  for (const [address, data] of Object.entries(addressMsg)) {
+    if (data) {
+      updateAddressCardDisplay(address, data as AddressMetadata);
+    }
+  }
+}
 
 /**
  * Update USDT and breakdown display

@@ -56,13 +56,9 @@ const initialState: UnifiedModalState = {
 const stateBindings = {
   isVisible: [
     { selector: idSelector(DOM_IDS.actionOverlay), type: 'visible' as const }
-  ],
-  title: [
-    { selector: idSelector(DOM_IDS.unifiedTitle), type: 'text' as const }
-  ],
-  text: [
-    { selector: idSelector(DOM_IDS.unifiedText), type: 'text' as const }
   ]
+  // 注意：移除了 title 和 text 的绑定，因为这些元素由 showModalTip 等函数直接管理
+  // 混用 reactive 的 textContent 和 showModalTip 的 renderInto 会导致 lit-html ChildPart 错误
 };
 
 // 模态框状态实例
@@ -174,7 +170,9 @@ export function showUnifiedLoading(text?: string): void {
   
   // 更新加载文本元素
   const textEl = document.getElementById(DOM_IDS.actionOverlayText);
-  if (textEl) textEl.textContent = text || t('common.processing') || '处理中...';
+  if (textEl) {
+    textEl.textContent = text || t('common.processing') || '处理中...';
+  }
   
   updateModalUI('loading');
 }
@@ -344,12 +342,10 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
   if (textEl) {
     if (isError) textEl.classList.add('tip--error');
     else textEl.classList.remove('tip--error');
-    // Use textContent directly for strings to avoid lit-html issues
+    // 始终用 renderInto，让 lit-html 自己管理内容更新
     if (typeof content === 'string' || content === undefined) {
-      textEl.textContent = typeof content === 'string' ? content.trim() : '';
+      renderInto(textEl, html`${typeof content === 'string' ? content.trim() : ''}`);
     } else {
-      // For TemplateResult, clear innerHTML first then use renderInto
-      textEl.innerHTML = '';
       renderInto(textEl, content);
     }
   }
@@ -405,20 +401,24 @@ export function showConfirmModal(
       currentConfirmCancelHandler = null;
     }
 
-    if (titleEl) titleEl.textContent = title || t('modal.confirm') || '确认';
+    if (titleEl) {
+      titleEl.textContent = title || t('modal.confirm') || '确认';
+    }
     if (textEl) {
       textEl.classList.remove('tip--error');
-      // Use textContent directly instead of renderInto to avoid lit-html issues
+      // 始终用 renderInto，让 lit-html 自己管理内容更新
       if (typeof content === 'string' || content === undefined) {
-        textEl.textContent = typeof content === 'string' ? content.trim() : '';
+        renderInto(textEl, html`${typeof content === 'string' ? content.trim() : ''}`);
       } else {
-        // For TemplateResult, we need to use renderInto but clear the element first
-        textEl.innerHTML = '';
         renderInto(textEl, content);
       }
     }
-    if (okText) okEl.textContent = okText;
-    if (cancelText) cancelEl.textContent = cancelText;
+    if (okText) {
+      okEl.textContent = okText;
+    }
+    if (cancelText) {
+      cancelEl.textContent = cancelText;
+    }
 
     modal.classList.remove('hidden');
 

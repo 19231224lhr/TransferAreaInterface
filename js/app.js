@@ -167,7 +167,7 @@ import {
   initAdvancedOptions 
 } from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
-import { initTransferSubmit, initBuildTransaction } from './services/transfer';
+import { initTransferSubmit } from './services/transfer';
 import { updateWalletStruct } from './services/walletStruct.js';
 
 // Router
@@ -395,7 +395,6 @@ Object.assign(PP.transaction, {
   buildNewTX,
   exchangeRate,
   initTransferSubmit,
-  initBuildTransaction,
 });
 
 // Crypto

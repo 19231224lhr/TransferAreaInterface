@@ -53,6 +53,8 @@ export default {
   'encryption.migrationDesc': '检测到未加密的私钥，请设置密码以加密存储',
   'encryption.encryptSuccess': '私钥已加密保存',
   'encryption.decryptFailed': '解密失败，请检查密码',
+  'encryption.decryptForTx': '构造交易需要使用您的账户私钥进行签名。请输入密码解锁私钥。',
+  'encryption.passwordPlaceholder': '请输入您的密码',
 
   // 页面标题
   'page.title': 'PanguPay',
@@ -486,11 +488,29 @@ export default {
   'toast.buildTxSuccess': '交易构造成功',
   'toast.buildTxSuccessDesc': '已成功构造 Transaction 结构体，点击下方按钮查看详情',
   'toast.buildTxFailed': '构造失败',
+  'toast.submitTxSuccess': '交易提交成功',
+  'toast.submitTxFailed': '交易提交失败',
   'toast.importFailed': '导入失败',
   'toast.importSuccess': '导入成功',
   'toast.importSuccessDesc': '地址已成功导入到当前钱包',
   'toast.cannotParseAddress': '无法解析地址',
   'toast.addressExists': '该地址已存在，不能重复导入',
+
+  // 交易构造错误
+  'txBuilder.notInGroup': '用户未加入担保组织',
+  'txBuilder.noGuarGroup': '用户未加入担保组织',
+  'txBuilder.noUserId': '用户 ID 不存在',
+  'txBuilder.noAccountPrivKey': '账户私钥不存在',
+  'txBuilder.noAddressPrivKey': '地址缺少私钥',
+  'txBuilder.insufficientBalance': '余额不足',
+  'txBuilder.noChangeAddress': '缺少找零地址',
+  'txBuilder.changeAddressNotFound': '找零地址不存在',
+  'txBuilder.changeAddressNoPublicKey': '找零地址缺少公钥',
+  'txBuilder.cannotGetUtxoOutput': '无法获取 UTXO 的原始输出数据',
+  'txBuilder.noWalletData': '钱包数据为空，请先添加地址',
+  'txBuilder.noFromAddress': '未选择发送地址',
+  'txBuilder.addressNotFound': '地址不存在',
+  'txBuilder.utxoDataError': 'UTXO 数据错误',
 
   // 验证消息
   'validation.nickname.empty': '昵称不能为空',
