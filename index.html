@@ -471,6 +471,37 @@
         </div>
       </div>
     </div>
+    <!-- Import Address Preview Modal -->
+    <div id="importPreviewModal" class="modal hidden" role="dialog" aria-modal="true">
+      <div class="dialog import-preview-dialog">
+        <h3 id="importPreviewTitle" data-i18n="walletModal.importPreviewTitle">导入地址预览</h3>
+        <div class="import-preview-content">
+          <p class="import-preview-tip" data-i18n="walletModal.importPreviewTip">请确认以下地址信息是否正确：</p>
+          <div class="import-preview-info">
+            <div class="preview-row">
+              <span class="preview-label" data-i18n="walletModal.addressLabel">地址</span>
+              <span id="importPreviewAddress" class="preview-value preview-address"></span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label" data-i18n="walletModal.publicKeyXLabel">公钥 X</span>
+              <span id="importPreviewPubX" class="preview-value preview-pubkey"></span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label" data-i18n="walletModal.publicKeyYLabel">公钥 Y</span>
+              <span id="importPreviewPubY" class="preview-value preview-pubkey"></span>
+            </div>
+            <div class="preview-row">
+              <span class="preview-label" data-i18n="walletModal.coinTypeLabel">币种类型</span>
+              <span id="importPreviewCoinType" class="preview-value"></span>
+            </div>
+          </div>
+        </div>
+        <div class="actions actions--split">
+          <button id="importPreviewCancelBtn" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="importPreviewConfirmBtn" class="btn primary" data-i18n="walletModal.confirmImport">确认导入</button>
+        </div>
+      </div>
+    </div>
     <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog" style="max-width: 600px; width: 90%;">
         <h3 id="detailModalTitle">详细信息</h3>

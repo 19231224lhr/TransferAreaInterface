@@ -328,7 +328,17 @@ export const DOM_IDS = {
   woExitBtn: 'woExitBtn',
   woGroupID: 'woGroupID',
   woPledge: 'woPledge',
-  woJoinBtn: 'woJoinBtn'
+  woJoinBtn: 'woJoinBtn',
+
+  // Import Address Preview Modal
+  importPreviewModal: 'importPreviewModal',
+  importPreviewTitle: 'importPreviewTitle',
+  importPreviewAddress: 'importPreviewAddress',
+  importPreviewPubX: 'importPreviewPubX',
+  importPreviewPubY: 'importPreviewPubY',
+  importPreviewCoinType: 'importPreviewCoinType',
+  importPreviewCancelBtn: 'importPreviewCancelBtn',
+  importPreviewConfirmBtn: 'importPreviewConfirmBtn'
 } as const;
 
 export type DomId = typeof DOM_IDS[keyof typeof DOM_IDS];

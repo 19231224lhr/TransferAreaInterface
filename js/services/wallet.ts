@@ -34,6 +34,7 @@ import {
   isShowingSkeleton
 } from '../utils/walletSkeleton';
 import { UTXOData } from '../types/blockchain';
+import { createNewAddressOnBackend, isUserInOrganization } from './address';
 
 // ============================================================================
 // Types
@@ -93,6 +94,19 @@ interface WalletSnapshot {
 let walletMap: Record<string, AddressMetadata> = {};
 let srcAddrs: string[] = [];
 let __addrMode: 'create' | 'import' = 'create';
+
+/**
+ * Pending import data for preview modal
+ */
+interface PendingImportData {
+  privHex: string;
+  address: string;
+  pubXHex: string;
+  pubYHex: string;
+  coinType: number;
+}
+
+let __pendingImport: PendingImportData | null = null;
 
 function getCurrentUser(): User | null {
   return (selectUser(store.getState()) as User | null) || null;
@@ -476,6 +490,13 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
 /**
  * Handle address deletion
  * Exported for use by event delegation system
+ * 
+ * If user is in a guarantor organization, this will:
+ * 1. Show confirmation modal
+ * 2. Call backend unbind-address API
+ * 3. Only delete locally if backend succeeds
+ * 
+ * If user is NOT in an organization, it will just delete locally.
  */
 export function handleDeleteAddress(address: string): void {
   const modal = document.getElementById(DOM_IDS.confirmDelModal);
@@ -489,13 +510,82 @@ export function handleDeleteAddress(address: string): void {
   if (textEl) textEl.textContent = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
   if (modal) modal.classList.remove('hidden');
   
-  const doDel = () => {
+  const doDel = async () => {
     if (modal) modal.classList.add('hidden');
     const current = getCurrentUser();
     if (!current) return;
-    const u = deepClone(current);
     
     const key = String(address).toLowerCase();
+    
+    // Get address metadata for backend API
+    const addressData = current.wallet?.addressMsg?.[address] || 
+                        current.wallet?.addressMsg?.[key] ||
+                        Object.entries(current.wallet?.addressMsg || {}).find(
+                          ([k]) => String(k).toLowerCase() === key
+                        )?.[1];
+    
+    // Check if user is in a guarantor organization
+    const group = getJoinedGroup();
+    const isInOrg = !!(group && group.groupID);
+    
+    if (isInOrg && addressData) {
+      // User is in organization - need to call backend API first
+      const pubXHex = addressData.pubXHex;
+      const pubYHex = addressData.pubYHex;
+      const addressType = Number(addressData.type || 0);
+      
+      if (!pubXHex || !pubYHex) {
+        // No public key info - show error
+        const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
+        if (at) at.textContent = t('wallet.deleteFailed', '删除失败');
+        if (ax) { 
+          ax.classList.add('tip--error'); 
+          ax.textContent = t('error.addressPublicKeyMissing', '地址公钥信息缺失，无法解绑'); 
+        }
+        if (am) am.classList.remove('hidden');
+        const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
+        ok1?.addEventListener('click', h2);
+        return;
+      }
+      
+      // Show loading animation
+      const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+      showUnifiedLoading(t('address.unbinding', '正在解绑地址...'));
+      
+      try {
+        // Call backend unbind API
+        const { unbindAddressOnBackend } = await import('./address');
+        const result = await unbindAddressOnBackend(address, pubXHex, pubYHex, addressType);
+        
+        hideUnifiedOverlay();
+        
+        if (!result.success) {
+          // Backend failed - show error, don't delete locally
+          // Type narrowing: result is now { success: false; error: string }
+          const errorMsg = 'error' in result ? result.error : t('error.unknownError', '未知错误');
+          showUnifiedError(
+            t('wallet.deleteFailed', '删除失败'),
+            errorMsg
+          );
+          return;
+        }
+        
+        // Backend succeeded - proceed with local deletion
+        console.info('[Wallet] ✓ Address unbound on backend, proceeding with local deletion');
+        
+      } catch (error) {
+        hideUnifiedOverlay();
+        console.error('[Wallet] ✗ Unbind address error:', error);
+        showUnifiedError(
+          t('wallet.deleteFailed', '删除失败'),
+          error instanceof Error ? error.message : t('error.unknownError', '未知错误')
+        );
+        return;
+      }
+    }
+    
+    // Proceed with local deletion (either not in org, or backend succeeded)
+    const u = deepClone(current);
     const isMain = (u.address && u.address.toLowerCase() === key);
     
     if (u.wallet?.addressMsg) {
@@ -518,14 +608,11 @@ export function handleDeleteAddress(address: string): void {
     // 2. Store subscription can't know which specific card to remove
     renderWallet();
     
-    // Show success modal
-    const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
-    if (at) at.textContent = t('wallet.deleteSuccess');
-    if (ax) { ax.classList.remove('tip--error'); ax.textContent = t('wallet.deleteSuccessDesc'); }
-    if (am) am.classList.remove('hidden');
-    
-    const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
-    ok1?.addEventListener('click', h2);
+    // Show success toast (supports dark mode automatically via CSS)
+    showSuccessToast(
+      t('wallet.deleteSuccessDesc', '已删除该地址及其相关本地数据'),
+      t('wallet.deleteSuccess', '删除成功')
+    );
   };
   
   const cancel = () => {
@@ -978,6 +1065,160 @@ export function hideAddrModal(): void {
   setAddrError('');
 }
 
+// ============================================================================
+// Import Preview Modal Functions
+// ============================================================================
+
+/**
+ * Show import preview modal with parsed address data
+ */
+function showImportPreviewModal(data: PendingImportData): void {
+  const modal = document.getElementById(DOM_IDS.importPreviewModal);
+  const addressEl = document.getElementById(DOM_IDS.importPreviewAddress);
+  const pubXEl = document.getElementById(DOM_IDS.importPreviewPubX);
+  const pubYEl = document.getElementById(DOM_IDS.importPreviewPubY);
+  const coinTypeEl = document.getElementById(DOM_IDS.importPreviewCoinType);
+  
+  if (addressEl) addressEl.textContent = data.address;
+  if (pubXEl) pubXEl.textContent = data.pubXHex || '-';
+  if (pubYEl) pubYEl.textContent = data.pubYHex || '-';
+  if (coinTypeEl) coinTypeEl.textContent = getCoinName(data.coinType);
+  
+  if (modal) modal.classList.remove('hidden');
+}
+
+/**
+ * Hide import preview modal
+ */
+function hideImportPreviewModal(): void {
+  const modal = document.getElementById(DOM_IDS.importPreviewModal);
+  if (modal) modal.classList.add('hidden');
+  __pendingImport = null;
+}
+
+/**
+ * Handle import preview confirm button
+ * Calls backend API if user is in organization, then saves locally
+ */
+async function handleImportPreviewConfirm(): Promise<void> {
+  if (!__pendingImport) {
+    hideImportPreviewModal();
+    return;
+  }
+  
+  const { privHex, address, pubXHex, pubYHex, coinType } = __pendingImport;
+  
+  hideImportPreviewModal();
+  
+  // Show loading animation
+  const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+  showUnifiedLoading(t('walletModal.importing', '正在导入...'));
+  
+  try {
+    // Check if user is in organization - if so, sync with backend first
+    if (isUserInOrganization()) {
+      console.debug('[Wallet] User is in organization, syncing with backend...');
+      
+      const result = await createNewAddressOnBackend(address, pubXHex, pubYHex, coinType);
+      
+      if (!result.success) {
+        hideUnifiedOverlay();
+        // Type narrowing: result is now { success: false; error: string }
+        const errorMsg = 'error' in result ? result.error : t('error.unknownError');
+        showUnifiedError(
+          t('toast.importFailed', '导入失败'),
+          errorMsg
+        );
+        return;
+      }
+      
+      console.info('[Wallet] ✓ Address synced with backend');
+    }
+    
+    // Proceed with local import
+    await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
+    
+    hideUnifiedOverlay();
+    showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
+    
+  } catch (error) {
+    hideUnifiedOverlay();
+    console.error('[Wallet] ✗ Import address error:', error);
+    showUnifiedError(
+      t('toast.importFailed', '导入失败'),
+      error instanceof Error ? error.message : t('error.unknownError')
+    );
+  }
+}
+
+/**
+ * Import address with pre-parsed data (used by preview modal confirm)
+ */
+async function importAddressInPlaceWithData(
+  priv: string,
+  address: string,
+  pubXHex: string,
+  pubYHex: string,
+  coinType: number
+): Promise<void> {
+  const u2 = getCurrentUser();
+  if (!u2?.accountId) { 
+    throw new Error(t('modal.pleaseLoginFirst')); 
+  }
+  
+  const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
+  const addr = address.toLowerCase();
+  
+  acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { 
+    type: coinType, 
+    utxos: {}, 
+    txCers: {}, 
+    value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, 
+    estInterest: 0, 
+    origin: 'imported' 
+  };
+  
+  const normPriv = priv.replace(/^0x/i, '');
+  const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
+  addrMeta.privHex = normPriv;
+  addrMeta.pubXHex = pubXHex;
+  addrMeta.pubYHex = pubYHex;
+  
+  saveUser(acc);
+  
+  // Encrypt the imported address private key
+  try {
+    if (normPriv && u2.accountId && !hasEncryptedKey(u2.accountId)) {
+      await encryptAndSavePrivateKey(`${u2.accountId}_${addr}`, normPriv);
+    }
+  } catch (encryptErr) {
+    console.warn('Imported address key encryption skipped:', encryptErr);
+  }
+  
+  try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+  
+  renderWallet();
+  try { updateWalletBrief(); } catch { }
+}
+
+/**
+ * Initialize import preview modal buttons
+ */
+export function initImportPreviewModal(): void {
+  const cancelBtn = document.getElementById(DOM_IDS.importPreviewCancelBtn);
+  const confirmBtn = document.getElementById(DOM_IDS.importPreviewConfirmBtn);
+  
+  if (cancelBtn && !cancelBtn.dataset._previewBind) {
+    cancelBtn.onclick = hideImportPreviewModal;
+    cancelBtn.dataset._previewBind = '1';
+  }
+  
+  if (confirmBtn && !confirmBtn.dataset._previewBind) {
+    confirmBtn.onclick = handleImportPreviewConfirm;
+    confirmBtn.dataset._previewBind = '1';
+  }
+}
+
 /**
  * Set address error message
  */
@@ -1107,8 +1348,53 @@ export async function handleAddrModalOk(): Promise<void> {
     }
     
     setAddrError('');
-    hideAddrModal();
-    await importAddressInPlace(v);
+    
+    // Parse the private key to get address info for preview
+    try {
+      const data = await importFromPrivHex(v);
+      const addr = (data.address || '').toLowerCase();
+      
+      if (!addr) {
+        showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed'));
+        return;
+      }
+      
+      // Check for duplicate address
+      const u2 = getCurrentUser();
+      if (u2) {
+        const map = u2.wallet?.addressMsg || {};
+        const lowerMain = (u2.address || '').toLowerCase();
+        
+        if (lowerMain && lowerMain === addr) {
+          showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+          return;
+        }
+        
+        for (const k in map) { 
+          if (Object.prototype.hasOwnProperty.call(map, k)) { 
+            if (String(k).toLowerCase() === addr) { 
+              showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+              return;
+            } 
+          } 
+        }
+      }
+      
+      // Store pending import data and show preview modal
+      __pendingImport = {
+        privHex: v,
+        address: addr,
+        pubXHex: data.pubXHex || '',
+        pubYHex: data.pubYHex || '',
+        coinType: 0 // Default to PGC
+      };
+      
+      hideAddrModal();
+      showImportPreviewModal(__pendingImport);
+      
+    } catch (err) {
+      showErrorToast((err as Error).message || String(err), t('toast.importFailed'));
+    }
   }
 }
 
@@ -1153,6 +1439,9 @@ export function initAddressModal(): void {
     addrOkBtn.onclick = handleAddrModalOk;
     addrOkBtn.dataset._walletBind = '1';
   }
+  
+  // Initialize import preview modal buttons
+  initImportPreviewModal();
 }
 
 

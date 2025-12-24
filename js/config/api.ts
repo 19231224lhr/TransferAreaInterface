@@ -67,6 +67,7 @@ export const API_ENDPOINTS = {
   // AssignNode endpoints (动态路由: /api/v1/{groupID}/assign/*)
   ASSIGN_HEALTH: (groupId: string) => `/api/v1/${groupId}/assign/health`,
   ASSIGN_NEW_ADDRESS: (groupId: string) => `/api/v1/${groupId}/assign/new-address`,
+  ASSIGN_UNBIND_ADDRESS: (groupId: string) => `/api/v1/${groupId}/assign/unbind-address`,
   ASSIGN_FLOW_APPLY: (groupId: string) => `/api/v1/${groupId}/assign/flow-apply`,
   ASSIGN_SUBMIT_TX: (groupId: string) => `/api/v1/${groupId}/assign/submit-tx`,
   ASSIGN_RE_ONLINE: (groupId: string) => `/api/v1/${groupId}/assign/re-online`,

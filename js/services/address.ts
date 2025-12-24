@@ -220,3 +220,214 @@ export function isUserInOrganization(): boolean {
   const group = getJoinedGroup();
   return !!(group && group.groupID);
 }
+
+// ============================================================================
+// Unbind Address Types
+// ============================================================================
+
+/**
+ * User address binding/unbinding message (Go: UserAddressBindingMsg)
+ * 
+ * Backend structure:
+ * ```go
+ * type UserAddressBindingMsg struct {
+ *     Op        int            // Operation type (0=unbind, 1=rebind)
+ *     UserID    string         // User ID
+ *     Address   string         // Address to unbind
+ *     PublicKey PublicKeyNew   // Address public key
+ *     Type      int            // Address type
+ *     TimeStamp uint64         // Request timestamp
+ *     Sig       EcdsaSignature // User signature
+ * }
+ * ```
+ */
+export interface UserAddressBindingMsg {
+  Op: number;                   // Operation type (0=unbind)
+  UserID: string;               // 8-digit user ID
+  Address: string;              // Address to unbind
+  PublicKey: PublicKeyNew;      // Address public key (P-256)
+  Type: number;                 // Address type (0=PGC, 1=BTC, 2=ETH)
+  TimeStamp: number;            // Request timestamp (Unix seconds)
+  Sig?: EcdsaSignature;         // User signature (added after signing)
+}
+
+/**
+ * Response from unbind-address API
+ */
+export interface UnbindAddressResponse {
+  success: boolean;
+  message: string;
+}
+
+// ============================================================================
+// Unbind Address API
+// ============================================================================
+
+/**
+ * Unbind (soft delete) an address from backend AssignNode
+ * 
+ * This function:
+ * 1. Validates user is logged in and in a guarantor organization
+ * 2. Gets the user's private key for signing
+ * 3. Builds the UserAddressBindingMsg request
+ * 4. Signs the request with user's account private key
+ * 5. Sends to AssignNode's unbind-address endpoint
+ * 
+ * ⚠️ Important: This uses the ACCOUNT private key for signing, not the address private key!
+ * 
+ * @param address - The address to unbind (40 hex chars)
+ * @param pubXHex - Address public key X coordinate (hex)
+ * @param pubYHex - Address public key Y coordinate (hex)
+ * @param addressType - Address type (0=PGC, 1=BTC, 2=ETH)
+ * @returns Result with success status
+ */
+export async function unbindAddressOnBackend(
+  address: string,
+  pubXHex: string,
+  pubYHex: string,
+  addressType: number = 0
+): Promise<AddressResult<UnbindAddressResponse>> {
+  try {
+    // 1. Validate user is logged in
+    const user = loadUser();
+    if (!user || !user.accountId) {
+      return { success: false, error: t('error.userNotLoggedIn') };
+    }
+
+    // 2. Check if user is in a guarantor organization
+    const group = getJoinedGroup();
+    if (!group || !group.groupID) {
+      console.warn('[Address] User not in a guarantor organization, skipping backend unbind');
+      // Return success since local deletion can proceed
+      return { 
+        success: true, 
+        data: { 
+          success: true, 
+          message: 'Address unbound locally (not in organization)' 
+        } 
+      };
+    }
+
+    // 3. Get decrypted ACCOUNT private key for signing
+    // ⚠️ Important: Use account private key, NOT address private key!
+    const privHex = await getDecryptedPrivateKeyWithPrompt(
+      user.accountId,
+      t('encryption.unlockForSigning', '解锁私钥进行签名'),
+      t('encryption.unlockForUnbindAddress', '解绑地址需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。')
+    );
+
+    if (!privHex) {
+      return { success: false, error: t('error.privateKeyFetchFailed') };
+    }
+
+    // 4. Build request body (without signature first)
+    const timestamp = Math.floor(Date.now() / 1000);
+    const requestBody: UserAddressBindingMsg = {
+      Op: 0, // 0 = unbind
+      UserID: user.accountId,
+      Address: address,
+      PublicKey: convertHexToPublicKey(pubXHex, pubYHex),
+      Type: addressType,
+      TimeStamp: timestamp
+      // Note: Sig will be added after signing
+    };
+
+    console.debug('[Address] Building unbind-address request:', {
+      Address: address,
+      UserID: user.accountId,
+      Type: addressType,
+      TimeStamp: timestamp
+    });
+
+    // 5. Sign the request (Sig field will be excluded automatically)
+    const signature = signStruct(
+      requestBody as unknown as Record<string, unknown>,
+      privHex,
+      ['Sig']
+    );
+    requestBody.Sig = signature;
+
+    console.debug('[Address] Request signed successfully');
+
+    // 6. Determine API endpoint
+    const groupInfo = group as GroupInfo;
+    let apiUrl: string;
+    
+    if (groupInfo.assignAPIEndpoint) {
+      const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
+      apiUrl = `${assignNodeUrl}/api/v1/${group.groupID}/assign/unbind-address`;
+    } else {
+      apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_UNBIND_ADDRESS(group.groupID)}`;
+    }
+
+    console.debug('[Address] Sending unbind request to:', apiUrl);
+
+    // 7. Send request
+    const serializedBody = serializeForBackend(requestBody);
+    console.debug('[Address] Request body:', serializedBody);
+
+    const response = await fetch(apiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: serializedBody
+    });
+
+    // 8. Handle response
+    let responseData: UnbindAddressResponse;
+    try {
+      responseData = await response.json();
+    } catch {
+      responseData = { 
+        success: response.ok, 
+        message: response.ok ? 'Address unbound' : `HTTP ${response.status}` 
+      };
+    }
+
+    if (!response.ok) {
+      console.error('[Address] ✗ Unbind address failed:', responseData);
+      
+      // Parse specific error messages
+      const errorMsg = responseData.message || (responseData as any).error || '';
+      
+      if (errorMsg.includes('user not found in group')) {
+        return { success: false, error: t('error.userNotInGroup', '用户不在担保组织中') };
+      }
+      if (errorMsg.includes('address not found')) {
+        return { success: false, error: t('error.addressNotFound', '地址不存在') };
+      }
+      if (errorMsg.includes('already revoked')) {
+        return { success: false, error: t('error.addressAlreadyRevoked', '地址已被解绑') };
+      }
+      if (errorMsg.includes('signature verification')) {
+        return { success: false, error: t('error.signatureVerificationFailed', '签名验证失败') };
+      }
+      
+      return {
+        success: false,
+        error: errorMsg || `${t('error.networkError')}: HTTP ${response.status}`
+      };
+    }
+
+    console.info('[Address] ✓ Address unbound successfully on backend');
+    return { success: true, data: responseData };
+
+  } catch (error) {
+    console.error('[Address] ✗ Unbind address error:', error);
+    
+    if (error instanceof ApiRequestError) {
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+    
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : t('error.unknownError')
+    };
+  }
+}
+

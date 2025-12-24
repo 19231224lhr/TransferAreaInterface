@@ -48,6 +48,7 @@ export default {
   'encryption.unlockForJoinGroup': 'Joining a guarantor organization requires signing with your account private key. Please enter password to unlock it.',
   'encryption.unlockForLeaveGroup': 'Leaving a guarantor organization requires signing with your account private key. Please enter password to unlock it.',
   'encryption.unlockForNewAddress': 'Creating a new address requires signing with your account private key. Please enter password to unlock it.',
+  'encryption.unlockForUnbindAddress': 'Unbinding an address requires signing with your account private key. Please enter password to unlock it.',
   'encryption.migrationTitle': 'Security Upgrade',
   'encryption.migrationDesc': 'Unencrypted private key detected. Please set a password to encrypt it.',
   'encryption.encryptSuccess': 'Private key encrypted successfully',
@@ -317,6 +318,7 @@ export default {
   'wallet.exportPrivateKey': 'Export Private Key',
   'wallet.deleteSuccess': 'Deleted Successfully',
   'wallet.deleteSuccessDesc': 'Address and related local data have been deleted',
+  'wallet.deleteFailed': 'Delete Failed',
   'wallet.exportFailed': 'Export Failed',
   'wallet.noPrivateKey': 'No private key available for this address',
   'wallet.copy': 'Copy',
@@ -506,6 +508,9 @@ export default {
   'address.deleteCancel': 'Cancel',
   'address.backendSyncFailed': 'Backend sync failed, address created locally',
   'address.createFailed': 'Failed to create address',
+  'address.unbinding': 'Unbinding address...',
+  'address.unbindSuccess': 'Address unbound successfully',
+  'address.unbindFailed': 'Failed to unbind address',
 
   // Loading Stages
   'loading.initializing': 'Initializing',
@@ -556,6 +561,14 @@ export default {
   'walletModal.privateKeyDoNotShare': 'Private Key (Do Not Share)',
   'walletModal.privateKeyFormatError': 'Private key format incorrect: must be 64-character hex string',
   'walletModal.pleaseEnterPrivateKey': 'Please enter private key Hex',
+  'walletModal.importPreviewTitle': 'Import Address Preview',
+  'walletModal.importPreviewTip': 'Please confirm the following address information:',
+  'walletModal.addressLabel': 'Address',
+  'walletModal.publicKeyXLabel': 'Public Key X',
+  'walletModal.publicKeyYLabel': 'Public Key Y',
+  'walletModal.coinTypeLabel': 'Coin Type',
+  'walletModal.confirmImport': 'Confirm Import',
+  'walletModal.importing': 'Importing address...',
 
   // Guarantor Organization Detail Page
   'groupDetail.title': 'Guarantor Organization',
@@ -668,6 +681,11 @@ export default {
   'error.unknownError': 'Unknown error',
   'error.joinGroupFailed': 'Failed to join guarantor organization',
   'error.leaveGroupFailed': 'Failed to leave guarantor organization',
+  'error.userNotInGroup': 'User is not in the guarantor organization',
+  'error.addressNotFound': 'Address not found',
+  'error.addressAlreadyRevoked': 'Address has already been unbound',
+  'error.signatureVerificationFailed': 'Signature verification failed',
+  'error.addressPublicKeyMissing': 'Address public key information is missing, cannot unbind',
 
   // Transfer related
   'transfer.optimizedAddresses': 'Detected {count} source addresses not used in this transfer, automatically optimized',

@@ -48,6 +48,7 @@ export default {
   'encryption.unlockForJoinGroup': '加入担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.unlockForLeaveGroup': '退出担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.unlockForNewAddress': '创建新地址需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
+  'encryption.unlockForUnbindAddress': '解绑地址需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.migrationTitle': '安全升级',
   'encryption.migrationDesc': '检测到未加密的私钥，请设置密码以加密存储',
   'encryption.encryptSuccess': '私钥已加密保存',
@@ -317,6 +318,7 @@ export default {
   'wallet.exportPrivateKey': '导出私钥',
   'wallet.deleteSuccess': '删除成功',
   'wallet.deleteSuccessDesc': '已删除该地址及其相关本地数据',
+  'wallet.deleteFailed': '删除失败',
   'wallet.exportFailed': '导出失败',
   'wallet.noPrivateKey': '该地址无可导出私钥',
   'wallet.copy': '复制',
@@ -506,6 +508,9 @@ export default {
   'address.deleteCancel': '取消',
   'address.backendSyncFailed': '后端同步失败，地址已本地创建',
   'address.createFailed': '创建地址失败',
+  'address.unbinding': '正在解绑地址...',
+  'address.unbindSuccess': '地址解绑成功',
+  'address.unbindFailed': '地址解绑失败',
 
   // 加载阶段
   'loading.initializing': '正在初始化',
@@ -556,6 +561,14 @@ export default {
   'walletModal.privateKeyDoNotShare': '私钥 (请勿泄露)',
   'walletModal.privateKeyFormatError': '私钥格式不正确：需为 64 位十六进制字符串',
   'walletModal.pleaseEnterPrivateKey': '请输入私钥 Hex',
+  'walletModal.importPreviewTitle': '导入地址预览',
+  'walletModal.importPreviewTip': '请确认以下地址信息是否正确：',
+  'walletModal.addressLabel': '地址',
+  'walletModal.publicKeyXLabel': '公钥 X',
+  'walletModal.publicKeyYLabel': '公钥 Y',
+  'walletModal.coinTypeLabel': '币种类型',
+  'walletModal.confirmImport': '确认导入',
+  'walletModal.importing': '正在导入地址...',
 
   // 担保组织详情页
   'groupDetail.title': '担保组织',
@@ -668,6 +681,11 @@ export default {
   'error.unknownError': '未知错误',
   'error.joinGroupFailed': '加入担保组织失败',
   'error.leaveGroupFailed': '退出担保组织失败',
+  'error.userNotInGroup': '用户不在担保组织中',
+  'error.addressNotFound': '地址不存在',
+  'error.addressAlreadyRevoked': '地址已被解绑',
+  'error.signatureVerificationFailed': '签名验证失败',
+  'error.addressPublicKeyMissing': '地址公钥信息缺失，无法解绑',
 
   // 转账相关
   'transfer.optimizedAddresses': '检测到本次转账中有 {count} 个来源地址在本次转账中未被实际使用，已自动优化',
