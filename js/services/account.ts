@@ -348,6 +348,15 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
       showUnifiedLoading(t('modal.addingWalletAddress'));
       
       if (!result.success) {
+        // Check if user cancelled password input
+        if (result.error === 'USER_CANCELLED') {
+          console.info('[Account] User cancelled password input for new address');
+          hideUnifiedOverlay();
+          const { showMiniToast } = await import('../utils/toast.js');
+          showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+          return; // Exit without saving locally
+        }
+        
         // Backend failed - do NOT save locally, show error
         console.error('[Account] ✗ Backend sync failed:', result.error);
         hideUnifiedOverlay();

@@ -234,6 +234,13 @@ export async function handleLeaveOrg() {
     hideUnifiedOverlay();
     
     if (!result.success) {
+      // Check if user cancelled password input
+      if (result.error === 'USER_CANCELLED') {
+        console.info(`[GroupDetail] User cancelled password input for leave`);
+        showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        return;
+      }
+      
       console.error(`[GroupDetail] ✗ Failed to leave organization:`, result.error);
       showUnifiedError(
         t('join.leaveFailed') || '退出失败',

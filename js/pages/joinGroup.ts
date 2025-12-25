@@ -690,6 +690,7 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
   try {
     // 显示加载动画
     const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+    const { showMiniToast } = await import('../utils/toast.js');
     
     showUnifiedLoading(t('join.joiningOrg'));
     if (joinRecBtn) joinRecBtn.disabled = true;
@@ -704,6 +705,13 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
     hideUnifiedOverlay();
     
     if (!result.success) {
+      // Check if user cancelled password input
+      if (result.error === 'USER_CANCELLED') {
+        console.info(`[JoinGroup] User cancelled password input`);
+        showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        return;
+      }
+      
       console.error(`[JoinGroup] ✗ Failed to join organization:`, result.error);
       showUnifiedError(
         t('join.joinFailed') || '加入失败',

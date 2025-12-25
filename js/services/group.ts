@@ -500,7 +500,8 @@ export async function joinGuarGroup(
     );
     
     if (!privHex) {
-      return { success: false, error: t('error.privateKeyFetchFailed') };
+      // User cancelled password input - return special error code
+      return { success: false, error: 'USER_CANCELLED' };
     }
     
     // 2. Build AddressMsg from user's sub-addresses only
@@ -639,7 +640,8 @@ export async function leaveGuarGroup(
     );
     
     if (!privHex) {
-      return { success: false, error: t('error.privateKeyFetchFailed') };
+      // User cancelled password input - return special error code
+      return { success: false, error: 'USER_CANCELLED' };
     }
     
     // 2. Build request body

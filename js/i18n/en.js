@@ -23,6 +23,7 @@ export default {
   'common.expandMore': 'Show More',
   'common.collapseMore': 'Show Less',
   'common.separator': ', ',
+  'common.operationCancelled': 'Operation cancelled',
 
   // Authentication
   'auth.loginRequired': 'Login Required',
@@ -581,6 +582,8 @@ export default {
   'tx.insufficientGasNoMint': 'Insufficient Gas: Transaction Gas and transfer Gas exceed available wallet Gas',
   'tx.duplicateAddress': 'Duplicate address',
   'tx.addressNotFound': 'Address information not found',
+  'tx.addressIsRetail': 'This address is a retail address, not in any guarantor organization',
+  'tx.addressIsRetailWithPubKey': 'Public key retrieved, this is a retail address (not in any group)',
   'tx.queryFailed': 'Query failed, please try again later',
   'tx.infoRetrieved': 'Retrieved {info} information',
   'tx.publicKey': 'Public Key',

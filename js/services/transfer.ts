@@ -8,7 +8,6 @@ import { t } from '../i18n/index.js';
 import { loadUser, User, AddressData } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
-import { html as viewHtml } from '../utils/view';
 import { BuildTXInfo } from './transaction';
 import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX } from './txBuilder';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
@@ -447,13 +446,9 @@ export function initTransferSubmit(): void {
       }
       
       if (extraPGC > 0) {
-        const raw = t('transfer.exchangeGasDesc', { amount: String(extraPGC) });
-        const marker = '__AMOUNT__MARKER__';
-        const withMarker = raw.replace(/\{amount\}/g, marker);
-        const parts = withMarker.split(marker);
-        const exchangeDesc = parts.length === 2
-          ? viewHtml`${parts[0]}<strong>${extraPGC}</strong>${parts[1]}`
-          : viewHtml`${raw} <strong>${extraPGC}</strong>`;
+        // Use t() function's built-in parameter substitution
+        // The translation string has {amount} placeholders that t() will replace
+        const exchangeDesc = t('transfer.exchangeGasDesc', { amount: String(extraPGC) });
         const confirmed = await showConfirmModal(
           t('transfer.confirmExchangeGas'),
           exchangeDesc,

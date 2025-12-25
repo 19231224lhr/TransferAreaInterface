@@ -6,9 +6,9 @@
 
 import { t } from '../i18n/index.js';
 import { showMiniToast } from '../utils/toast.js';
-import { wait } from '../utils/helpers.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto } from '../utils/view';
+import { querySingleAddressGroup, GROUP_ID_NOT_EXIST, GROUP_ID_RETAIL } from './accountQuery';
 
 let billSeq = 0;
 
@@ -16,7 +16,7 @@ let billSeq = 0;
  * Normalize address input
  */
 function normalizeAddrInput(addr) {
-  return addr ? String(addr).trim().toLowerCase() : '';
+  return addr ? String(addr).trim().toLowerCase().replace(/^0x/i, '') : '';
 }
 
 /**
@@ -27,23 +27,66 @@ function isValidAddressFormat(addr) {
 }
 
 /**
- * Mock address info lookup (replace with real API call)
+ * Fetch address info from ComNode (query-address-group API)
+ * 
+ * @param {string} addr - Address to query (40 hex chars)
+ * @returns {Promise<{groupId: string, pubKey: string} | null>} Address info or null if not found
  */
 async function fetchAddrInfo(addr) {
-  const MOCK_ADDR_INFO = {
-    '299954ff8bbd78eda3a686abcf86732cd18533af': {
-      groupId: '10000000',
-      pubKey: '2b9edf25237d23a753ea8774ffbfb1b6d6bbbc2c96209d41ee59089528eb1566&c295d31bfd805e18b212fbbb726fc29a1bfc0762523789be70a2a1b737e63a80'
-    },
-    'd76ec4020140d58c35e999a730bea07bf74a7763': {
-      groupId: '',
-      pubKey: '11970dd5a7c3f6a131e24e8f066416941d79a177579c63d889ef9ce90ffd9ca8&037d81e8fb19883cc9e5ed8ebcc2b75e1696880c75a864099bec10a5821f69e0'
-    }
-  };
+  const normalized = normalizeAddrInput(addr);
+  if (!normalized || !isValidAddressFormat(normalized)) {
+    return null;
+  }
   
-  const norm = normalizeAddrInput(addr);
-  await wait(300);
-  return MOCK_ADDR_INFO[norm] || null;
+  try {
+    const result = await querySingleAddressGroup(normalized);
+    
+    if (!result.success) {
+      console.error('[Recipient] Query address group failed:', result.error);
+      return null;
+    }
+    
+    const info = result.data;
+    
+    // Check if address exists
+    if (!info.exists) {
+      console.debug('[Recipient] Address not found on chain:', normalized);
+      return null;
+    }
+    
+    // Build public key string (X&Y format)
+    // Note: accountQuery.ts now returns X/Y as 64-char hex strings
+    let pubKey = '';
+    if (info.publicKey && info.publicKey.x && info.publicKey.y) {
+      // X and Y are already 64-char hex strings from accountQuery.ts
+      const x = info.publicKey.x;
+      const y = info.publicKey.y;
+      // Format as "X&Y" for the public key input field
+      pubKey = `${x}&${y}`;
+    }
+    
+    // Get group ID (empty string for retail addresses)
+    const groupId = info.isInGroup ? info.groupID : '';
+    
+    console.debug('[Recipient] Address info retrieved:', {
+      address: normalized,
+      groupId,
+      isRetail: info.isRetail,
+      isInGroup: info.isInGroup,
+      hasPubKey: !!pubKey
+    });
+    
+    return {
+      groupId,
+      pubKey,
+      isRetail: info.isRetail,
+      isInGroup: info.isInGroup
+    };
+    
+  } catch (error) {
+    console.error('[Recipient] Fetch address info error:', error);
+    return null;
+  }
 }
 
 /**
@@ -231,18 +274,34 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           await new Promise((resolve) => setTimeout(resolve, 2000 - elapsed));
         }
         if (!info) {
+          // GroupID = "0": Address does not exist
           showMiniToast(t('tx.addressNotFound'), 'error');
           return;
         }
+        
+        // Fill in public key if available
         if (pubInputEl && info.pubKey) {
           pubInputEl.value = info.pubKey;
         }
+        
+        // Fill in group ID (empty for retail addresses)
         if (gidInputEl) {
           gidInputEl.value = info.groupId || '';
         }
-        // Auto-expand details after successful lookup
-        if (info.pubKey || info.groupId) {
-          card.classList.add('expanded');
+        
+        // Auto-expand details section
+        card.classList.add('expanded');
+        
+        // Show appropriate toast message based on address status
+        if (info.isRetail) {
+          // GroupID = "1": Address exists but not in any guarantor group
+          if (info.pubKey) {
+            showMiniToast(t('tx.addressIsRetailWithPubKey'), 'info');
+          } else {
+            showMiniToast(t('tx.addressIsRetail'), 'info');
+          }
+        } else if (info.isInGroup) {
+          // GroupID = other: Address is in a guarantor group
           const items = [];
           if (info.pubKey) items.push(t('tx.publicKey'));
           if (info.groupId) items.push(t('tx.guarantorOrg'));

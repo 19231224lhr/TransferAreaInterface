@@ -555,9 +555,17 @@ export function handleDeleteAddress(address: string): void {
         hideUnifiedOverlay();
         
         if (!result.success) {
-          // Backend failed - show error, don't delete locally
           // Type narrowing: result is now { success: false; error: string }
           const errorMsg = 'error' in result ? result.error : t('error.unknownError', '未知错误');
+          
+          // Check if user cancelled password input
+          if (errorMsg === 'USER_CANCELLED') {
+            console.info('[Wallet] User cancelled password input for unbind');
+            showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+            return;
+          }
+          
+          // Backend failed - show error, don't delete locally
           showUnifiedError(
             t('wallet.deleteFailed', '删除失败'),
             errorMsg
@@ -1219,6 +1227,14 @@ async function handleImportPreviewConfirm(): Promise<void> {
         hideUnifiedOverlay();
         // Type narrowing: result is now { success: false; error: string }
         const errorMsg = 'error' in result ? result.error : t('error.unknownError');
+        
+        // Check if user cancelled password input
+        if (errorMsg === 'USER_CANCELLED') {
+          console.info('[Wallet] User cancelled password input for import');
+          showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+          return;
+        }
+        
         showUnifiedError(
           t('toast.importFailed', '导入失败'),
           errorMsg
@@ -2088,9 +2104,11 @@ export async function refreshWalletBalances(): Promise<boolean> {
           meta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
         }
         meta.value.utxoValue = balanceInfo.balance;
-        meta.value.totalValue = balanceInfo.totalAssets;
+        // totalValue should be balance only, NOT including interest/gas
+        // Interest/gas is stored separately in meta.gas/meta.estInterest
+        meta.value.totalValue = balanceInfo.balance;
         
-        // Update interest/gas
+        // Update interest/gas (stored separately, not included in totalValue)
         meta.estInterest = balanceInfo.interest;
         meta.gas = balanceInfo.interest;
         

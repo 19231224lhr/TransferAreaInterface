@@ -23,6 +23,7 @@ export default {
   'common.expandMore': '展开更多',
   'common.collapseMore': '收起',
   'common.separator': '、',
+  'common.operationCancelled': '操作已取消',
 
   // 认证相关
   'auth.loginRequired': '请先登录',
@@ -581,6 +582,8 @@ export default {
   'tx.insufficientGasNoMint': 'Gas不足：交易Gas与转移Gas超出钱包可用Gas',
   'tx.duplicateAddress': '地址重复',
   'tx.addressNotFound': '未找到该地址信息',
+  'tx.addressIsRetail': '该地址为散户地址，未加入担保组织',
+  'tx.addressIsRetailWithPubKey': '已获取公钥，该地址为散户（未加入担保组织）',
   'tx.queryFailed': '查询失败，请稍后重试',
   'tx.infoRetrieved': '已获取{info}信息',
   'tx.publicKey': '公钥',

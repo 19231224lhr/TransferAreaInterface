@@ -117,7 +117,8 @@ export async function createNewAddressOnBackend(
     );
 
     if (!privHex) {
-      return { success: false, error: t('error.privateKeyFetchFailed') };
+      // User cancelled password input - return special error code
+      return { success: false, error: 'USER_CANCELLED' };
     }
 
     // 4. Build request body (without signature first)
@@ -326,7 +327,8 @@ export async function unbindAddressOnBackend(
     );
 
     if (!privHex) {
-      return { success: false, error: t('error.privateKeyFetchFailed') };
+      // User cancelled password input - return special error code
+      return { success: false, error: 'USER_CANCELLED' };
     }
 
     // 4. Build request body (without signature first)
