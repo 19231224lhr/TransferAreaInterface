@@ -149,11 +149,20 @@ export async function createNewAddressOnBackend(
     const groupInfo = group as GroupInfo;
     let apiUrl: string;
     
+    // Debug: Log group info to verify assignAPIEndpoint
+    console.debug('[Address] Group info:', {
+      groupID: groupInfo.groupID,
+      assignAPIEndpoint: groupInfo.assignAPIEndpoint,
+      aggrAPIEndpoint: groupInfo.aggrAPIEndpoint
+    });
+    
     if (groupInfo.assignAPIEndpoint) {
       const assignNodeUrl = buildAssignNodeUrl(groupInfo.assignAPIEndpoint);
       apiUrl = `${assignNodeUrl}/api/v1/${group.groupID}/assign/new-address`;
+      console.debug('[Address] Using AssignNode URL:', assignNodeUrl);
     } else {
       apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_NEW_ADDRESS(group.groupID)}`;
+      console.debug('[Address] Using fallback API_BASE_URL:', API_BASE_URL);
     }
 
     console.debug('[Address] Sending request to:', apiUrl);

@@ -489,6 +489,12 @@ export function unlockScreen(): void {
   
   // Restart activity timer
   resetActivityTimer();
+  
+  // Update header to show correct user info after unlock
+  const user = loadUser();
+  if (user && typeof window.PanguPay?.ui?.updateHeaderUser === 'function') {
+    window.PanguPay.ui.updateHeaderUser(user);
+  }
 }
 
 /**

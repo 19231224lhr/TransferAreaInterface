@@ -12,6 +12,7 @@ import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js
 import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 import { DOM_IDS } from '../config/domIds';
+import { initComNodeEndpoint } from '../services/comNodeEndpoint.ts';
 
 // Re-export for convenience
 export { renderWallet };
@@ -23,6 +24,19 @@ export { renderWallet };
 export function handleMainRoute() {
   // 首先显示骨架屏，提供更好的加载体验
   showWalletSkeletons();
+  
+  // Initialize ComNode endpoint (query BootNode for ComNode port)
+  // This is async but we don't wait for it - it will cache the result
+  // and subsequent API calls will use the cached endpoint
+  initComNodeEndpoint().then(available => {
+    if (available) {
+      console.info('[Main] ✓ ComNode endpoint initialized');
+    } else {
+      console.warn('[Main] ✗ ComNode endpoint not available');
+    }
+  }).catch(err => {
+    console.error('[Main] ✗ Failed to initialize ComNode endpoint:', err);
+  });
   
   try {
     const raw = localStorage.getItem('guarChoice');

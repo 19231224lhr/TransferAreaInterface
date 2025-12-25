@@ -63,6 +63,7 @@ export const API_ENDPOINTS = {
   // BootNode endpoints
   GROUPS_LIST: '/api/v1/groups',  // 列出所有担保组织
   GROUP_INFO: (groupId: string) => `/api/v1/groups/${groupId}`,  // 查询指定组织详情
+  COMMITTEE_ENDPOINT: '/api/v1/committee/endpoint',  // 查询 ComNode 端点
   
   // AssignNode endpoints (动态路由: /api/v1/{groupID}/assign/*)
   ASSIGN_HEALTH: (groupId: string) => `/api/v1/${groupId}/assign/health`,

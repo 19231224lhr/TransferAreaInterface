@@ -154,6 +154,7 @@ export function resetWalletBindings(): void {
     DOM_IDS.openCreateAddrBtn,
     DOM_IDS.openImportAddrBtn,
     DOM_IDS.openHistoryBtn,
+    DOM_IDS.refreshWalletBtn,
     DOM_IDS.addrCancelBtn,
     DOM_IDS.addrOkBtn
   ];
@@ -1498,6 +1499,7 @@ export function initAddressModal(): void {
   const openCreateAddrBtn = document.getElementById(DOM_IDS.openCreateAddrBtn);
   const openImportAddrBtn = document.getElementById(DOM_IDS.openImportAddrBtn);
   const openHistoryBtn = document.getElementById(DOM_IDS.openHistoryBtn);
+  const refreshWalletBtn = document.getElementById(DOM_IDS.refreshWalletBtn);
   const addrCancelBtn = document.getElementById(DOM_IDS.addrCancelBtn);
   const addrOkBtn = document.getElementById(DOM_IDS.addrOkBtn);
   
@@ -1521,6 +1523,16 @@ export function initAddressModal(): void {
       });
     };
     openHistoryBtn.dataset._walletBind = '1';
+  }
+  
+  // Refresh wallet balances button
+  if (refreshWalletBtn && !refreshWalletBtn.dataset._walletBind) {
+    refreshWalletBtn.onclick = () => {
+      refreshWalletBalances().catch(err => {
+        console.error('Failed to refresh wallet balances:', err);
+      });
+    };
+    refreshWalletBtn.dataset._walletBind = '1';
   }
   
   if (addrCancelBtn && !addrCancelBtn.dataset._walletBind) {
@@ -1988,6 +2000,159 @@ export function hideWalletSkeletons(): void {
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList) {
     clearSkeletonState(srcAddrList);
+  }
+}
+
+// ============================================================================
+// Wallet Balance Refresh Functions
+// ============================================================================
+
+/**
+ * Refresh wallet balances from backend
+ * 
+ * This function:
+ * 1. Gets all addresses from user's wallet
+ * 2. Calls the query-address API to fetch real balances
+ * 3. Updates local storage with real data (balance, interest, UTXOs)
+ * 4. Shows success/error toast
+ * 
+ * @returns Promise<boolean> - true if refresh was successful
+ */
+export async function refreshWalletBalances(): Promise<boolean> {
+  const current = getCurrentUser();
+  if (!current?.wallet?.addressMsg) {
+    showErrorToast(
+      t('wallet.noAddressToRefreshDesc', '请先添加钱包地址'),
+      t('wallet.noAddressToRefresh', '没有地址')
+    );
+    return false;
+  }
+  
+  const addresses = Object.keys(current.wallet.addressMsg);
+  if (addresses.length === 0) {
+    showErrorToast(
+      t('wallet.noAddressToRefreshDesc', '请先添加钱包地址'),
+      t('wallet.noAddressToRefresh', '没有地址')
+    );
+    return false;
+  }
+  
+  // Show loading state on refresh button
+  const refreshBtn = document.getElementById(DOM_IDS.refreshWalletBtn);
+  if (refreshBtn) {
+    refreshBtn.classList.add('loading');
+    refreshBtn.setAttribute('disabled', 'true');
+  }
+  
+  try {
+    // Import the query function dynamically to avoid circular dependencies
+    const { queryAddressBalances, convertUtxosForStorage, calculateTotalBalance } = await import('./accountQuery');
+    
+    console.info('[Wallet] Refreshing balances for', addresses.length, 'addresses');
+    
+    const result = await queryAddressBalances(addresses);
+    
+    if (!result.success) {
+      // Type narrowing: result is now { success: false; error: string }
+      const errorMsg = 'error' in result ? result.error : t('error.unknownError', '未知错误');
+      showErrorToast(
+        errorMsg,
+        t('wallet.refreshFailed', '刷新失败')
+      );
+      return false;
+    }
+    
+    // Update local storage with fetched data
+    const u = deepClone(current);
+    const balances = result.data;
+    
+    let updatedCount = 0;
+    
+    for (const balanceInfo of balances) {
+      const addr = balanceInfo.address.toLowerCase();
+      
+      // Find the address in wallet (case-insensitive)
+      let foundKey: string | null = null;
+      for (const key of Object.keys(u.wallet?.addressMsg || {})) {
+        if (key.toLowerCase() === addr) {
+          foundKey = key;
+          break;
+        }
+      }
+      
+      if (foundKey && u.wallet?.addressMsg?.[foundKey]) {
+        const meta = u.wallet.addressMsg[foundKey] as AddressMetadata;
+        
+        // Update balance
+        if (!meta.value) {
+          meta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+        }
+        meta.value.utxoValue = balanceInfo.balance;
+        meta.value.totalValue = balanceInfo.totalAssets;
+        
+        // Update interest/gas
+        meta.estInterest = balanceInfo.interest;
+        meta.gas = balanceInfo.interest;
+        
+        // Update type
+        meta.type = balanceInfo.type;
+        
+        // Update UTXOs if available
+        if (balanceInfo.utxoCount > 0) {
+          meta.utxos = convertUtxosForStorage(balanceInfo);
+        }
+        
+        updatedCount++;
+      }
+    }
+    
+    // Recalculate totals
+    recalculateWalletValue(u);
+    
+    // Update Store (SSOT) - this will trigger UI updates via subscriptions
+    setUser(u);
+    saveUser(u);
+    
+    // Force re-render wallet to show updated balances
+    renderWallet();
+    
+    // Update currency display
+    updateCurrencyDisplay(u);
+    updateTotalGasBadge(u);
+    
+    // Refresh source address list
+    try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
+    
+    // Calculate and log totals
+    const totals = calculateTotalBalance(balances);
+    console.info('[Wallet] ✓ Refresh complete:', {
+      addressesUpdated: updatedCount,
+      totalBalance: totals.totalBalance,
+      totalInterest: totals.totalInterest,
+      byType: totals.byType
+    });
+    
+    showSuccessToast(
+      t('wallet.refreshSuccessDesc', { count: updatedCount }),
+      t('wallet.refreshSuccess', '刷新成功')
+    );
+    
+    return true;
+    
+  } catch (error) {
+    console.error('[Wallet] ✗ Refresh failed:', error);
+    showErrorToast(
+      error instanceof Error ? error.message : t('error.unknownError', '未知错误'),
+      t('wallet.refreshFailed', '刷新失败')
+    );
+    return false;
+    
+  } finally {
+    // Remove loading state from refresh button
+    if (refreshBtn) {
+      refreshBtn.classList.remove('loading');
+      refreshBtn.removeAttribute('disabled');
+    }
   }
 }
 

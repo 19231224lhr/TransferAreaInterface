@@ -330,6 +330,9 @@ export const DOM_IDS = {
   woPledge: 'woPledge',
   woJoinBtn: 'woJoinBtn',
 
+  // Refresh Wallet Button
+  refreshWalletBtn: 'refreshWalletBtn',
+
   // Import Address Preview Modal
   importPreviewModal: 'importPreviewModal',
   importPreviewTitle: 'importPreviewTitle',

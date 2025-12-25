@@ -34,6 +34,16 @@ export default {
   'gateway.healthCheckEndpoint': '健康检查端点: GET /health',
   'gateway.bootNodeEndpoint': 'BootNode API: GET /api/v1/groups',
 
+  // ComNode 端点服务
+  'comNode.error': '服务连接失败',
+  'comNode.notRegistered': 'ComNode 尚未启动或未注册',
+  'comNode.bootNodeUnavailable': 'BootNode 服务不可用',
+  'comNode.queryFailed': '查询 ComNode 端点失败',
+  'comNode.connectionFailed': '无法连接到区块链节点，请检查网络连接或节点是否启动',
+  'comNode.connected': '已连接到担保委员会节点',
+  'comNode.notAvailable': 'ComNode 端点不可用，请稍后重试',
+  'comNode.refreshing': '正在刷新节点连接...',
+
   // 密码和加密相关
   'encryption.setPassword': '设置密码',
   'encryption.enterPassword': '输入密码',
@@ -370,6 +380,9 @@ export default {
   'join.confirmSkipDesc': '这是一个警告操作，确认后将不加入担保组织并进入下一步。',
   'join.joined': '已加入',
   'join.leavingOrg': '正在退出担保组织...',
+  'join.queryingOrg': '正在查询组织信息...',
+  'join.queryFailed': '查询失败',
+  'join.queryFailedDesc': '无法获取组织信息，请稍后重试',
 
   // 转账表单
   'transfer.recipientAddress': '收款地址',
@@ -660,6 +673,15 @@ export default {
 
   // 钱包操作按钮
   'wallet.history': '历史记录',
+  'wallet.refreshing': '正在刷新...',
+  'wallet.refreshSuccess': '刷新成功',
+  'wallet.refreshSuccessDesc': '已更新 {count} 个地址的余额信息',
+  'wallet.refreshFailed': '刷新失败',
+  'wallet.refreshFailedDesc': '无法获取最新余额，请稍后重试',
+  'wallet.noAddressToRefresh': '没有可刷新的地址',
+  'wallet.noAddressToRefreshDesc': '请先添加钱包地址',
+  'wallet.balanceUpdated': '余额已更新',
+  'wallet.interestUpdated': '利息已更新',
 
   // 页脚
   'footer.tagline': '区块链与你同频，信息予你无限。',
@@ -706,6 +728,8 @@ export default {
   'error.addressAlreadyRevoked': '地址已被解绑',
   'error.signatureVerificationFailed': '签名验证失败',
   'error.addressPublicKeyMissing': '地址公钥信息缺失，无法解绑',
+  'error.noAddressToQuery': '没有要查询的地址',
+  'error.leaderUnavailable': 'Leader 节点暂时不可用，请稍后重试',
 
   // 转账相关
   'transfer.optimizedAddresses': '检测到本次转账中有 {count} 个来源地址在本次转账中未被实际使用，已自动优化',

@@ -34,6 +34,16 @@ export default {
   'gateway.healthCheckEndpoint': 'Health Check Endpoint: GET /health',
   'gateway.bootNodeEndpoint': 'BootNode API: GET /api/v1/groups',
 
+  // ComNode Endpoint Service
+  'comNode.error': 'Service Connection Failed',
+  'comNode.notRegistered': 'ComNode not started or not registered',
+  'comNode.bootNodeUnavailable': 'BootNode service unavailable',
+  'comNode.queryFailed': 'Failed to query ComNode endpoint',
+  'comNode.connectionFailed': 'Cannot connect to blockchain node, please check network connection or if node is running',
+  'comNode.connected': 'Connected to committee node',
+  'comNode.notAvailable': 'ComNode endpoint unavailable, please try again later',
+  'comNode.refreshing': 'Refreshing node connection...',
+
   // Password and Encryption
   'encryption.setPassword': 'Set Password',
   'encryption.enterPassword': 'Enter Password',
@@ -370,6 +380,9 @@ export default {
   'join.confirmSkipDesc': 'This is a warning action. Confirming will skip joining an organization and proceed to the next step.',
   'join.joined': 'Joined',
   'join.leavingOrg': 'Leaving organization...',
+  'join.queryingOrg': 'Querying organization info...',
+  'join.queryFailed': 'Query Failed',
+  'join.queryFailedDesc': 'Unable to get organization info, please try again later',
 
   // Transfer Form
   'transfer.recipientAddress': 'Recipient Address',
@@ -660,6 +673,15 @@ export default {
 
   // Wallet Action Buttons
   'wallet.history': 'History',
+  'wallet.refreshing': 'Refreshing...',
+  'wallet.refreshSuccess': 'Refresh Successful',
+  'wallet.refreshSuccessDesc': 'Wallet balances have been updated',
+  'wallet.refreshFailed': 'Refresh Failed',
+  'wallet.refreshFailedDesc': 'Failed to refresh wallet balances, please try again later',
+  'wallet.noAddressToRefresh': 'No Addresses',
+  'wallet.noAddressToRefreshDesc': 'Please add a wallet address first',
+  'wallet.balanceUpdated': 'Balance updated',
+  'wallet.interestUpdated': 'Interest updated',
 
   // Footer
   'footer.tagline': 'Blockchain resonates with you. Infinity within your reach.',
@@ -706,6 +728,8 @@ export default {
   'error.addressAlreadyRevoked': 'Address has already been unbound',
   'error.signatureVerificationFailed': 'Signature verification failed',
   'error.addressPublicKeyMissing': 'Address public key information is missing, cannot unbind',
+  'error.noAddressToQuery': 'No addresses to query',
+  'error.leaderUnavailable': 'Leader node temporarily unavailable, please try again later',
 
   // Transfer related
   'transfer.optimizedAddresses': 'Detected {count} source addresses not used in this transfer, automatically optimized',

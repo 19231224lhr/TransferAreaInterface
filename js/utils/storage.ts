@@ -105,9 +105,18 @@ export interface UserProfile {
   signature: string;
 }
 
-/** Guarantor choice structure */
+/** Guarantor choice structure - stores the user's organization selection */
 export interface GuarChoice {
   groupID: string;
+  /** Optional: full group info from backend (for backward compatibility, may not exist in old data) */
+  aggreNode?: string;
+  assignNode?: string;
+  pledgeAddress?: string;
+  assignAPIEndpoint?: string;
+  aggrAPIEndpoint?: string;
+  assignNodeUrl?: string;
+  aggrNodeUrl?: string;
+  type?: string;  // 'join' | 'leave'
 }
 
 // ========================================
@@ -369,30 +378,89 @@ export function saveUserProfile(profile: UserProfile): void {
 
 /**
  * Get the joined guarantor organization
+ * 
+ * Priority order:
+ * 1. user.guarGroup (contains full info including assignAPIEndpoint from backend)
+ * 2. guarChoice (may contain full info if saved after joining)
+ * 3. guarChoice.groupID + GROUP_LIST lookup
+ * 4. user.orgNumber + GROUP_LIST lookup
+ * 5. DEFAULT_GROUP as fallback
+ * 
  * @returns Joined group or null
  */
 export function getJoinedGroup(): GuarantorGroup | null {
+  // 1. First, try to get from user.guarGroup (contains full backend info)
+  const u = loadUser();
+  if (u?.guarGroup && u.guarGroup.groupID) {
+    // Return the full guarGroup info which includes assignAPIEndpoint from backend
+    const result = {
+      groupID: u.guarGroup.groupID,
+      aggreNode: u.guarGroup.aggreNode || '',
+      assignNode: u.guarGroup.assignNode || '',
+      pledgeAddress: u.guarGroup.pledgeAddress || '',
+      assignAPIEndpoint: u.guarGroup.assignAPIEndpoint,
+      aggrAPIEndpoint: u.guarGroup.aggrAPIEndpoint
+    };
+    console.debug('[Storage] getJoinedGroup from user.guarGroup:', result);
+    return result;
+  }
+  
+  // 2. Try guarChoice from localStorage
   try {
     const raw = localStorage.getItem(GUAR_CHOICE_KEY);
     if (raw) {
       const c = JSON.parse(raw) as GuarChoice;
       if (c && c.groupID) {
+        // If guarChoice has full info (assignAPIEndpoint), use it directly
+        if (c.assignAPIEndpoint) {
+          const result = {
+            groupID: c.groupID,
+            aggreNode: c.aggreNode || '',
+            assignNode: c.assignNode || '',
+            pledgeAddress: c.pledgeAddress || '',
+            assignAPIEndpoint: c.assignAPIEndpoint,
+            aggrAPIEndpoint: c.aggrAPIEndpoint
+          };
+          console.debug('[Storage] getJoinedGroup from guarChoice (full info):', result);
+          return result;
+        }
+        
+        // Check if user has guarGroup with this ID
+        if (u?.guarGroup && u.guarGroup.groupID === c.groupID) {
+          const result = {
+            groupID: u.guarGroup.groupID,
+            aggreNode: u.guarGroup.aggreNode || '',
+            assignNode: u.guarGroup.assignNode || '',
+            pledgeAddress: u.guarGroup.pledgeAddress || '',
+            assignAPIEndpoint: u.guarGroup.assignAPIEndpoint,
+            aggrAPIEndpoint: u.guarGroup.aggrAPIEndpoint
+          };
+          console.debug('[Storage] getJoinedGroup from guarChoice + user.guarGroup:', result);
+          return result;
+        }
+        // Fallback to GROUP_LIST lookup
         const g = Array.isArray(GROUP_LIST) 
           ? GROUP_LIST.find(x => x.groupID === c.groupID) 
           : null;
-        return g || DEFAULT_GROUP;
+        const result = g || DEFAULT_GROUP;
+        console.debug('[Storage] getJoinedGroup from GROUP_LIST/DEFAULT_GROUP:', result);
+        return result;
       }
     }
   } catch { }
   
-  const u = loadUser();
-  const gid = u && (u.orgNumber || (u.guarGroup && u.guarGroup.groupID));
+  // 3. Try user.orgNumber
+  const gid = u && u.orgNumber;
   if (gid) {
     const g = Array.isArray(GROUP_LIST) 
       ? GROUP_LIST.find(x => x.groupID === gid) 
       : null;
-    return g || DEFAULT_GROUP;
+    const result = g || DEFAULT_GROUP;
+    console.debug('[Storage] getJoinedGroup from orgNumber + GROUP_LIST:', result);
+    return result;
   }
+  
+  console.debug('[Storage] getJoinedGroup: no group found');
   return null;
 }
 

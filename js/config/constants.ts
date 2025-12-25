@@ -59,8 +59,8 @@ export const DEFAULT_GROUP: GuarantorGroup = {
   aggreNode: '39012088',
   assignNode: '17770032',
   pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09',
-  assignAPIEndpoint: ':8081',  // 固定端口号
-  aggrAPIEndpoint: ':8082'     // 固定端口号
+  assignAPIEndpoint: ':8082',  // AssignNode 端口
+  aggrAPIEndpoint: ':8082'     // AggrNode 端口（与 AssignNode 共用）
 };
 
 /** List of available guarantor organizations */

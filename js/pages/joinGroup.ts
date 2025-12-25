@@ -615,21 +615,55 @@ function handleSearchBtnClick(): void {
 
 /**
  * 处理加入推荐组织
+ * 
+ * ⚠️ 重要：必须先从后端查询组织信息，获取动态的 assignAPIEndpoint
+ * 不能使用静态的 DEFAULT_GROUP，因为端口号会变化
  */
 async function handleJoinRecClick(): Promise<void> {
-  // 使用默认组织
-  const defaultGroup: GroupInfo = {
-    groupID: DEFAULT_GROUP.groupID,
-    peerGroupID: '',
-    aggreNode: DEFAULT_GROUP.aggreNode,
-    aggrePeerID: '',
-    assignNode: DEFAULT_GROUP.assignNode,
-    assignPeerID: '',
-    pledgeAddress: DEFAULT_GROUP.pledgeAddress,
-    assignAPIEndpoint: DEFAULT_GROUP.assignAPIEndpoint,
-    aggrAPIEndpoint: DEFAULT_GROUP.aggrAPIEndpoint
-  };
-  await handleJoinGroupWithAPI(defaultGroup);
+  const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
+  
+  try {
+    // 显示加载状态
+    if (joinRecBtn) joinRecBtn.disabled = true;
+    
+    const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+    showUnifiedLoading(t('join.queryingOrg') || '正在查询组织信息...');
+    
+    // 从后端动态查询推荐组织的信息（获取最新的端口号）
+    console.info(`[JoinGroup] 🔍 Querying recommended organization: ${DEFAULT_GROUP.groupID}`);
+    const result = await queryGroupInfoSafe(DEFAULT_GROUP.groupID);
+    
+    hideUnifiedOverlay();
+    
+    if (!result.success) {
+      console.error(`[JoinGroup] ✗ Failed to query recommended organization:`, result.error);
+      showUnifiedError(
+        t('join.queryFailed') || '查询失败',
+        result.error || t('join.queryFailedDesc') || '无法获取组织信息，请稍后重试'
+      );
+      return;
+    }
+    
+    console.info(`[JoinGroup] ✓ Got dynamic group info:`, {
+      groupID: result.data.groupID,
+      assignAPIEndpoint: result.data.assignAPIEndpoint,
+      aggrAPIEndpoint: result.data.aggrAPIEndpoint
+    });
+    
+    // 使用从后端获取的动态组织信息
+    await handleJoinGroupWithAPI(result.data);
+    
+  } catch (error) {
+    console.error(`[JoinGroup] ✗ Error querying recommended organization:`, error);
+    const { hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
+    hideUnifiedOverlay();
+    showUnifiedError(
+      t('join.queryFailed') || '查询失败',
+      error instanceof Error ? error.message : '未知错误'
+    );
+  } finally {
+    if (joinRecBtn) joinRecBtn.disabled = false;
+  }
 }
 
 /**
@@ -975,7 +1009,7 @@ export function initJoinGroupPage(): void {
   // 清除当前选中组织
   currentSelectedGroup = null;
   
-  // 设置默认组织信息（用于推荐面板）
+  // 先设置默认值（静态），然后异步从后端获取动态信息
   pageState.set({
     selectedGroup: null,
     searchState: 'idle',
@@ -983,14 +1017,62 @@ export function initJoinGroupPage(): void {
     recAggre: DEFAULT_GROUP.aggreNode,
     recAssign: DEFAULT_GROUP.assignNode,
     recPledge: DEFAULT_GROUP.pledgeAddress,
-    recAssignPort: DEFAULT_GROUP.assignAPIEndpoint || ':8081',
-    recAggrPort: DEFAULT_GROUP.aggrAPIEndpoint || ':8082',
+    recAssignPort: '加载中...',
+    recAggrPort: '加载中...',
     searchBtnDisabled: true
   });
+  
+  // 异步从后端获取推荐组织的动态信息
+  loadRecommendedGroupInfo();
   
   // 重置标签和面板状态
   resetTabsAndPanes();
   
   // 绑定事件
   bindEvents();
+}
+
+/**
+ * 从后端加载推荐组织的动态信息
+ * 用于显示最新的端口号等信息
+ */
+async function loadRecommendedGroupInfo(): Promise<void> {
+  try {
+    console.debug('[JoinGroup] Loading recommended group info from backend...');
+    const result = await queryGroupInfoSafe(DEFAULT_GROUP.groupID);
+    
+    if (result.success && pageState) {
+      console.debug('[JoinGroup] Got dynamic recommended group info:', {
+        groupID: result.data.groupID,
+        assignAPIEndpoint: result.data.assignAPIEndpoint,
+        aggrAPIEndpoint: result.data.aggrAPIEndpoint
+      });
+      
+      pageState.set({
+        recGroupID: result.data.groupID,
+        recAggre: result.data.aggreNode,
+        recAssign: result.data.assignNode,
+        recPledge: result.data.pledgeAddress,
+        recAssignPort: result.data.assignAPIEndpoint || '-',
+        recAggrPort: result.data.aggrAPIEndpoint || '-'
+      });
+    } else {
+      console.warn('[JoinGroup] Failed to load recommended group info:', result.success ? 'unknown' : result.error);
+      // 显示错误状态
+      if (pageState) {
+        pageState.set({
+          recAssignPort: '获取失败',
+          recAggrPort: '获取失败'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('[JoinGroup] Error loading recommended group info:', error);
+    if (pageState) {
+      pageState.set({
+        recAssignPort: '获取失败',
+        recAggrPort: '获取失败'
+      });
+    }
+  }
 }
