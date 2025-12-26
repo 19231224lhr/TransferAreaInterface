@@ -90,12 +90,17 @@ export interface TXOutput {
   Type: number;              // 货币类型：0=PGC, 1=BTC, 2=ETH
   ToPeerID: string;
   IsPayForGas: boolean;
-  IsGuarMake: boolean;
   IsCrossChain: boolean;
+  IsGuarMake: boolean;
 }
 
 /**
  * UTXO 输入
+ */
+/**
+ * UTXO 输入
+ * 
+ * ⚠️ 重要：字段顺序必须与 Go 结构体 core/transaction.go 中的 TXInputNormal 一致！
  */
 export interface TXInputNormal {
   FromTXID: string;
@@ -104,8 +109,8 @@ export interface TXInputNormal {
   IsGuarMake: boolean;
   IsCommitteeMake: boolean;
   IsCrossChain: boolean;
-  TXOutputHash: number[];           // 被引用 TXOutput 的 SHA256 哈希（字节数组）
-  InputSignature: EcdsaSignatureJSON;  // 地址私钥签名
+  InputSignature: EcdsaSignatureJSON;  // 地址私钥签名（Go 中在 TXOutputHash 前面）
+  TXOutputHash: number[];              // 被引用 TXOutput 的 SHA256 哈希（字节数组）
 }
 
 /**
@@ -135,7 +140,8 @@ export interface Transaction {
   TXInputsNormal: TXInputNormal[];
   TXInputsCertificate: any[];          // 快速转账填空数组
   TXOutputs: TXOutput[];
-  Data: number[];
+  // Go: []byte -> base64 string in JSON
+  Data: number[] | string;
 }
 
 
@@ -186,6 +192,61 @@ function bigintReplacer(_key: string, value: unknown): unknown {
     return value.toString(10);
   }
   return value;
+}
+
+/**
+ * 将数字数组（字节数组）转换为 Base64 字符串
+ * 
+ * ⚠️ 重要：Go 的 []byte 序列化为 Base64 字符串，不是数组
+ * 例如：[1, 2, 3] -> "AQID"
+ * 
+ * @param arr 数字数组（字节数组）
+ * @returns Base64 字符串
+ */
+function byteArrayToBase64(arr: number[]): string {
+  if (!arr || arr.length === 0) {
+    return '';
+  }
+  // 创建 Uint8Array 并转为 Base64
+  const uint8 = new Uint8Array(arr);
+  // 使用 btoa 进行 Base64 编码
+  let binary = '';
+  for (let i = 0; i < uint8.length; i++) {
+    binary += String.fromCharCode(uint8[i]);
+  }
+  return btoa(binary);
+}
+
+/**
+ * 将对象中的字节数组字段转换为 Base64
+ * 递归处理嵌套对象和数组
+ * 
+ * @param obj 要处理的对象
+ * @param byteArrayFields 字节数组字段名列表
+ */
+function convertByteArraysToBase64(obj: Record<string, unknown>, byteArrayFields: string[] = ['TXOutputHash', 'Data']): void {
+  if (!obj || typeof obj !== 'object') return;
+  
+  for (const key of Object.keys(obj)) {
+    const value = obj[key];
+    
+    // 如果是需要转换的字节数组字段
+    if (byteArrayFields.includes(key) && Array.isArray(value)) {
+      obj[key] = byteArrayToBase64(value as number[]);
+    }
+    // 如果是数组，递归处理每个元素
+    else if (Array.isArray(value)) {
+      for (const item of value) {
+        if (item && typeof item === 'object') {
+          convertByteArraysToBase64(item as Record<string, unknown>, byteArrayFields);
+        }
+      }
+    }
+    // 如果是对象，递归处理
+    else if (value && typeof value === 'object') {
+      convertByteArraysToBase64(value as Record<string, unknown>, byteArrayFields);
+    }
+  }
 }
 
 /**
@@ -279,7 +340,7 @@ export function getTXOutputHash(output: TXOutput): number[] {
  * 
  * 后端实现逻辑：
  * 1. 过滤掉 IsGuarMake=true 的 Input 和 Output
- * 2. 序列化时排除字段：Size, NewValue, UserSignature, TXType
+ * 2. 序列化时排除字段：TXID, Size, NewValue, UserSignature, TXType
  * 3. SHA256 哈希
  * 
  * @param tx Transaction 对象
@@ -298,11 +359,22 @@ export function getTXHash(tx: Transaction): number[] {
   };
   
   // 3. 深拷贝并设置排除字段为零值
+  // ⚠️ 重要：必须与后端 getTXHashForUserSignature 的排除字段完全一致！
+  // 后端排除：TXID, Size, NewValue, UserSignature, TXType
   const copy = JSON.parse(JSON.stringify(txForHash, bigintReplacer));
-  applyExcludeZeroValue(copy, ['Size', 'NewValue', 'UserSignature', 'TXType']);
+  applyExcludeZeroValue(copy, ['TXID', 'Size', 'NewValue', 'UserSignature', 'TXType']);
+  
+  // 3.5 ⚠️ 重要：将字节数组转换为 Base64（与后端 json.Marshal 行为一致）
+  // Go 的 []byte 序列化为 Base64，所以前端也必须这样做
+  convertByteArraysToBase64(copy);
   
   // 4. 序列化（对 ValueDivision, NewValueDiv, BackAssign 排序）
   const jsonStr = serializeToJSON(copy, ['ValueDivision', 'NewValueDiv', 'BackAssign']);
+  
+  // [SIGDBG] 输出序列化后的完整 JSON，方便与后端比对
+  console.log('[SIGDBG][FRONTEND] getTXHash jsonLen=' + jsonStr.length);
+  console.log('[SIGDBG][FRONTEND] getTXHash preview=' + jsonStr.substring(0, 220));
+  console.log('[SIGDBG][FRONTEND] getTXHash full=', jsonStr);
   
   // 5. SHA256 哈希
   return sha256.array(jsonStr);
@@ -349,8 +421,21 @@ export function signTXOutput(
   output: TXOutput,
   addressPrivateKeyHex: string
 ): { hash: number[]; signature: EcdsaSignature } {
+  // [DEBUG] 打印用于哈希的 TXOutput
+  const jsonForHash = serializeToJSON(output);
+  console.log('[signTXOutput] ========== TXOutput 签名详情 ==========');
+  console.log('[signTXOutput] TXOutput JSON 长度:', jsonForHash.length);
+  console.log('[signTXOutput] TXOutput JSON:', jsonForHash);
+  
   // 1. 计算 TXOutput 哈希
   const hash = getTXOutputHash(output);
+  
+  // [DEBUG] 打印哈希值
+  const hashHex = hash.map(b => b.toString(16).padStart(2, '0')).join('');
+  const hashBase64 = btoa(String.fromCharCode(...hash));
+  console.log('[signTXOutput] TXOutput Hash (hex):', hashHex);
+  console.log('[signTXOutput] TXOutput Hash (base64):', hashBase64);
+  console.log('[signTXOutput] ========================================');
   
   // 2. 使用地址私钥签名
   const key = ec.keyFromPrivate(addressPrivateKeyHex, 'hex');
@@ -383,10 +468,13 @@ export function signUserNewTX(
   // 1. 深拷贝
   const copy = JSON.parse(JSON.stringify(userNewTX, bigintReplacer));
   
-  // 2. 将排除字段设为零值
+  // 2. ⚠️ 重要：将字节数组转换为 Base64（Go 的 []byte 序列化格式）
+  convertByteArraysToBase64(copy);
+  
+  // 3. 将排除字段设为零值
   applyExcludeZeroValue(copy, ['Sig', 'Height']);
   
-  // 3. 递归处理嵌套的 TX 对象中的 map 字段
+  // 4. 递归处理嵌套的 TX 对象中的 map 字段
   if (copy.TX) {
     // 对 TX 内部的 map 字段排序
     const mapFields = ['ValueDivision', 'NewValueDiv', 'BackAssign'];
@@ -409,14 +497,14 @@ export function signUserNewTX(
     }
   }
   
-  // 4. JSON 序列化
+  // 5. JSON 序列化
   let jsonStr = JSON.stringify(copy);
   jsonStr = jsonStr.replace(/"(X|Y|R|S)":"(\d+)"/g, '"$1":$2');
   
-  // 5. SHA256 哈希
+  // 6. SHA256 哈希
   const hashBytes = sha256.array(jsonStr);
   
-  // 6. 使用账户私钥签名
+  // 7. 使用账户私钥签名
   const key = ec.keyFromPrivate(accountPrivateKeyHex, 'hex');
   const sig = key.sign(hashBytes);
   
@@ -702,8 +790,9 @@ export async function buildTransaction(
       Type: recipient.coinType,
       ToPeerID: '',
       IsPayForGas: false,
-      IsGuarMake: false,
-      IsCrossChain: isCrossChain
+      // ⚠️ 重要：字段顺序必须与 Go 结构体一致（IsCrossChain 在 IsGuarMake 前）
+      IsCrossChain: isCrossChain,
+      IsGuarMake: false
     });
   }
   
@@ -740,8 +829,8 @@ export async function buildTransaction(
         Type: coinType,
         ToPeerID: '',
         IsPayForGas: false,
-        IsGuarMake: false,
-        IsCrossChain: false
+        IsCrossChain: false,
+        IsGuarMake: false
       });
     }
   }
@@ -766,8 +855,23 @@ export async function buildTransaction(
     
     // 获取被引用的 TXOutput
     const position = utxoData.Position;
-    const indexZ = position?.IndexZ || 0;
+    let indexZ = position?.IndexZ || 0;
+    
+    // 预处理：检查 TXID 是否包含旧格式（包含 " + IndexZ" 后缀）
+    // 如果是，需要从中提取真正的 IndexZ
+    let rawTXID = utxoData.UTXO?.TXID || utxoData.TXID || '';
+    if (rawTXID.includes(' + ')) {
+      const parts = rawTXID.split(' + ');
+      const extractedIndexZ = parseInt(parts[1]?.trim() || '0', 10);
+      // 如果 Position.IndexZ 为 0 但 TXID 中有 IndexZ，使用 TXID 中的值
+      if (indexZ === 0 && extractedIndexZ > 0) {
+        indexZ = extractedIndexZ;
+        console.warn(`[交易构造] 从旧格式 TXID 中提取 IndexZ: ${extractedIndexZ}`);
+      }
+    }
+    
     console.log('[交易构造] UTXO Position:', JSON.stringify(position));
+    console.log('[交易构造] 最终使用的 IndexZ:', indexZ);
     console.log('[交易构造] UTXO.UTXO 存在:', !!utxoData.UTXO);
     console.log('[交易构造] UTXO.UTXO.TXOutputs 存在:', !!(utxoData.UTXO?.TXOutputs));
     console.log('[交易构造] UTXO.UTXO.TXOutputs 长度:', utxoData.UTXO?.TXOutputs?.length || 0);
@@ -822,8 +926,8 @@ export async function buildTransaction(
       Type: referencedOutput.Type ?? referencedOutput.ToCoinType ?? 0,
       ToPeerID: referencedOutput.ToPeerID || '',
       IsPayForGas: referencedOutput.IsPayForGas || false,
-      IsGuarMake: referencedOutput.IsGuarMake || false,
-      IsCrossChain: referencedOutput.IsCrossChain || false
+      IsCrossChain: referencedOutput.IsCrossChain || false,
+      IsGuarMake: referencedOutput.IsGuarMake || false
     };
     console.log('[交易构造] 用于哈希的 TXOutput:', outputForHash);
     
@@ -832,20 +936,42 @@ export async function buildTransaction(
     console.log('[交易构造] TXOutput 哈希长度:', hash.length);
     console.log('[交易构造] InputSignature R:', signature.R.toString().slice(0, 20) + '...');
     
+    // 从 UTXO 数据中获取正确的 TXID
+    // 注意：utxoData.UTXO.TXID 应该是纯 TXID，不包含 " + IndexZ" 后缀
+    // 但如果旧数据中包含了后缀，需要自动修复
+    let fromTXID = utxoData.UTXO?.TXID || utxoData.TXID || '';
+    let effectiveIndexZ = indexZ;
+    
+    // 自动修复：如果 TXID 包含 " + " 后缀（旧格式缓存数据），需要分割
+    if (fromTXID.includes(' + ')) {
+      const parts = fromTXID.split(' + ');
+      fromTXID = parts[0].trim();
+      // 如果 Position.IndexZ 为 0，使用从 TXID 中解析的 IndexZ
+      if (indexZ === 0 && parts[1]) {
+        effectiveIndexZ = parseInt(parts[1].trim(), 10);
+      }
+      console.warn(`[交易构造] 检测到旧格式 TXID，已自动修复: "${utxoData.UTXO?.TXID}" => TXID="${fromTXID}", IndexZ=${effectiveIndexZ}`);
+    }
+    
+    console.log(`[交易构造] FromTXID="${fromTXID}", IndexZ=${effectiveIndexZ}`);
+    console.log(`[交易构造] 将生成 UTXO 标识符: "${fromTXID} + ${effectiveIndexZ}"`);
+    
     txInputs.push({
-      FromTXID: utxoData.UTXO?.TXID || utxoData.TXID || '',
+      FromTXID: fromTXID,
       FromTxPosition: {
         Blocknum: position?.Blocknum || 0,
         IndexX: position?.IndexX || 0,
         IndexY: position?.IndexY || 0,
-        IndexZ: indexZ
+        IndexZ: effectiveIndexZ
       },
       FromAddress: address,
       IsGuarMake: false,
       IsCommitteeMake: false,
       IsCrossChain: isCrossChain,
-      TXOutputHash: hash,
-      InputSignature: signatureToJSON(signature)
+      // ⚠️ 重要：字段顺序必须与 Go 结构体一致！
+      // Go: InputSignature 在 TXOutputHash 前面
+      InputSignature: signatureToJSON(signature),
+      TXOutputHash: hash
     });
   }
   
@@ -879,7 +1005,7 @@ export async function buildTransaction(
       Output: recipients.reduce((sum, r) => sum + (r.interest || 0), 0),
       BackAssign: backAssign
     },
-    UserSignature: { R: null, S: null },  // 可选，高安全场景使用
+    UserSignature: { R: null, S: null },  // Step 6.5 计算
     TXInputsNormal: txInputs,
     TXInputsCertificate: [],
     TXOutputs: txOutputs,
@@ -890,6 +1016,31 @@ export async function buildTransaction(
   transaction.TXID = calculateTXID(transaction);
   console.log('[交易构造] TXID:', transaction.TXID);
 
+  // ========== Step 6.5: 计算 UserSignature ==========
+  // UserSignature 是用第一个 Input 的地址私钥对交易哈希签名
+  // 后端实现: sig, err := tx.GetTXUserSignature(key) 其中 key = a.Wallet.AddressMsg[tx.TXInputsNormal[0].FromAddress].WPrivateKey
+  if (txInputs.length > 0) {
+    const firstInputAddress = txInputs[0].FromAddress;
+    const firstAddrData = walletData[firstInputAddress];
+    const firstAddrPrivKey = firstAddrData?.privHex || '';
+    
+    if (firstAddrPrivKey) {
+      console.log('[交易构造] 开始计算 UserSignature (使用第一个输入地址的私钥)...');
+      const txHash = getTXHash(transaction);
+      // [SIGDBG] 输出前端计算的 TX 哈希，方便与后端日志比对
+      const txHashHex = txHash.map(b => b.toString(16).padStart(2, '0')).join('');
+      console.log('[SIGDBG][FRONTEND] TXHASH=' + txHashHex);
+      const userSigKey = ec.keyFromPrivate(firstAddrPrivKey, 'hex');
+      const userSig = userSigKey.sign(txHash);
+      transaction.UserSignature = {
+        R: userSig.r.toString(10),
+        S: userSig.s.toString(10)
+      };
+      console.log('[交易构造] UserSignature 签名完成');
+    } else {
+      console.warn('[交易构造] 第一个输入地址缺少私钥，无法生成 UserSignature');
+    }
+  }
   
   // ========== Step 7: 构造 UserNewTX 并签名 ==========
   const userNewTX: UserNewTX = {
@@ -922,6 +1073,9 @@ export async function buildTransaction(
 export function serializeUserNewTX(userNewTX: UserNewTX): string {
   // 深拷贝
   const copy = JSON.parse(JSON.stringify(userNewTX, bigintReplacer));
+  
+  // ⚠️ 重要：将字节数组转换为 Base64（Go 的 []byte 序列化格式）
+  convertByteArraysToBase64(copy);
   
   // 对 map 字段排序
   if (copy.TX) {
@@ -967,14 +1121,18 @@ export function serializeUserNewTX(userNewTX: UserNewTX): string {
  */
 export async function submitTransaction(
   userNewTX: UserNewTX,
-  groupID: string
+  groupID: string,
+  assignNodeUrl?: string
 ): Promise<{ success: boolean; tx_id?: string; error?: string }> {
   const { API_BASE_URL, API_ENDPOINTS } = await import('../config/api');
   
-  const url = API_BASE_URL + API_ENDPOINTS.ASSIGN_SUBMIT_TX(groupID);
+  // 如果提供了 AssignNode URL，则使用它；否则使用默认的 API_BASE_URL
+  const baseUrl = assignNodeUrl || API_BASE_URL;
+  const url = baseUrl + API_ENDPOINTS.ASSIGN_SUBMIT_TX(groupID);
   const body = serializeUserNewTX(userNewTX);
   
-  console.log('[交易提交] URL:', url);
+  console.log('[交易提交] AssignNode URL:', assignNodeUrl || '(using default API_BASE_URL)');
+  console.log('[交易提交] Full URL:', url);
   console.log('[交易提交] Body:', body);
   
   const response = await fetch(url, {

@@ -1,11 +1,11 @@
 /**
  * Transfer Transaction Builder Module
  * 
- * Handles transaction building and validation
+ * Handles transaction building, validation and submission
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, User, AddressData } from '../utils/storage';
+import { loadUser, User, AddressData, getJoinedGroup } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
 import { BuildTXInfo } from './transaction';
@@ -19,6 +19,7 @@ import { showToast } from '../utils/toast';
 import { DOM_IDS } from '../config/domIds';
 import { hasEncryptedKey, getPrivateKey } from '../utils/keyEncryption';
 import { showPasswordPrompt } from '../utils/keyEncryptionUI';
+import { buildAssignNodeUrl } from './group';
 
 // ========================================
 // Type Definitions
@@ -121,6 +122,42 @@ function parsePub(raw: string): { x: string; y: string; ok: boolean } {
 // ========================================
 
 /**
+ * Update transfer button state based on user's organization membership
+ * Disables the button if user hasn't joined a guarantor organization
+ */
+export function updateTransferButtonState(): void {
+  const tfBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLButtonElement | null;
+  if (!tfBtn) return;
+  
+  const guarGroup = getJoinedGroup();
+  const user = loadUser();
+  const hasJoined = !!(guarGroup && guarGroup.groupID && (user?.orgNumber || user?.guarGroup?.groupID));
+  
+  // Get the mode selector to check if it's quick transfer
+  const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
+  const currentMode = tfMode?.value || 'quick';
+  const isQuickTransfer = currentMode === 'quick';
+  
+  // Enable button only if user has joined org AND is using quick transfer mode
+  const shouldEnable = hasJoined && isQuickTransfer;
+  
+  tfBtn.disabled = !shouldEnable;
+  
+  // Update button appearance
+  if (shouldEnable) {
+    tfBtn.classList.remove('btn-disabled');
+    tfBtn.title = '';
+  } else {
+    tfBtn.classList.add('btn-disabled');
+    if (!hasJoined) {
+      tfBtn.title = t('transfer.joinOrgFirst') || '请先加入担保组织后才能发送交易';
+    } else if (!isQuickTransfer) {
+      tfBtn.title = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型';
+    }
+  }
+}
+
+/**
  * Initialize transfer form submission
  */
 export function initTransferSubmit(): void {
@@ -138,6 +175,14 @@ export function initTransferSubmit(): void {
   const txErr = document.getElementById(DOM_IDS.txError);
   
   if (!tfBtn || tfBtn.dataset._bind) return;
+  
+  // Initial button state check
+  updateTransferButtonState();
+  
+  // Listen for mode changes to update button state
+  if (tfMode) {
+    tfMode.addEventListener('change', updateTransferButtonState);
+  }
   
   // Create submission guard to prevent double-submit
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
@@ -608,10 +653,116 @@ export function initTransferSubmit(): void {
         txInfoBtn.classList.remove('hidden');
       }
 
-      showModalTip(t('toast.buildTxSuccess'), t('toast.buildTxSuccessDesc'), false);
+      // ========== Step 2: 确认并发送交易 ==========
+      // 获取担保组织信息
+      const guarGroup = getJoinedGroup();
+      if (!guarGroup || !guarGroup.groupID) {
+        const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织，无法发送交易';
+        console.error('[发送交易] 错误:', errMsg);
+        showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
+        return;
+      }
+
+      // 检查交易模式，只支持快速转账
+      const currentTfMode = tfMode?.value || 'quick';
+      if (currentTfMode !== 'quick') {
+        const errMsg = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型的交易';
+        console.error('[发送交易] 错误:', errMsg);
+        showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
+        return;
+      }
+
+      // 计算转账总金额用于显示
+      const totalAmount = Object.values(bills).reduce((sum, bill) => sum + bill.Value, 0);
+      const recipientCount = Object.keys(bills).length;
       
-      // 清除草稿
-      try { clearTransferDraft(); } catch (_) { }
+      // 显示确认对话框
+      const confirmMessage = t('transfer.confirmSendTxDesc', {
+        amount: totalAmount.toFixed(4),
+        recipients: String(recipientCount),
+        txid: userNewTX.TX.TXID
+      }) || `确认发送交易？\n\n交易ID: ${userNewTX.TX.TXID}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount.toFixed(4)}`;
+      
+      const confirmed = await showConfirmModal(
+        t('transfer.confirmSendTx') || '确认发送交易',
+        confirmMessage,
+        t('transfer.send') || '发送',
+        t('common.cancel') || '取消'
+      );
+
+      if (!confirmed) {
+        console.log('[发送交易] 用户取消发送');
+        showToast(t('transfer.txBuildSuccess') || '交易已构造，稍后可手动发送', 'info');
+        return;
+      }
+
+      // ========== Step 3: 发送交易到后端 ==========
+      console.log('[发送交易] 开始发送交易到后端...');
+      console.log('[发送交易] 担保组织ID:', guarGroup.groupID);
+      
+      // 获取 AssignNode URL
+      let assignNodeUrl: string | undefined;
+      if (guarGroup.assignAPIEndpoint) {
+        assignNodeUrl = buildAssignNodeUrl(guarGroup.assignAPIEndpoint);
+        console.log('[发送交易] AssignNode URL:', assignNodeUrl);
+      } else {
+        console.warn('[发送交易] 警告: 担保组织缺少 assignAPIEndpoint，将使用默认 API_BASE_URL');
+      }
+      
+      // 更新 loading 提示
+      hideLoading(loadingId);
+      const sendLoadingId = showLoading(t('transfer.sendingTx') || '正在发送交易...');
+
+      try {
+        const result = await submitTransaction(userNewTX, guarGroup.groupID, assignNodeUrl);
+        
+        if (result.success) {
+          console.log('[发送交易] 交易发送成功，TXID:', result.tx_id);
+          showModalTip(
+            t('toast.sendTxSuccess') || '交易发送成功',
+            t('transfer.txSentSuccessDesc', { txid: result.tx_id || userNewTX.TX.TXID }) || 
+            `交易已成功提交到担保组织！\n\n交易ID: ${result.tx_id || userNewTX.TX.TXID}`,
+            false
+          );
+          
+          // 清除草稿
+          try { clearTransferDraft(); } catch (_) { }
+          
+          // 清空表单
+          try {
+            // 取消选中所有源地址
+            Array.from(addrList!.querySelectorAll('input[type="checkbox"]')).forEach((inp: any) => {
+              inp.checked = false;
+              const label = inp.closest('label');
+              if (label) label.classList.remove('selected');
+            });
+            // 清空收款人列表
+            if (billList) billList.innerHTML = '';
+            // 重置 gas 输入
+            if (gasInput) gasInput.value = '0';
+            if (txGasInput) txGasInput.value = '1';
+          } catch (_) { }
+          
+        } else {
+          const errMsg = result.error || t('transfer.unknownError') || '未知错误';
+          console.error('[发送交易] 发送失败:', errMsg);
+          showModalTip(
+            t('toast.sendTxFailed') || '交易发送失败',
+            errMsg,
+            true
+          );
+        }
+      } catch (sendErr: any) {
+        const errMsg = sendErr?.message || String(sendErr);
+        console.error('[发送交易] 发送异常:', errMsg);
+        showModalTip(
+          t('toast.sendTxFailed') || '交易发送失败',
+          t('transfer.networkError') || '网络错误，请检查网络连接后重试：' + errMsg,
+          true
+        );
+      } finally {
+        hideLoading(sendLoadingId);
+      }
     } catch (err: any) {
       // Restore stable UI state and storage snapshot
       try { if (snapTxErr) restoreFromSnapshot(snapTxErr); } catch (_) { }

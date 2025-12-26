@@ -504,11 +504,25 @@ export default {
   'toast.buildTxFailed': 'Build Failed',
   'toast.submitTxSuccess': 'Transaction Submitted Successfully',
   'toast.submitTxFailed': 'Transaction Submission Failed',
+  'toast.sendTxSuccess': 'Transaction Sent Successfully',
+  'toast.sendTxFailed': 'Transaction Send Failed',
   'toast.importFailed': 'Import Failed',
   'toast.importSuccess': 'Import Successful',
   'toast.importSuccessDesc': 'Address has been successfully imported to current wallet',
   'toast.cannotParseAddress': 'Cannot parse address',
   'toast.addressExists': 'Address already exists, cannot import duplicate',
+
+  // Transaction Sending
+  'transfer.confirmSendTx': 'Confirm Send Transaction',
+  'transfer.confirmSendTxDesc': 'Confirm to send transaction?\n\nTransaction ID: {txid}\nRecipients: {recipients}\nTotal Amount: {amount}',
+  'transfer.send': 'Send',
+  'transfer.sendingTx': 'Sending transaction...',
+  'transfer.txSentSuccessDesc': 'Transaction successfully submitted to guarantor organization!\n\nTransaction ID: {txid}',
+  'transfer.txBuildSuccess': 'Transaction built, can be sent manually later',
+  'transfer.networkError': 'Network error, please check connection and retry',
+  'transfer.unknownError': 'Unknown error',
+  'transfer.onlyQuickTransferSupported': 'Only quick transfer type is currently supported',
+  'transfer.joinOrgFirst': 'Please join a guarantor organization first to send transactions',
 
   // Transaction Builder Errors
   'txBuilder.notInGroup': 'User has not joined a guarantor organization',

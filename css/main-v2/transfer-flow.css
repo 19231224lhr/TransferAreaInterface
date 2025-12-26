@@ -121,13 +121,37 @@
   box-shadow: var(--shadow-blue);
 }
 
-.submit-btn--primary:hover {
+.submit-btn--primary:hover:not(:disabled) {
   transform: translateY(-2px);
   box-shadow: 0 12px 35px rgba(59, 130, 246, 0.3);
 }
 
-.submit-btn--primary:active {
+.submit-btn--primary:active:not(:disabled) {
   transform: translateY(0);
+}
+
+/* Disabled state for submit button */
+.submit-btn--primary:disabled,
+.submit-btn--primary.btn-disabled {
+  background: var(--neutral-300);
+  color: var(--text-tertiary);
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+  transform: none;
+}
+
+.submit-btn--primary:disabled:hover,
+.submit-btn--primary.btn-disabled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Dark theme disabled state */
+[data-theme="dark"] .submit-btn--primary:disabled,
+[data-theme="dark"] .submit-btn--primary.btn-disabled {
+  background: var(--neutral-700);
+  color: var(--neutral-500);
 }
 
 .submit-btn--secondary {

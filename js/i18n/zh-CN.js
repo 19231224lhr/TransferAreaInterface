@@ -504,11 +504,25 @@ export default {
   'toast.buildTxFailed': '构造失败',
   'toast.submitTxSuccess': '交易提交成功',
   'toast.submitTxFailed': '交易提交失败',
+  'toast.sendTxSuccess': '交易发送成功',
+  'toast.sendTxFailed': '交易发送失败',
   'toast.importFailed': '导入失败',
   'toast.importSuccess': '导入成功',
   'toast.importSuccessDesc': '地址已成功导入到当前钱包',
   'toast.cannotParseAddress': '无法解析地址',
   'toast.addressExists': '该地址已存在，不能重复导入',
+
+  // 交易发送相关
+  'transfer.confirmSendTx': '确认发送交易',
+  'transfer.confirmSendTxDesc': '确认发送交易？\n\n交易ID: {txid}\n收款方数量: {recipients}\n总金额: {amount}',
+  'transfer.send': '发送',
+  'transfer.sendingTx': '正在发送交易...',
+  'transfer.txSentSuccessDesc': '交易已成功提交到担保组织！\n\n交易ID: {txid}',
+  'transfer.txBuildSuccess': '交易已构造，稍后可手动发送',
+  'transfer.networkError': '网络错误，请检查网络连接后重试',
+  'transfer.unknownError': '未知错误',
+  'transfer.onlyQuickTransferSupported': '目前只支持快速转账类型的交易',
+  'transfer.joinOrgFirst': '请先加入担保组织后才能发送交易',
 
   // 交易构造错误
   'txBuilder.notInGroup': '用户未加入担保组织',

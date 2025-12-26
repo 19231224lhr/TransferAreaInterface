@@ -35,6 +35,7 @@ import {
 } from '../utils/walletSkeleton';
 import { UTXOData } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
+import { updateTransferButtonState } from './transfer';
 
 // ============================================================================
 // Types
@@ -324,6 +325,9 @@ export function refreshOrgPanel(): void {
       if (el) el.textContent = val;
     });
   }
+  
+  // Update transfer button state based on organization membership
+  updateTransferButtonState();
 }
 
 // ============================================================================

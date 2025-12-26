@@ -26,11 +26,29 @@ export interface QueryAddressRequest {
 }
 
 /**
- * UTXO data from backend (simplified for query response)
+ * Transaction position in blockchain
+ * Corresponds to Go: TxPosition
+ */
+export interface QueryTxPosition {
+  Blocknum: number;
+  IndexX: number;
+  IndexY: number;
+  IndexZ: number;
+}
+
+/**
+ * UTXO data from backend
+ * Corresponds to Go: UTXOData in core/guaruserinfo.go
+ * 
+ * Note: Backend returns complete UTXOData structure including Position
  */
 export interface QueryUTXOData {
-  Value: number;
-  Type: number;
+  UTXO?: any;           // Source transaction (SubATX), optional for simplified queries
+  Value: number;        // Transfer amount
+  Type: number;         // Currency type: 0=PGC, 1=BTC, 2=ETH
+  Time?: number;        // Construction timestamp
+  Position?: QueryTxPosition;  // Position information (Blocknum, IndexX, IndexY, IndexZ)
+  IsTXCerUTXO?: boolean; // Is this a TXCer-related UTXO
 }
 
 /**
@@ -133,19 +151,101 @@ function normalizeAddressData(address: string, data: PointAddressData): AddressB
 
 /**
  * Convert QueryUTXOData to full UTXOData format for storage
- * Note: This creates a minimal UTXOData structure since query response
- * doesn't include full transaction details
+ * 
+ * UTXO key formats:
+ * - Backend: "TXID + IndexZ" (with space around +)
+ * - Legacy: "txid:index" or "txid_index"
+ * 
+ * 重要：后端返回的 QueryUTXOData 可能包含完整的 UTXO（SubATX）数据！
+ * 1. 如果 queryUtxo.UTXO 存在，使用完整的后端数据（包含 TXOutputs）
+ * 2. 必须使用后端返回的 Position，而不是从 key 解析（key 只包含 TXID + IndexZ）
+ * 
+ * ⚠️ 关键：签名验证要求前端构造的 TXOutput 哈希必须与后端存储的完全一致！
+ * 因此必须使用后端原始的 TXOutputs 数据，不能自己重新构造。
  */
 function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address: string): UTXOData {
-  // Parse UTXO key (format: "txid:index" or "txid_index")
-  const [txid, indexStr] = utxoKey.includes(':') 
-    ? utxoKey.split(':') 
-    : utxoKey.split('_');
-  const index = parseInt(indexStr || '0', 10);
+  // Parse UTXO key - 后端格式是 "TXID + IndexZ"（注意空格）
+  // 示例: "f78854637d183c84 + 0"
+  // 注意：key 只用于提取 TXID，Position 必须从 queryUtxo.Position 获取！
+  let txid: string;
+  let indexZFromKey: number = 0;
+  
+  if (utxoKey.includes(' + ')) {
+    // 后端实际格式: "TXID + IndexZ"
+    const parts = utxoKey.split(' + ');
+    txid = parts[0].trim();
+    indexZFromKey = parseInt(parts[1]?.trim() || '0', 10);
+  } else if (utxoKey.includes(':')) {
+    // 文档示例格式: "txid:index"
+    const parts = utxoKey.split(':');
+    txid = parts[0];
+    indexZFromKey = parseInt(parts[1] || '0', 10);
+  } else if (utxoKey.includes('_')) {
+    // 兼容格式: "txid_index"
+    const parts = utxoKey.split('_');
+    txid = parts[0];
+    indexZFromKey = parseInt(parts[1] || '0', 10);
+  } else {
+    // 无分隔符，整个 key 作为 txid
+    txid = utxoKey;
+    indexZFromKey = 0;
+  }
+  
+  // 使用后端返回的 Position，如果没有则用 key 解析的 IndexZ 作为 fallback
+  const position: { Blocknum: number; IndexX: number; IndexY: number; IndexZ: number } = queryUtxo.Position 
+    ? {
+        Blocknum: queryUtxo.Position.Blocknum || 0,
+        IndexX: queryUtxo.Position.IndexX || 0,
+        IndexY: queryUtxo.Position.IndexY || 0,
+        IndexZ: queryUtxo.Position.IndexZ ?? indexZFromKey
+      }
+    : { Blocknum: 0, IndexX: 0, IndexY: 0, IndexZ: indexZFromKey };
+  
+  console.log(`[UTXO解析] key="${utxoKey}" => txid="${txid}", Position=${JSON.stringify(position)}`);
+  
+  // 如果后端没有返回 Position，打印警告
+  if (!queryUtxo.Position) {
+    console.warn(`[UTXO解析] 警告：后端未返回 Position 数据，使用 fallback 值`);
+  }
+  
+  // ⚠️ 重要修复：如果后端返回了完整的 UTXO（SubATX）数据，必须使用它！
+  // 这对于签名验证至关重要，因为 TXOutput 哈希必须与后端存储的完全一致
+  if (queryUtxo.UTXO && typeof queryUtxo.UTXO === 'object') {
+    const backendUTXO = queryUtxo.UTXO;
+    console.log(`[UTXO解析] ✓ 使用后端返回的完整 UTXO 数据`);
+    console.log(`[UTXO解析] 后端 UTXO.TXID: ${backendUTXO.TXID}`);
+    console.log(`[UTXO解析] 后端 UTXO.TXOutputs 长度: ${backendUTXO.TXOutputs?.length || 0}`);
+    
+    // 使用后端原始数据，但确保 TXID 正确（从 key 解析的纯 TXID）
+    return {
+      UTXO: {
+        TXID: txid, // 使用从 key 解析的纯 TXID
+        TXType: backendUTXO.TXType || 0,
+        TXInputsNormal: backendUTXO.TXInputsNormal || [],
+        TXInputsCertificate: backendUTXO.TXInputsCertificate || [],
+        // ⚠️ 关键：使用后端原始的 TXOutputs，这对签名验证至关重要！
+        TXOutputs: backendUTXO.TXOutputs || [],
+        InterestAssign: backendUTXO.InterestAssign || { Gas: 0, Output: 0, BackAssign: {} },
+        ExTXCerID: backendUTXO.ExTXCerID || [],
+        Data: backendUTXO.Data || []
+      },
+      TXID: txid,
+      Value: queryUtxo.Value,
+      Type: queryUtxo.Type,
+      Time: queryUtxo.Time || Date.now(),
+      Position: position,
+      IsTXCerUTXO: queryUtxo.IsTXCerUTXO || false
+    };
+  }
+  
+  // Fallback：如果后端没有返回完整 UTXO 数据，构造简化版本
+  // 注意：这种情况下签名验证可能会失败！
+  console.warn(`[UTXO解析] ⚠️ 警告：后端未返回完整 UTXO 数据，使用 fallback 构造`);
+  console.warn(`[UTXO解析] 这可能导致签名验证失败，因为 TXOutput 哈希可能不匹配！`);
   
   return {
     UTXO: {
-      TXID: txid || utxoKey,
+      TXID: txid,
       TXType: 0,
       TXInputsNormal: [],
       TXInputsCertificate: [],
@@ -164,12 +264,12 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
       ExTXCerID: [],
       Data: []
     },
-    TXID: txid || utxoKey,
+    TXID: txid,
     Value: queryUtxo.Value,
     Type: queryUtxo.Type,
-    Time: Date.now(),
-    Position: { Blocknum: 0, IndexX: 0, IndexY: index, IndexZ: 0 },
-    IsTXCerUTXO: false
+    Time: queryUtxo.Time || Date.now(),
+    Position: position,
+    IsTXCerUTXO: queryUtxo.IsTXCerUTXO || false
   };
 }
 
@@ -248,7 +348,12 @@ export async function queryAddressInfo(
       };
     }
 
-    const data = await response.json() as QueryAddressResponse;
+    // ⚠️ 重要：使用 parseBigIntJson 而不是 response.json()
+    // 因为后端返回的 TXOutput.ToPublicKey.X/Y 是大整数 (*big.Int)
+    // JavaScript 的 JSON.parse() 会丢失大整数精度（超过 2^53-1）
+    // 这会导致前端计算的 TXOutput 哈希与后端不一致，签名验证失败
+    const responseText = await response.text();
+    const data = parseBigIntJson(responseText) as QueryAddressResponse;
 
     console.info('[AccountQuery] ✓ Query successful, received data for', 
       Object.keys(data.AddressData || {}).length, 'addresses');
