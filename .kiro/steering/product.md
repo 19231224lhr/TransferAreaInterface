@@ -16,6 +16,8 @@ PanguPay (盘古支付 - 转账区钱包接口) is a blockchain wallet solution 
 - **Offline Support**: Service Worker enables offline access to cached resources
 - **Accessibility**: WCAG 2.1 AA compliant with screen reader support
 - **Performance Monitoring**: Built-in performance tracking and optimization modes
+- **Real-time Account Updates**: 🆕 Automatic UTXO/TXCer synchronization via polling
+- **Transaction Status Tracking**: 🆕 Real-time transaction confirmation monitoring
 
 ## Security Features
 
@@ -97,3 +99,18 @@ Developers and users interacting with a UTXO-based blockchain system requiring g
 - Focus management for modals
 - Skip links for navigation
 - High contrast support
+
+### Real-time Features (2025) 🆕
+
+**Account Update Polling:**
+- Automatic UTXO synchronization (additions and deletions)
+- TXCer status change notifications (confirmed, failed, cleared)
+- Block height updates
+- 3-second polling interval with failure protection
+- Toast notifications for account changes
+
+**Transaction Status Tracking:**
+- Real-time transaction confirmation monitoring
+- Configurable polling interval and timeout
+- Status change callbacks for UI updates
+- Support for pending, success, failed, and not_found states

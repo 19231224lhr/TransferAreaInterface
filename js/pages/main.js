@@ -13,6 +13,7 @@ import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 import { DOM_IDS } from '../config/domIds';
 import { initComNodeEndpoint } from '../services/comNodeEndpoint.ts';
+import { startAccountPolling, stopAccountPolling, isAccountPollingActive } from '../services/accountPolling';
 
 // Re-export for convenience
 export { renderWallet };
@@ -107,6 +108,10 @@ export function handleMainRoute() {
   
   // Initialize no-org-warn button (copied from backup lines 6227-6281)
   initNoOrgWarnBtn();
+  
+  // Start account polling for users in guarantor organization
+  // This will automatically check if user is in an organization before starting
+  startAccountPolling();
 }
 
 /**

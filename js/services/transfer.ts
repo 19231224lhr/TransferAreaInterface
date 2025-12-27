@@ -20,6 +20,7 @@ import { DOM_IDS } from '../config/domIds';
 import { hasEncryptedKey, getPrivateKey } from '../utils/keyEncryption';
 import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 import { buildAssignNodeUrl } from './group';
+import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 
 // ========================================
 // Type Definitions
@@ -724,6 +725,42 @@ export function initTransferSubmit(): void {
           
           const txIdToQuery = result.tx_id || userNewTX.TX.TXID;
           
+          // 🔒 锁定使用到的 UTXO
+          try {
+            const utxosToLock: Omit<LockedUTXO, 'lockTime' | 'txId'>[] = [];
+            const txInputs = userNewTX.TX.TXInputsNormal || [];
+            
+            for (const input of txInputs) {
+              const fromAddr = input.FromAddress?.toLowerCase() || '';
+              const fromTxId = input.FromTXID || '';
+              const indexZ = input.FromTxPosition?.IndexZ ?? 0;
+              
+              // 构造 UTXO ID (与 utxoLock.ts 中的格式一致)
+              const utxoId = `${fromTxId}_${indexZ}`;
+              
+              // 获取 UTXO 的金额和类型
+              const addrData = walletMap[fromAddr];
+              const utxoData = addrData?.utxos?.[utxoId];
+              const value = utxoData?.Value || 0;
+              const type = utxoData?.Type || 0;
+              
+              utxosToLock.push({
+                utxoId,
+                address: fromAddr,
+                value,
+                type
+              });
+            }
+            
+            if (utxosToLock.length > 0) {
+              lockUTXOs(utxosToLock, txIdToQuery);
+              console.log('[发送交易] 已锁定', utxosToLock.length, '个 UTXO');
+            }
+          } catch (lockErr) {
+            console.warn('[发送交易] 锁定 UTXO 失败:', lockErr);
+            // 锁定失败不影响交易发送
+          }
+          
           // 显示成功提示，告知用户交易已提交
           showToast(
             t('transfer.txSubmittedWaitingConfirm') || '交易已提交，正在后台等待确认...',
@@ -757,6 +794,13 @@ export function initTransferSubmit(): void {
             }
             if (gasInput) gasInput.value = '0';
             if (txGasInput) txGasInput.value = '1';
+          } catch (_) { }
+          
+          // 🔄 重新渲染钱包以显示锁定状态
+          try {
+            const { renderWallet, refreshSrcAddrList } = await import('./wallet');
+            renderWallet();
+            refreshSrcAddrList();
           } catch (_) { }
           
           // 🔄 后台异步轮询交易状态（不阻塞用户界面）

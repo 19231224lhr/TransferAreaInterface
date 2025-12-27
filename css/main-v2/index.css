@@ -57,6 +57,9 @@
 /* 交易详情 */
 @import './tx-detail.css';
 
+/* UTXO 锁定状态 */
+@import './utxo-lock.css';
+
 /* 工具类 */
 @import './utilities.css';
 

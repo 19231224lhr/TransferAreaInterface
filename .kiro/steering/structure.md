@@ -110,6 +110,8 @@ TransferAreaInterface/
 │   ├── services/           # Business logic services (TS + JS)
 │   │   ├── api.ts          # 🆕 Gateway API 客户端核心 (HTTP, 重试, 错误处理)
 │   │   ├── group.ts        # 🆕 担保组织查询服务
+│   │   ├── accountPolling.ts # 🆕 账户更新轮询服务 (UTXO/TXCer 实时同步)
+│   │   ├── txBuilder.ts    # 🆕 交易构造器 (含交易状态轮询)
 │   │   ├── account.ts      # Account management (TS)
 │   │   ├── transaction.ts  # Transaction building (TS)
 │   │   ├── transfer.ts     # Transfer form logic (TS)
@@ -140,6 +142,7 @@ TransferAreaInterface/
 │       ├── storage.ts      # localStorage management (TS)
 │       ├── statePersistence.ts # 🆕 Store 状态持久化 (TS)
 │       ├── view.ts         # 🆕 安全 DOM 渲染 (lit-html 封装)
+│       ├── utxoLock.ts     # 🆕 UTXO 锁定管理 (防止双花)
 │       ├── accessibility.ts # A11y utilities (TS)
 │       ├── loading.ts      # Loading state manager (TS)
 │       ├── formValidator.ts # Form validation (TS)
@@ -387,8 +390,11 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 | `js/utils/transaction.ts` | Transaction helpers and auto-save |
 | `js/utils/reactive.ts` | 响应式 UI 绑定系统 |
 | **`js/utils/walletSkeleton.ts`** | **🆕 骨架屏加载工具** |
+| **`js/utils/utxoLock.ts`** | **🆕 UTXO 锁定管理 (防止双花)** |
 | **`js/services/api.ts`** | **🆕 Gateway API 客户端核心** |
 | **`js/services/group.ts`** | **🆕 担保组织查询服务** |
+| **`js/services/accountPolling.ts`** | **🆕 账户更新轮询服务 (UTXO/TXCer 实时同步)** |
+| **`js/services/txBuilder.ts`** | **🆕 交易构造器 (含交易状态轮询)** |
 | **`js/config/api.ts`** | **🆕 Gateway API 配置** |
 | `js/services/account.ts` | Account management business logic |
 | `js/services/transaction.ts` | Transaction building |
@@ -427,6 +433,12 @@ The project is undergoing a **gradual migration** from JavaScript to TypeScript:
 - 集中的 API 配置 (`js/config/api.ts`)
 - 按业务实体组织的服务模块 (`js/services/*.ts`)
 - 自动超时、重试、结构化错误处理
+
+**🆕 Real-time Polling Services (2025):**
+- 账户更新轮询 (`js/services/accountPolling.ts`) - UTXO/TXCer 实时同步
+- 交易状态轮询 (`js/services/txBuilder.ts`) - 单笔交易确认等待
+- 与 UTXO 锁定系统集成 (`js/utils/utxoLock.ts`)
+- 自动 UI 刷新和 Toast 通知
 
 ### Backup Files
 

@@ -337,6 +337,18 @@ export default {
   'wallet.copy': 'Copy',
   'wallet.copied': 'Copied!',
   'wallet.syncing': 'Syncing...',
+  
+  // UTXO Locking
+  'wallet.utxoLockedTooltip': 'This UTXO is locked, waiting for transaction confirmation',
+  'wallet.lockedUtxoCount': '{count} UTXO(s) locked',
+  'wallet.totalBalance': 'Total Balance',
+  'wallet.availableBalance': 'Available',
+  'wallet.lockedBalance': 'Locked',
+  'wallet.refreshSuccess': 'Refresh Successful',
+  'wallet.refreshSuccessDesc': 'Updated balances for {count} addresses',
+  'wallet.refreshFailed': 'Refresh Failed',
+  'wallet.noAddressToRefresh': 'No Addresses',
+  'wallet.noAddressToRefreshDesc': 'Please add wallet addresses first',
 
   // Join Guarantee Organization Page
   'join.title': 'Join Guarantor Organization',
@@ -715,6 +727,17 @@ export default {
   'wallet.balanceUpdated': 'Balance updated',
   'wallet.interestUpdated': 'Interest updated',
 
+  // UTXO Lock Related
+  'wallet.totalBalance': 'Total Balance',
+  'wallet.availableBalance': 'Available',
+  'wallet.lockedBalance': 'Locked',
+  'wallet.utxoLocked': 'Locked',
+  'wallet.utxoLockedTooltip': 'This UTXO is locked, waiting for transaction confirmation',
+  'wallet.utxoLockedDetail': 'Locked at {time}, TX: {txId}',
+  'wallet.lockedUtxoCount': '{count} UTXOs locked',
+  'wallet.lockedUtxoWarning': 'Some UTXOs are locked and cannot be used for new transactions',
+  'wallet.clearLockedOnRefresh': 'All locks will be cleared after refresh',
+
   // Footer
   'footer.tagline': 'Blockchain resonates with you. Infinity within your reach.',
   'footer.docs': 'Docs',
@@ -774,5 +797,16 @@ export default {
   'transfer.confirmExchange': 'Confirm Exchange',
   'transfer.crossChainLimit': 'Cross-chain Transaction Limit',
   'transfer.selectChangeAddress': 'Please select main currency change address for cross-chain transaction',
-  'transfer.changeAddressMissing': 'Change address missing'
+  'transfer.changeAddressMissing': 'Change address missing',
+
+  // Account polling related
+  'polling.tooManyFailures': 'Account sync paused, please refresh later',
+  'polling.blockHeightUpdated': 'Block height updated: {height}',
+  'polling.accountUpdated': 'Account info updated',
+  'polling.txCerConfirmed': 'TXCer {id}... confirmed',
+  'polling.txCerInvalid': 'TXCer {id}... verification failed',
+  'polling.txCerCleared': 'TXCer {id}... suspicion cleared',
+  'polling.interestReceived': 'Interest received: {amount}',
+  'polling.newUtxoReceived': 'New UTXO received',
+  'polling.utxoConfirmed': 'UTXO confirmed'
 };

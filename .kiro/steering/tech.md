@@ -1650,3 +1650,198 @@ if (!isValid) {
 3. **检查 Network 面板**：确认 Request Payload 中 X/Y/R/S 是数字不是字符串
 4. **对比后端日志**：让后端打印收到的 JSON 和计算的哈希
 
+---
+
+## Real-time Polling Services (实时轮询服务) 🆕
+
+### Overview
+
+项目实现了两套轮询服务，用于实时同步后端状态：
+
+1. **Account Polling** - 账户更新轮询（UTXO/TXCer 变动）
+2. **TX Status Polling** - 交易状态轮询（单笔交易确认）
+
+### Account Polling Service (`js/services/accountPolling.ts`)
+
+自动轮询 AssignNode 的账户更新接口，实时同步用户的 UTXO/TXCer 变动。
+
+#### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **自动轮询** | 3 秒间隔轮询 `/api/v1/{groupID}/assign/account-update` |
+| **UTXO 同步** | 处理 UTXO 新增（In）和删除（Out） |
+| **TXCer 状态** | 处理 TXCer 确认、失败、解除怀疑 |
+| **区块高度** | 同步最新区块高度 |
+| **失败保护** | 连续 5 次失败后自动暂停 |
+| **生命周期** | 仅对已加入组织的用户启用 |
+
+#### Types (匹配后端 Go 结构体)
+
+```typescript
+// 账户更新信息
+interface AccountUpdateInfo {
+  UserID: string;
+  WalletChangeData: InfoChangeData;
+  TXCerChangeData: TXCerChangeToUser[];
+  UsedTXCerChangeData: UsedTXCerChangeData[];
+  Timestamp: number;
+  BlockHeight: number;
+  IsNoWalletChange: boolean;  // 若为 true，只更新区块高度
+  Sig: { R: string; S: string };
+}
+
+// 账户变动数据
+interface InfoChangeData {
+  In: Record<string, InUTXO[]>;  // 新增 UTXO
+  Out: string[];                  // 删除的 UTXO 标识符
+}
+
+// TXCer 状态变更
+interface TXCerChangeToUser {
+  TXCerID: string;
+  Status: number;  // 0=已上链, 1=验证失败, 2=解除怀疑
+  UTXO: string;
+  Sig: { R: string; S: string };
+}
+```
+
+#### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `startAccountPolling()` | 启动轮询（仅对已加入组织的用户） |
+| `stopAccountPolling()` | 停止轮询 |
+| `restartAccountPolling()` | 重启轮询（用于加入组织后） |
+| `isAccountPollingActive()` | 检查轮询是否运行中 |
+| `getPollingStatus()` | 获取轮询状态信息 |
+| `triggerManualPoll()` | 手动触发一次轮询 |
+
+#### Usage
+
+```typescript
+import { startAccountPolling, stopAccountPolling } from '../services/accountPolling';
+
+// 在主钱包页面启动轮询
+function handleMainRoute() {
+  // ... 初始化钱包 UI
+  startAccountPolling();  // 自动检查是否已加入组织
+}
+
+// 在路由切换时停止轮询
+function cleanupRoute() {
+  stopAccountPolling();
+}
+```
+
+#### Integration Points
+
+- **启动**: `js/pages/main.js` 的 `handleMainRoute()` 中调用 `startAccountPolling()`
+- **停止**: `js/router.ts` 的路由清理逻辑中调用 `stopAccountPolling()`
+- **UTXO 解锁**: 与 `js/utils/utxoLock.ts` 集成，自动解锁已确认的 UTXO
+- **UI 刷新**: 自动调用 `renderWallet()`, `refreshSrcAddrList()`, `updateWalletBrief()`
+
+### TX Status Polling Service (`js/services/txBuilder.ts`)
+
+单笔交易状态轮询，用于等待交易确认。
+
+#### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **单次查询** | `queryTXStatus()` 查询交易当前状态 |
+| **等待确认** | `waitForTXConfirmation()` 轮询直到确认或超时 |
+| **状态回调** | 支持状态变化回调函数 |
+| **超时控制** | 默认 60 秒超时，可配置 |
+
+#### Types
+
+```typescript
+// 交易状态类型
+type TXStatusType = 'pending' | 'success' | 'failed' | 'not_found';
+
+// 交易状态响应
+interface TXStatusResponse {
+  tx_id: string;
+  status: TXStatusType;
+  receive_result: boolean;
+  result: boolean;
+  error_reason: string;
+  guar_id: string;
+  user_id: string;
+  block_height: number;
+}
+
+// 等待确认结果
+interface WaitForConfirmationResult {
+  success: boolean;
+  status: TXStatusType;
+  errorReason?: string;
+  timeout: boolean;
+  response?: TXStatusResponse;
+}
+```
+
+#### Key Functions
+
+| Function | Purpose |
+|----------|---------|
+| `queryTXStatus(txID, groupID)` | 单次查询交易状态 |
+| `waitForTXConfirmation(txID, groupID, options)` | 轮询等待交易确认 |
+
+#### Usage
+
+```typescript
+import { queryTXStatus, waitForTXConfirmation } from '../services/txBuilder';
+
+// 单次查询
+const status = await queryTXStatus(txID, groupID);
+console.log(status.status);  // 'pending' | 'success' | 'failed' | 'not_found'
+
+// 等待确认（带回调）
+const result = await waitForTXConfirmation(txID, groupID, undefined, {
+  pollInterval: 2000,   // 2 秒轮询
+  maxWaitTime: 60000,   // 60 秒超时
+  onStatusChange: (status) => {
+    console.log('状态变化:', status.status);
+  }
+});
+
+if (result.success) {
+  console.log('交易确认成功');
+} else if (result.timeout) {
+  console.log('等待超时');
+} else {
+  console.log('交易失败:', result.errorReason);
+}
+```
+
+### Polling Services Comparison (轮询服务对比)
+
+| 特性 | Account Polling | TX Status Polling |
+|------|-----------------|-------------------|
+| **用途** | 持续同步账户状态 | 等待单笔交易确认 |
+| **生命周期** | 长期运行（主钱包页面） | 短期运行（交易提交后） |
+| **触发时机** | 进入主钱包页面 | 提交交易后 |
+| **轮询间隔** | 3 秒 | 2 秒（可配置） |
+| **超时** | 无（连续失败后暂停） | 60 秒（可配置） |
+| **数据来源** | AssignNode `/account-update` | AssignNode `/tx-status/{txID}` |
+| **文件位置** | `accountPolling.ts` | `txBuilder.ts` |
+
+### i18n Keys (国际化键)
+
+轮询相关的翻译键：
+
+```javascript
+// zh-CN.js
+polling: {
+  accountUpdated: '账户信息已更新',
+  blockHeightUpdated: '区块高度更新: {height}',
+  txCerConfirmed: 'TXCer {id}... 已确认',
+  txCerInvalid: 'TXCer {id}... 验证失败',
+  txCerCleared: 'TXCer {id}... 已解除怀疑',
+  interestReceived: '收到利息: {amount}',
+  tooManyFailures: '账户同步暂停，请稍后刷新'
+}
+```
+

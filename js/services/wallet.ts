@@ -36,6 +36,16 @@ import {
 import { UTXOData } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
 import { updateTransferButtonState } from './transfer';
+import { 
+  getLockedUTXOsByAddress, 
+  getLockedBalanceByAddress, 
+  isUTXOLocked,
+  clearAllLockedUTXOs,
+  clearLockedUTXOsByAddress,
+  getLockedBalanceSummary,
+  getLockedUTXOInfo,
+  lockUTXOs
+} from '../utils/utxoLock';
 
 // ============================================================================
 // Types
@@ -384,6 +394,20 @@ export function renderWallet(): void {
     const coinType = getCoinName(typeId0);
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
+    
+    // 获取锁定 UTXO 信息
+    const lockedUtxos = getLockedUTXOsByAddress(a);
+    const lockedBalance = getLockedBalanceByAddress(a);
+    const hasLockedUtxos = lockedUtxos.length > 0;
+    const availableBalance = Math.max(0, amtCash0 - lockedBalance);
+    
+    // 如果有锁定的 UTXO，添加标记类
+    if (hasLockedUtxos) {
+      item.classList.add('has-locked-utxos');
+    }
+
+    // 锁定图标 SVG
+    const lockIconSvg = `<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
 
     // Use lit-html for safe and efficient rendering
     const template = viewHtml`
@@ -391,7 +415,18 @@ export function renderWallet(): void {
         <div class="addr-card-avatar coin--${coinClass}">${coinType}</div>
         <div class="addr-card-main">
           <span class="addr-card-hash" title="${a}">${shortAddr}</span>
-          <span class="addr-card-balance">${String(amtCash0)} ${coinType}</span>
+          <span class="addr-card-balance">
+            ${String(amtCash0)} ${coinType}
+            ${hasLockedUtxos ? viewHtml`
+              <span class="utxo-locked-indicator" title="${t('wallet.utxoLockedTooltip')}">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span class="utxo-locked-tooltip">${t('wallet.lockedUtxoCount', { count: lockedUtxos.length })}</span>
+              </span>
+            ` : ''}
+          </span>
         </div>
         <div class="addr-card-arrow">
           <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -403,10 +438,33 @@ export function renderWallet(): void {
             <span class="addr-detail-label">${t('address.fullAddress')}</span>
             <span class="addr-detail-value">${a}</span>
           </div>
-          <div class="addr-detail-row">
-            <span class="addr-detail-label">${t('address.balance')}</span>
-            <span class="addr-detail-value">${String(amtCash0)} ${coinType}</span>
-          </div>
+          ${hasLockedUtxos ? viewHtml`
+            <div class="balance-breakdown">
+              <div class="balance-row">
+                <span class="balance-label">${t('wallet.totalBalance')}</span>
+                <span class="balance-value">${String(amtCash0)} ${coinType}</span>
+              </div>
+              <div class="balance-row available">
+                <span class="balance-label">${t('wallet.availableBalance')}</span>
+                <span class="balance-value">${String(availableBalance)} ${coinType}</span>
+              </div>
+              <div class="balance-row locked">
+                <span class="balance-label">
+                  <svg class="lock-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  ${t('wallet.lockedBalance')}
+                </span>
+                <span class="balance-value">${String(lockedBalance)} ${coinType}</span>
+              </div>
+            </div>
+          ` : viewHtml`
+            <div class="addr-detail-row">
+              <span class="addr-detail-label">${t('address.balance')}</span>
+              <span class="addr-detail-value">${String(amtCash0)} ${coinType}</span>
+            </div>
+          `}
           <div class="addr-detail-row">
             <span class="addr-detail-label">GAS</span>
             <span class="addr-detail-value gas">${String(gas0)}</span>
@@ -829,8 +887,35 @@ function generateMockSignature(): { R: string; S: string } {
 }
 
 /**
+ * 获取当前展开的地址卡片列表
+ */
+function getExpandedAddresses(): string[] {
+  const expandedCards = document.querySelectorAll('.addr-card.expanded');
+  return Array.from(expandedCards).map(card => (card as HTMLElement).dataset.addr || '').filter(Boolean);
+}
+
+/**
+ * 恢复地址卡片的展开状态
+ */
+function restoreExpandedAddresses(addresses: string[]): void {
+  if (!addresses.length) return;
+  
+  const addrSet = new Set(addresses.map(a => a.toLowerCase()));
+  const cards = document.querySelectorAll('.addr-card');
+  
+  cards.forEach(card => {
+    const addr = (card as HTMLElement).dataset.addr?.toLowerCase();
+    if (addr && addrSet.has(addr)) {
+      card.classList.add('expanded');
+    }
+  });
+}
+
+/**
  * Handle add balance to address
  * 创建逼真的测试 UTXO 数据，包含完整的交易结构
+ * 
+ * 【测试模式】新增的 UTXO 会被自动锁定，用于测试锁定 UI
  */
 export function handleAddToAddress(address: string): void {
   const current = getCurrentUser();
@@ -939,6 +1024,15 @@ export function handleAddToAddress(address: string): void {
   // Add to UTXOs (no type assertion needed)
   found.utxos![utxoKey] = utxoData;
 
+  // 【测试模式】锁定新增的 UTXO，用于测试锁定 UI
+  lockUTXOs([{
+    utxoId: utxoKey,
+    address: key,
+    value: inc,
+    type: typeId
+  }], `test_tx_${txid}`);
+  console.info('[测试] 已锁定新增的 UTXO:', utxoKey);
+
   // Update Balance with type-safe reduction
   const newUtxoVal = Object.values(found.utxos!).reduce((sum, utxo) => sum + utxo.Value, 0);
   found.value.utxoValue = newUtxoVal;
@@ -955,9 +1049,14 @@ export function handleAddToAddress(address: string): void {
   // Legacy persistence for backward compatibility (Store persistence will also run)
   saveUser(u);
 
+  // 保存展开状态，重新渲染后恢复
+  const expandedAddrs = getExpandedAddresses();
+  renderWallet();
+  restoreExpandedAddresses(expandedAddrs);
+
   // Show toast notification (not a state-driven UI element)
   const coinType = getCoinName(typeId);
-  showMiniToast(`+${inc} ${coinType}`, 'success');
+  showMiniToast(`+${inc} ${coinType} (已锁定)`, 'success');
   
   // All other UI updates (currency display, address cards, charts, etc.) 
   // are handled by store.subscribe() in bootstrap.ts
@@ -984,6 +1083,9 @@ export function handleZeroAddress(address: string): void {
   found.estInterest = 0;
   found.gas = 0;
 
+  // 清除该地址的锁定 UTXO
+  clearLockedUTXOsByAddress(key);
+
   // Recalculate ValueDivision
   recalculateWalletValue(u);
   
@@ -992,6 +1094,11 @@ export function handleZeroAddress(address: string): void {
 
   // Legacy persistence for backward compatibility
   saveUser(u);
+
+  // 保存展开状态，重新渲染后恢复
+  const expandedAddrs = getExpandedAddresses();
+  renderWallet();
+  restoreExpandedAddresses(expandedAddrs);
   
   // Show toast notification (not a state-driven UI element)
   showMiniToast(t('address.clear'), 'info');
@@ -1704,6 +1811,12 @@ export function rebuildAddrList(): void {
     const tId = Number(meta.type ?? 0);
     const amt = Number(meta.value?.utxoValue || 0);
     
+    // 获取锁定信息
+    const lockedUtxos = getLockedUTXOsByAddress(a);
+    const lockedBalance = getLockedBalanceByAddress(a);
+    const hasLockedUtxos = lockedUtxos.length > 0;
+    const availableBalance = Math.max(0, amt - lockedBalance);
+    
     const coinInfo = getCoinInfo(tId);
     const color = coinInfo.className;
     const coinName = coinInfo.name;
@@ -1724,6 +1837,15 @@ export function rebuildAddrList(): void {
           <div class="addr-info">
             <span class="addr-text" title="${a}">${shortAddr}</span>
             <span class="coin-name-tiny">${coinName}</span>
+            ${hasLockedUtxos ? viewHtml`
+              <span class="src-addr-locked-info">
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                ${t('wallet.availableBalance')}: ${String(availableBalance)}
+              </span>
+            ` : ''}
           </div>
         </div>
         <div class="item-right">
@@ -2056,6 +2178,10 @@ export async function refreshWalletBalances(): Promise<boolean> {
     );
     return false;
   }
+  
+  // 清除所有锁定的 UTXO（刷新后从后端获取最新数据）
+  clearAllLockedUTXOs();
+  console.info('[Wallet] Cleared all locked UTXOs before refresh');
   
   // Show loading state on refresh button
   const refreshBtn = document.getElementById(DOM_IDS.refreshWalletBtn);

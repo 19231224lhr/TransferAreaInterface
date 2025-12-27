@@ -337,6 +337,18 @@ export default {
   'wallet.copy': '复制',
   'wallet.copied': '已复制！',
   'wallet.syncing': '同步中...',
+  
+  // UTXO 锁定相关
+  'wallet.utxoLockedTooltip': '此 UTXO 已被锁定，等待交易确认',
+  'wallet.lockedUtxoCount': '已锁定 {count} 个 UTXO',
+  'wallet.totalBalance': '总余额',
+  'wallet.availableBalance': '可用余额',
+  'wallet.lockedBalance': '锁定余额',
+  'wallet.refreshSuccess': '刷新成功',
+  'wallet.refreshSuccessDesc': '已更新 {count} 个地址的余额',
+  'wallet.refreshFailed': '刷新失败',
+  'wallet.noAddressToRefresh': '没有地址',
+  'wallet.noAddressToRefreshDesc': '请先添加钱包地址',
 
   // 加入担保组织页面
   'join.title': '加入担保组织',
@@ -715,6 +727,17 @@ export default {
   'wallet.balanceUpdated': '余额已更新',
   'wallet.interestUpdated': '利息已更新',
 
+  // UTXO 锁定相关
+  'wallet.totalBalance': '总余额',
+  'wallet.availableBalance': '可用余额',
+  'wallet.lockedBalance': '锁定余额',
+  'wallet.utxoLocked': '已锁定',
+  'wallet.utxoLockedTooltip': '该 UTXO 已被锁定，正在等待交易确认',
+  'wallet.utxoLockedDetail': '锁定于 {time}，关联交易: {txId}',
+  'wallet.lockedUtxoCount': '{count} 个 UTXO 已锁定',
+  'wallet.lockedUtxoWarning': '部分 UTXO 已锁定，不可用于新交易',
+  'wallet.clearLockedOnRefresh': '刷新后将清除所有锁定状态',
+
   // 页脚
   'footer.tagline': '区块链与你同频，信息予你无限。',
   'footer.docs': '文档',
@@ -774,5 +797,16 @@ export default {
   'transfer.confirmExchange': '确认兑换',
   'transfer.crossChainLimit': '跨链交易限制',
   'transfer.selectChangeAddress': '请为跨链交易选择主货币找零地址',
-  'transfer.changeAddressMissing': '找零地址缺失'
+  'transfer.changeAddressMissing': '找零地址缺失',
+
+  // 账户轮询相关
+  'polling.tooManyFailures': '账户同步暂停，请稍后刷新',
+  'polling.blockHeightUpdated': '区块高度更新: {height}',
+  'polling.accountUpdated': '账户信息已更新',
+  'polling.txCerConfirmed': 'TXCer {id}... 已确认',
+  'polling.txCerInvalid': 'TXCer {id}... 验证失败',
+  'polling.txCerCleared': 'TXCer {id}... 已解除怀疑',
+  'polling.interestReceived': '收到利息: {amount}',
+  'polling.newUtxoReceived': '收到新的 UTXO',
+  'polling.utxoConfirmed': 'UTXO 已确认使用'
 };

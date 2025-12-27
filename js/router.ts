@@ -19,6 +19,7 @@ import { getPageConfig, getAllContainerIds } from './config/pageTemplates';
 import { resetWalletBindings } from './services/wallet';
 import { html as viewHtml, renderInto } from './utils/view';
 import { DOM_IDS } from './config/domIds';
+import { stopAccountPolling } from './services/accountPolling';
 
 type PageModule = Record<string, unknown>;
 
@@ -297,6 +298,9 @@ export async function router(): Promise<void> {
 
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
+  
+  // Stop account polling when leaving any page (will be restarted if navigating to main)
+  stopAccountPolling();
 
   // Reinitialize header user menu after cleanup
   initUserMenu();
