@@ -1109,6 +1109,178 @@ export function serializeUserNewTX(userNewTX: UserNewTX): string {
 }
 
 // ============================================================================
+// 交易状态查询
+// ============================================================================
+
+/**
+ * 交易状态类型
+ */
+export type TXStatusType = 'pending' | 'success' | 'failed' | 'not_found';
+
+/**
+ * 交易状态响应
+ */
+export interface TXStatusResponse {
+  tx_id: string;
+  status: TXStatusType;
+  receive_result: boolean;
+  result: boolean;
+  error_reason: string;
+  guar_id: string;
+  user_id: string;
+  block_height: number;
+}
+
+/**
+ * 查询交易状态
+ * 
+ * @param txID 交易ID
+ * @param groupID 担保组织ID
+ * @param assignNodeUrl AssignNode URL（可选）
+ * @returns 交易状态响应
+ */
+export async function queryTXStatus(
+  txID: string,
+  groupID: string,
+  assignNodeUrl?: string
+): Promise<TXStatusResponse> {
+  const { API_BASE_URL, API_ENDPOINTS } = await import('../config/api');
+  
+  const baseUrl = assignNodeUrl || API_BASE_URL;
+  const url = baseUrl + API_ENDPOINTS.ASSIGN_TX_STATUS(groupID, txID);
+  
+  console.log('[交易状态查询] URL:', url);
+  
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json'
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`查询交易状态失败: ${response.statusText}`);
+  }
+  
+  const result = await response.json();
+  console.log('[交易状态查询] 结果:', result);
+  
+  return result;
+}
+
+/**
+ * 等待交易确认的配置
+ */
+export interface WaitForConfirmationOptions {
+  /** 轮询间隔（毫秒），默认 2000 */
+  pollInterval?: number;
+  /** 最大等待时间（毫秒），默认 60000 */
+  maxWaitTime?: number;
+  /** 状态变化回调 */
+  onStatusChange?: (status: TXStatusResponse) => void;
+}
+
+/**
+ * 等待交易确认结果
+ */
+export interface WaitForConfirmationResult {
+  /** 是否成功 */
+  success: boolean;
+  /** 最终状态 */
+  status: TXStatusType;
+  /** 错误原因（如果失败） */
+  errorReason?: string;
+  /** 是否超时 */
+  timeout: boolean;
+  /** 完整的状态响应 */
+  response?: TXStatusResponse;
+}
+
+/**
+ * 等待交易确认
+ * 
+ * 轮询查询交易状态，直到交易被确认（成功或失败）或超时
+ * 
+ * @param txID 交易ID
+ * @param groupID 担保组织ID
+ * @param assignNodeUrl AssignNode URL（可选）
+ * @param options 配置选项
+ * @returns 确认结果
+ */
+export async function waitForTXConfirmation(
+  txID: string,
+  groupID: string,
+  assignNodeUrl?: string,
+  options: WaitForConfirmationOptions = {}
+): Promise<WaitForConfirmationResult> {
+  const {
+    pollInterval = 2000,
+    maxWaitTime = 60000,
+    onStatusChange
+  } = options;
+  
+  const startTime = Date.now();
+  let lastStatus: TXStatusType | null = null;
+  
+  console.log(`[等待交易确认] 开始轮询 TXID=${txID}, 间隔=${pollInterval}ms, 最大等待=${maxWaitTime}ms`);
+  
+  while (Date.now() - startTime < maxWaitTime) {
+    try {
+      const statusResponse = await queryTXStatus(txID, groupID, assignNodeUrl);
+      
+      // 状态变化时触发回调
+      if (statusResponse.status !== lastStatus) {
+        lastStatus = statusResponse.status;
+        console.log(`[等待交易确认] 状态变化: ${statusResponse.status}`);
+        if (onStatusChange) {
+          onStatusChange(statusResponse);
+        }
+      }
+      
+      // 检查是否已确认
+      if (statusResponse.status === 'success') {
+        console.log('[等待交易确认] 交易成功确认');
+        return {
+          success: true,
+          status: 'success',
+          timeout: false,
+          response: statusResponse
+        };
+      }
+      
+      if (statusResponse.status === 'failed') {
+        console.log('[等待交易确认] 交易验证失败:', statusResponse.error_reason);
+        return {
+          success: false,
+          status: 'failed',
+          errorReason: statusResponse.error_reason,
+          timeout: false,
+          response: statusResponse
+        };
+      }
+      
+      // 如果是 not_found，可能是交易还没被处理，继续等待
+      // 如果是 pending，继续等待
+      
+    } catch (err) {
+      console.warn('[等待交易确认] 查询失败，将重试:', err);
+      // 查询失败不中断，继续重试
+    }
+    
+    // 等待下一次轮询
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+  }
+  
+  // 超时
+  console.log('[等待交易确认] 超时');
+  return {
+    success: false,
+    status: lastStatus || 'pending',
+    timeout: true
+  };
+}
+
+// ============================================================================
 // 提交交易
 // ============================================================================
 

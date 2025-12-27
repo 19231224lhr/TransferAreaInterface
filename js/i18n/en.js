@@ -523,6 +523,21 @@ export default {
   'transfer.unknownError': 'Unknown error',
   'transfer.onlyQuickTransferSupported': 'Only quick transfer type is currently supported',
   'transfer.joinOrgFirst': 'Please join a guarantor organization first to send transactions',
+  
+  // Transaction Status Confirmation
+  'transfer.txSubmittedWaitingConfirm': 'Transaction submitted, confirming in background...',
+  'transfer.waitingForConfirmation': 'Waiting for transaction confirmation...',
+  'transfer.txPendingVerification': 'Transaction is being verified by guarantor node...',
+  'transfer.txConfirmedSuccess': 'Transaction Confirmed',
+  'transfer.txConfirmedSuccessDesc': 'Transaction has been verified and confirmed by guarantor node!\n\nTransaction ID: {txid}',
+  'transfer.txConfirmedSuccessShort': 'Transaction {txid} confirmed successfully!',
+  'transfer.txConfirmationTimeout': 'Confirmation Timeout',
+  'transfer.txConfirmationTimeoutDesc': 'Transaction submitted but confirmation timed out. Please check transaction history later.\n\nTransaction ID: {txid}',
+  'transfer.txConfirmationTimeoutShort': 'Transaction {txid} confirmation timed out, please check history',
+  'transfer.txVerificationFailed': 'Transaction Verification Failed',
+  'transfer.txVerificationFailedDesc': 'Guarantor node failed to verify transaction!\n\nTransaction ID: {txid}\nReason: {reason}',
+  'transfer.txVerificationFailedShort': 'Transaction verification failed: {reason}',
+  'transfer.txSentButStatusUnknown': 'Transaction submitted but unable to get confirmation status. Please check transaction history later.\n\nTransaction ID: {txid}',
 
   // Transaction Builder Errors
   'txBuilder.notInGroup': 'User has not joined a guarantor organization',

@@ -523,6 +523,21 @@ export default {
   'transfer.unknownError': '未知错误',
   'transfer.onlyQuickTransferSupported': '目前只支持快速转账类型的交易',
   'transfer.joinOrgFirst': '请先加入担保组织后才能发送交易',
+  
+  // 交易状态确认相关
+  'transfer.txSubmittedWaitingConfirm': '交易已提交，正在后台等待确认...',
+  'transfer.waitingForConfirmation': '等待交易确认...',
+  'transfer.txPendingVerification': '交易正在由担保节点验证中...',
+  'transfer.txConfirmedSuccess': '交易确认成功',
+  'transfer.txConfirmedSuccessDesc': '交易已被担保节点验证并确认成功！\n\n交易ID: {txid}',
+  'transfer.txConfirmedSuccessShort': '交易 {txid} 已确认成功！',
+  'transfer.txConfirmationTimeout': '确认超时',
+  'transfer.txConfirmationTimeoutDesc': '交易已提交但确认超时，请稍后在交易历史中查看状态。\n\n交易ID: {txid}',
+  'transfer.txConfirmationTimeoutShort': '交易 {txid} 确认超时，请稍后查看交易历史',
+  'transfer.txVerificationFailed': '交易验证失败',
+  'transfer.txVerificationFailedDesc': '担保节点验证交易失败！\n\n交易ID: {txid}\n失败原因: {reason}',
+  'transfer.txVerificationFailedShort': '交易验证失败: {reason}',
+  'transfer.txSentButStatusUnknown': '交易已提交，但无法获取确认状态。请稍后在交易历史中查看。\n\n交易ID: {txid}',
 
   // 交易构造错误
   'txBuilder.notInGroup': '用户未加入担保组织',

@@ -9,7 +9,7 @@ import { loadUser, User, AddressData, getJoinedGroup } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showModalTip, showConfirmModal } from '../ui/modal';
 import { BuildTXInfo } from './transaction';
-import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX } from './txBuilder';
+import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX, waitForTXConfirmation, TXStatusResponse } from './txBuilder';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
 import { clearTransferDraft } from './transferDraft';
@@ -716,32 +716,43 @@ export function initTransferSubmit(): void {
       try {
         const result = await submitTransaction(userNewTX, guarGroup.groupID, assignNodeUrl);
         
+        // 立即隐藏 loading，不等待轮询
+        hideLoading(sendLoadingId);
+        
         if (result.success) {
           console.log('[发送交易] 交易发送成功，TXID:', result.tx_id);
-          showModalTip(
-            t('toast.sendTxSuccess') || '交易发送成功',
-            t('transfer.txSentSuccessDesc', { txid: result.tx_id || userNewTX.TX.TXID }) || 
-            `交易已成功提交到担保组织！\n\n交易ID: ${result.tx_id || userNewTX.TX.TXID}`,
-            false
+          
+          const txIdToQuery = result.tx_id || userNewTX.TX.TXID;
+          
+          // 显示成功提示，告知用户交易已提交
+          showToast(
+            t('transfer.txSubmittedWaitingConfirm') || '交易已提交，正在后台等待确认...',
+            'success',
+            t('toast.sendTxSuccess') || '交易发送成功'
           );
           
-          // 清除草稿
+          // 清除草稿（交易已提交）
           try { clearTransferDraft(); } catch (_) { }
           
           // 清空表单
           try {
-            // 取消选中所有源地址
             Array.from(addrList!.querySelectorAll('input[type="checkbox"]')).forEach((inp: any) => {
               inp.checked = false;
               const label = inp.closest('label');
               if (label) label.classList.remove('selected');
             });
-            // 清空收款人列表
             if (billList) billList.innerHTML = '';
-            // 重置 gas 输入
             if (gasInput) gasInput.value = '0';
             if (txGasInput) txGasInput.value = '1';
           } catch (_) { }
+          
+          // 🔄 后台异步轮询交易状态（不阻塞用户界面）
+          console.log('[发送交易] 开始后台轮询交易状态:', txIdToQuery);
+          
+          // 使用 setTimeout 0 确保 UI 先更新
+          setTimeout(() => {
+            pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, assignNodeUrl);
+          }, 0);
           
         } else {
           const errMsg = result.error || t('transfer.unknownError') || '未知错误';
@@ -753,6 +764,7 @@ export function initTransferSubmit(): void {
           );
         }
       } catch (sendErr: any) {
+        hideLoading(sendLoadingId);
         const errMsg = sendErr?.message || String(sendErr);
         console.error('[发送交易] 发送异常:', errMsg);
         showModalTip(
@@ -760,8 +772,6 @@ export function initTransferSubmit(): void {
           t('transfer.networkError') || '网络错误，请检查网络连接后重试：' + errMsg,
           true
         );
-      } finally {
-        hideLoading(sendLoadingId);
       }
     } catch (err: any) {
       // Restore stable UI state and storage snapshot
@@ -788,6 +798,85 @@ export function initTransferSubmit(): void {
   });
   
   tfBtn.dataset._bind = '1';
+}
+
+// ========================================
+// 后台轮询交易状态
+// ========================================
+
+/**
+ * 后台异步轮询交易状态
+ * 
+ * 不阻塞用户界面，通过 toast 通知用户状态变化
+ * 
+ * @param txID 交易ID
+ * @param groupID 担保组织ID
+ * @param assignNodeUrl AssignNode URL（可选）
+ */
+async function pollTXStatusInBackground(
+  txID: string,
+  groupID: string,
+  assignNodeUrl?: string
+): Promise<void> {
+  console.log('[后台轮询] 开始轮询交易状态:', txID);
+  
+  try {
+    const confirmResult = await waitForTXConfirmation(
+      txID,
+      groupID,
+      assignNodeUrl,
+      {
+        pollInterval: 2000,   // 每 2 秒轮询一次
+        maxWaitTime: 60000,   // 最多等待 60 秒
+        onStatusChange: (status: TXStatusResponse) => {
+          // 状态变化时通过 toast 通知用户
+          if (status.status === 'pending') {
+            console.log('[后台轮询] 交易处理中...');
+            // 不频繁弹 toast，避免打扰用户
+          }
+        }
+      }
+    );
+    
+    if (confirmResult.success) {
+      // 交易确认成功 - 显示成功 toast
+      console.log('[后台轮询] 交易确认成功:', txID);
+      showToast(
+        t('transfer.txConfirmedSuccessShort', { txid: txID.slice(0, 8) + '...' }) || 
+        `交易 ${txID.slice(0, 8)}... 已确认成功！`,
+        'success',
+        t('transfer.txConfirmedSuccess') || '交易确认成功',
+        5000  // 显示 5 秒
+      );
+      
+    } else if (confirmResult.timeout) {
+      // 超时 - 显示提示 toast
+      console.log('[后台轮询] 交易确认超时:', txID);
+      showToast(
+        t('transfer.txConfirmationTimeoutShort', { txid: txID.slice(0, 8) + '...' }) || 
+        `交易 ${txID.slice(0, 8)}... 确认超时，请稍后查看交易历史`,
+        'warning',
+        t('transfer.txConfirmationTimeout') || '确认超时',
+        5000
+      );
+      
+    } else {
+      // 交易验证失败 - 显示错误 toast
+      const errorReason = confirmResult.errorReason || t('transfer.unknownError') || '未知错误';
+      console.log('[后台轮询] 交易验证失败:', txID, errorReason);
+      showToast(
+        t('transfer.txVerificationFailedShort', { reason: errorReason }) || 
+        `交易验证失败: ${errorReason}`,
+        'error',
+        t('transfer.txVerificationFailed') || '交易验证失败',
+        8000  // 错误信息显示更久
+      );
+    }
+    
+  } catch (err: any) {
+    console.warn('[后台轮询] 轮询异常:', err);
+    // 轮询失败不需要特别提示，用户可以在交易历史中查看
+  }
 }
 
 // initBuildTransaction 已合并到 initTransferSubmit 中，不再需要单独的函数
