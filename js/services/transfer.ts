@@ -741,7 +741,20 @@ export function initTransferSubmit(): void {
               const label = inp.closest('label');
               if (label) label.classList.remove('selected');
             });
-            if (billList) billList.innerHTML = '';
+            if (billList) {
+              billList.innerHTML = '';
+              // 重新添加一个空的收款人卡片
+              try {
+                const recipientModule = await import('./recipient.js');
+                const computeCurrentOrgId = () => {
+                  const guarGroup = getJoinedGroup();
+                  return guarGroup?.groupID || '';
+                };
+                recipientModule.addRecipientCard(billList, computeCurrentOrgId);
+              } catch (e) {
+                console.warn('[发送交易] 重新添加收款人卡片失败:', e);
+              }
+            }
             if (gasInput) gasInput.value = '0';
             if (txGasInput) txGasInput.value = '1';
           } catch (_) { }
