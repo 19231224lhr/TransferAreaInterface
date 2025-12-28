@@ -243,6 +243,11 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
       // Clear all user data properly
       clearAccountStorage();
       
+      // Reset wallet refresh flag for next login
+      if (typeof window.PanguPay?.pages?.resetWalletRefreshFlag === 'function') {
+        window.PanguPay.pages.resetWalletRefreshFlag();
+      }
+      
       // Clear screen lock state
       localStorage.removeItem(STORAGE_KEY);
       

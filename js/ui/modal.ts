@@ -134,6 +134,7 @@ function resetModalState(): void {
   const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
   const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
   const textEl = document.getElementById(DOM_IDS.unifiedText);
+  const titleEl = document.getElementById(DOM_IDS.unifiedTitle);
   
   if (loading) loading.classList.remove('hidden');
   if (success) {
@@ -143,7 +144,14 @@ function resetModalState(): void {
   if (iconWrap) iconWrap.classList.remove('error-state');
   if (successIcon) successIcon.classList.remove('hidden');
   if (errorIcon) errorIcon.classList.add('hidden');
-  if (textEl) textEl.classList.remove('tip--error');
+  if (textEl) {
+    textEl.classList.remove('tip--error');
+    // 清空文本内容，使用 renderInto 保持与其他函数一致
+    renderInto(textEl, html``);
+  }
+  if (titleEl) {
+    titleEl.textContent = '';
+  }
   
   onOkCallback = null;
   onCancelCallback = null;
@@ -211,6 +219,23 @@ export function showUnifiedSuccess(
   
   // 更新 UI
   updateModalUI(isError ? 'error' : 'success', isError);
+  
+  // 手动更新标题和文本（因为绑定配置中移除了这些绑定）
+  const titleEl = document.getElementById(DOM_IDS.unifiedTitle);
+  const textEl = document.getElementById(DOM_IDS.unifiedText);
+  
+  if (titleEl) {
+    titleEl.textContent = finalTitle;
+  }
+  if (textEl) {
+    if (isError) {
+      textEl.classList.add('tip--error');
+    } else {
+      textEl.classList.remove('tip--error');
+    }
+    // 使用 renderInto 与 showModalTip 保持一致，避免 lit-html 状态冲突
+    renderInto(textEl, html`${finalText}`);
+  }
   
   // 处理取消按钮
   const cancelBtn = document.getElementById(DOM_IDS.unifiedCancelBtn);

@@ -380,8 +380,13 @@ export default {
   'join.startSearch': '输入组织编号开始搜索',
   'join.skipJoin': '暂不加入担保组织',
   'join.joiningOrg': '正在加入担保组织...',
+  'join.checkingAddresses': '正在检查地址状态...',
   'join.joinFailed': '加入失败',
   'join.joinFailedDesc': '加入担保组织失败，请稍后重试',
+  'join.addressAlreadyInOrg': '地址已属于组织',
+  'join.addressAlreadyInOrgDesc': '您的钱包地址已经属于一个担保组织。如果您刚导入了这个地址，系统应该已自动关联组织信息。请返回主页查看。',
+  'join.addressInOtherOrgDesc': '您的地址 {address}... 已属于组织 {groupID}。一个地址只能属于一个担保组织。如需加入其他组织，请先退出当前组织。',
+  'join.alreadyInTargetOrg': '您的地址已属于组织 {groupID}',
   'join.leaveFailed': '退出失败',
   'join.leaveFailedDesc': '退出担保组织失败，请稍后重试',
   'join.noSubAddress': '没有可用的钱包地址',
@@ -396,6 +401,8 @@ export default {
   'join.queryingOrg': '正在查询组织信息...',
   'join.queryFailed': '查询失败',
   'join.queryFailedDesc': '无法获取组织信息，请稍后重试',
+  'join.addressInOrgRecommendation': '您的地址 {address}... 已属于担保组织 {groupID}，您必须加入该组织。',
+  'join.addressInOrgRecommendationTitle': '推荐组织',
 
   // 转账表单
   'transfer.recipientAddress': '收款地址',
@@ -524,6 +531,12 @@ export default {
   'toast.cannotParseAddress': '无法解析地址',
   'toast.addressExists': '该地址已存在，不能重复导入',
 
+  // 导入地址组织检查
+  'import.addressAlreadyInOrg': '地址已属于组织 {groupID}，已自动关联',
+  'import.addressAlreadyInOrgDesc': '地址导入成功！该地址已属于担保组织 {groupID}，已自动关联。',
+  'import.checkingOrg': '正在检查地址所属组织...',
+  'import.addressBelongsToOrgHint': '注意：该地址已属于担保组织 {groupID}，加入组织时请选择该组织。',
+
   // 交易发送相关
   'transfer.confirmSendTx': '确认发送交易',
   'transfer.confirmSendTxDesc': '确认发送交易？\n\n交易ID: {txid}\n收款方数量: {recipients}\n总金额: {amount}',
@@ -550,6 +563,8 @@ export default {
   'transfer.txVerificationFailedDesc': '担保节点验证交易失败！\n\n交易ID: {txid}\n失败原因: {reason}',
   'transfer.txVerificationFailedShort': '交易验证失败: {reason}',
   'transfer.txSentButStatusUnknown': '交易已提交，但无法获取确认状态。请稍后在交易历史中查看。\n\n交易ID: {txid}',
+  'transfer.userNotInOrgHint': '您的账户未在后端担保组织中注册。这可能是因为：\n1. 您导入的地址已属于其他组织\n2. 加入组织时发生了错误\n\n请尝试：退出当前组织，然后重新加入正确的组织。',
+  'transfer.utxoAlreadySpent': 'UTXO 已被使用，请刷新页面后重试',
 
   // 交易构造错误
   'txBuilder.notInGroup': '用户未加入担保组织',

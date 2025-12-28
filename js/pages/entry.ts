@@ -171,19 +171,25 @@ function renderWalletList(addrs: string[]): void {
     li.appendChild(addr);
     li.appendChild(badge);
     
-    // 如果是从登录进入且地址被锁定，添加删除按钮
+    // 添加删除按钮（所有地址都可以删除）
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'address-delete-btn';
+    deleteBtn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+        <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    `;
+    deleteBtn.title = t('entry.deleteAddress') || '删除地址';
+    deleteBtn.onclick = (e) => {
+      e.stopPropagation();
+      handleDeleteAddress(a);
+    };
+    li.appendChild(deleteBtn);
+    
+    // 如果是从登录进入且地址被锁定，添加点击事件以解锁地址
     if (isFromLogin && o.locked) {
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'address-delete-btn';
-      deleteBtn.textContent = '×';
-      deleteBtn.title = t('entry.deleteAddress') || '删除地址';
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        handleDeleteAddress(a);
-      };
-      li.appendChild(deleteBtn);
-      
-      // 添加点击事件以解锁地址
       li.style.cursor = 'pointer';
       li.onclick = () => handleUnlockAddress(a);
     }

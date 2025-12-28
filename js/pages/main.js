@@ -5,7 +5,7 @@
  */
 
 import { loadUser, saveUser, getJoinedGroup } from '../utils/storage.ts';
-import { renderWallet, refreshOrgPanel, initAddressModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions, showWalletSkeletons } from '../services/wallet';
+import { renderWallet, refreshOrgPanel, initAddressModal, initTransferModeTabs, rebuildAddrList, initRefreshSrcAddrList, initChangeAddressSelects, initRecipientCards, initAdvancedOptions, showWalletSkeletons, refreshWalletBalances } from '../services/wallet';
 import { initTransferSubmit } from '../services/transfer.ts';
 import { initTransferDraftPersistence, restoreTransferDraft } from '../services/transferDraft.ts';
 import { initWalletStructToggle, initTxDetailModal } from '../ui/walletStruct.js';
@@ -15,8 +15,19 @@ import { DOM_IDS } from '../config/domIds';
 import { initComNodeEndpoint } from '../services/comNodeEndpoint.ts';
 import { startAccountPolling, stopAccountPolling, isAccountPollingActive } from '../services/accountPolling';
 
+// 标记是否是首次进入 main 页面（用于自动刷新钱包余额）
+let isFirstMainPageVisit = true;
+
 // Re-export for convenience
 export { renderWallet };
+
+/**
+ * Reset first visit flag
+ * Call this when user logs out or switches account
+ */
+export function resetFirstMainPageVisit() {
+  isFirstMainPageVisit = true;
+}
 
 /**
  * Handle main route initialization
@@ -112,6 +123,26 @@ export function handleMainRoute() {
   // Start account polling for users in guarantor organization
   // This will automatically check if user is in an organization before starting
   startAccountPolling();
+  
+  // 首次进入 main 页面时，自动刷新钱包余额（从后端查询最新数据）
+  // 这通常发生在用户从 inquiry-main 页面（加入组织后的加载动画）进入时
+  if (isFirstMainPageVisit) {
+    isFirstMainPageVisit = false;
+    
+    // 延迟执行，确保 UI 渲染完成后再查询
+    setTimeout(() => {
+      console.info('[Main] First visit to main page, auto-refreshing wallet balances...');
+      refreshWalletBalances().then(success => {
+        if (success) {
+          console.info('[Main] ✓ Auto-refresh wallet balances completed');
+        } else {
+          console.warn('[Main] ✗ Auto-refresh wallet balances failed');
+        }
+      }).catch(err => {
+        console.error('[Main] ✗ Auto-refresh wallet balances error:', err);
+      });
+    }, 500);
+  }
 }
 
 /**

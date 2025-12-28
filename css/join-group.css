@@ -1595,3 +1595,93 @@
     padding: 16px 24px;
   }
 }
+
+
+/* ========================================
+   组织推荐横幅 - 当用户地址已属于某组织时显示
+   ======================================== */
+
+.org-recommendation-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  margin: 0 24px 20px 24px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.15) 0%, rgba(245, 158, 11, 0.1) 100%);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  animation: bannerSlideIn 0.3s ease-out;
+}
+
+@keyframes bannerSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.org-recommendation-banner.hidden {
+  display: none;
+}
+
+.org-recommendation-banner__icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(251, 191, 36, 0.2);
+  border-radius: 8px;
+  color: #d97706;
+}
+
+.org-recommendation-banner__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.org-recommendation-banner__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #92400e;
+  margin-bottom: 4px;
+}
+
+.org-recommendation-banner__message {
+  font-size: 13px;
+  color: #b45309;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* 深色模式 */
+[data-theme="dark"] .org-recommendation-banner {
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-color: rgba(251, 191, 36, 0.2);
+}
+
+[data-theme="dark"] .org-recommendation-banner__icon {
+  background: rgba(251, 191, 36, 0.15);
+  color: #fbbf24;
+}
+
+[data-theme="dark"] .org-recommendation-banner__title {
+  color: #fcd34d;
+}
+
+[data-theme="dark"] .org-recommendation-banner__message {
+  color: #fbbf24;
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .org-recommendation-banner {
+    margin: 0 16px 16px 16px;
+    padding: 14px 16px;
+  }
+}

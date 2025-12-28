@@ -813,12 +813,30 @@ export function initTransferSubmit(): void {
           
         } else {
           const errMsg = result.error || t('transfer.unknownError') || '未知错误';
-          console.error('[发送交易] 发送失败:', errMsg);
-          showModalTip(
-            t('toast.sendTxFailed') || '交易发送失败',
-            errMsg,
-            true
-          );
+          const errorCode = (result as any).errorCode;
+          console.error('[发送交易] 发送失败:', errMsg, 'errorCode:', errorCode);
+          
+          // Provide more helpful error messages based on error code
+          let userFriendlyMsg = errMsg;
+          let title = t('toast.sendTxFailed') || '交易发送失败';
+          
+          if (errorCode === 'USER_NOT_IN_ORG') {
+            // User not in organization - this is a critical state mismatch
+            title = t('error.userNotInGroup') || '用户不在担保组织内';
+            userFriendlyMsg = t('transfer.userNotInOrgHint') || 
+              '您的账户未在后端担保组织中注册。这可能是因为：\n' +
+              '1. 您导入的地址已属于其他组织\n' +
+              '2. 加入组织时发生了错误\n\n' +
+              '请尝试：退出当前组织，然后重新加入正确的组织。';
+          } else if (errorCode === 'ADDRESS_REVOKED') {
+            userFriendlyMsg = t('error.addressAlreadyRevoked') || '使用的地址已被解绑，请选择其他地址';
+          } else if (errorCode === 'SIGNATURE_FAILED') {
+            userFriendlyMsg = t('error.signatureVerificationFailed') || '签名验证失败，请检查私钥是否正确';
+          } else if (errorCode === 'UTXO_SPENT') {
+            userFriendlyMsg = t('transfer.utxoAlreadySpent') || 'UTXO 已被使用，请刷新页面后重试';
+          }
+          
+          showModalTip(title, userFriendlyMsg, true);
         }
       } catch (sendErr: any) {
         hideLoading(sendLoadingId);

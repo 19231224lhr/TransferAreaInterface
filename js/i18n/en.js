@@ -380,8 +380,13 @@ export default {
   'join.orgNotFoundDesc': 'No matching organization found, please check the number and try again',
   'join.skipJoin': 'Skip for Now',
   'join.joiningOrg': 'Joining organization...',
+  'join.checkingAddresses': 'Checking address status...',
   'join.joinFailed': 'Join Failed',
   'join.joinFailedDesc': 'Failed to join guarantor organization, please try again later',
+  'join.addressAlreadyInOrg': 'Address Already in Organization',
+  'join.addressAlreadyInOrgDesc': 'Your wallet address already belongs to a guarantor organization. If you just imported this address, the system should have auto-linked the organization info. Please go back to the main page to check.',
+  'join.addressInOtherOrgDesc': 'Your address {address}... already belongs to organization {groupID}. An address can only belong to one guarantor organization. To join another organization, please leave the current one first.',
+  'join.alreadyInTargetOrg': 'Your address already belongs to organization {groupID}',
   'join.leaveFailed': 'Leave Failed',
   'join.leaveFailedDesc': 'Failed to leave guarantor organization, please try again later',
   'join.noSubAddress': 'No wallet addresses available',
@@ -396,6 +401,8 @@ export default {
   'join.queryingOrg': 'Querying organization info...',
   'join.queryFailed': 'Query Failed',
   'join.queryFailedDesc': 'Unable to get organization info, please try again later',
+  'join.addressInOrgRecommendation': 'Your address {address}... belongs to organization {groupID}. You must join this organization.',
+  'join.addressInOrgRecommendationTitle': 'Recommended Organization',
 
   // Transfer Form
   'transfer.recipientAddress': 'Recipient Address',
@@ -524,6 +531,12 @@ export default {
   'toast.cannotParseAddress': 'Cannot parse address',
   'toast.addressExists': 'Address already exists, cannot import duplicate',
 
+  // Import Address Organization Check
+  'import.addressAlreadyInOrg': 'Address belongs to organization {groupID}, auto-linked',
+  'import.addressAlreadyInOrgDesc': 'Address imported successfully! This address already belongs to guarantor organization {groupID}, auto-linked.',
+  'import.checkingOrg': 'Checking address organization...',
+  'import.addressBelongsToOrgHint': 'Note: This address belongs to organization {groupID}. Please select this organization when joining.',
+
   // Transaction Sending
   'transfer.confirmSendTx': 'Confirm Send Transaction',
   'transfer.confirmSendTxDesc': 'Confirm to send transaction?\n\nTransaction ID: {txid}\nRecipients: {recipients}\nTotal Amount: {amount}',
@@ -550,6 +563,8 @@ export default {
   'transfer.txVerificationFailedDesc': 'Guarantor node failed to verify transaction!\n\nTransaction ID: {txid}\nReason: {reason}',
   'transfer.txVerificationFailedShort': 'Transaction verification failed: {reason}',
   'transfer.txSentButStatusUnknown': 'Transaction submitted but unable to get confirmation status. Please check transaction history later.\n\nTransaction ID: {txid}',
+  'transfer.userNotInOrgHint': 'Your account is not registered in the backend guarantor organization. This may be because:\n1. The address you imported already belongs to another organization\n2. An error occurred when joining the organization\n\nPlease try: Leave the current organization and rejoin the correct one.',
+  'transfer.utxoAlreadySpent': 'UTXO has already been spent, please refresh the page and try again',
 
   // Transaction Builder Errors
   'txBuilder.notInGroup': 'User has not joined a guarantor organization',

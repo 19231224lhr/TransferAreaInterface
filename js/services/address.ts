@@ -403,14 +403,42 @@ export async function unbindAddressOnBackend(
       // Parse specific error messages
       const errorMsg = responseData.message || (responseData as any).error || '';
       
-      if (errorMsg.includes('user not found in group')) {
-        return { success: false, error: t('error.userNotInGroup', '用户不在担保组织中') };
+      // If user is not in the organization, treat as success for local deletion
+      // This can happen when:
+      // 1. User imported an address that belongs to an org but never successfully joined
+      // 2. User's join request failed but frontend saved org info anyway
+      if (errorMsg.includes('user is not in the guarantor') || 
+          errorMsg.includes('user not found in group')) {
+        console.warn('[Address] User not in organization on backend, allowing local deletion');
+        return { 
+          success: true, 
+          data: { 
+            success: true, 
+            message: 'Address unbound locally (user not in organization on backend)' 
+          } 
+        };
       }
       if (errorMsg.includes('address not found')) {
-        return { success: false, error: t('error.addressNotFound', '地址不存在') };
+        // Address not found on backend - allow local deletion
+        console.warn('[Address] Address not found on backend, allowing local deletion');
+        return { 
+          success: true, 
+          data: { 
+            success: true, 
+            message: 'Address unbound locally (not found on backend)' 
+          } 
+        };
       }
       if (errorMsg.includes('already revoked')) {
-        return { success: false, error: t('error.addressAlreadyRevoked', '地址已被解绑') };
+        // Address already revoked - allow local deletion
+        console.warn('[Address] Address already revoked on backend, allowing local deletion');
+        return { 
+          success: true, 
+          data: { 
+            success: true, 
+            message: 'Address unbound locally (already revoked on backend)' 
+          } 
+        };
       }
       if (errorMsg.includes('signature verification')) {
         return { success: false, error: t('error.signatureVerificationFailed', '签名验证失败') };

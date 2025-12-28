@@ -140,13 +140,35 @@ function getCurrentUser(): User | null {
 }
 
 /**
- * 生成 UTXO 唯一标识符
- * 格式: txid_indexZ (与后端 Out 字段格式一致)
+ * 生成 UTXO 唯一标识符（前端格式）
+ * 格式: txid_indexZ (下划线分隔)
  */
 function generateUTXOId(utxo: UTXOData): string {
   const txid = utxo.UTXO?.TXID || utxo.TXID || '';
   const indexZ = utxo.Position?.IndexZ ?? 0;
   return `${txid}_${indexZ}`;
+}
+
+/**
+ * 生成 UTXO 唯一标识符（后端格式）
+ * 格式: txid + indexZ (空格+加号+空格)
+ * 用于兼容后端存储的 UTXO ID
+ */
+function generateBackendUTXOId(utxo: UTXOData): string {
+  const txid = utxo.UTXO?.TXID || utxo.TXID || '';
+  const indexZ = utxo.Position?.IndexZ ?? 0;
+  return `${txid} + ${indexZ}`;
+}
+
+/**
+ * 将后端格式的 UTXO ID 转换为前端格式
+ * "txid + indexZ" -> "txid_indexZ"
+ */
+function normalizeUtxoId(id: string): string {
+  if (id.includes(' + ')) {
+    return id.replace(' + ', '_');
+  }
+  return id;
 }
 
 // ============================================================================
@@ -268,15 +290,38 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
       }
 
       for (const inUtxo of inUtxos) {
+        // 🔧 使用前端格式的 UTXO ID (txid_indexZ)
         const utxoId = generateUTXOId(inUtxo.UTXOData);
         
-        // 检查是否已存在
+        // 🔧 同时检查后端格式的 ID，如果存在则先删除（避免重复）
+        const backendFormatId = generateBackendUTXOId(inUtxo.UTXOData);
+        if (addrData.utxos[backendFormatId]) {
+          console.info(`[AccountPolling] Removing old backend-format UTXO: ${backendFormatId}`);
+          delete addrData.utxos[backendFormatId];
+        }
+        
+        // 检查是否已存在（前端格式）
         if (addrData.utxos[utxoId]) {
           console.debug(`[AccountPolling] UTXO ${utxoId} already exists, skipping`);
           continue;
         }
 
-        // 添加新 UTXO
+        // [DEBUG] 打印接收到的完整 UTXO 数据，特别是 TXOutputs
+        console.info(`[AccountPolling] ========== 接收到新 UTXO ==========`);
+        console.info(`[AccountPolling] UTXO ID: ${utxoId}`);
+        console.info(`[AccountPolling] Value: ${inUtxo.UTXOData.Value}`);
+        console.info(`[AccountPolling] Type: ${inUtxo.UTXOData.Type}`);
+        console.info(`[AccountPolling] Position: ${JSON.stringify(inUtxo.UTXOData.Position)}`);
+        console.info(`[AccountPolling] UTXO.TXID: ${inUtxo.UTXOData.UTXO?.TXID}`);
+        console.info(`[AccountPolling] UTXO.TXOutputs 数量: ${inUtxo.UTXOData.UTXO?.TXOutputs?.length || 0}`);
+        if (inUtxo.UTXOData.UTXO?.TXOutputs) {
+          inUtxo.UTXOData.UTXO.TXOutputs.forEach((output: any, idx: number) => {
+            console.info(`[AccountPolling]   TXOutput[${idx}]: ToAddress=${output.ToAddress?.slice(0, 16)}..., ToValue=${output.ToValue}, Type=${output.Type}`);
+          });
+        }
+        console.info(`[AccountPolling] =====================================`);
+
+        // 添加新 UTXO（使用前端格式 ID）
         addrData.utxos[utxoId] = inUtxo.UTXOData;
         hasChanges = true;
         
@@ -292,25 +337,43 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   if (update.WalletChangeData?.Out && update.WalletChangeData.Out.length > 0) {
     const outUtxoIds = update.WalletChangeData.Out;
     
+    // 🔧 转换后端 UTXO ID 格式为前端格式
+    // 后端格式: "txid + indexZ" (空格+加号+空格)
+    // 前端格式: "txid_indexZ" (下划线)
+    const normalizedUtxoIds = outUtxoIds.map(normalizeUtxoId);
+    
+    console.info('[AccountPolling] Out UTXO IDs (original):', outUtxoIds);
+    console.info('[AccountPolling] Out UTXO IDs (normalized):', normalizedUtxoIds);
+    
     // 解锁这些 UTXO（它们已经被确认使用）
-    unlockUTXOs(outUtxoIds);
+    // 使用转换后的前端格式 ID
+    unlockUTXOs(normalizedUtxoIds);
+    hasChanges = true; // 解锁操作本身就是一个变化，需要刷新 UI
     
     // 从本地钱包中删除这些 UTXO
+    // 🔧 同时尝试删除两种格式的 ID（兼容旧数据）
     for (const [address, addrData] of Object.entries(user.wallet.addressMsg)) {
       if (!addrData.utxos) continue;
       
-      for (const utxoId of outUtxoIds) {
-        if (addrData.utxos[utxoId]) {
-          delete addrData.utxos[utxoId];
-          hasChanges = true;
-          console.info(`[AccountPolling] Removed UTXO: ${utxoId} from address ${address}`);
+      for (let i = 0; i < outUtxoIds.length; i++) {
+        const backendId = outUtxoIds[i];
+        const frontendId = normalizedUtxoIds[i];
+        
+        // 尝试删除后端格式 ID
+        if (addrData.utxos[backendId]) {
+          delete addrData.utxos[backendId];
+          console.info(`[AccountPolling] Removed UTXO (backend format): ${backendId} from address ${address}`);
+        }
+        
+        // 尝试删除前端格式 ID
+        if (addrData.utxos[frontendId]) {
+          delete addrData.utxos[frontendId];
+          console.info(`[AccountPolling] Removed UTXO (frontend format): ${frontendId} from address ${address}`);
         }
       }
 
       // 重新计算地址余额
-      if (hasChanges) {
-        recalculateAddressBalance(addrData);
-      }
+      recalculateAddressBalance(addrData);
     }
   }
 

@@ -26,6 +26,11 @@ import {
   createReactiveState,
   type ReactiveState
 } from '../utils/reactive';
+import {
+  queryAddressGroupInfo,
+  isInGuarGroup,
+  type NormalizedAddressGroupInfo
+} from '../services/accountQuery';
 
 // ============================================================================
 // Types
@@ -679,6 +684,108 @@ async function handleJoinSearchClick(): Promise<void> {
 }
 
 /**
+ * 检查用户的钱包地址是否已经属于某个担保组织
+ * 如果有任何地址已属于组织，返回该地址和组织信息
+ */
+async function checkUserAddressesOrganization(): Promise<{
+  hasAddressInOrg: boolean;
+  address?: string;
+  groupID?: string;
+} | null> {
+  const user = loadUser();
+  if (!user || !user.wallet?.addressMsg) {
+    return null;
+  }
+  
+  const addresses = Object.keys(user.wallet.addressMsg);
+  if (addresses.length === 0) {
+    return null;
+  }
+  
+  try {
+    console.info(`[JoinGroup] 🔍 Checking if user addresses belong to any organization...`);
+    const result = await queryAddressGroupInfo(addresses);
+    
+    if (!result.success) {
+      console.warn(`[JoinGroup] ⚠️ Failed to query address organizations:`, result.error);
+      return null;
+    }
+    
+    // Check if any address is already in a group
+    for (const addrInfo of result.data) {
+      if (isInGuarGroup(addrInfo.groupID)) {
+        console.info(`[JoinGroup] ✓ Address ${addrInfo.address} belongs to organization ${addrInfo.groupID}`);
+        return {
+          hasAddressInOrg: true,
+          address: addrInfo.address,
+          groupID: addrInfo.groupID
+        };
+      }
+    }
+    
+    console.info(`[JoinGroup] ✓ No addresses belong to any organization`);
+    return { hasAddressInOrg: false };
+  } catch (error) {
+    console.error(`[JoinGroup] ✗ Error checking address organizations:`, error);
+    return null;
+  }
+}
+
+/**
+ * 保存组织信息并导航到主页
+ * 用于地址已属于目标组织的情况
+ */
+function saveOrganizationAndNavigate(group: GroupInfo): void {
+  // 构建完整的节点 URL
+  let assignNodeUrl: string | undefined;
+  let aggrNodeUrl: string | undefined;
+  
+  if (group.assignAPIEndpoint) {
+    assignNodeUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
+  }
+  if (group.aggrAPIEndpoint) {
+    aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
+  }
+  
+  // 保存到 localStorage
+  try {
+    localStorage.setItem('guarChoice', JSON.stringify({
+      type: 'join',
+      groupID: group.groupID,
+      aggreNode: group.aggreNode,
+      assignNode: group.assignNode,
+      pledgeAddress: group.pledgeAddress,
+      assignAPIEndpoint: group.assignAPIEndpoint,
+      aggrAPIEndpoint: group.aggrAPIEndpoint,
+      assignNodeUrl: assignNodeUrl,
+      aggrNodeUrl: aggrNodeUrl
+    }));
+  } catch { /* ignore */ }
+  
+  // 保存到用户账户
+  const u = loadUser();
+  if (u?.accountId) {
+    saveUser({
+      accountId: u.accountId,
+      orgNumber: group.groupID,
+      guarGroup: {
+        groupID: group.groupID,
+        aggreNode: group.aggreNode,
+        assignNode: group.assignNode,
+        pledgeAddress: group.pledgeAddress,
+        assignAPIEndpoint: group.assignAPIEndpoint,
+        aggrAPIEndpoint: group.aggrAPIEndpoint
+      }
+    });
+  }
+  
+  // 导航到询问页面（显示成功动画后跳转到 main）
+  if (typeof window.PanguPay?.router?.routeTo === 'function') {
+    window.PanguPay.router.routeTo('#/inquiry-main');
+  }
+}
+
+/**
  * 处理加入组织（调用真实 API）
  */
 async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
@@ -692,14 +799,40 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
     const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
     const { showMiniToast } = await import('../utils/toast.js');
     
-    showUnifiedLoading(t('join.joiningOrg'));
+    showUnifiedLoading(t('join.checkingAddresses') || '正在检查地址状态...');
     if (joinRecBtn) joinRecBtn.disabled = true;
     if (joinSearchBtn) joinSearchBtn.disabled = true;
+    
+    // 先检查用户的地址是否已经属于某个组织
+    const orgCheck = await checkUserAddressesOrganization();
+    
+    if (orgCheck && orgCheck.hasAddressInOrg) {
+      // 如果地址属于其他组织（不是目标组织），提前告知用户
+      if (orgCheck.groupID !== group.groupID) {
+        hideUnifiedOverlay();
+        console.warn(`[JoinGroup] ⚠️ User has address ${orgCheck.address} in different organization ${orgCheck.groupID}`);
+        
+        // 显示错误并更新推荐横幅
+        showOrgRecommendationBanner(orgCheck.address || '', orgCheck.groupID || '');
+        showUnifiedError(
+          t('join.addressAlreadyInOrg') || '地址已属于组织',
+          t('join.addressInOtherOrgDesc', { address: orgCheck.address, groupID: orgCheck.groupID }) ||
+          `您的地址 ${orgCheck.address?.slice(0, 10)}... 已属于组织 ${orgCheck.groupID}。一个地址只能属于一个担保组织。请加入组织 ${orgCheck.groupID}，或在钱包管理页面删除该地址后重试。`
+        );
+        return;
+      }
+      // 如果地址已属于目标组织，继续调用 API（后端现在允许这种情况）
+      console.info(`[JoinGroup] ✓ Address ${orgCheck.address} already belongs to target organization ${group.groupID}, proceeding with join`);
+    }
+    
+    showUnifiedLoading(t('join.joiningOrg'));
     
     console.info(`[JoinGroup] 🚀 Attempting to join organization ${group.groupID}...`);
     
     // 调用真实 API 加入组织
     const result = await joinGuarGroup(group.groupID, group);
+    
+    console.log(`[JoinGroup] joinGuarGroup result:`, JSON.stringify(result));
     
     // 隐藏加载动画
     hideUnifiedOverlay();
@@ -709,6 +842,26 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
       if (result.error === 'USER_CANCELLED') {
         console.info(`[JoinGroup] User cancelled password input`);
         showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        return;
+      }
+      
+      // Check if address already belongs to a DIFFERENT organization
+      // 后端现在返回更详细的错误: "address xxx already has GuarGroup yyy, cannot join zzz"
+      if (result.error && result.error.includes('already has GuarGroup')) {
+        console.warn(`[JoinGroup] Address already belongs to a different organization`);
+        
+        // 尝试从错误信息中提取组织 ID
+        const groupMatch = result.error.match(/already has GuarGroup\s+(\d+)/i);
+        const existingGroupID = groupMatch ? groupMatch[1] : null;
+        
+        showUnifiedError(
+          t('join.addressAlreadyInOrg') || '地址已属于组织',
+          existingGroupID 
+            ? t('join.addressInOtherOrgDesc', { address: '您的地址', groupID: existingGroupID }) ||
+              `您的地址已属于组织 ${existingGroupID}。一个地址只能属于一个担保组织。请加入组织 ${existingGroupID}，或在钱包管理页面删除该地址后重试。`
+            : t('join.addressAlreadyInOrgDesc') || 
+              '您的钱包地址已经属于一个担保组织。请加入该组织，或在钱包管理页面删除该地址后重试。'
+        );
         return;
       }
       
@@ -1038,6 +1191,88 @@ export function initJoinGroupPage(): void {
   
   // 绑定事件
   bindEvents();
+  
+  // 检查用户地址是否已属于某个组织，显示推荐提示
+  checkAndShowAddressOrgRecommendation();
+}
+
+/**
+ * 检查用户地址是否已属于某个组织，并显示推荐提示
+ * 如果用户的地址已属于某个组织，在页面顶部显示推荐横幅
+ */
+async function checkAndShowAddressOrgRecommendation(): Promise<void> {
+  try {
+    const orgCheck = await checkUserAddressesOrganization();
+    
+    if (!orgCheck || !orgCheck.hasAddressInOrg) {
+      // 没有地址属于组织，隐藏推荐横幅
+      hideOrgRecommendationBanner();
+      return;
+    }
+    
+    // 有地址属于组织，显示推荐横幅
+    console.info(`[JoinGroup] 📢 User has address ${orgCheck.address} in organization ${orgCheck.groupID}, showing recommendation`);
+    showOrgRecommendationBanner(orgCheck.address || '', orgCheck.groupID || '');
+    
+  } catch (error) {
+    console.error(`[JoinGroup] Error checking address organization:`, error);
+    hideOrgRecommendationBanner();
+  }
+}
+
+/**
+ * 显示组织推荐横幅
+ */
+function showOrgRecommendationBanner(address: string, groupID: string): void {
+  // 查找或创建推荐横幅容器
+  let banner = document.getElementById('orgRecommendationBanner');
+  
+  if (!banner) {
+    // 创建横幅元素
+    banner = document.createElement('div');
+    banner.id = 'orgRecommendationBanner';
+    banner.className = 'org-recommendation-banner';
+    
+    // 插入到页面顶部（在 join-group-card 之前）
+    const joinCard = document.querySelector('.join-group-card');
+    if (joinCard && joinCard.parentNode) {
+      joinCard.parentNode.insertBefore(banner, joinCard);
+    }
+  }
+  
+  // 截断地址显示
+  const shortAddress = address.length > 10 ? `${address.slice(0, 10)}...` : address;
+  
+  // 设置横幅内容
+  const title = t('join.addressInOrgRecommendationTitle') || '推荐组织';
+  const message = t('join.addressInOrgRecommendation', { address: shortAddress, groupID }) || 
+    `您的地址 ${shortAddress} 已属于担保组织 ${groupID}，您必须加入该组织。`;
+  
+  banner.innerHTML = `
+    <div class="org-recommendation-banner__icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+    </div>
+    <div class="org-recommendation-banner__content">
+      <div class="org-recommendation-banner__title">${title}</div>
+      <div class="org-recommendation-banner__message">${message}</div>
+    </div>
+  `;
+  
+  banner.classList.remove('hidden');
+}
+
+/**
+ * 隐藏组织推荐横幅
+ */
+function hideOrgRecommendationBanner(): void {
+  const banner = document.getElementById('orgRecommendationBanner');
+  if (banner) {
+    banner.classList.add('hidden');
+  }
 }
 
 /**

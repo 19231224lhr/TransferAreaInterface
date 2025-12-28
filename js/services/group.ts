@@ -70,6 +70,8 @@ export interface FlowApplyResponse {
   guar_group_id: string;
   result: boolean;
   message: string;
+  /** Error message (returned by respondWithError when HTTP status is not 200) */
+  error?: string;
 }
 
 /**
@@ -573,21 +575,31 @@ export async function joinGuarGroup(
     
     const responseData = await response.json() as FlowApplyResponse;
     
+    console.log(`[Group] Response status: ${response.status}, ok: ${response.ok}`);
+    console.log(`[Group] Response data:`, JSON.stringify(responseData));
+    
     if (!response.ok) {
-      console.error(`[Group] ✗ Join failed:`, responseData);
+      console.error(`[Group] ✗ Join failed (HTTP ${response.status}):`, responseData);
+      // 后端错误响应格式: {"error": "..."} 或 {"message": "..."}
+      const errorMsg = responseData.error || responseData.message || `${t('error.networkError')}: HTTP ${response.status}`;
+      console.error(`[Group] ✗ Error message extracted:`, errorMsg);
       return {
         success: false,
-        error: responseData.message || `${t('error.networkError')}: HTTP ${response.status}`
+        error: errorMsg
       };
     }
     
     if (!responseData.result) {
+      // 业务逻辑失败，后端返回 {"result": false, "message": "..."}
+      const errorMsg = responseData.error || responseData.message || t('error.joinGroupFailed');
+      console.error(`[Group] ✗ Business logic failed:`, errorMsg);
       return {
         success: false,
-        error: responseData.message || t('error.joinGroupFailed')
+        error: errorMsg
       };
     }
     
+    console.info(`[Group] ✓ Join succeeded`);
     return { success: true, data: responseData };
     
   } catch (error) {
@@ -710,17 +722,21 @@ export async function leaveGuarGroup(
     
     if (!response.ok) {
       console.error(`[Group] ✗ Leave failed:`, responseData);
+      // 后端错误响应格式: {"error": "..."} 或 {"message": "..."}
+      const errorMsg = responseData.error || responseData.message || `${t('error.networkError')}: HTTP ${response.status}`;
       return {
         success: false,
-        error: responseData.message || `${t('error.networkError')}: HTTP ${response.status}`
+        error: errorMsg
       };
     }
     
     if (!responseData.result) {
-      console.warn(`[Group] ✗ Leave rejected:`, responseData.message);
+      // 业务逻辑失败，后端返回 {"result": false, "message": "..."}
+      const errorMsg = responseData.error || responseData.message || t('error.leaveGroupFailed');
+      console.warn(`[Group] ✗ Leave rejected:`, errorMsg);
       return {
         success: false,
-        error: responseData.message || t('error.leaveGroupFailed')
+        error: errorMsg
       };
     }
     

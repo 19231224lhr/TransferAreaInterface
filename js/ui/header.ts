@@ -18,6 +18,7 @@ import {
   type ReactiveState
 } from '../utils/reactive';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { resetFirstMainPageVisit } from '../pages/main.js';
 
 // ============================================================================
 // Types
@@ -487,6 +488,9 @@ function handleLogoutClick(e: MouseEvent): void {
   
   // 清除账户存储
   clearAccountStorage();
+  
+  // 重置首次访问标记，以便下次登录后进入 main 页面时自动刷新
+  resetFirstMainPageVisit();
   
   // 更新头部显示登出状态
   updateHeaderUser(null);

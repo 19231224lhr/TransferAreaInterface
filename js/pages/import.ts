@@ -12,7 +12,7 @@
 
 import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { importFromPrivHex } from '../services/account';
-import { showErrorToast } from '../utils/toast.js';
+import { showErrorToast, showMiniToast } from '../utils/toast.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
@@ -27,6 +27,11 @@ import {
   runParallelAnimations,
   type ReactiveState
 } from '../utils/reactive';
+import { 
+  querySingleAddressGroup, 
+  isInGuarGroup
+} from '../services/accountQuery';
+import { queryGroupInfoSafe, type GroupInfo } from '../services/group';
 
 // ============================================================================
 // Types
@@ -127,6 +132,63 @@ let pageState: ReactiveState<ImportPageState> | null = null;
 
 // 事件清理函数数组
 let eventCleanups: (() => void)[] = [];
+
+// ============================================================================
+// Address Organization Check
+// ============================================================================
+
+/**
+ * Check if an address already belongs to a guarantor organization
+ * If so, automatically save the organization info to user data
+ * 
+ * @param address - The address to check
+ * @returns Object with organization info if address belongs to a group, null otherwise
+ */
+async function checkAddressOrganization(address: string): Promise<{
+  groupID: string;
+  groupInfo: GroupInfo | null;
+} | null> {
+  try {
+    console.info(`[Import] 🔍 Checking if address ${address} belongs to an organization...`);
+    
+    const result = await querySingleAddressGroup(address);
+    
+    if (!result.success) {
+      console.warn(`[Import] ⚠️ Failed to query address organization:`, result.error);
+      return null;
+    }
+    
+    const addressInfo = result.data;
+    
+    if (!isInGuarGroup(addressInfo.groupID)) {
+      console.info(`[Import] ✓ Address is not in any organization (GroupID: ${addressInfo.groupID})`);
+      return null;
+    }
+    
+    console.info(`[Import] ✓ Address belongs to organization: ${addressInfo.groupID}`);
+    
+    // Query the organization info
+    const groupResult = await queryGroupInfoSafe(addressInfo.groupID);
+    
+    if (groupResult.success) {
+      console.info(`[Import] ✓ Got organization info:`, groupResult.data);
+      return {
+        groupID: addressInfo.groupID,
+        groupInfo: groupResult.data
+      };
+    } else {
+      console.warn(`[Import] ⚠️ Failed to query organization info:`, groupResult.error);
+      // Still return the groupID even if we couldn't get full info
+      return {
+        groupID: addressInfo.groupID,
+        groupInfo: null
+      };
+    }
+  } catch (error) {
+    console.error(`[Import] ✗ Error checking address organization:`, error);
+    return null;
+  }
+}
 
 // ============================================================================
 // Animation Sequences
@@ -421,7 +483,9 @@ async function handleImport(): Promise<void> {
           value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
           estInterest: 0,
           origin: 'imported',
-          privHex: data.privHex || normalized
+          privHex: data.privHex || normalized,
+          pubXHex: data.pubXHex || '',  // 保存公钥 X 坐标
+          pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
         };
       }
       
@@ -430,6 +494,25 @@ async function handleImport(): Promise<void> {
       // 更新 header
       const user = loadUser();
       updateHeaderUser(user);
+      
+      // 检查导入的地址是否已经属于某个担保组织
+      // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
+      if (addr) {
+        console.info(`[Import] Checking if imported address belongs to an organization...`);
+        const orgInfo = await checkAddressOrganization(addr);
+        
+        if (orgInfo) {
+          // 地址已经属于某个组织，显示提示但不自动保存
+          console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
+          
+          // 显示提示信息
+          showMiniToast(
+            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) || 
+            `注意：该地址已属于组织 ${orgInfo.groupID}`,
+            'info'
+          );
+        }
+      }
       
     } else {
       // 钱包模式 - 添加到现有账户
@@ -486,12 +569,40 @@ async function handleImport(): Promise<void> {
           value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, 
           estInterest: 0, 
           origin: 'imported', 
-          privHex: (data.privHex || normalized) 
+          privHex: (data.privHex || normalized),
+          pubXHex: data.pubXHex || '',  // 保存公钥 X 坐标
+          pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
         };
       }
       
       saveUser(acc);
       updateWalletBrief();
+      
+      // 检查导入的地址是否已经属于某个担保组织
+      // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
+      if (addr) {
+        console.info(`[Import] Checking if imported address belongs to an organization...`);
+        const orgInfo = await checkAddressOrganization(addr);
+        
+        if (orgInfo) {
+          // 地址已经属于某个组织，显示提示但不自动保存
+          console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
+          
+          // 显示成功提示，包含组织信息提示
+          showUnifiedSuccess(
+            t('toast.importSuccess'), 
+            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) || 
+            `地址导入成功！注意：该地址已属于担保组织 ${orgInfo.groupID}，加入组织时请选择该组织。`, 
+            () => {
+              if (typeof window.PanguPay?.router?.routeTo === 'function') {
+                window.PanguPay.router.routeTo('#/entry');
+              }
+            }, 
+            undefined
+          );
+          return;
+        }
+      }
       
       showUnifiedSuccess(t('toast.importSuccess'), t('toast.importSuccessDesc'), () => {
         if (typeof window.PanguPay?.router?.routeTo === 'function') {

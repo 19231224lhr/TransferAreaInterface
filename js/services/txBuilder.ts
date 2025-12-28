@@ -876,6 +876,20 @@ export async function buildTransaction(
     console.log('[交易构造] UTXO.UTXO.TXOutputs 存在:', !!(utxoData.UTXO?.TXOutputs));
     console.log('[交易构造] UTXO.UTXO.TXOutputs 长度:', utxoData.UTXO?.TXOutputs?.length || 0);
     
+    // [DEBUG] 打印完整的 UTXO 数据，用于诊断 TXOutputHash 不匹配问题
+    console.log('[交易构造] ========== UTXO 完整数据 ==========');
+    console.log('[交易构造] UTXO Key:', utxoKey);
+    console.log('[交易构造] UTXOData.Value:', utxoData.Value);
+    console.log('[交易构造] UTXOData.Type:', utxoData.Type);
+    console.log('[交易构造] UTXOData.UTXO.TXID:', utxoData.UTXO?.TXID);
+    if (utxoData.UTXO?.TXOutputs) {
+      console.log('[交易构造] TXOutputs 详情:');
+      utxoData.UTXO.TXOutputs.forEach((output: any, idx: number) => {
+        console.log(`[交易构造]   [${idx}] ToAddress=${output.ToAddress?.slice(0, 16)}..., ToValue=${output.ToValue}, Type=${output.Type || output.ToCoinType}`);
+      });
+    }
+    console.log('[交易构造] =====================================');
+    
     // 检查 UTXO 数据完整性
     if (!utxoData.UTXO) {
       const errMsg = `UTXO 数据不完整：缺少 UTXO 字段（来源交易信息）。这可能是因为钱包数据未从后端同步完整。`;
@@ -1295,7 +1309,7 @@ export async function submitTransaction(
   userNewTX: UserNewTX,
   groupID: string,
   assignNodeUrl?: string
-): Promise<{ success: boolean; tx_id?: string; error?: string }> {
+): Promise<{ success: boolean; tx_id?: string; error?: string; errorCode?: string }> {
   const { API_BASE_URL, API_ENDPOINTS } = await import('../config/api');
   
   // 如果提供了 AssignNode URL，则使用它；否则使用默认的 API_BASE_URL
@@ -1321,6 +1335,35 @@ export async function submitTransaction(
     console.log('[交易提交] 成功，TXID:', result.tx_id);
   } else {
     console.error('[交易提交] 失败:', result.error);
+    
+    // Parse specific error messages and add error codes for better handling
+    const errorMsg = result.error || '';
+    
+    // User not in organization - this typically means:
+    // 1. User imported an address that belongs to an org but never successfully joined
+    // 2. User's join request failed but frontend saved org info anyway
+    // 3. User was removed from the organization
+    if (errorMsg.includes('user is not in the guarantor') || 
+        errorMsg.includes('user not found in group') ||
+        errorMsg.includes('not in the guarantor organization')) {
+      console.warn('[交易提交] 用户不在担保组织内，可能需要重新加入组织');
+      result.errorCode = 'USER_NOT_IN_ORG';
+    }
+    
+    // Address revoked - address was unbound
+    if (errorMsg.includes('address revoked') || errorMsg.includes('already revoked')) {
+      result.errorCode = 'ADDRESS_REVOKED';
+    }
+    
+    // Signature verification failed
+    if (errorMsg.includes('signature verification')) {
+      result.errorCode = 'SIGNATURE_FAILED';
+    }
+    
+    // UTXO already spent
+    if (errorMsg.includes('utxo already spent') || errorMsg.includes('double spend')) {
+      result.errorCode = 'UTXO_SPENT';
+    }
   }
   
   return result;
