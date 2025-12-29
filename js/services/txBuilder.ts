@@ -177,6 +177,8 @@ export interface BuildTransactionParams {
   gas: number;
   /** 是否跨链交易 */
   isCrossChain?: boolean;
+  /** 额外 PGC 兑换 Gas 的数量（用于支付交易费） */
+  howMuchPayForGas?: number;
 }
 
 // ============================================================================
@@ -557,8 +559,12 @@ export function publicKeyToJSON(pubKey: PublicKeyNew): PublicKeyNewJSON {
  * @returns PublicKeyNewJSON
  */
 export function hexToPublicKeyJSON(pubXHex: string, pubYHex: string): PublicKeyNewJSON {
-  const x = BigInt('0x' + pubXHex.replace(/^0x/i, ''));
-  const y = BigInt('0x' + pubYHex.replace(/^0x/i, ''));
+  // 处理空字符串情况（用于 IsPayForGas 输出等不需要公钥的场景）
+  const xHex = pubXHex || '0';
+  const yHex = pubYHex || '0';
+  
+  const x = BigInt('0x' + xHex.replace(/^0x/i, ''));
+  const y = BigInt('0x' + yHex.replace(/^0x/i, ''));
   return {
     CurveName: 'P256',
     X: x.toString(10),  // 转为十进制字符串
@@ -729,7 +735,8 @@ export async function buildTransaction(
     recipients,
     changeAddresses,
     gas,
-    isCrossChain = false
+    isCrossChain = false,
+    howMuchPayForGas = 0
   } = params;
   
   // 获取钱包数据
@@ -762,6 +769,13 @@ export async function buildTransaction(
   for (const recipient of recipients) {
     requiredAmounts[recipient.coinType] = (requiredAmounts[recipient.coinType] || 0) + recipient.amount;
   }
+  
+  // 额外兑换 Gas 的 PGC 也需要从 UTXO 中扣除（币种 0 = PGC）
+  if (howMuchPayForGas > 0) {
+    requiredAmounts[0] += howMuchPayForGas;
+    console.log('[交易构造] 包含额外 Gas 兑换:', howMuchPayForGas, 'PGC');
+  }
+  
   console.log('[交易构造] 需要金额:', requiredAmounts);
   
   // ========== Step 2: 选择 UTXO ==========
@@ -833,6 +847,24 @@ export async function buildTransaction(
         IsGuarMake: false
       });
     }
+  }
+
+  // 3.3 额外 PGC 兑换 Gas 输出（IsPayForGas: true）
+  // 用于将额外的 PGC 兑换为 Gas，后端会将此输出金额加到可用利息中
+  if (howMuchPayForGas > 0) {
+    console.log('[交易构造] 创建额外 Gas 输出, 金额:', howMuchPayForGas);
+    txOutputs.push({
+      ToAddress: '',
+      ToValue: howMuchPayForGas,
+      ToGuarGroupID: '',
+      ToPublicKey: hexToPublicKeyJSON('', ''),  // 使用空字符串生成零值公钥（与其他输出格式一致）
+      ToInterest: 0,
+      Type: 0, // PGC
+      ToPeerID: '',
+      IsPayForGas: true,  // 关键标记：标识此输出用于支付 Gas
+      IsCrossChain: false,
+      IsGuarMake: false
+    });
   }
 
   
@@ -1427,7 +1459,8 @@ export function convertLegacyBuildInfo(buildInfo: LegacyBuildTXInfo): BuildTrans
     recipients,
     changeAddresses: buildInfo.ChangeAddress,
     gas: buildInfo.InterestAssign.Gas,
-    isCrossChain: buildInfo.IsCrossChainTX
+    isCrossChain: buildInfo.IsCrossChainTX,
+    howMuchPayForGas: buildInfo.HowMuchPayForGas || 0
   };
 }
 

@@ -175,6 +175,35 @@ export function unlockUTXOs(utxoIds: string[]): void {
 }
 
 /**
+ * 按交易 ID 解锁 UTXO
+ * 
+ * 当交易验证失败时，解锁该交易锁定的所有 UTXO
+ * 
+ * @param txId - 交易 ID
+ */
+export function unlockUTXOsByTxId(txId: string): void {
+  const storage = readLockedStorage();
+  if (!storage) return;
+  
+  const normalizedTxId = txId.toLowerCase();
+  const originalCount = storage.lockedUtxos.length;
+  
+  storage.lockedUtxos = storage.lockedUtxos.filter(
+    u => u.txId.toLowerCase() !== normalizedTxId
+  );
+  
+  const unlockedCount = originalCount - storage.lockedUtxos.length;
+  
+  if (unlockedCount > 0) {
+    storage.lastUpdate = Date.now();
+    writeLockedStorage(storage);
+    console.info('[UTXOLock] Unlocked', unlockedCount, 'UTXOs for TX:', txId);
+  } else {
+    console.warn('[UTXOLock] No locked UTXOs found for TX:', txId);
+  }
+}
+
+/**
  * 获取所有锁定的 UTXO
  * 
  * @param filterExpired - 是否过滤掉已过期的锁定（默认 true）

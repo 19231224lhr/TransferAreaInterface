@@ -936,9 +936,24 @@ async function pollTXStatusInBackground(
       );
       
     } else {
-      // 交易验证失败 - 显示错误 toast
+      // 交易验证失败 - 显示错误 toast 并解锁 UTXO
       const errorReason = confirmResult.errorReason || t('transfer.unknownError') || '未知错误';
       console.log('[后台轮询] 交易验证失败:', txID, errorReason);
+      
+      // 🔓 解锁与此交易相关的 UTXO（交易失败，UTXO 可以再次使用）
+      try {
+        const { unlockUTXOsByTxId } = await import('../utils/utxoLock');
+        unlockUTXOsByTxId(txID);
+        console.log('[后台轮询] 已解锁交易', txID, '的 UTXO');
+        
+        // 刷新 UI 显示最新的锁定状态
+        const { renderWallet, refreshSrcAddrList } = await import('./wallet');
+        renderWallet();
+        refreshSrcAddrList();
+      } catch (unlockErr) {
+        console.warn('[后台轮询] 解锁 UTXO 失败:', unlockErr);
+      }
+      
       showToast(
         t('transfer.txVerificationFailedShort', { reason: errorReason }) || 
         `交易验证失败: ${errorReason}`,
