@@ -13,7 +13,7 @@
     "postbuild": "node scripts/copy-sw.js",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test tests/interestAccrual.node.test.js"
   },
   "keywords": [],
   "author": "",

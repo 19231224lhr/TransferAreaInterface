@@ -23,6 +23,9 @@ import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
 import { renderWallet, refreshSrcAddrList, updateWalletBrief } from './wallet';
 import { UTXOData } from '../types/blockchain';
+import { accrueWalletInterest, normalizeInterestFields } from '../utils/interestAccrual.js';
+import { queryAddressBalances } from './accountQuery';
+import { applyComNodeInterests } from '../utils/interestSync.js';
 
 // ============================================================================
 // Types (匹配后端 Go 结构体)
@@ -262,13 +265,60 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     txCerChangeCount: update.TXCerChangeData?.length || 0
   });
 
+  // Ensure wallet exists
+  if (!user.wallet) {
+    console.warn('[AccountPolling] User has no wallet, skipping update');
+    return;
+  }
+
+  const prevHeight = Number(user.wallet.updateBlock || 0);
+  const nextHeight = Number(update.BlockHeight || 0);
+  const deltaHeight = nextHeight > prevHeight && prevHeight > 0 ? (nextHeight - prevHeight) : 0;
+
+  // Accrue interest BEFORE applying wallet changes (new UTXO shouldn't generate interest until next block)
+  if (deltaHeight > 0) {
+    // Normalize legacy fields first so reads/writes are consistent
+    for (const meta of Object.values(user.wallet.addressMsg || {})) {
+      normalizeInterestFields(meta as any);
+    }
+    accrueWalletInterest(user.wallet as any, deltaHeight);
+  } else {
+    // Still normalize fields so UI won't be stuck on stale `gas`
+    for (const meta of Object.values(user.wallet.addressMsg || {})) {
+      normalizeInterestFields(meta as any);
+    }
+  }
+
   // 只更新区块高度
   if (update.IsNoWalletChange) {
-    // 更新区块高度
-    if (user.wallet && update.BlockHeight > (user.wallet.updateBlock || 0)) {
-      user.wallet.updateBlock = update.BlockHeight;
+    if (nextHeight > prevHeight) {
+      user.wallet.updateBlock = nextHeight;
       saveUser(user);
-      showMiniToast(t('polling.blockHeightUpdated', { height: update.BlockHeight }) || `区块高度更新: ${update.BlockHeight}`);
+
+      // If we don't have a solid baseline yet, refresh canonical interest once.
+      // (ComNode returns current interest; AssignNode update doesn't.)
+      if (!prevHeight || prevHeight <= 0) {
+        try {
+          const addrs = Object.keys(user.wallet.addressMsg || {});
+          if (addrs.length) {
+            const qr = await queryAddressBalances(addrs);
+            if (qr.success) {
+              applyComNodeInterests(user.wallet as any, qr.data as any);
+              saveUser(user);
+            }
+          }
+        } catch (e) {
+          console.debug('[AccountPolling] ComNode interest refresh skipped (no-change update):', e);
+        }
+      }
+
+      // Refresh UI so GAS line updates
+      renderWallet();
+      refreshSrcAddrList();
+      updateWalletBrief();
+
+      // Keep the toast but avoid spam if height didn't advance
+      showMiniToast(t('polling.blockHeightUpdated', { height: nextHeight }) || `区块高度更新: ${nextHeight}`);
     }
     return;
   }
@@ -397,9 +447,9 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     }
   }
 
-  // 更新区块高度
-  if (user.wallet && update.BlockHeight > (user.wallet.updateBlock || 0)) {
-    user.wallet.updateBlock = update.BlockHeight;
+  // 更新区块高度 (interest already accrued above)
+  if (nextHeight > prevHeight) {
+    user.wallet.updateBlock = nextHeight;
     hasChanges = true;
   }
 
@@ -407,6 +457,22 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   if (hasChanges) {
     // 重新计算总余额
     recalculateTotalBalance(user);
+
+    // IMPORTANT: AssignNode account-update doesn't include per-address interest snapshots.
+    // After a tx is verified by GuarNode, interest is re-assigned (gas deducted) even if
+    // there is no explicit interest delta in WalletChangeData. Refresh canonical interest
+    // from ComNode so UI shows the correct GAS (e.g. 13.00 instead of stale 10.00).
+    try {
+      const addrs = Object.keys(user.wallet.addressMsg || {});
+      if (addrs.length) {
+        const qr = await queryAddressBalances(addrs);
+        if (qr.success) {
+          applyComNodeInterests(user.wallet as any, qr.data as any);
+        }
+      }
+    } catch (e) {
+      console.debug('[AccountPolling] ComNode interest refresh failed, using local accrual only:', e);
+    }
     
     saveUser(user);
     
@@ -460,8 +526,13 @@ function processUsedTXCerChange(user: User, usedTxCer: UsedTXCerChangeData): voi
   const addrData = user.wallet.addressMsg[normalizedAddr];
   
   if (addrData) {
-    // 增加利息
-    addrData.estInterest = (addrData.estInterest || 0) + usedTxCer.ToInterest;
+    // 增加利息（保持 EstInterest/estInterest/gas 一致）
+    normalizeInterestFields(addrData as any);
+    const base = Number((addrData as any).EstInterest ?? (addrData as any).estInterest ?? (addrData as any).gas ?? 0) || 0;
+    const next = base + usedTxCer.ToInterest;
+    (addrData as any).EstInterest = next;
+    (addrData as any).estInterest = next;
+    (addrData as any).gas = next;
     showMiniToast(t('polling.interestReceived', { amount: usedTxCer.ToInterest.toFixed(2) }) || `收到利息: ${usedTxCer.ToInterest.toFixed(2)}`);
   }
 }

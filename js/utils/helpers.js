@@ -53,7 +53,8 @@ export const toFiniteNumber = (val) => {
  */
 export function readAddressInterest(meta) {
   if (!meta) return 0;
-  const props = ['gas', 'estInterest', 'interest', 'EstInterest'];
+  // Prefer backend canonical field name first; others are mirrored for compatibility.
+  const props = ['EstInterest', 'estInterest', 'gas', 'interest'];
   for (const key of props) {
     if (meta[key] === undefined || meta[key] === null) continue;
     const num = toFiniteNumber(meta[key]);
