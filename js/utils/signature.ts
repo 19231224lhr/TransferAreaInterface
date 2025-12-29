@@ -25,12 +25,12 @@ const ec = new EC('p256');
 
 /**
  * 公钥格式（后端要求）
- * X/Y 使用 bigint 存储，序列化时转为十进制字符串
+ * X/Y 可以是 bigint 或 string（BigInt-safe JSON 解析后是 string）
  */
 export interface PublicKeyNew {
   CurveName: string;
-  X: bigint;
-  Y: bigint;
+  X: bigint | string;
+  Y: bigint | string;
 }
 
 /**
@@ -353,14 +353,16 @@ export function hexToBigInt(hex: string): bigint {
 }
 
 /**
- * 将 bigint 转为 hex 字符串（无 0x 前缀）
+ * 将 bigint 或 string（十进制）转为 hex 字符串（无 0x 前缀）
  * 
- * @param value bigint 值
+ * @param value bigint 或十进制字符串
  * @param padLength 填充长度（默认 64）
  * @returns hex 字符串
  */
-export function bigIntToHex(value: bigint, padLength: number = 64): string {
-  return value.toString(16).padStart(padLength, '0');
+export function bigIntToHex(value: bigint | string, padLength: number = 64): string {
+  // 如果是 string，先转为 BigInt
+  const bi = typeof value === 'string' ? BigInt(value) : value;
+  return bi.toString(16).padStart(padLength, '0');
 }
 
 // ============================================

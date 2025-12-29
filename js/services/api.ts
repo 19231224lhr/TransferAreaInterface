@@ -8,11 +8,13 @@
  * - Structured error handling
  * - Request/response interceptors
  * - AbortController support for cancellation
+ * - BigInt-safe JSON parsing for large integers
  * 
  * @module services/api
  */
 
 import { API_BASE_URL, DEFAULT_TIMEOUT, DEFAULT_RETRY_COUNT, RETRY_DELAY } from '../config/api';
+import { parseBigIntJson } from '../utils/bigIntJson';
 
 // ============================================================================
 // Types
@@ -41,6 +43,8 @@ export interface ApiRequestOptions {
   signal?: AbortSignal;
   /** Skip error toast on failure */
   silent?: boolean;
+  /** Use BigInt-safe JSON parsing (for responses with large integers like PublicKeyNew X/Y) */
+  useBigIntParsing?: boolean;
 }
 
 /**
@@ -286,7 +290,14 @@ async function makeRequest<T>(
     }
 
     // Parse JSON response
-    const data = await response.json() as T;
+    // Use BigInt-safe parsing if requested (for responses containing large integers like PublicKeyNew X/Y)
+    let data: T;
+    if (options.useBigIntParsing) {
+      const text = await response.text();
+      data = parseBigIntJson<T>(text);
+    } else {
+      data = await response.json() as T;
+    }
 
     return {
       data,

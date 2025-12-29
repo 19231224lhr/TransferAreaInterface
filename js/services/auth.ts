@@ -10,6 +10,7 @@
 import { API_BASE_URL } from '../config/api';
 import { signStruct, serializeForBackend } from '../utils/signature';
 import { secureFetchWithRetry } from '../utils/security';
+import { parseBigIntJson } from '../utils/bigIntJson';
 
 // ============================================================================
 // Type Definitions
@@ -30,11 +31,12 @@ export interface UserReOnlineMsg {
 
 /**
  * Public key structure (matches Go's PublicKeyNew)
+ * X and Y are stored as strings after BigInt-safe JSON parsing
  */
 export interface PublicKeyNew {
   CurveName: string;
-  X: bigint;
-  Y: bigint;
+  X: string;
+  Y: string;
 }
 
 /**
@@ -134,7 +136,11 @@ export async function userReOnline(
     throw new Error(`Re-online failed: ${response.status} ${errorText}`);
   }
 
-  const result: ReturnUserReOnlineMsg = await response.json();
+  // ⚠️ 重要：使用 BigInt 安全解析
+  // 后端返回的 UserWalletData 中包含 UTXO 数据，其中的 PublicKeyNew X/Y 是 256 位整数
+  // JavaScript 原生 JSON.parse 会丢失精度，导致后续 TXOutputHash 计算错误
+  const text = await response.text();
+  const result: ReturnUserReOnlineMsg = parseBigIntJson(text);
   return result;
 }
 

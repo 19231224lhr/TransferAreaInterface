@@ -840,7 +840,7 @@ export async function buildTransaction(
   console.log('[交易构造] 开始构造 TXInputNormal...');
   const txInputs: TXInputNormal[] = [];
   
-  for (const { address, utxoData } of selectedUTXOs) {
+  for (const { address, utxoKey, utxoData } of selectedUTXOs) {
     console.log(`[交易构造] 处理地址 ${address.slice(0, 8)}... 的 UTXO`);
     
     // 获取地址私钥

@@ -203,10 +203,14 @@ async function pollAccountUpdates(): Promise<void> {
   try {
     const endpoint = `${API_ENDPOINTS.ASSIGN_ACCOUNT_UPDATE(group.groupID)}?userID=${user.accountId}&consume=true`;
     
+    // ⚠️ 重要：启用 BigInt 安全解析
+    // 后端发送的 UTXO 数据中包含 PublicKeyNew，其 X/Y 坐标是 256 位整数
+    // JavaScript 原生 JSON.parse 会丢失精度，导致 TXOutputHash 计算错误
     const response = await apiClient.get<AccountUpdateResponse>(endpoint, {
       timeout: 5000,
       retries: 0,
-      silent: true
+      silent: true,
+      useBigIntParsing: true
     });
 
     // 重置失败计数
