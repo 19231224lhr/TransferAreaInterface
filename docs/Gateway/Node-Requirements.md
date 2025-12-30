@@ -260,6 +260,7 @@ type GuarGroupTable struct {
 | 账户/余额/UTXO/TXCer 更新 | `AccountUpdateInfo` | `assignnode.go` 800-838 | 提供轮询接口 `GET /api/v1/{groupID}/assign/account-update?userID=...`，原 P2P 单播保留 |
 | 仅区块高度更新 | `AccountUpdateInfo`（`IsNoWalletChange=true`） | `assignnode.go` 854-886 | 同上，复用轮询接口 |
 | TXCer 状态变动通知 | `TXCerChangeToUser` | `txcertable.go` 178-191 | 提供轮询接口 `GET /api/v1/{groupID}/assign/txcer-change?userID=...`，原 P2P 单播保留 |
+| 跨组织 TXCer 接收（给本组织用户） | `TXCerToUser` | `assignnode.go`（跨组织接收逻辑入队） | 提供轮询接口 `GET /api/v1/{groupID}/assign/poll-cross-org-txcers?userID=...`，原 P2P 群发保留 |
 
 ### 3) 路由草案（对应 ForGateway 方法）
 
@@ -273,8 +274,9 @@ type GuarGroupTable struct {
 | `POST /api/v1/{groupID}/assign/submit-tx` | POST | 用户提交交易 | `ReceiveUserNewTXForGateway` → 返回受理状态 | ✅ 已实现 |
 | `POST /api/v1/{groupID}/assign/re-online` | POST | 用户重新上线 | `UserReOnlineForGateway` → 返回 `ReturnUserReOnlineMsg` | ✅ 已实现 |
 | `GET /api/v1/{groupID}/assign/group-info` | GET | 查询担保组织信息 | `GetGroupMsgForGateway` → 返回 `ReturnGroupBootMsg` | ✅ 已实现 |
-| `GET /api/v1/{groupID}/assign/account-update?userID=...` | GET | 轮询获取账户更新信息 | 返回 `[]AccountUpdateInfo`（增量/列表） | 待实现 |
-| `GET /api/v1/{groupID}/assign/txcer-change?userID=...` | GET | 轮询获取 TXCer 状态变动 | 返回 `[]TXCerChangeToUser`（增量/列表） | 待实现 |
+| `GET /api/v1/{groupID}/assign/account-update?userID=...` | GET | 轮询获取账户更新信息 | 返回 `[]AccountUpdateInfo`（增量/列表） | ✅ 已实现 |
+| `GET /api/v1/{groupID}/assign/txcer-change?userID=...` | GET | 轮询获取 TXCer 状态变动 | 返回 `[]TXCerChangeToUser`（增量/列表） | ✅ 已实现 |
+| `GET /api/v1/{groupID}/assign/poll-cross-org-txcers?userID=...` | GET | 轮询获取跨组织 TXCer | 返回 `[]TXCerToUser`（增量/列表） | ✅ 已实现 |
 
 ### 4) 数据结构说明
 
@@ -425,55 +427,13 @@ type TXCerChangeToUser struct {
 
 ## AggrNode（聚合节点）
 
-### 1) 对用户输出场景（AggrNode → 用户，前端轮询）
+### 1) 当前 Gateway 暴露能力
 
-| 场景 | 输出结构 | 原发送端参考 | Gateway 方案 |
+| 路由 | 方法 | 功能 | 说明 |
 | --- | --- | --- | --- |
-| 聚合节点给用户群发 TXCer | `TXCerToUser` | `aggrnode.go` 526-535 | 提供轮询接口 `GET /api/v1/aggr/txcer?address=...`，原 P2P 群发保留 |
+| `GET /api/v1/{groupID}/aggr/health` | GET | AggrNode 健康检查 | 当前仅实现健康检查 |
 
-### 2) 路由草案
-
-| 路由 | 方法 | 功能 | 内部调用 |
-| --- | --- | --- | --- |
-| `GET /api/v1/aggr/txcer?address=...` | GET | 拉取指定地址收到的 TXCer | 从本地缓存/队列返回 `[]TXCerToUser` |
-
-### 3) 数据结构说明
-
-#### 输出结构
-
-```go
-// TXCer 列表返回
-type TXCerListResponse struct {
-    TXCers    []TXCerToUser `json:"txcers"`     // TXCer列表
-    Total     int           `json:"total"`      // 总数量
-    HasMore   bool          `json:"has_more"`   // 是否还有更多
-    NextSince uint64        `json:"next_since"` // 下次查询的起始时间戳
-}
-
-// 单条 TXCer - core.TXCerToUser
-type TXCerToUser struct {
-    ToAddress string        `json:"to_address"` // 接收用户子地址
-    TXCer     TxCertificate `json:"txcer"`      // 交易凭证详情
-}
-```
-
-### 4) 设计要点
-
-1. **群发转轮询**：原 P2P 群发保留，Gateway 提供拉取接口，前端根据 `toAddress` 过滤。
-
-2. **增量查询**：支持 `since` 时间戳参数。
-
-3. **去重机制**：前端按 `TXCerID` 去重。
-
-### 5) 实施步骤
-
-1. 在 `Guarantor/AggretionNode/aggrnode.go` 中新增 TXCer 缓存队列。
-
-2. 实现 `GetTXCerForGateway(address string, since uint64, limit int)` 方法。
-
-3. 在 `gateway/server.go` 中定义 `AggrNodeInterface` 接口并注册路由。
-
-4. 在原 `BroadcastAllP2P` 发送处，同时将 TXCer 写入缓存队列。
+> 说明：原先规划的 `GET /api/v1/{groupID}/aggr/txcer` 已不再使用，跨组织 TXCer 的轮询统一由 AssignNode 提供（`poll-cross-org-txcers`）。
 
 ---
 
@@ -612,10 +572,11 @@ type NoGuarGroupTXResponse struct {
 | AssignNode | `GET /api/v1/{groupID}/assign/group-info` | GET | 查询担保组织信息 | ✅ 已实现 |
 | AssignNode | `GET /api/v1/{groupID}/assign/account-update` | GET | 轮询获取账户更新 | 待实现 |
 | AssignNode | `GET /api/v1/{groupID}/assign/txcer-change` | GET | 轮询获取 TXCer 状态变动 | 待实现 |
-| AggrNode | `GET /api/v1/{groupID}/aggr/txcer` | GET | 拉取 TXCer 列表 | 待实现 |
-| ComNode | `POST /api/v1/{committeeID}/com/query-address` | POST | 查询地址账户信息 | 待实现 |
-| ComNode | `POST /api/v1/{committeeID}/com/query-address-group` | POST | 查询地址所属担保组织 | 待实现 |
-| ComNode | `POST /api/v1/{committeeID}/com/submit-noguargroup-tx` | POST | 提交散户交易 | 待实现 |
-| ComNode | `GET /api/v1/{committeeID}/com/utxo-change` | GET | 轮询获取 UTXO 变动通知 | 待实现 |
+| AssignNode | `GET /api/v1/{groupID}/assign/poll-cross-org-txcers` | GET | 轮询获取跨组织 TXCer | ✅ 已实现 |
+| AggrNode | `GET /api/v1/{groupID}/aggr/health` | GET | AggrNode 健康检查 | ✅ 已实现 |
+| ComNode | `POST /api/v1/com/query-address` | POST | 查询地址账户信息 | ✅ 已实现 |
+| ComNode | `POST /api/v1/com/query-address-group` | POST | 查询地址所属担保组织 | ✅ 已实现 |
+| ComNode | `POST /api/v1/com/submit-noguargroup-tx` | POST | 提交散户交易 | ✅ 已实现 |
+| ComNode | `GET /api/v1/com/utxo-change` | GET | 轮询获取 UTXO 变动通知 | 待实现 |
 
-> **注意**：所有 AssignNode/AggrNode/ComNode 路由均采用动态路由设计，`{groupID}` 和 `{committeeID}` 是路径参数，用于标识目标节点所属的担保组织或委员会。
+> **注意**：AssignNode/AggrNode 路由采用动态路由设计（`{groupID}`）；ComNode 为全局唯一，使用固定前缀 `/api/v1/com/*`。
