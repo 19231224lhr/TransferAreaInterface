@@ -68,6 +68,37 @@ interface TXCerChangeToUser {
 }
 
 /**
+ * 跨组织TXCer接收信息
+ * 对应 Go: TXCerToUser
+ */
+interface TXCerToUser {
+  ToAddress: string;
+  TXCer: {
+    TXCerID: string;
+    ToAddress: string;
+    Value: number;
+    ToInterest: number;
+    FromGuarGroupID: string;
+    ToGuarGroupID: string;
+    ConstructionTime: number;
+    TXID: string;
+    TxCerPosition: {
+      BlockHeight: number;
+      Index: number;
+      InIndex: number;
+    };
+    GuarGroupSignature: {
+      R: string;
+      S: string;
+    };
+    UserSignature: {
+      R: string;
+      S: string;
+    };
+  };
+}
+
+/**
  * 已使用 TXCer 变动数据
  * 对应 Go: UsedTXCerChangeData
  */
@@ -104,6 +135,15 @@ interface AccountUpdateResponse {
   success: boolean;
   count: number;
   updates: AccountUpdateInfo[];
+}
+
+/**
+ * 跨组织TXCer轮询响应
+ */
+interface CrossOrgTXCerResponse {
+  success: boolean;
+  count: number;
+  txcers: TXCerToUser[];
 }
 
 // ============================================================================
