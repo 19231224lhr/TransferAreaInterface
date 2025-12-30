@@ -22,10 +22,11 @@ import { showSuccessToast, showMiniToast, showErrorToast } from '../utils/toast.
 import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
 import { renderWallet, refreshSrcAddrList, updateWalletBrief } from './wallet';
-import { UTXOData } from '../types/blockchain';
+import { UTXOData, TxCertificate } from '../types/blockchain';
 import { accrueWalletInterest, normalizeInterestFields } from '../utils/interestAccrual.js';
 import { queryAddressBalances } from './accountQuery';
 import { applyComNodeInterests } from '../utils/interestSync.js';
+import { shouldBlockTXCerUpdate, cacheTXCerUpdate, unlockTXCers } from './txCerLockManager';
 
 // ============================================================================
 // Types (匹配后端 Go 结构体)
@@ -73,29 +74,16 @@ interface TXCerChangeToUser {
  */
 interface TXCerToUser {
   ToAddress: string;
-  TXCer: {
-    TXCerID: string;
-    ToAddress: string;
-    Value: number;
-    ToInterest: number;
-    FromGuarGroupID: string;
-    ToGuarGroupID: string;
-    ConstructionTime: number;
-    TXID: string;
-    TxCerPosition: {
-      BlockHeight: number;
-      Index: number;
-      InIndex: number;
-    };
-    GuarGroupSignature: {
-      R: string;
-      S: string;
-    };
-    UserSignature: {
-      R: string;
-      S: string;
-    };
-  };
+  TXCer: TxCertificate;
+}
+
+/**
+ * 跨组织TXCer轮询响应
+ */
+interface CrossOrgTXCerResponse {
+  success: boolean;
+  count: number;
+  txcers: TXCerToUser[];
 }
 
 /**
@@ -245,7 +233,7 @@ async function pollAccountUpdates(): Promise<void> {
 
   try {
     const endpoint = `${API_ENDPOINTS.ASSIGN_ACCOUNT_UPDATE(group.groupID)}?userID=${user.accountId}&consume=true`;
-    
+
     // ⚠️ 重要：启用 BigInt 安全解析
     // 后端发送的 UTXO 数据中包含 PublicKeyNew，其 X/Y 坐标是 256 位整数
     // JavaScript 原生 JSON.parse 会丢失精度，导致 TXOutputHash 计算错误
@@ -262,14 +250,14 @@ async function pollAccountUpdates(): Promise<void> {
 
     if (response.success && response.count > 0) {
       console.info(`[AccountPolling] Received ${response.count} updates`);
-      
+
       for (const update of response.updates) {
         await processAccountUpdate(update);
       }
     }
   } catch (error) {
     consecutiveFailures++;
-    
+
     if (isNetworkError(error)) {
       console.warn('[AccountPolling] Network error - backend may be offline');
     } else if (isTimeoutError(error)) {
@@ -357,8 +345,7 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
       refreshSrcAddrList();
       updateWalletBrief();
 
-      // Keep the toast but avoid spam if height didn't advance
-      showMiniToast(t('polling.blockHeightUpdated', { height: nextHeight }) || `区块高度更新: ${nextHeight}`);
+      // 区块高度更新，无需 Toast 通知（避免干扰）
     }
     return;
   }
@@ -369,9 +356,9 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   if (update.WalletChangeData?.In) {
     for (const [address, inUtxos] of Object.entries(update.WalletChangeData.In)) {
       if (!inUtxos || inUtxos.length === 0) continue;
-      
+
       const normalizedAddr = address.toLowerCase();
-      
+
       // 确保地址存在于钱包中
       if (!user.wallet.addressMsg[normalizedAddr]) {
         console.warn(`[AccountPolling] Address ${address} not found in wallet, skipping`);
@@ -386,14 +373,14 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
       for (const inUtxo of inUtxos) {
         // 🔧 使用前端格式的 UTXO ID (txid_indexZ)
         const utxoId = generateUTXOId(inUtxo.UTXOData);
-        
+
         // 🔧 同时检查后端格式的 ID，如果存在则先删除（避免重复）
         const backendFormatId = generateBackendUTXOId(inUtxo.UTXOData);
         if (addrData.utxos[backendFormatId]) {
           console.info(`[AccountPolling] Removing old backend-format UTXO: ${backendFormatId}`);
           delete addrData.utxos[backendFormatId];
         }
-        
+
         // 检查是否已存在（前端格式）
         if (addrData.utxos[utxoId]) {
           console.debug(`[AccountPolling] UTXO ${utxoId} already exists, skipping`);
@@ -418,7 +405,7 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
         // 添加新 UTXO（使用前端格式 ID）
         addrData.utxos[utxoId] = inUtxo.UTXOData;
         hasChanges = true;
-        
+
         console.info(`[AccountPolling] Added new UTXO: ${utxoId}, value: ${inUtxo.UTXOData.Value}, type: ${inUtxo.UTXOData.Type}`);
       }
 
@@ -430,35 +417,35 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   // 处理转出（删除/确认 UTXO）
   if (update.WalletChangeData?.Out && update.WalletChangeData.Out.length > 0) {
     const outUtxoIds = update.WalletChangeData.Out;
-    
+
     // 🔧 转换后端 UTXO ID 格式为前端格式
     // 后端格式: "txid + indexZ" (空格+加号+空格)
     // 前端格式: "txid_indexZ" (下划线)
     const normalizedUtxoIds = outUtxoIds.map(normalizeUtxoId);
-    
+
     console.info('[AccountPolling] Out UTXO IDs (original):', outUtxoIds);
     console.info('[AccountPolling] Out UTXO IDs (normalized):', normalizedUtxoIds);
-    
+
     // 解锁这些 UTXO（它们已经被确认使用）
     // 使用转换后的前端格式 ID
     unlockUTXOs(normalizedUtxoIds);
     hasChanges = true; // 解锁操作本身就是一个变化，需要刷新 UI
-    
+
     // 从本地钱包中删除这些 UTXO
     // 🔧 同时尝试删除两种格式的 ID（兼容旧数据）
     for (const [address, addrData] of Object.entries(user.wallet.addressMsg)) {
       if (!addrData.utxos) continue;
-      
+
       for (let i = 0; i < outUtxoIds.length; i++) {
         const backendId = outUtxoIds[i];
         const frontendId = normalizedUtxoIds[i];
-        
+
         // 尝试删除后端格式 ID
         if (addrData.utxos[backendId]) {
           delete addrData.utxos[backendId];
           console.info(`[AccountPolling] Removed UTXO (backend format): ${backendId} from address ${address}`);
         }
-        
+
         // 尝试删除前端格式 ID
         if (addrData.utxos[frontendId]) {
           delete addrData.utxos[frontendId];
@@ -471,12 +458,24 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     }
   }
 
+
   // 处理 TXCer 状态变更
   if (update.TXCerChangeData && update.TXCerChangeData.length > 0) {
     for (const txCerChange of update.TXCerChangeData) {
+      // 🔒 检查 TXCer 是否被锁定
+      if (shouldBlockTXCerUpdate(txCerChange.TXCerID, txCerChange.Status)) {
+        // 缓存此更新，等待解锁后处理
+        cacheTXCerUpdate(txCerChange.TXCerID, txCerChange.Status, txCerChange.UTXO);
+        console.warn(
+          `[AccountPolling] TXCer ${txCerChange.TXCerID.slice(0, 8)}... 被锁定，更新已缓存`
+        );
+        continue; // 跳过立即处理
+      }
+
       processTXCerChange(user, txCerChange);
       hasChanges = true;
     }
+
   }
 
   // 处理已使用 TXCer 的利息返还
@@ -513,15 +512,15 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     } catch (e) {
       console.debug('[AccountPolling] ComNode interest refresh failed, using local accrual only:', e);
     }
-    
+
     saveUser(user);
-    
+
     // 刷新钱包 UI
     renderWallet();
     refreshSrcAddrList();
     updateWalletBrief();
-    
-    showSuccessToast(t('polling.accountUpdated') || '账户信息已更新');
+
+    // 账户更新成功，无需 Toast 通知（避免干扰）
   }
 }
 
@@ -536,24 +535,63 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
       // 前置交易已上链，TXCer 转换为 UTXO
       // 需要从 TXCer 列表中移除，UTXO 会通过 In 字段添加
       removeTXCerFromWallet(user, change.TXCerID);
-      showMiniToast(t('polling.txCerConfirmed', { id: change.TXCerID.slice(0, 8) }) || `TXCer ${change.TXCerID.slice(0, 8)}... 已确认`);
+      // 终态更新必须解锁，否则会出现“TXCer 已被链上替换但前端仍显示锁定”的永久锁问题。
+      unlockTXCers([change.TXCerID], false);
+      showMiniToast(
+        `✅ TXCer 已上链\nID: ${change.TXCerID.slice(0, 8)}...\n已转换为 UTXO`,
+        'success'
+      );
       break;
-    
+
     case 1:
       // 验证错误，TXCer 不能使用
       markTXCerAsInvalid(user, change.TXCerID);
-      showErrorToast(t('polling.txCerInvalid', { id: change.TXCerID.slice(0, 8) }) || `TXCer ${change.TXCerID.slice(0, 8)}... 验证失败`);
+      // 验证失败同样是终态：解锁并清理本地锁，避免永久锁定。
+      unlockTXCers([change.TXCerID], false);
+      showErrorToast(`❌ TXCer 验证失败\nID: ${change.TXCerID.slice(0, 8)}...`);
       break;
-    
+
+
     case 2:
       // 解除怀疑，TXCer 可以正常使用
       markTXCerAsValid(user, change.TXCerID);
-      showMiniToast(t('polling.txCerCleared', { id: change.TXCerID.slice(0, 8) }) || `TXCer ${change.TXCerID.slice(0, 8)}... 已解除怀疑`);
+      showMiniToast(
+        `🔓 TXCer 已解除怀疑\nID: ${change.TXCerID.slice(0, 8)}...`,
+        'info'
+      );
       break;
-    
+
     default:
       console.warn(`[AccountPolling] Unknown TXCer status: ${change.Status}`);
   }
+}
+
+/**
+ * 直接处理 TXCer 状态变更（供 txCerLockManager 调用）
+ * 
+ * 此函数用于处理缓存的更新，在 TXCer 解锁后调用
+ * 
+ * @param change TXCer 变更数据
+ */
+export function processTXCerChangeDirectly(change: TXCerChangeToUser): void {
+  const user = getCurrentUser();
+  if (!user) {
+    console.warn('[AccountPolling] processTXCerChangeDirectly: No user logged in');
+    return;
+  }
+
+  console.info(`[AccountPolling] 处理缓存的 TXCer 更新: ${change.TXCerID}, status: ${change.Status}`);
+
+  processTXCerChange(user, change);
+
+  // 重新计算并保存
+  recalculateTotalBalance(user);
+  saveUser(user);
+
+  // 刷新 UI
+  renderWallet();
+  refreshSrcAddrList();
+  updateWalletBrief();
 }
 
 /**
@@ -564,7 +602,7 @@ function processUsedTXCerChange(user: User, usedTxCer: UsedTXCerChangeData): voi
 
   const normalizedAddr = usedTxCer.ToAddress.toLowerCase();
   const addrData = user.wallet.addressMsg[normalizedAddr];
-  
+
   if (addrData) {
     // 增加利息（保持 EstInterest/estInterest/gas 一致）
     normalizeInterestFields(addrData as any);
@@ -573,7 +611,7 @@ function processUsedTXCerChange(user: User, usedTxCer: UsedTXCerChangeData): voi
     (addrData as any).EstInterest = next;
     (addrData as any).estInterest = next;
     (addrData as any).gas = next;
-    showMiniToast(t('polling.interestReceived', { amount: usedTxCer.ToInterest.toFixed(2) }) || `收到利息: ${usedTxCer.ToInterest.toFixed(2)}`);
+    // 利息自动累加，无需 Toast 通知（避免干扰）
   }
 }
 
@@ -588,7 +626,7 @@ function removeTXCerFromWallet(user: User, txCerId: string): void {
       return;
     }
   }
-  
+
   // 也检查总 TXCer 列表
   if (user.wallet.totalTXCers && user.wallet.totalTXCers[txCerId] !== undefined) {
     delete user.wallet.totalTXCers[txCerId];
@@ -650,7 +688,7 @@ function recalculateTotalBalance(user: User): void {
   for (const addrData of Object.values(user.wallet.addressMsg)) {
     const type = addrData.type || 0;
     const value = addrData.value?.totalValue || addrData.value?.TotalValue || 0;
-    
+
     if (valueDivision[type] !== undefined) {
       valueDivision[type] += value;
     }
@@ -672,6 +710,7 @@ function recalculateTotalBalance(user: User): void {
  * 启动账户更新轮询
  * 
  * 仅对已加入担保组织的用户启用
+ * 同时启动跨组织TXCer轮询
  */
 export function startAccountPolling(): void {
   // 检查是否已启动
@@ -694,7 +733,7 @@ export function startAccountPolling(): void {
   }
 
   console.info(`[AccountPolling] Starting polling for user ${user.accountId} in group ${group.groupID}`);
-  
+
   isPollingStarted = true;
   consecutiveFailures = 0;
 
@@ -703,20 +742,27 @@ export function startAccountPolling(): void {
 
   // 设置定时轮询
   pollingTimer = setInterval(pollAccountUpdates, POLLING_INTERVAL);
+
+  // 同时启动跨组织TXCer轮询
+  startCrossOrgTXCerPolling();
 }
 
 /**
  * 停止账户更新轮询
+ * 同时停止跨组织TXCer轮询
  */
 export function stopAccountPolling(): void {
   if (pollingTimer) {
     clearInterval(pollingTimer);
     pollingTimer = null;
   }
-  
+
   isPollingStarted = false;
   isPolling = false;
-  
+
+  // 同时停止跨组织TXCer轮询
+  stopCrossOrgTXCerPolling();
+
   console.info('[AccountPolling] Polling stopped');
 }
 
@@ -760,3 +806,224 @@ export async function triggerManualPoll(): Promise<void> {
   await pollAccountUpdates();
 }
 
+// ============================================================================
+// 跨组织 TXCer 轮询 (TXCerToUser)
+// ============================================================================
+
+/** 跨组织TXCer轮询定时器 */
+let crossOrgTxCerTimer: ReturnType<typeof setInterval> | null = null;
+
+/** 跨组织TXCer轮询间隔（毫秒）*/
+const CROSS_ORG_TXCER_POLLING_INTERVAL = 5000; // 5秒轮询一次
+
+/** 是否正在轮询跨组织TXCer */
+let isPollingCrossOrgTxCer = false;
+
+/** 跨组织TXCer轮询连续失败次数 */
+let crossOrgTxCerFailures = 0;
+
+/**
+ * 执行一次跨组织TXCer轮询
+ * 
+ * 轮询接收来自其他担保组织的TXCer
+ */
+async function pollCrossOrgTXCers(): Promise<void> {
+  if (isPollingCrossOrgTxCer) {
+    console.debug('[CrossOrgTXCer] Skipping poll - already in progress');
+    return;
+  }
+
+  const user = getCurrentUser();
+  if (!user?.accountId) {
+    console.debug('[CrossOrgTXCer] No user logged in, skipping poll');
+    return;
+  }
+
+  const group = getJoinedGroup();
+  if (!group?.groupID) {
+    console.debug('[CrossOrgTXCer] User not in organization, skipping poll');
+    return;
+  }
+
+  isPollingCrossOrgTxCer = true;
+
+  try {
+    const endpoint = `${API_ENDPOINTS.ASSIGN_CROSS_ORG_TXCER(group.groupID)}?userID=${user.accountId}&limit=10&consume=true`;
+
+    const response = await apiClient.get<CrossOrgTXCerResponse>(endpoint, {
+      timeout: 5000,
+      retries: 0,
+      silent: true,
+      useBigIntParsing: true
+    });
+
+    crossOrgTxCerFailures = 0;
+
+    if (response.success && response.count > 0) {
+      console.info(`[CrossOrgTXCer] Received ${response.count} TXCers`);
+      
+      let hasChanges = false;
+      
+      for (const txCerToUser of response.txcers) {
+        const result = processTXCerToUser(user, txCerToUser);
+        if (result) {
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges) {
+        // 重新计算总余额
+        recalculateTotalBalance(user);
+        saveUser(user);
+
+        // 刷新UI
+        renderWallet();
+        refreshSrcAddrList();
+        updateWalletBrief();
+
+        // TXCer 接收通知已在 processTXCerToUser 中显示，这里不再重复
+        console.info(`[CrossOrgTXCer] ${response.count} TXCers processed and UI updated`);
+      }
+    }
+  } catch (error) {
+    crossOrgTxCerFailures++;
+
+    if (isNetworkError(error)) {
+      console.debug('[CrossOrgTXCer] Network error');
+    } else if (isTimeoutError(error)) {
+      console.debug('[CrossOrgTXCer] Request timeout');
+    } else {
+      console.warn('[CrossOrgTXCer] Poll failed:', error);
+    }
+
+    // 连续失败过多，暂停轮询
+    if (crossOrgTxCerFailures >= MAX_CONSECUTIVE_FAILURES) {
+      console.warn(`[CrossOrgTXCer] Too many failures (${crossOrgTxCerFailures}), pausing`);
+      stopCrossOrgTXCerPolling();
+    }
+  } finally {
+    isPollingCrossOrgTxCer = false;
+  }
+}
+
+/**
+ * 处理接收到的 TXCer
+ * 
+ * 将 TXCer 存储到对应地址的 txCers 字段和 wallet.totalTXCers 中
+ * 
+ * @param user 当前用户
+ * @param txCerToUser 接收到的 TXCer 信息
+ * @returns 是否处理成功
+ */
+function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
+  const { ToAddress, TXCer } = txCerToUser;
+  const normalizedAddr = ToAddress.toLowerCase();
+  const txCerId = TXCer.TXCerID;
+
+  console.info(`[CrossOrgTXCer] Processing TXCer ${txCerId.slice(0, 8)}... for address ${normalizedAddr.slice(0, 16)}...`);
+  console.info(`[CrossOrgTXCer] TXCer details: Value=${TXCer.Value}, ToInterest=${TXCer.ToInterest}, From=${TXCer.FromGuarGroupID.slice(0, 8)}...`);
+
+  // 确保钱包存在
+  if (!user.wallet) {
+    console.warn('[CrossOrgTXCer] User has no wallet');
+    return false;
+  }
+
+  // 检查地址是否属于用户
+  const addrData = user.wallet.addressMsg[normalizedAddr];
+  if (!addrData) {
+    console.warn(`[CrossOrgTXCer] Address ${normalizedAddr.slice(0, 16)}... not found in wallet`);
+    return false;
+  }
+
+  // TXCer 只能用于主货币（type=0）地址
+  if (addrData.type !== 0) {
+    console.warn(`[CrossOrgTXCer] TXCer can only be used for main currency addresses, but address type is ${addrData.type}`);
+    return false;
+  }
+
+  // 初始化 txCers 字段
+  if (!addrData.txCers) {
+    addrData.txCers = {};
+  }
+
+  // 检查是否已存在
+  if (addrData.txCers[txCerId] !== undefined) {
+    console.debug(`[CrossOrgTXCer] TXCer ${txCerId.slice(0, 8)}... already exists`);
+    return false;
+  }
+
+  // 存储 TXCer 金额到地址的 txCers 字段
+  addrData.txCers[txCerId] = TXCer.Value;
+
+  // 初始化并存储完整 TXCer 到 totalTXCers
+  if (!user.wallet.totalTXCers) {
+    user.wallet.totalTXCers = {};
+  }
+  user.wallet.totalTXCers[txCerId] = TXCer;
+
+  // 重新计算地址余额
+  recalculateAddressBalance(addrData);
+
+  console.info(`[CrossOrgTXCer] TXCer ${txCerId.slice(0, 8)}... stored successfully`);
+  
+  // 显示 TXCer 接收提示
+  showSuccessToast(`📥 收到 TXCer: ${TXCer.Value.toFixed(4)} PGC`);
+
+  return true;
+}
+
+/**
+ * 启动跨组织TXCer轮询
+ */
+export function startCrossOrgTXCerPolling(): void {
+  if (crossOrgTxCerTimer) {
+    console.debug('[CrossOrgTXCer] Already started');
+    return;
+  }
+
+  const group = getJoinedGroup();
+  if (!group?.groupID) {
+    console.info('[CrossOrgTXCer] User not in organization, polling not started');
+    return;
+  }
+
+  const user = getCurrentUser();
+  if (!user?.accountId) {
+    console.info('[CrossOrgTXCer] No user logged in, polling not started');
+    return;
+  }
+
+  console.info('[CrossOrgTXCer] Starting cross-org TXCer polling');
+
+  crossOrgTxCerFailures = 0;
+
+  // 立即执行一次
+  pollCrossOrgTXCers();
+
+  // 设置定时轮询
+  crossOrgTxCerTimer = setInterval(pollCrossOrgTXCers, CROSS_ORG_TXCER_POLLING_INTERVAL);
+}
+
+/**
+ * 停止跨组织TXCer轮询
+ */
+export function stopCrossOrgTXCerPolling(): void {
+  if (crossOrgTxCerTimer) {
+    clearInterval(crossOrgTxCerTimer);
+    crossOrgTxCerTimer = null;
+  }
+
+  isPollingCrossOrgTxCer = false;
+
+  console.info('[CrossOrgTXCer] Polling stopped');
+}
+
+/**
+ * 重启跨组织TXCer轮询
+ */
+export function restartCrossOrgTXCerPolling(): void {
+  stopCrossOrgTXCerPolling();
+  crossOrgTxCerFailures = 0;
+  startCrossOrgTXCerPolling();
+}

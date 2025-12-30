@@ -60,6 +60,9 @@
 /* UTXO 锁定状态 */
 @import './utxo-lock.css';
 
+/* TXCer 待转换资金 */
+@import './txcer.css';
+
 /* 工具类 */
 @import './utilities.css';
 

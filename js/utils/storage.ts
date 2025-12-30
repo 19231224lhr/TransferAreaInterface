@@ -15,7 +15,7 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
-import { UTXOData } from '../types/blockchain';
+import { UTXOData, TxCertificate } from '../types/blockchain';
 
 // ========================================
 // Type Definitions
@@ -67,7 +67,7 @@ export interface HistoryRecord {
 /** Wallet structure with strict typing */
 export interface Wallet {
   addressMsg: Record<string, AddressData>;
-  totalTXCers: Record<string, number>;  // TXCer ID -> value mapping
+  totalTXCers: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object (needed for signing)
   totalValue: number;
   TotalValue?: number;
   valueDivision: Record<number, number>;

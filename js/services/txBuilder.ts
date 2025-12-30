@@ -16,7 +16,8 @@
 import { sha256 } from 'js-sha256';
 import { ec as EC } from 'elliptic';
 import { User, AddressData } from '../utils/storage';
-import { UTXOData } from '../types/blockchain';
+import { UTXOData, TxCertificate } from '../types/blockchain';
+import { isUTXOLocked } from '../utils/utxoLock';
 
 // 初始化 P-256 曲线
 const ec = new EC('p256');
@@ -179,6 +180,27 @@ export interface BuildTransactionParams {
   isCrossChain?: boolean;
   /** 额外 PGC 兑换 Gas 的数量（用于支付交易费） */
   howMuchPayForGas?: number;
+  /** 是否优先使用 TXCer（主币种 0） */
+  preferTXCer?: boolean;
+}
+
+function normalizeUtxoIdForLockCheck(utxoId: string): { raw: string; normalized: string; backendStyle: string } {
+  const raw = String(utxoId || '');
+  const normalized = raw.includes(' + ') ? raw.replace(' + ', '_') : raw;
+  // txid is hex, so "_" is safe as a separator.
+  let backendStyle = raw;
+  if (normalized.includes('_')) {
+    const parts = normalized.split('_');
+    if (parts.length === 2) {
+      backendStyle = `${parts[0]} + ${parts[1]}`;
+    }
+  }
+  return { raw, normalized, backendStyle };
+}
+
+function isUtxoLockedAnyFormat(utxoId: string): boolean {
+  const ids = normalizeUtxoIdForLockCheck(utxoId);
+  return isUTXOLocked(ids.raw) || isUTXOLocked(ids.normalized) || isUTXOLocked(ids.backendStyle);
 }
 
 // ============================================================================
@@ -518,6 +540,75 @@ export function signUserNewTX(
 
 
 // ============================================================================
+// TXCer 签名函数
+// ============================================================================
+
+/**
+ * 计算 TXCer 的 SHA256 哈希
+ * 
+ * 后端实现：GetTXCerHash 排除 GuarGroupSignature 和 UserSignature 字段
+ * 
+ * @param txCer TxCertificate 对象
+ * @returns 32字节哈希值（数字数组）
+ */
+export function getTXCerHash(txCer: TxCertificate): number[] {
+  // 深拷贝并排除签名字段（设为零值）
+  const copy = JSON.parse(JSON.stringify(txCer, bigintReplacer));
+  
+  // 将签名字段设为零值 {R: null, S: null}
+  copy.GuarGroupSignature = { R: null, S: null };
+  copy.UserSignature = { R: null, S: null };
+  
+  // JSON 序列化，把 X/Y/R/S 的引号去掉
+  let jsonStr = JSON.stringify(copy);
+  jsonStr = jsonStr.replace(/"(X|Y|R|S)":"(\d+)"/g, '"$1":$2');
+  
+  console.log('[TXCer签名] TXCer 哈希 JSON:', jsonStr.slice(0, 200) + '...');
+  
+  // SHA256 哈希
+  return sha256.array(jsonStr);
+}
+
+/**
+ * 对 TXCer 签名（用于 TxCertificate.UserSignature）
+ * 
+ * 后端实现：使用接收地址的私钥对 TXCer 哈希签名
+ * 参考：core.SignStruct(txcer, a.Wallet.AddressMsg[txcer.ToAddress].WPrivateKey, "UserSignature")
+ * 
+ * @param txCer TxCertificate 对象
+ * @param addressPrivateKeyHex 接收地址私钥（hex 格式）
+ * @returns 签名后的 TxCertificate 副本
+ */
+export function signTXCer(
+  txCer: TxCertificate,
+  addressPrivateKeyHex: string
+): TxCertificate {
+  // 深拷贝
+  const signedTxCer = JSON.parse(JSON.stringify(txCer, bigintReplacer));
+  
+  // 计算哈希
+  const hash = getTXCerHash(txCer);
+  
+  console.log('[TXCer签名] TXCerID:', txCer.TXCerID);
+  console.log('[TXCer签名] 哈希长度:', hash.length);
+  
+  // 使用地址私钥签名
+  const key = ec.keyFromPrivate(addressPrivateKeyHex, 'hex');
+  const sig = key.sign(hash);
+  
+  // 设置 UserSignature（十进制字符串格式）
+  signedTxCer.UserSignature = {
+    R: sig.r.toString(10),
+    S: sig.s.toString(10)
+  };
+  
+  console.log('[TXCer签名] UserSignature R:', signedTxCer.UserSignature.R.slice(0, 20) + '...');
+  
+  return signedTxCer;
+}
+
+
+// ============================================================================
 // 公钥工具函数
 // ============================================================================
 
@@ -646,6 +737,10 @@ function selectUTXOs(
     
     // 遍历该地址的 UTXO
     for (const [utxoKey, utxoData] of Object.entries(utxos)) {
+      if (isUtxoLockedAnyFormat(utxoKey)) {
+        console.log(`  - UTXO ${utxoKey.slice(0, 16)}... 已锁定(pending)，跳过`);
+        continue;
+      }
       if (!utxoData) {
         console.log(`  - UTXO ${utxoKey}: 数据为空`);
         continue;
@@ -703,6 +798,69 @@ function selectUTXOs(
   return selected;
 }
 
+/**
+ * 选择 UTXO（不抛出错误，尽可能多收集）
+ * 
+ * 用于 TXCer 补足场景，即使 UTXO 不足也不报错
+ * 
+ * @param addresses 可用地址列表
+ * @param walletData 钱包数据
+ * @param requiredAmounts 各币种需要的金额
+ * @returns 选中的 UTXO 列表
+ */
+function selectUTXOsPartial(
+  addresses: string[],
+  walletData: Record<string, AddressData>,
+  requiredAmounts: Record<number, number>
+): Array<{
+  address: string;
+  utxoKey: string;
+  utxoData: UTXOData;
+  coinType: number;
+}> {
+  const selected: Array<{
+    address: string;
+    utxoKey: string;
+    utxoData: UTXOData;
+    coinType: number;
+  }> = [];
+  
+  // 按币种统计已收集金额
+  const collected: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+  
+  for (const address of addresses) {
+    const addrData = walletData[address];
+    if (!addrData) continue;
+    
+    const coinType = addrData.type || 0;
+    const utxos = addrData.utxos || {};
+    
+    // 检查该币种是否还需要更多
+    const needed = requiredAmounts[coinType] || 0;
+    if (collected[coinType] >= needed) continue;
+    
+    // 遍历该地址的 UTXO
+    for (const [utxoKey, utxoData] of Object.entries(utxos)) {
+      if (isUtxoLockedAnyFormat(utxoKey)) continue;
+      if (!utxoData || utxoData.Value <= 0) continue;
+      if (!utxoData.UTXO || !utxoData.UTXO.TXOutputs?.length) continue;
+      
+      selected.push({
+        address,
+        utxoKey,
+        utxoData,
+        coinType
+      });
+      
+      collected[coinType] += utxoData.Value;
+      if (collected[coinType] >= needed) break;
+    }
+  }
+  
+  // 不验证是否满足需求，直接返回已收集的
+  return selected;
+}
+
 
 // ============================================================================
 // 主构造函数
@@ -736,7 +894,8 @@ export async function buildTransaction(
     changeAddresses,
     gas,
     isCrossChain = false,
-    howMuchPayForGas = 0
+    howMuchPayForGas = 0,
+    preferTXCer = false
   } = params;
   
   // 获取钱包数据
@@ -778,17 +937,165 @@ export async function buildTransaction(
   
   console.log('[交易构造] 需要金额:', requiredAmounts);
   
-  // ========== Step 2: 选择 UTXO ==========
+  // ========== Step 2: 选择 UTXO 和 TXCer ==========
   console.log('[交易构造] 开始选择 UTXO...');
-  const selectedUTXOs = selectUTXOs(fromAddresses, walletData, requiredAmounts);
-  console.log('[交易构造] 选中 UTXO 数量:', selectedUTXOs.length);
   
-  // 计算各币种收集的总额
+  // 先尝试仅使用 UTXO（或按 preferTXCer 规则优先使用 TXCer）
+  let selectedUTXOs: Array<{
+    address: string;
+    utxoKey: string;
+    utxoData: UTXOData;
+    coinType: number;
+  }> = [];
+  
+  let selectedTXCers: Array<{
+    txCerId: string;
+    txCer: TxCertificate;
+    address: string;
+  }> = [];
+  
+  let txType = 0; // 0 = 普通转账，1 = 使用了 TXCer
+
+  const buildAvailableTXCers = (): Array<{ txCerId: string; txCer: TxCertificate; address: string; value: number }> => {
+    const availableTXCers: Array<{ txCerId: string; txCer: TxCertificate; address: string; value: number }> = [];
+    for (const address of fromAddresses) {
+      const addrData = walletData[address];
+      if (!addrData) continue;
+      if ((addrData.type || 0) !== 0) continue; // TXCer only for main currency
+      const txCerIds = addrData.txCers || {};
+      const totalTXCers = user.wallet?.totalTXCers || {};
+      for (const [txCerId, value] of Object.entries(txCerIds)) {
+        const txCer = totalTXCers[txCerId];
+        if (txCer && typeof value === 'number' && value > 0) {
+          availableTXCers.push({ txCerId, txCer, address, value });
+        }
+      }
+    }
+    console.log('[交易构造] 可用 TXCer 数量:', availableTXCers.length);
+    return availableTXCers;
+  };
+
+  const selectTXCersForMainCurrency = (
+    availableTXCers: Array<{ txCerId: string; txCer: TxCertificate; address: string; value: number }>,
+    needed: number
+  ) => {
+    let remainingNeeded = needed;
+    for (const txCerInfo of availableTXCers) {
+      if (remainingNeeded <= 0) break;
+      selectedTXCers.push({ txCerId: txCerInfo.txCerId, txCer: txCerInfo.txCer, address: txCerInfo.address });
+      remainingNeeded -= txCerInfo.value;
+      console.log('[交易构造] 选中 TXCer:', txCerInfo.txCerId.slice(0, 8) + '...', '金额:', txCerInfo.value);
+    }
+    return remainingNeeded;
+  };
+
+  if (preferTXCer) {
+    console.log('[交易构造] preferTXCer=true，主币种优先使用 TXCer');
+    if (isCrossChain) {
+      throw new Error('跨链交易不能使用 TXCer');
+    }
+    const availableTXCers = buildAvailableTXCers();
+    const mainCurrencyNeeded = requiredAmounts[0] || 0;
+    const remainingMain = selectTXCersForMainCurrency(availableTXCers, mainCurrencyNeeded);
+
+    const requiredAfterTXCer: Record<number, number> = { ...requiredAmounts };
+    requiredAfterTXCer[0] = Math.max(0, remainingMain);
+
+    // 主币种仍不足，或者存在非主币种需求，则补充选择 UTXO
+    if (requiredAfterTXCer[0] > 0 || (requiredAfterTXCer[1] || 0) > 0 || (requiredAfterTXCer[2] || 0) > 0) {
+      try {
+        selectedUTXOs = selectUTXOs(fromAddresses, walletData, requiredAfterTXCer);
+      } catch {
+        selectedUTXOs = selectUTXOsPartial(fromAddresses, walletData, requiredAfterTXCer);
+      }
+    }
+
+    // 校验主币种是否足够（UTXO+TXCer）
+    let mainCollected = 0;
+    for (const { utxoData, coinType } of selectedUTXOs) {
+      if (coinType === 0) mainCollected += utxoData.Value;
+    }
+    let txCerCollected = 0;
+    for (const { txCer } of selectedTXCers) txCerCollected += txCer.Value;
+    const stillNeed = mainCurrencyNeeded - (mainCollected + txCerCollected);
+    if (stillNeed > 0.00000001) {
+      throw new Error(`余额不足：UTXO + TXCer 仍然缺少 ${stillNeed.toFixed(4)} 主货币`);
+    }
+
+    if (selectedTXCers.length > 0) {
+      txType = 1;
+      console.log('[交易构造] preferTXCer 模式：TXType 设为 1');
+    }
+  } else {
+    try {
+      selectedUTXOs = selectUTXOs(fromAddresses, walletData, requiredAmounts);
+      console.log('[交易构造] UTXO 足够，选中数量:', selectedUTXOs.length);
+    } catch (utxoError) {
+      // UTXO 不足，尝试使用 TXCer 补足（仅主货币）
+    console.log('[交易构造] UTXO 不足，尝试使用 TXCer 补足...');
+    
+    // 检查条件：TXCer 只能用于主货币（type=0），且不能用于质押交易和跨链交易
+    if (isCrossChain) {
+      throw new Error('跨链交易不能使用 TXCer');
+    }
+    
+    // 检查是否只涉及主货币
+    const hasNonMainCurrency = [1, 2].some(t => (requiredAmounts[t] || 0) > 0);
+    if (hasNonMainCurrency) {
+      // 非主货币交易，重新抛出 UTXO 不足错误
+      throw utxoError;
+    }
+    
+    const availableTXCers = buildAvailableTXCers();
+    
+    // 重新尝试选择 UTXO（不抛出错误）
+    try {
+      selectedUTXOs = selectUTXOs(fromAddresses, walletData, requiredAmounts);
+    } catch {
+      // 忽略错误，selectedUTXOs 保持为空数组
+      selectedUTXOs = selectUTXOsPartial(fromAddresses, walletData, requiredAmounts);
+    }
+    
+    // 计算 UTXO 已收集的金额
+    let utxoCollected = 0;
+    for (const { utxoData, coinType } of selectedUTXOs) {
+      if (coinType === 0) {
+        utxoCollected += utxoData.Value;
+      }
+    }
+    
+    // 计算还需要多少主货币
+    const mainCurrencyNeeded = requiredAmounts[0] || 0;
+    let remainingNeeded = mainCurrencyNeeded - utxoCollected;
+    
+    console.log('[交易构造] UTXO 已收集:', utxoCollected, '还需:', remainingNeeded);
+    
+    remainingNeeded = selectTXCersForMainCurrency(availableTXCers, remainingNeeded);
+    
+    if (remainingNeeded > 0.00000001) {
+      throw new Error(`余额不足：UTXO + TXCer 仍然缺少 ${remainingNeeded.toFixed(4)} 主货币`);
+    }
+    
+    // 标记为使用了 TXCer
+    if (selectedTXCers.length > 0) {
+      txType = 1;
+      console.log('[交易构造] 将使用 TXCer 补足，TXType 设为 1');
+    }
+    }
+  }
+  console.log('[交易构造] 选中 UTXO 数量:', selectedUTXOs.length);
+  console.log('[交易构造] 选中 TXCer 数量:', selectedTXCers.length);
+  
+  // 计算各币种收集的总额（包含 TXCer）
   const collectedAmounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
   for (const { utxoData, coinType } of selectedUTXOs) {
     collectedAmounts[coinType] += utxoData.Value;
   }
-  console.log('[交易构造] 收集金额:', collectedAmounts);
+  // TXCer 只能是主货币
+  for (const { txCer } of selectedTXCers) {
+    collectedAmounts[0] += txCer.Value;
+  }
+  console.log('[交易构造] 收集金额（含TXCer）:', collectedAmounts);
   
   // ========== Step 3: 构造 TXOutput ==========
   const txOutputs: TXOutput[] = [];
@@ -1021,6 +1328,32 @@ export async function buildTransaction(
     });
   }
   
+  // ========== Step 4.5: 处理 TXCer 输入（如果有） ==========
+  const txInputsCertificate: TxCertificate[] = [];
+  
+  if (selectedTXCers.length > 0) {
+    console.log('[交易构造] 开始处理 TXCer 输入...');
+    
+    for (const { txCerId, txCer, address } of selectedTXCers) {
+      console.log(`[交易构造] 处理 TXCer ${txCerId.slice(0, 8)}...`);
+      
+      // 获取接收地址的私钥（TXCer.ToAddress）
+      const txCerAddr = txCer.ToAddress?.toLowerCase() || address.toLowerCase();
+      const addrData = walletData[txCerAddr];
+      const addrPrivKey = addrData?.privHex || '';
+      
+      if (!addrPrivKey) {
+        throw new Error(`TXCer 接收地址 ${txCerAddr.slice(0, 16)}... 缺少私钥`);
+      }
+      
+      // 对 TXCer 签名
+      const signedTxCer = signTXCer(txCer, addrPrivKey);
+      txInputsCertificate.push(signedTxCer);
+      
+      console.log(`[交易构造] TXCer ${txCerId.slice(0, 8)}... 签名完成`);
+    }
+  }
+  
   // ========== Step 5: 构造 Transaction ==========
   // 计算总转账金额（按汇率换算）
   const exchangeRates: Record<number, number> = { 0: 1, 1: 1000000, 2: 1000 };
@@ -1041,7 +1374,7 @@ export async function buildTransaction(
     Size: 0,   // 后端会重新计算
     Version: 1.0,
     GuarantorGroup: guarGroupID,
-    TXType: 0,  // 普通转账
+    TXType: txType,  // 0=普通转账, 1=使用了TXCer
     Value: totalValue,
     ValueDivision: requiredAmounts,
     NewValue: 0,
@@ -1053,7 +1386,7 @@ export async function buildTransaction(
     },
     UserSignature: { R: null, S: null },  // Step 6.5 计算
     TXInputsNormal: txInputs,
-    TXInputsCertificate: [],
+    TXInputsCertificate: txInputsCertificate,
     TXOutputs: txOutputs,
     Data: []
   };
@@ -1064,28 +1397,39 @@ export async function buildTransaction(
 
   // ========== Step 6.5: 计算 UserSignature ==========
   // UserSignature 是用第一个 Input 的地址私钥对交易哈希签名
-  // 后端实现: sig, err := tx.GetTXUserSignature(key) 其中 key = a.Wallet.AddressMsg[tx.TXInputsNormal[0].FromAddress].WPrivateKey
+  // 后端实现: 
+  // - 如果有 TXInputsNormal，使用第一个输入地址的私钥
+  // - 如果只有 TXInputsCertificate，使用第一个 TXCer 的接收地址私钥
+  let firstInputPrivKey = '';
+  
   if (txInputs.length > 0) {
     const firstInputAddress = txInputs[0].FromAddress;
     const firstAddrData = walletData[firstInputAddress];
-    const firstAddrPrivKey = firstAddrData?.privHex || '';
-    
-    if (firstAddrPrivKey) {
-      console.log('[交易构造] 开始计算 UserSignature (使用第一个输入地址的私钥)...');
-      const txHash = getTXHash(transaction);
-      // [SIGDBG] 输出前端计算的 TX 哈希，方便与后端日志比对
-      const txHashHex = txHash.map(b => b.toString(16).padStart(2, '0')).join('');
-      console.log('[SIGDBG][FRONTEND] TXHASH=' + txHashHex);
-      const userSigKey = ec.keyFromPrivate(firstAddrPrivKey, 'hex');
-      const userSig = userSigKey.sign(txHash);
-      transaction.UserSignature = {
-        R: userSig.r.toString(10),
-        S: userSig.s.toString(10)
-      };
-      console.log('[交易构造] UserSignature 签名完成');
-    } else {
-      console.warn('[交易构造] 第一个输入地址缺少私钥，无法生成 UserSignature');
-    }
+    firstInputPrivKey = firstAddrData?.privHex || '';
+  } else if (txInputsCertificate.length > 0) {
+    // 只有 TXCer 输入，使用第一个 TXCer 的接收地址私钥
+    const firstTxCer = txInputsCertificate[0];
+    const txCerAddr = firstTxCer.ToAddress?.toLowerCase() || '';
+    const addrData = walletData[txCerAddr];
+    firstInputPrivKey = addrData?.privHex || '';
+    console.log('[交易构造] 使用 TXCer 接收地址的私钥生成 UserSignature');
+  }
+  
+  if (firstInputPrivKey) {
+    console.log('[交易构造] 开始计算 UserSignature...');
+    const txHash = getTXHash(transaction);
+    // [SIGDBG] 输出前端计算的 TX 哈希，方便与后端日志比对
+    const txHashHex = txHash.map(b => b.toString(16).padStart(2, '0')).join('');
+    console.log('[SIGDBG][FRONTEND] TXHASH=' + txHashHex);
+    const userSigKey = ec.keyFromPrivate(firstInputPrivKey, 'hex');
+    const userSig = userSigKey.sign(txHash);
+    transaction.UserSignature = {
+      R: userSig.r.toString(10),
+      S: userSig.s.toString(10)
+    };
+    console.log('[交易构造] UserSignature 签名完成');
+  } else {
+    console.warn('[交易构造] 无法获取输入地址的私钥，无法生成 UserSignature');
   }
   
   // ========== Step 7: 构造 UserNewTX 并签名 ==========
@@ -1203,9 +1547,24 @@ export async function queryTXStatus(
       'Content-Type': 'application/json'
     }
   });
-  
+
+  // Treat 404 as a legitimate "not_found" state (common if the tx is dropped/rejected
+  // or status indexing hasn't happened yet).
+  if (response.status === 404) {
+    return {
+      tx_id: txID,
+      status: 'not_found',
+      receive_result: false,
+      result: false,
+      error_reason: 'transaction not found',
+      guar_id: '',
+      user_id: '',
+      block_height: 0
+    };
+  }
+
   if (!response.ok) {
-    throw new Error(`查询交易状态失败: ${response.statusText}`);
+    throw new Error(`查询交易状态失败: ${response.status} ${response.statusText}`);
   }
   
   const result = await response.json();
@@ -1304,6 +1663,10 @@ export async function waitForTXConfirmation(
           response: statusResponse
         };
       }
+
+      // not_found/pending are both treated as "still waiting" here.
+      // Some backends only start tracking status after aggregation / block confirmation,
+      // so mapping not_found -> failed can cause premature unlocks.
       
       // 如果是 not_found，可能是交易还没被处理，继续等待
       // 如果是 pending，继续等待
@@ -1460,7 +1823,8 @@ export function convertLegacyBuildInfo(buildInfo: LegacyBuildTXInfo): BuildTrans
     changeAddresses: buildInfo.ChangeAddress,
     gas: buildInfo.InterestAssign.Gas,
     isCrossChain: buildInfo.IsCrossChainTX,
-    howMuchPayForGas: buildInfo.HowMuchPayForGas || 0
+    howMuchPayForGas: buildInfo.HowMuchPayForGas || 0,
+    preferTXCer: !!buildInfo.PriUseTXCer
   };
 }
 

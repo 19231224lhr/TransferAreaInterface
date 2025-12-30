@@ -21,6 +21,7 @@ import { hasEncryptedKey, getPrivateKey } from '../utils/keyEncryption';
 import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 import { buildAssignNodeUrl } from './group';
 import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
+import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
 
 // ========================================
 // Type Definitions
@@ -83,7 +84,7 @@ function getWalletSnapshot(): WalletSnapshot {
     return sum + readAddressInterest(meta);
   }, 0);
   const walletGasTotal = getWalletGasSum(walletMap);
-  
+
   return { walletMap, walletGasTotal };
 }
 
@@ -129,21 +130,21 @@ function parsePub(raw: string): { x: string; y: string; ok: boolean } {
 export function updateTransferButtonState(): void {
   const tfBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLButtonElement | null;
   if (!tfBtn) return;
-  
+
   const guarGroup = getJoinedGroup();
   const user = loadUser();
   const hasJoined = !!(guarGroup && guarGroup.groupID && (user?.orgNumber || user?.guarGroup?.groupID));
-  
+
   // Get the mode selector to check if it's quick transfer
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
   const currentMode = tfMode?.value || 'quick';
   const isQuickTransfer = currentMode === 'quick';
-  
+
   // Enable button only if user has joined org AND is using quick transfer mode
   const shouldEnable = hasJoined && isQuickTransfer;
-  
+
   tfBtn.disabled = !shouldEnable;
-  
+
   // Update button appearance
   if (shouldEnable) {
     tfBtn.classList.remove('btn-disabled');
@@ -168,26 +169,38 @@ export function initTransferSubmit(): void {
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
   const isPledge = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
   const useTXCer = document.getElementById(DOM_IDS.useTXCer) as HTMLSelectElement | null;
+  const useTXCerChk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
   const chPGC = document.getElementById(DOM_IDS.chAddrPGC) as HTMLSelectElement | null;
   const chBTC = document.getElementById(DOM_IDS.chAddrBTC) as HTMLSelectElement | null;
   const chETH = document.getElementById(DOM_IDS.chAddrETH) as HTMLSelectElement | null;
   const gasInput = document.getElementById(DOM_IDS.extraGasPGC) as HTMLInputElement | null;
   const txGasInput = document.getElementById(DOM_IDS.txGasInput) as HTMLInputElement | null;
   const txErr = document.getElementById(DOM_IDS.txError);
-  
+
   if (!tfBtn || tfBtn.dataset._bind) return;
-  
+
   // Initial button state check
   updateTransferButtonState();
-  
+
+  // Keep hidden select `useTXCer` in sync with visible checkbox `useTXCerChk`.
+  // Transfer building reads `useTXCer.value` -> BuildTXInfo.PriUseTXCer.
+  const syncUseTXCer = (): void => {
+    if (!useTXCer || !useTXCerChk) return;
+    useTXCer.value = useTXCerChk.checked ? 'true' : 'false';
+  };
+  syncUseTXCer();
+  if (useTXCerChk) {
+    useTXCerChk.addEventListener('change', syncUseTXCer);
+  }
+
   // Listen for mode changes to update button state
   if (tfMode) {
     tfMode.addEventListener('change', updateTransferButtonState);
   }
-  
+
   // Create submission guard to prevent double-submit
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
-  
+
   tfBtn.addEventListener('click', async () => {
     const checkpointId = `transfer-generate-${Date.now()}`;
     // Persisted draft keys we may want to restore quickly on unexpected failure
@@ -199,7 +212,7 @@ export function initTransferSubmit(): void {
     }
 
     const loadingId = showLoading(t('common.processing') || '处理中...');
-    
+
     // Add loading state to button (only modify span text to preserve SVG)
     const btnSpan = tfBtn.querySelector('span');
     const originalText = btnSpan ? btnSpan.textContent : tfBtn.textContent;
@@ -209,7 +222,7 @@ export function initTransferSubmit(): void {
     } else {
       tfBtn.textContent = t('common.loading') || '处理中...';
     }
-    
+
     // Snapshot key UI elements so we can restore to a stable state if something throws unexpectedly.
     const snapTxErr = txErr ? createDOMSnapshot(txErr) : null;
     const txResultActions = document.getElementById(DOM_IDS.txResultActions);
@@ -221,53 +234,53 @@ export function initTransferSubmit(): void {
 
     try {
       const { walletMap, walletGasTotal } = getWalletSnapshot();
-      
+
       if (txErr) {
         txErr.textContent = '';
         txErr.classList.add('hidden');
       }
-      
+
       // Hide previous transaction result buttons
       if (txResultActions) txResultActions.classList.add('hidden');
       if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
-      
+
       const sel = Array.from(addrList!.querySelectorAll('input[type="checkbox"]'))
         .filter((x: any) => x.checked)
         .map((x: any) => x.value);
-      
+
       if (sel.length === 0) {
         showTxValidationError(t('modal.pleaseLoginFirst'), null, t('tx.addressNotSelected'));
         return;
       }
-      
+
       for (const addr of sel) {
         if (!getAddrMeta(addr)) {
           showTxValidationError(t('toast.cannotParseAddress'), null, t('tx.addressError'));
           return;
         }
       }
-      
+
       const rows = Array.from(billList!.querySelectorAll('.recipient-card'));
       if (rows.length === 0) {
         showTxValidationError(t('wallet.addRecipient'), null, t('tx.missingTransferInfo'));
         return;
       }
-      
+
       const isCross = tfMode?.value === 'cross';
       if (isCross && rows.length !== 1) {
         showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit'));
         return;
       }
-      
+
       const changeMap: Record<number, string> = {};
       if (chPGC?.value) changeMap[0] = chPGC.value;
       if (chBTC?.value) changeMap[1] = chBTC.value;
       if (chETH?.value) changeMap[2] = chETH.value;
-      
+
       const bills: Record<string, TransferBill> = {};
       const vd: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
       let outInterest = 0;
-      
+
       for (const r of rows) {
         const toEl = r.querySelector('[data-name="to"]') as HTMLInputElement | null;
         const mtEl = r.querySelector('[data-name="mt"]') as HTMLElement | null;
@@ -275,7 +288,7 @@ export function initTransferSubmit(): void {
         const gidEl = r.querySelector('[data-name="gid"]') as HTMLInputElement | null;
         const pubEl = r.querySelector('[data-name="pub"]') as HTMLInputElement | null;
         const gasEl = r.querySelector('[data-name="gas"]') as HTMLInputElement | null;
-        
+
         const to = String((toEl && toEl.value) || '').trim();
         const normalizedTo = normalizeAddrInput(to);
         const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
@@ -286,7 +299,7 @@ export function initTransferSubmit(): void {
         const parsedPub = parsePub(comb);
         const { x: px, y: py, ok: pubOk } = parsedPub;
         const tInt = Number((gasEl && gasEl.value) || 0);
-        
+
         // Address validation using security.ts
         if (!to) {
           showTxValidationError(t('validation.addressRequired') || t('modal.inputIncomplete'), toEl, t('tx.addressEmpty'));
@@ -297,20 +310,20 @@ export function initTransferSubmit(): void {
           showTxValidationError(addrValidation.error!, toEl, t('tx.addressFormatError'));
           return;
         }
-        
+
         // Currency validation
         if (![0, 1, 2].includes(mt)) {
           showTxValidationError(t('transfer.currency'), null, t('tx.currencyError'));
           return;
         }
-        
+
         // Amount validation using security.ts (require amount > 0)
         const amountValidation = validateTransferAmount(val, { min: 0.00000001 });
         if (!amountValidation.valid) {
           showTxValidationError(amountValidation.error!, valEl, t('tx.amountError'));
           return;
         }
-        
+
         // Organization ID validation using security.ts
         if (gid) {
           const orgValidation = validateOrgId(gid);
@@ -319,13 +332,13 @@ export function initTransferSubmit(): void {
             return;
           }
         }
-        
+
         // Public key validation
         if (!pubOk) {
           showTxValidationError(t('transfer.publicKey'), pubEl, t('tx.publicKeyFormatError'));
           return;
         }
-        
+
         // Gas validation
         if (!Number.isFinite(tInt)) {
           showTxValidationError('Gas', gasEl, t('tx.gasParamError'));
@@ -343,7 +356,7 @@ export function initTransferSubmit(): void {
           showTxValidationError(t('toast.addressExists'), null, t('tx.duplicateAddress'));
           return;
         }
-        
+
         bills[normalizedTo] = {
           MoneyType: mt,
           Value: val,
@@ -354,25 +367,25 @@ export function initTransferSubmit(): void {
         vd[mt] += val;
         outInterest += Math.max(0, tInt || 0);
       }
-      
+
       const extraPGC = Number(gasInput?.value || 0);
       if (!Number.isFinite(extraPGC) || extraPGC < 0) {
         showTxValidationError(t('wallet.extraGas'), gasInput, t('tx.gasParamError'));
         return;
       }
-      
+
       const interestGas = extraPGC > 0 ? extraPGC : 0;
       vd[0] += extraPGC;
-      
+
       const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
       if (!Number.isFinite(baseTxGas) || baseTxGas < 0) {
         showTxValidationError(t('wallet.txGas'), txGasInput, t('tx.gasParamError'));
         return;
       }
-      
+
       const typeBalances: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
       let availableGas = 0; // 只计算已选择源地址的 Gas
-      
+
       sel.forEach((addr) => {
         const meta = getAddrMeta(addr);
         if (!meta) return;
@@ -384,7 +397,7 @@ export function initTransferSubmit(): void {
         // 累加选中地址的 Gas（interest）
         availableGas += readAddressInterest(meta);
       });
-      
+
       const ensureChangeAddrValid = (typeId: number): boolean => {
         const need = vd[typeId] || 0;
         if (need <= 0) return true;
@@ -406,20 +419,20 @@ export function initTransferSubmit(): void {
         }
         return true;
       };
-      
+
       if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
         const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
         const coinName = getCoinName(lackType);
         showTxValidationError(`${coinName} ${t('tx.insufficientBalance')}`, null, t('tx.insufficientBalance'));
         return;
       }
-      
+
       if (![0, 1, 2].every((t) => ensureChangeAddrValid(t))) return;
-      
+
       const mintedGas = interestGas;
       const totalGasNeed = baseTxGas + outInterest;
       const totalGasBudget = availableGas + mintedGas;
-      
+
       if (totalGasNeed > totalGasBudget + 1e-8) {
         const msg = mintedGas > 0
           ? t('tx.insufficientGasWithMint')
@@ -427,11 +440,11 @@ export function initTransferSubmit(): void {
         showTxValidationError(t('tx.insufficientGas'), null, msg);
         return;
       }
-      
+
       const usedTypes = [0, 1, 2].filter((t) => (vd[t] || 0) > 0);
       let finalSel = sel.slice();
       let removedAddrs: string[] = [];
-      
+
       if (usedTypes.length) {
         const infos: AddressInfo[] = sel.map((addr) => {
           const meta = getAddrMeta(addr);
@@ -443,14 +456,14 @@ export function initTransferSubmit(): void {
           const totalRel = usedTypes.reduce((s, t) => s + bal[t] * (COIN_TO_PGC_RATES[t as CoinTypeId] || 1), 0);
           return { addr, bal, totalRel };
         });
-        
+
         const candidates = infos.filter((info) => usedTypes.some((t) => info.bal[t] > 0));
         if (candidates.length) {
           candidates.sort((a, b) => b.totalRel - a.totalRel);
           const remain: Record<number, number> = {};
           usedTypes.forEach((t) => { remain[t] = vd[t] || 0; });
           const chosen: string[] = [];
-          
+
           for (const info of candidates) {
             if (usedTypes.every((t) => (remain[t] || 0) <= 0)) break;
             const helps = usedTypes.some((t) => (remain[t] || 0) > 0 && info.bal[t] > 0);
@@ -462,7 +475,7 @@ export function initTransferSubmit(): void {
               }
             });
           }
-          
+
           if (usedTypes.every((t) => (remain[t] || 0) <= 0)) {
             const chosenSet = new Set(chosen);
             const optimizedSel = sel.filter((a) => chosenSet.has(a));
@@ -480,7 +493,7 @@ export function initTransferSubmit(): void {
           }
         }
       }
-      
+
       if (removedAddrs.length) {
         // 使用 toast 提示，避免挡住后续的确认对话框
         // showToast(message, type, title, duration)
@@ -490,7 +503,7 @@ export function initTransferSubmit(): void {
           t('toast.addressOptimized')
         );
       }
-      
+
       if (extraPGC > 0) {
         // Use t() function's built-in parameter substitution
         // The translation string has {amount} placeholders that t() will replace
@@ -503,12 +516,12 @@ export function initTransferSubmit(): void {
         );
         if (!confirmed) return;
       }
-      
+
       const backAssign: Record<string, number> = {};
       finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
-      
+
       const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k) as CoinTypeId] || 1), 0);
-      
+
       const build: BuildTXInfo = {
         Value: valueTotal,
         ValueDivision: vd,
@@ -522,7 +535,7 @@ export function initTransferSubmit(): void {
         Data: '',
         InterestAssign: { Gas: baseTxGas, Output: outInterest, BackAssign: backAssign }
       };
-      
+
       if (isCross && finalSel.length !== 1) {
         showTxValidationError(t('transfer.crossChainSingleInput'), null, t('transfer.crossChainLimit'));
         return;
@@ -531,7 +544,7 @@ export function initTransferSubmit(): void {
         showTxValidationError(t('transfer.selectChangeAddress'), null, t('transfer.changeAddressMissing'));
         return;
       }
-      
+
       // Save transaction structure and show view button
       if (txResultActions) {
         txResultActions.classList.remove('hidden');
@@ -543,7 +556,7 @@ export function initTransferSubmit(): void {
 
       // ========== 直接构造交易（合并原 buildTxBtn 的功能）==========
       console.log('[构造交易] ========== 开始构造 ==========');
-      
+
       const user = loadUser();
       if (!user) {
         const errMsg = '用户数据不存在，请先登录';
@@ -569,25 +582,25 @@ export function initTransferSubmit(): void {
 
       // 检查账户私钥（支持加密私钥）
       let accountPrivKey = user.keys?.privHex || user.privHex || '';
-      
+
       // 如果没有明文私钥，检查是否有加密私钥
       if (!accountPrivKey && user.accountId && hasEncryptedKey(user.accountId)) {
         console.log('[构造交易] 检测到加密私钥，需要密码解密');
         hideLoading(loadingId);
-        
+
         const password = await showPasswordPrompt({
           title: t('encryption.enterPassword') || '请输入密码',
           description: t('encryption.decryptForTx') || '需要密码解密私钥以签署交易',
           placeholder: t('encryption.passwordPlaceholder') || '请输入您的密码'
         });
-        
+
         if (!password) {
           console.log('[构造交易] 用户取消密码输入');
           return;
         }
-        
+
         const newLoadingId = showLoading(t('toast.buildingTx'));
-        
+
         try {
           accountPrivKey = await getPrivateKey(user.accountId, password);
           console.log('[构造交易] 私钥解密成功');
@@ -642,10 +655,41 @@ export function initTransferSubmit(): void {
         }
       }
 
+      // 🔒 锁定可能使用的 TXCer（防止与轮询更新产生竞态条件）
+      const lockedTXCerIds: string[] = [];
+      try {
+        for (const addr of fromAddresses) {
+          const addrData = walletData[addr];
+          if (addrData?.txCers && Object.keys(addrData.txCers).length > 0) {
+            const txCerIds = Object.keys(addrData.txCers);
+            const lockedIds = lockTXCers(txCerIds, `构造交易 - 地址 ${addr.slice(0, 8)}...`);
+            lockedTXCerIds.push(...lockedIds);
+            console.log(`[构造交易] 锁定地址 ${addr.slice(0, 8)}... 的 ${lockedIds.length} 个 TXCer`);
+          }
+        }
+        if (lockedTXCerIds.length > 0) {
+          console.log(`[构造交易] 共锁定 ${lockedTXCerIds.length} 个 TXCer`);
+        }
+      } catch (lockErr) {
+        console.warn('[构造交易] TXCer 锁定失败:', lockErr);
+        // 锁定失败不影响继续构造
+      }
+
       // 使用新的交易构造器
-      const userNewTX = await buildTransactionFromLegacy(build, user);
-      console.log('[构造交易] 交易构造成功');
-      console.log('[构造交易] TXID:', userNewTX.TX.TXID);
+      let userNewTX: UserNewTX;
+      try {
+        userNewTX = await buildTransactionFromLegacy(build, user);
+        console.log('[构造交易] 交易构造成功');
+        console.log('[构造交易] TXID:', userNewTX.TX.TXID);
+        console.log('[构造交易] TXType:', userNewTX.TX.TXType, userNewTX.TX.TXType === 1 ? '(使用了TXCer)' : '(仅UTXO)');
+      } catch (buildErr) {
+        // 🔓 构造失败，解锁 TXCer
+        if (lockedTXCerIds.length > 0) {
+          unlockTXCers(lockedTXCerIds, false);
+          console.log(`[构造交易] 构造失败，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
+        }
+        throw buildErr;
+      }
 
       // Save transaction data and show view button
       const txInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
@@ -658,6 +702,10 @@ export function initTransferSubmit(): void {
       // 获取担保组织信息
       const guarGroup = getJoinedGroup();
       if (!guarGroup || !guarGroup.groupID) {
+        // 🔓 无担保组织，解锁 TXCer
+        if (lockedTXCerIds.length > 0) {
+          unlockTXCers(lockedTXCerIds, false);
+        }
         const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织，无法发送交易';
         console.error('[发送交易] 错误:', errMsg);
         showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
@@ -667,6 +715,10 @@ export function initTransferSubmit(): void {
       // 检查交易模式，只支持快速转账
       const currentTfMode = tfMode?.value || 'quick';
       if (currentTfMode !== 'quick') {
+        // 🔓 不支持的模式，解锁 TXCer
+        if (lockedTXCerIds.length > 0) {
+          unlockTXCers(lockedTXCerIds, false);
+        }
         const errMsg = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型的交易';
         console.error('[发送交易] 错误:', errMsg);
         showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
@@ -676,14 +728,14 @@ export function initTransferSubmit(): void {
       // 计算转账总金额用于显示
       const totalAmount = Object.values(bills).reduce((sum, bill) => sum + bill.Value, 0);
       const recipientCount = Object.keys(bills).length;
-      
+
       // 显示确认对话框
       const confirmMessage = t('transfer.confirmSendTxDesc', {
         amount: totalAmount.toFixed(4),
         recipients: String(recipientCount),
         txid: userNewTX.TX.TXID
       }) || `确认发送交易？\n\n交易ID: ${userNewTX.TX.TXID}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount.toFixed(4)}`;
-      
+
       const confirmed = await showConfirmModal(
         t('transfer.confirmSendTx') || '确认发送交易',
         confirmMessage,
@@ -692,6 +744,11 @@ export function initTransferSubmit(): void {
       );
 
       if (!confirmed) {
+        // 🔓 用户取消，解锁 TXCer
+        if (lockedTXCerIds.length > 0) {
+          unlockTXCers(lockedTXCerIds, false);
+          console.log(`[发送交易] 用户取消，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
+        }
         console.log('[发送交易] 用户取消发送');
         showToast(t('transfer.txBuildSuccess') || '交易已构造，稍后可手动发送', 'info');
         return;
@@ -700,7 +757,7 @@ export function initTransferSubmit(): void {
       // ========== Step 3: 发送交易到后端 ==========
       console.log('[发送交易] 开始发送交易到后端...');
       console.log('[发送交易] 担保组织ID:', guarGroup.groupID);
-      
+
       // 获取 AssignNode URL
       let assignNodeUrl: string | undefined;
       if (guarGroup.assignAPIEndpoint) {
@@ -709,49 +766,108 @@ export function initTransferSubmit(): void {
       } else {
         console.warn('[发送交易] 警告: 担保组织缺少 assignAPIEndpoint，将使用默认 API_BASE_URL');
       }
-      
+
       // 更新 loading 提示
       hideLoading(loadingId);
       const sendLoadingId = showLoading(t('transfer.sendingTx') || '正在发送交易...');
 
       try {
         const result = await submitTransaction(userNewTX, guarGroup.groupID, assignNodeUrl);
-        
+
         // 立即隐藏 loading，不等待轮询
         hideLoading(sendLoadingId);
-        
+
         if (result.success) {
           console.log('[发送交易] 交易发送成功，TXID:', result.tx_id);
-          
+
+          // 🔒 发送成功：
+          // - 未使用的 TXCer 立即解锁（可再次选择）
+          // - 已使用的 TXCer 进入“已提交交易长锁”，直到明确成功/失败才解锁/处理
+          if (lockedTXCerIds.length > 0) {
+            const usedTxCerIds: string[] = [];
+            if (userNewTX.TX.TXInputsCertificate) {
+              for (const txCer of userNewTX.TX.TXInputsCertificate as any[]) {
+                if (txCer?.TXCerID) {
+                  usedTxCerIds.push(String(txCer.TXCerID));
+                }
+              }
+            }
+
+            const unusedTxCerIds = lockedTXCerIds.filter(id => !usedTxCerIds.includes(id));
+            if (unusedTxCerIds.length > 0) {
+              unlockTXCers(unusedTxCerIds, false);
+              console.log(`[发送交易] 已解锁 ${unusedTxCerIds.length} 个未使用的 TXCer`);
+            }
+
+            if (usedTxCerIds.length > 0) {
+              markTXCersSubmitted(usedTxCerIds, result.tx_id || userNewTX.TX.TXID);
+              console.log(`[发送交易] 已锁定 ${usedTxCerIds.length} 个已使用的 TXCer，等待确认`);
+            }
+          }
+
           const txIdToQuery = result.tx_id || userNewTX.TX.TXID;
-          
+
           // 🔒 锁定使用到的 UTXO
           try {
             const utxosToLock: Omit<LockedUTXO, 'lockTime' | 'txId'>[] = [];
             const txInputs = userNewTX.TX.TXInputsNormal || [];
-            
+
             for (const input of txInputs) {
-              const fromAddr = input.FromAddress?.toLowerCase() || '';
+              const fromAddrHint = input.FromAddress?.toLowerCase() || '';
               const fromTxId = input.FromTXID || '';
               const indexZ = input.FromTxPosition?.IndexZ ?? 0;
-              
+
               // 构造 UTXO ID (与 utxoLock.ts 中的格式一致)
               const utxoId = `${fromTxId}_${indexZ}`;
-              
+
+              if (!fromTxId) {
+                console.warn('[发送交易] 跳过锁定：TXInputsNormal 缺少 FromTXID');
+                continue;
+              }
+
+              // 兼容后端格式 key
+              const backendKey = `${fromTxId} + ${indexZ}`;
+
+              // 在钱包中定位该 UTXO（优先 FromAddress，其次全表扫描）
+              let resolvedAddr = fromAddrHint;
+              let resolvedAddrData: any = (user.wallet?.addressMsg as any)?.[resolvedAddr];
+
+              let utxoData: any = resolvedAddrData?.utxos?.[utxoId] || resolvedAddrData?.utxos?.[backendKey];
+
+              if (!utxoData) {
+                const allAddrs = (user.wallet?.addressMsg || {}) as Record<string, any>;
+                for (const [addrKey, addrData] of Object.entries(allAddrs)) {
+                  const candidate = addrData?.utxos?.[utxoId] || addrData?.utxos?.[backendKey];
+                  if (candidate) {
+                    resolvedAddr = String(addrKey).toLowerCase();
+                    resolvedAddrData = addrData;
+                    utxoData = candidate;
+                    break;
+                  }
+                }
+              }
+
+              if (!resolvedAddr) {
+                // 兜底：仍然用 hint
+                resolvedAddr = fromAddrHint;
+              }
+
               // 获取 UTXO 的金额和类型
-              const addrData = walletMap[fromAddr];
-              const utxoData = addrData?.utxos?.[utxoId];
-              const value = utxoData?.Value || 0;
-              const type = utxoData?.Type || 0;
-              
+              const value = Number(utxoData?.Value ?? 0) || 0;
+              const type = Number(utxoData?.Type ?? resolvedAddrData?.type ?? 0) || 0;
+
+              if (!utxoData) {
+                console.warn('[发送交易] 未在钱包中找到 UTXO，仍会锁定以防双花，但锁定金额可能为 0:', utxoId);
+              }
+
               utxosToLock.push({
                 utxoId,
-                address: fromAddr,
+                address: resolvedAddr,
                 value,
                 type
               });
             }
-            
+
             if (utxosToLock.length > 0) {
               lockUTXOs(utxosToLock, txIdToQuery);
               console.log('[发送交易] 已锁定', utxosToLock.length, '个 UTXO');
@@ -760,17 +876,17 @@ export function initTransferSubmit(): void {
             console.warn('[发送交易] 锁定 UTXO 失败:', lockErr);
             // 锁定失败不影响交易发送
           }
-          
+
           // 显示成功提示，告知用户交易已提交
           showToast(
             t('transfer.txSubmittedWaitingConfirm') || '交易已提交，正在后台等待确认...',
             'success',
             t('toast.sendTxSuccess') || '交易发送成功'
           );
-          
+
           // 清除草稿（交易已提交）
           try { clearTransferDraft(); } catch (_) { }
-          
+
           // 清空表单
           try {
             Array.from(addrList!.querySelectorAll('input[type="checkbox"]')).forEach((inp: any) => {
@@ -795,35 +911,35 @@ export function initTransferSubmit(): void {
             if (gasInput) gasInput.value = '0';
             if (txGasInput) txGasInput.value = '1';
           } catch (_) { }
-          
+
           // 🔄 重新渲染钱包以显示锁定状态
           try {
             const { renderWallet, refreshSrcAddrList } = await import('./wallet');
             renderWallet();
             refreshSrcAddrList();
           } catch (_) { }
-          
+
           // 🔄 后台异步轮询交易状态（不阻塞用户界面）
           console.log('[发送交易] 开始后台轮询交易状态:', txIdToQuery);
-          
+
           // 使用 setTimeout 0 确保 UI 先更新
           setTimeout(() => {
             pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, assignNodeUrl);
           }, 0);
-          
+
         } else {
           const errMsg = result.error || t('transfer.unknownError') || '未知错误';
           const errorCode = (result as any).errorCode;
           console.error('[发送交易] 发送失败:', errMsg, 'errorCode:', errorCode);
-          
+
           // Provide more helpful error messages based on error code
           let userFriendlyMsg = errMsg;
           let title = t('toast.sendTxFailed') || '交易发送失败';
-          
+
           if (errorCode === 'USER_NOT_IN_ORG') {
             // User not in organization - this is a critical state mismatch
             title = t('error.userNotInGroup') || '用户不在担保组织内';
-            userFriendlyMsg = t('transfer.userNotInOrgHint') || 
+            userFriendlyMsg = t('transfer.userNotInOrgHint') ||
               '您的账户未在后端担保组织中注册。这可能是因为：\n' +
               '1. 您导入的地址已属于其他组织\n' +
               '2. 加入组织时发生了错误\n\n' +
@@ -835,11 +951,24 @@ export function initTransferSubmit(): void {
           } else if (errorCode === 'UTXO_SPENT') {
             userFriendlyMsg = t('transfer.utxoAlreadySpent') || 'UTXO 已被使用，请刷新页面后重试';
           }
-          
+
+          // 🔓 发送失败，解锁 TXCer（不删除）
+          if (lockedTXCerIds.length > 0) {
+            unlockTXCers(lockedTXCerIds, false);
+            console.log(`[发送交易] 发送失败，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
+          }
+
           showModalTip(title, userFriendlyMsg, true);
         }
       } catch (sendErr: any) {
         hideLoading(sendLoadingId);
+        
+        // 🔓 发送异常，解锁 TXCer（不删除）
+        if (lockedTXCerIds.length > 0) {
+          unlockTXCers(lockedTXCerIds, false);
+          console.log(`[发送交易] 发送异常，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
+        }
+        
         const errMsg = sendErr?.message || String(sendErr);
         console.error('[发送交易] 发送异常:', errMsg);
         showModalTip(
@@ -871,7 +1000,7 @@ export function initTransferSubmit(): void {
       hideLoading(loadingId);
     }
   });
-  
+
   tfBtn.dataset._bind = '1';
 }
 
@@ -894,7 +1023,7 @@ async function pollTXStatusInBackground(
   assignNodeUrl?: string
 ): Promise<void> {
   console.log('[后台轮询] 开始轮询交易状态:', txID);
-  
+
   try {
     const confirmResult = await waitForTXConfirmation(
       txID,
@@ -912,40 +1041,51 @@ async function pollTXStatusInBackground(
         }
       }
     );
-    
+
     if (confirmResult.success) {
       // 交易确认成功 - 显示成功 toast
       console.log('[后台轮询] 交易确认成功:', txID);
       showToast(
-        t('transfer.txConfirmedSuccessShort', { txid: txID.slice(0, 8) + '...' }) || 
+        t('transfer.txConfirmedSuccessShort', { txid: txID.slice(0, 8) + '...' }) ||
         `交易 ${txID.slice(0, 8)}... 已确认成功！`,
         'success',
         t('transfer.txConfirmedSuccess') || '交易确认成功',
         5000  // 显示 5 秒
       );
-      
+
+      // ✅ 确认成功：允许 TXCer 状态更新（并处理缓存），让已使用的 TXCer 正常消失/变更
+      try {
+        const lockedTxCers = getLockedTXCerIdsByTxId(txID);
+        if (lockedTxCers.length > 0) {
+          unlockTXCers(lockedTxCers, true);
+          console.log('[后台轮询] 已解锁并处理 TXCer 更新, txID=', txID, 'count=', lockedTxCers.length);
+        }
+      } catch (e) {
+        console.warn('[后台轮询] 处理 TXCer 解锁失败:', e);
+      }
+
     } else if (confirmResult.timeout) {
       // 超时 - 显示提示 toast
       console.log('[后台轮询] 交易确认超时:', txID);
       showToast(
-        t('transfer.txConfirmationTimeoutShort', { txid: txID.slice(0, 8) + '...' }) || 
+        t('transfer.txConfirmationTimeoutShort', { txid: txID.slice(0, 8) + '...' }) ||
         `交易 ${txID.slice(0, 8)}... 确认超时，请稍后查看交易历史`,
         'warning',
         t('transfer.txConfirmationTimeout') || '确认超时',
         5000
       );
-      
+
     } else {
       // 交易验证失败 - 显示错误 toast 并解锁 UTXO
       const errorReason = confirmResult.errorReason || t('transfer.unknownError') || '未知错误';
       console.log('[后台轮询] 交易验证失败:', txID, errorReason);
-      
+
       // 🔓 解锁与此交易相关的 UTXO（交易失败，UTXO 可以再次使用）
       try {
         const { unlockUTXOsByTxId } = await import('../utils/utxoLock');
         unlockUTXOsByTxId(txID);
         console.log('[后台轮询] 已解锁交易', txID, '的 UTXO');
-        
+
         // 刷新 UI 显示最新的锁定状态
         const { renderWallet, refreshSrcAddrList } = await import('./wallet');
         renderWallet();
@@ -953,16 +1093,27 @@ async function pollTXStatusInBackground(
       } catch (unlockErr) {
         console.warn('[后台轮询] 解锁 UTXO 失败:', unlockErr);
       }
-      
+
+      // 🔓 交易失败：解锁这笔交易占用的 TXCer（不处理缓存，避免误删）
+      try {
+        const lockedTxCers = getLockedTXCerIdsByTxId(txID);
+        if (lockedTxCers.length > 0) {
+          unlockTXCers(lockedTxCers, false);
+          console.log('[后台轮询] 已解锁交易', txID, '占用的 TXCer', lockedTxCers.length);
+        }
+      } catch (e) {
+        console.warn('[后台轮询] 解锁 TXCer 失败:', e);
+      }
+
       showToast(
-        t('transfer.txVerificationFailedShort', { reason: errorReason }) || 
+        t('transfer.txVerificationFailedShort', { reason: errorReason }) ||
         `交易验证失败: ${errorReason}`,
         'error',
         t('transfer.txVerificationFailed') || '交易验证失败',
         8000  // 错误信息显示更久
       );
     }
-    
+
   } catch (err: any) {
     console.warn('[后台轮询] 轮询异常:', err);
     // 轮询失败不需要特别提示，用户可以在交易历史中查看

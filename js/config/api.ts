@@ -76,6 +76,8 @@ export const API_ENDPOINTS = {
   ASSIGN_GROUP_INFO: (groupId: string) => `/api/v1/${groupId}/assign/group-info`,
   ASSIGN_ACCOUNT_UPDATE: (groupId: string) => `/api/v1/${groupId}/assign/account-update`,
   ASSIGN_TXCER_CHANGE: (groupId: string) => `/api/v1/${groupId}/assign/txcer-change`,
+  /** 跨组织TXCer轮询 - 接收从其他组织发送过来的TXCer */
+  ASSIGN_CROSS_ORG_TXCER: (groupId: string) => `/api/v1/${groupId}/assign/poll-cross-org-txcers`,
   
   // AggrNode endpoints (动态路由: /api/v1/{groupID}/aggr/*)
   AGGR_TXCER: (groupId: string) => `/api/v1/${groupId}/aggr/txcer`,

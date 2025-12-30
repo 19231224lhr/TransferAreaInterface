@@ -33,7 +33,7 @@ import {
   clearSkeletonState,
   isShowingSkeleton
 } from '../utils/walletSkeleton';
-import { UTXOData } from '../types/blockchain';
+import { UTXOData, TxCertificate } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
 import { updateTransferButtonState } from './transfer';
 import { 
@@ -46,6 +46,7 @@ import {
   getLockedUTXOInfo,
   lockUTXOs
 } from '../utils/utxoLock';
+import { isTXCerLocked } from './txCerLockManager';
 
 // ============================================================================
 // Types
@@ -84,7 +85,7 @@ interface AddressMetadata {
  */
 interface ExtendedWallet {
   addressMsg: Record<string, AddressMetadata>;
-  totalTXCers?: Record<string, number>;  // TXCer ID -> value mapping
+  totalTXCers?: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object
   totalValue?: number;
   TotalValue?: number;
   valueDivision?: Record<number, number>;
@@ -370,6 +371,9 @@ export function renderWallet(): void {
   
   const list = document.getElementById(DOM_IDS.walletAddrList);
   if (!list) return;
+
+  // Preserve expanded state across re-renders (e.g., when TXCer arrives)
+  const expandedBeforeRender = getExpandedAddresses();
   
   const addresses = Object.keys((u.wallet?.addressMsg) || {});
   
@@ -399,11 +403,35 @@ export function renderWallet(): void {
     const lockedUtxos = getLockedUTXOsByAddress(a);
     const lockedBalance = getLockedBalanceByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
-    const availableBalance = Math.max(0, amtCash0 - lockedBalance);
+    const unlockedUtxoBalance = Math.max(0, amtCash0 - lockedBalance);
+    
+    // 获取 TXCer 信息（仅主货币地址有 TXCer）
+    const txCers = meta?.txCers || {};
+    const txCerIds = Object.keys(txCers);
+    const hasTXCers = txCerIds.length > 0;
+    const txCerBalance = Object.values(txCers).reduce((sum, val) => sum + (val as number), 0);
+    const txCerCount = txCerIds.length;
+
+    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用）
+    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+      if (!isTXCerLocked(id)) return sum;
+      return sum + (Number((txCers as any)[id]) || 0);
+    }, 0);
+    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    
+    // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
+    const totalBalance = amtCash0 + txCerBalance;
+    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
+    const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
     
     // 如果有锁定的 UTXO，添加标记类
     if (hasLockedUtxos) {
       item.classList.add('has-locked-utxos');
+    }
+    
+    // 如果有 TXCer，添加标记类
+    if (hasTXCers) {
+      item.classList.add('has-txcers');
     }
 
     // 锁定图标 SVG
@@ -416,14 +444,23 @@ export function renderWallet(): void {
         <div class="addr-card-main">
           <span class="addr-card-hash" title="${a}">${shortAddr}</span>
           <span class="addr-card-balance">
-            ${String(amtCash0)} ${coinType}
+            ${String(availableBalance)} ${coinType}
             ${hasLockedUtxos ? viewHtml`
               <span class="utxo-locked-indicator" title="${t('wallet.utxoLockedTooltip')}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                   <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                 </svg>
                 <span class="utxo-locked-tooltip">${t('wallet.lockedUtxoCount', { count: lockedUtxos.length })}</span>
+              </span>
+            ` : ''}
+            ${hasTXCers ? viewHtml`
+              <span class="txcer-indicator" title="${t('wallet.txCerTooltip') || 'TXCer 待转换'}">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                <span class="txcer-tooltip">TXCer: ${txCerCount}个 可用${unlockedTxCerBalance.toFixed(2)} / 总${txCerBalance.toFixed(2)}</span>
               </span>
             ` : ''}
           </span>
@@ -438,16 +475,22 @@ export function renderWallet(): void {
             <span class="addr-detail-label">${t('address.fullAddress')}</span>
             <span class="addr-detail-value">${a}</span>
           </div>
-          ${hasLockedUtxos ? viewHtml`
-            <div class="balance-breakdown">
-              <div class="balance-row">
-                <span class="balance-label">${t('wallet.totalBalance')}</span>
+          <div class="balance-breakdown">
+            <div class="balance-row">
+              <span class="balance-label">${t('wallet.totalBalance')}</span>
+              <span class="balance-value">${String(totalBalance)} ${coinType}</span>
+            </div>
+            <div class="balance-row available">
+              <span class="balance-label">${t('wallet.availableBalance')}</span>
+              <span class="balance-value">${String(availableBalance)} ${coinType}</span>
+            </div>
+            ${amtCash0 > 0 ? viewHtml`
+              <div class="balance-row utxo">
+                <span class="balance-label">UTXO 余额</span>
                 <span class="balance-value">${String(amtCash0)} ${coinType}</span>
               </div>
-              <div class="balance-row available">
-                <span class="balance-label">${t('wallet.availableBalance')}</span>
-                <span class="balance-value">${String(availableBalance)} ${coinType}</span>
-              </div>
+            ` : ''}
+            ${hasLockedUtxos ? viewHtml`
               <div class="balance-row locked">
                 <span class="balance-label">
                   <svg class="lock-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
@@ -458,17 +501,62 @@ export function renderWallet(): void {
                 </span>
                 <span class="balance-value">${String(lockedBalance)} ${coinType}</span>
               </div>
-            </div>
-          ` : viewHtml`
-            <div class="addr-detail-row">
-              <span class="addr-detail-label">${t('address.balance')}</span>
-              <span class="addr-detail-value">${String(amtCash0)} ${coinType}</span>
-            </div>
-          `}
+            ` : ''}
+            ${hasTXCers ? viewHtml`
+              <div class="balance-row txcer">
+                <span class="balance-label">
+                  <svg class="txcer-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  TXCer 余额
+                </span>
+                <span class="balance-value">${String(txCerBalance)} ${coinType}</span>
+              </div>
+            ` : ''}
+            ${hasTXCers && lockedTxCerBalance > 0 ? viewHtml`
+              <div class="balance-row locked">
+                <span class="balance-label">
+                  <svg class="lock-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                  TXCer 锁定
+                </span>
+                <span class="balance-value">${String(lockedTxCerBalance)} ${coinType}</span>
+              </div>
+            ` : ''}
+          </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">GAS</span>
             <span class="addr-detail-value gas">${String(gas0)}</span>
           </div>
+          ${hasTXCers ? viewHtml`
+            <div class="txcer-breakdown">
+              <div class="txcer-header">
+                <span class="txcer-header-label">
+                  <svg class="txcer-icon" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  TXCer（待转换）
+                </span>
+                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType}</span>
+              </div>
+              <div class="txcer-list">
+                ${txCerIds.map(id => {
+                  const value = txCers[id] as number;
+                  const locked = isTXCerLocked(id);
+                  return viewHtml`
+                    <div class="txcer-item">
+                      <span class="txcer-id" title="${id}">${id.slice(0, 8)}...${id.slice(-6)}</span>
+                      <span class="txcer-value">${value.toFixed(4)}${locked ? ' (锁定)' : ''}</span>
+                    </div>
+                  `;
+                })}
+              </div>
+            </div>
+          ` : ''}
           <div class="addr-card-actions">
             <button class="addr-action-btn addr-action-btn--primary btn-add" data-action="addToAddress" data-addr="${a}" title="${t('address.add')}">
               <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -502,6 +590,9 @@ export function renderWallet(): void {
   // Single DOM update
   list.replaceChildren();
   list.appendChild(fragment);
+
+  // Restore expanded state after re-render
+  restoreExpandedAddresses(expandedBeforeRender);
   
   // Update wallet chart after rendering
   try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
@@ -1161,7 +1252,19 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   const key = String(address).toLowerCase();
   const typeId = Number(found.type ?? 0);
   const coinType = getCoinName(typeId);
-  const balance = Number(found.value?.utxoValue || 0);
+  const utxoBalance = Number(found.value?.utxoValue || 0);
+  const lockedBalance = getLockedBalanceByAddress(address);
+  const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
+  const txCers = found.txCers || {};
+  const txCerIds = Object.keys(txCers);
+  const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
+  const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+    if (!isTXCerLocked(id)) return sum;
+    return sum + (Number((txCers as any)[id]) || 0);
+  }, 0);
+  const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+  const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
+  const totalBalance = utxoBalance + txCerBalance;
   const gas = Number(found.estInterest || found.gas || 0);
   
   const list = document.getElementById(DOM_IDS.walletAddrList);
@@ -1174,7 +1277,59 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       // 直接更新余额显示，不使用 scheduleBatchUpdate
       const balanceEl = card.querySelector('.addr-card-balance');
       if (balanceEl) {
-        balanceEl.textContent = `${balance} ${coinType}`;
+        // Update only one non-empty text node to avoid destroying lock/TXCer indicators,
+        // and clear any other non-empty text nodes to prevent duplicated "70 PGC 70 PGC".
+        const prefix = `${availableBalance} ${coinType} `;
+        const textNodes = Array.from(balanceEl.childNodes)
+          .filter(n => n.nodeType === Node.TEXT_NODE)
+          .map(n => n as Text);
+        const primary = textNodes.find(t => (t.textContent || '').trim().length > 0) || textNodes[0] || null;
+        if (primary) {
+          primary.textContent = prefix;
+          for (const t of textNodes) {
+            if (t !== primary && (t.textContent || '').trim().length > 0) {
+              t.textContent = ' ';
+            }
+          }
+        } else {
+          balanceEl.insertBefore(document.createTextNode(prefix), balanceEl.firstChild);
+        }
+      }
+
+      // Update breakdown values when expanded (or present)
+      const totalEl = card.querySelector('.balance-row .balance-value');
+      const totalRow = card.querySelector('.balance-row:not(.available):not(.locked):not(.txcer):not(.utxo) .balance-value');
+      const availableRow = card.querySelector('.balance-row.available .balance-value');
+      const utxoRow = card.querySelector('.balance-row.utxo .balance-value');
+      const txcerRow = card.querySelector('.balance-row.txcer .balance-value');
+      if (totalRow) totalRow.textContent = `${totalBalance} ${coinType}`;
+      else if (totalEl) totalEl.textContent = `${totalBalance} ${coinType}`;
+      if (availableRow) availableRow.textContent = `${availableBalance} ${coinType}`;
+      if (utxoRow) utxoRow.textContent = `${utxoBalance} ${coinType}`;
+      if (txcerRow) txcerRow.textContent = `${txCerBalance} ${coinType}`;
+
+      // Update locked rows (UTXO locked vs TXCer locked share the same CSS class)
+      const lockedRows = card.querySelectorAll('.balance-row.locked');
+      lockedRows.forEach((row) => {
+        const labelEl = row.querySelector('.balance-label');
+        const valueEl = row.querySelector('.balance-value');
+        if (!valueEl) return;
+        const labelText = (labelEl?.textContent || '').trim();
+        if (labelText.includes('TXCer')) {
+          valueEl.textContent = `${lockedTxCerBalance} ${coinType}`;
+        } else {
+          valueEl.textContent = `${lockedBalance} ${coinType}`;
+        }
+      });
+
+      // Keep TXCer tooltip/header in sync (locks affect available)
+      const txcerTooltip = card.querySelector('.txcer-tooltip');
+      if (txcerTooltip) {
+        txcerTooltip.textContent = `TXCer: ${txCerIds.length}个 可用${unlockedTxCerBalance.toFixed(2)} / 总${txCerBalance.toFixed(2)}`;
+      }
+      const txcerHeaderValue = card.querySelector('.txcer-header-value');
+      if (txcerHeaderValue) {
+        txcerHeaderValue.textContent = `${txCerIds.length}个 / ${txCerBalance.toFixed(4)} ${coinType}`;
       }
       
       // 直接更新详情行
@@ -1185,7 +1340,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
         if (label && value) {
           const labelText = label.textContent;
           if (labelText === t('address.balance') || labelText === '余额') {
-            value.textContent = `${balance} ${coinType}`;
+            value.textContent = `${availableBalance} ${coinType}`;
           } else if (labelText === 'GAS') {
             value.textContent = String(gas);
           }
@@ -1809,13 +1964,26 @@ export function rebuildAddrList(): void {
   srcAddrs.forEach(a => {
     const meta = walletMap[a] || {};
     const tId = Number(meta.type ?? 0);
-    const amt = Number(meta.value?.utxoValue || 0);
+    const utxoAmt = Number(meta.value?.utxoValue || 0);
     
     // 获取锁定信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
     const lockedBalance = getLockedBalanceByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
-    const availableBalance = Math.max(0, amt - lockedBalance);
+    const unlockedUtxoBalance = Math.max(0, utxoAmt - lockedBalance);
+    
+    // 获取 TXCer 余额
+    const txCers = meta.txCers || {};
+    const txCerIds = Object.keys(txCers);
+    const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
+    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+      if (!isTXCerLocked(id)) return sum;
+      return sum + (Number((txCers as any)[id]) || 0);
+    }, 0);
+    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    
+    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
+    const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
     
     const coinInfo = getCoinInfo(tId);
     const color = coinInfo.className;
@@ -1849,7 +2017,7 @@ export function rebuildAddrList(): void {
           </div>
         </div>
         <div class="item-right">
-          <span class="amount-num" title="${String(amt)}">${String(amt)}</span>
+          <span class="amount-num" title="${String(availableBalance)}">${String(availableBalance)}</span>
           <div class="check-mark">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
           </div>
@@ -1898,8 +2066,19 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
   
   const addrsWithBalance = srcAddrs.filter(addr => {
     const meta = walletMap[addr];
-    const amt = Number(meta?.value?.utxoValue || 0);
-    return amt > 0;
+    const utxoAmt = Number(meta?.value?.utxoValue || 0);
+    const lockedBalance = getLockedBalanceByAddress(addr);
+    const unlockedUtxo = Math.max(0, utxoAmt - lockedBalance);
+    const txCers = meta?.txCers || {};
+    const txCerIds = Object.keys(txCers);
+    const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
+    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+      if (!isTXCerLocked(id)) return sum;
+      return sum + (Number((txCers as any)[id]) || 0);
+    }, 0);
+    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    const availableBalance = unlockedUtxo + unlockedTxCerBalance;
+    return availableBalance > 0;
   });
   
   if (addrsWithBalance.length === 1) {

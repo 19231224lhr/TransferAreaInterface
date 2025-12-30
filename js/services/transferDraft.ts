@@ -198,6 +198,8 @@ function setOptionsOpen(open: boolean): void {
 function captureDraft(): TransferDraft {
   const optionsToggle = document.getElementById(DOM_IDS.optionsToggle);
   const isOpen = !!optionsToggle?.classList.contains('active');
+  const chk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
+  const useTXCer = chk?.checked ? 'true' : 'false';
 
   return {
     version: 1,
@@ -210,9 +212,9 @@ function captureDraft(): TransferDraft {
       chAddrPGC: getInputValue(DOM_IDS.chAddrPGC),
       chAddrBTC: getInputValue(DOM_IDS.chAddrBTC),
       chAddrETH: getInputValue(DOM_IDS.chAddrETH),
-      useTXCerChk: !!(document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null)?.checked,
+      useTXCerChk: !!chk?.checked,
       tfMode: getInputValue(DOM_IDS.tfMode),
-      useTXCer: getInputValue(DOM_IDS.useTXCer),
+      useTXCer,
       isPledge: getInputValue(DOM_IDS.isPledge),
       optionsOpen: isOpen
     }
@@ -234,7 +236,8 @@ async function applyDraft(draft: TransferDraft): Promise<void> {
   if (chk) chk.checked = !!draft.advanced?.useTXCerChk;
 
   setInputValue(DOM_IDS.tfMode, draft.advanced?.tfMode ?? 'quick');
-  setInputValue(DOM_IDS.useTXCer, draft.advanced?.useTXCer ?? 'true');
+  // Keep the hidden select consistent with the checkbox state.
+  setInputValue(DOM_IDS.useTXCer, chk?.checked ? 'true' : (draft.advanced?.useTXCer ?? 'true'));
   setInputValue(DOM_IDS.isPledge, draft.advanced?.isPledge ?? 'false');
 
   setOptionsOpen(!!draft.advanced?.optionsOpen);

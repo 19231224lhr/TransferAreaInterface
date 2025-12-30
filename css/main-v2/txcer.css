@@ -1,0 +1,278 @@
+/**
+ * TXCer Styles
+ * 
+ * TXCer（交易凭证）的视觉样式，包括：
+ * - TXCer 指示器图标
+ * - TXCer 详情展示
+ * - TXCer 列表样式
+ * - Tooltip 提示
+ */
+
+/* ============================================================================
+   TXCer 指示器（在余额旁边显示）
+   ============================================================================ */
+
+.txcer-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  color: var(--color-info, #06b6d4);
+  cursor: help;
+  position: relative;
+}
+
+.txcer-indicator svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* TXCer 图标动画 - 旋转时钟 */
+.txcer-indicator svg {
+  animation: txcer-pulse 2s ease-in-out infinite;
+}
+
+@keyframes txcer-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .txcer-indicator svg {
+    animation: none;
+  }
+}
+
+/* ============================================================================
+   TXCer Tooltip
+   ============================================================================ */
+
+.txcer-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 10px;
+  background: var(--tooltip-bg, rgba(6, 182, 212, 0.95));
+  color: var(--tooltip-color, #fff);
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 1000;
+  pointer-events: none;
+  margin-bottom: 6px;
+}
+
+.txcer-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--tooltip-bg, rgba(6, 182, 212, 0.95));
+}
+
+.txcer-indicator:hover .txcer-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ============================================================================
+   TXCer 分类显示（在地址详情中）
+   ============================================================================ */
+
+.txcer-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  background: var(--txcer-bg, rgba(6, 182, 212, 0.08));
+  border-radius: 8px;
+  font-size: 13px;
+  border: 1px solid rgba(6, 182, 212, 0.2);
+}
+
+.txcer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(6, 182, 212, 0.15);
+}
+
+.txcer-header-label {
+  color: var(--color-info, #06b6d4);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.txcer-header-value {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-info, #06b6d4);
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+.txcer-icon {
+  width: 12px;
+  height: 12px;
+  color: var(--color-info, #06b6d4);
+  flex-shrink: 0;
+}
+
+/* ============================================================================
+   TXCer 列表
+   ============================================================================ */
+
+.txcer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.txcer-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.txcer-list::-webkit-scrollbar-track {
+  background: rgba(6, 182, 212, 0.1);
+  border-radius: 2px;
+}
+
+.txcer-list::-webkit-scrollbar-thumb {
+  background: rgba(6, 182, 212, 0.3);
+  border-radius: 2px;
+}
+
+.txcer-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 4px;
+  transition: background 0.15s;
+}
+
+.txcer-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.txcer-id {
+  font-size: 11px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  color: var(--text-secondary, rgba(255, 255, 255, 0.6));
+  cursor: pointer;
+}
+
+.txcer-id:hover {
+  color: var(--color-info, #06b6d4);
+}
+
+.txcer-value {
+  font-size: 12px;
+  font-weight: 500;
+  color: #ffffff;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+}
+
+/* ============================================================================
+   地址卡片中的 TXCer 状态
+   ============================================================================ */
+
+.addr-card.has-txcers {
+  border-right: 3px solid var(--color-info, #06b6d4);
+}
+
+/* 同时有锁定 UTXO 和 TXCer 时的边框样式 */
+.addr-card.has-locked-utxos.has-txcers {
+  border-left: 3px solid var(--color-warning, #f59e0b);
+  border-right: 3px solid var(--color-info, #06b6d4);
+}
+
+.addr-card .txcer-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background: var(--color-info-bg, rgba(6, 182, 212, 0.1));
+  color: var(--color-info, #06b6d4);
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.addr-card .txcer-badge svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* ============================================================================
+   深色模式适配
+   ============================================================================ */
+
+[data-theme="dark"] .txcer-tooltip {
+  --tooltip-bg: rgba(6, 182, 212, 0.95);
+  --tooltip-color: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="dark"] .txcer-tooltip::after {
+  border-top-color: rgba(6, 182, 212, 0.95);
+}
+
+[data-theme="dark"] .txcer-breakdown {
+  --txcer-bg: rgba(6, 182, 212, 0.08);
+}
+
+[data-theme="dark"] .addr-card .txcer-badge {
+  --color-info-bg: rgba(6, 182, 212, 0.15);
+}
+
+/* ============================================================================
+   响应式适配
+   ============================================================================ */
+
+@media (max-width: 640px) {
+  .txcer-breakdown {
+    padding: 8px 10px;
+  }
+  
+  .txcer-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+  
+  .txcer-item {
+    padding: 4px 6px;
+  }
+  
+  .txcer-id {
+    font-size: 10px;
+  }
+  
+  .txcer-value {
+    font-size: 11px;
+  }
+}

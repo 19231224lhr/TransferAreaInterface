@@ -87,11 +87,32 @@ export interface TXInputNormal {
  * Corresponds to Go: TxCertificate
  */
 export interface TxCertificate {
-  ToAddress: string;        // Destination address
-  Value: number;            // Transfer amount
-  GuarantorGroup: string;   // Guarantor group ID
-  Sig: EcdsaSignature;      // Signature
-  // Additional fields as needed
+  TXCerID: string;            // 交易凭证ID
+  ToAddress: string;          // 交易转入钱的地址
+  Value: number;              // 转账金额
+  ToInterest: number;         // 转账利息
+  FromGuarGroupID: string;    // 发送用户所属的担保人组织ID
+  ToGuarGroupID: string;      // 接收用户所属的担保人组织ID
+  ConstructionTime: number;   // 交易凭证构造时间 (uint64)
+  Size?: number;              // 交易凭证大小
+
+  // 原交易信息
+  TXID: string;               // 来源交易ID
+  TxCerPosition: TXCerPosition; // 来源交易在担保人组织区块链中的位置信息
+
+  // 签名相关
+  GuarGroupSignature: EcdsaSignature; // 担保人组织签名
+  UserSignature: EcdsaSignature;      // 接收用户签名 (针对除了UserSignature字段以外的哈希值签名)
+}
+
+/**
+ * TXCer position in guarantor organization blockchain
+ * Corresponds to Go: TXCerPosition
+ */
+export interface TXCerPosition {
+  BlockHeight: number;  // 交易所在区块号
+  Index: number;        // 交易所在区块的担保交易序号
+  InIndex: number;      // 对应于交易的第几个output
 }
 
 // ============================================================================
