@@ -27,6 +27,7 @@ import { accrueWalletInterest, normalizeInterestFields } from '../utils/interest
 import { queryAddressBalances } from './accountQuery';
 import { applyComNodeInterests } from '../utils/interestSync.js';
 import { shouldBlockTXCerUpdate, cacheTXCerUpdate, unlockTXCers } from './txCerLockManager';
+import { buildAssignNodeUrl } from './group';
 
 // ============================================================================
 // Types (匹配后端 Go 结构体)
@@ -232,7 +233,21 @@ async function pollAccountUpdates(): Promise<void> {
   isPolling = true;
 
   try {
-    const endpoint = `${API_ENDPOINTS.ASSIGN_ACCOUNT_UPDATE(group.groupID)}?userID=${user.accountId}&consume=true`;
+    // 🔧 Distributed Gateway Support: Use direct AssignNode URL if available
+    let baseUrl = '';
+    if (group.assignAPIEndpoint) {
+      baseUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
+      console.debug(`[AccountPolling] Using direct AssignNode URL: ${baseUrl}`);
+    }
+
+    // If baseUrl is set (e.g. http://localhost:8082), prepend it.
+    // If not, it will be empty and apiClient (via makeRequest) might use default base,
+    // BUT api.ts makeRequest logic is: if url is absolute, use it.
+    // So we just construct the full URL here.
+
+    const path = API_ENDPOINTS.ASSIGN_ACCOUNT_UPDATE(group.groupID);
+    const endpoint = baseUrl ? `${baseUrl}${path}?userID=${user.accountId}&consume=true`
+      : `${path}?userID=${user.accountId}&consume=true`;
 
     // ⚠️ 重要：启用 BigInt 安全解析
     // 后端发送的 UTXO 数据中包含 PublicKeyNew，其 X/Y 坐标是 256 位整数
@@ -861,9 +876,9 @@ async function pollCrossOrgTXCers(): Promise<void> {
 
     if (response.success && response.count > 0) {
       console.info(`[CrossOrgTXCer] Received ${response.count} TXCers`);
-      
+
       let hasChanges = false;
-      
+
       for (const txCerToUser of response.txcers) {
         const result = processTXCerToUser(user, txCerToUser);
         if (result) {
@@ -966,7 +981,7 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
   recalculateAddressBalance(addrData);
 
   console.info(`[CrossOrgTXCer] TXCer ${txCerId.slice(0, 8)}... stored successfully`);
-  
+
   // 显示 TXCer 接收提示
   showSuccessToast(`📥 收到 TXCer: ${TXCer.Value.toFixed(4)} PGC`);
 
