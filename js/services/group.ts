@@ -307,7 +307,7 @@ export async function queryGroupInfoViaAssignNode(
 
   // The response is ReturnGroupBootMsg: { guar_group_id, group_msg: GuarGroupTable }
   const data = await response.json();
-  
+
   // Handle both direct GuarGroupTable and wrapped ReturnGroupBootMsg formats
   const raw: GuarGroupTable = data.group_msg || data.GroupMsg || data;
   const groupId = data.guar_group_id || data.GuarGroupID || targetGroupId;
@@ -420,15 +420,15 @@ export function verifyStructLocal(
   console.debug('[Group] 🔍 Verifying signature locally...');
   console.debug('[Group] Public key X:', pubXHex);
   console.debug('[Group] Public key Y:', pubYHex);
-  
+
   const result = verifyStructCore(data, signature, pubXHex, pubYHex, excludeFields);
-  
+
   if (result) {
     console.info('[Group] ✅ Local signature verification PASSED');
   } else {
     console.error('[Group] ❌ Local signature verification FAILED');
   }
-  
+
   return result;
 }
 
@@ -441,31 +441,50 @@ export function verifyStructLocal(
  * @param assignEndpoint - Port string like ":8081"
  * @returns Full URL like "http://localhost:8081"
  */
+/**
+ * Build AssignNode URL from base host and endpoint
+ * @param assignEndpoint - Port string like ":8081" or "IP:PORT"
+ * @returns Full URL like "http://localhost:8081"
+ */
 export function buildAssignNodeUrl(assignEndpoint: string): string {
-  // Extract host from API_BASE_URL
   const baseUrl = new URL(API_BASE_URL);
-  const host = baseUrl.hostname;
   const protocol = baseUrl.protocol;
-  
-  // assignEndpoint is like ":8081", extract port
-  const port = assignEndpoint.startsWith(':') ? assignEndpoint.slice(1) : assignEndpoint;
-  
-  return `${protocol}//${host}:${port}`;
+
+  if (assignEndpoint.startsWith(':')) {
+    // Old format ":8081" -> Use current host + port
+    const host = baseUrl.hostname;
+    const port = assignEndpoint.slice(1);
+    return `${protocol}//${host}:${port}`;
+  } else {
+    // New format "IP:PORT"
+    if (!assignEndpoint.startsWith('http://') && !assignEndpoint.startsWith('https://')) {
+      return `${protocol}//${assignEndpoint}`;
+    }
+    return assignEndpoint;
+  }
 }
 
 /**
  * Build AggrNode URL from base host and endpoint
- * @param aggrEndpoint - Port string like ":8082"
+ * @param aggrEndpoint - Port string like ":8082" or "IP:PORT"
  * @returns Full URL like "http://localhost:8082"
  */
 export function buildAggrNodeUrl(aggrEndpoint: string): string {
   const baseUrl = new URL(API_BASE_URL);
-  const host = baseUrl.hostname;
   const protocol = baseUrl.protocol;
-  
-  const port = aggrEndpoint.startsWith(':') ? aggrEndpoint.slice(1) : aggrEndpoint;
-  
-  return `${protocol}//${host}:${port}`;
+
+  if (aggrEndpoint.startsWith(':')) {
+    // Old format ":8082" -> Use current host + port
+    const host = baseUrl.hostname;
+    const port = aggrEndpoint.slice(1);
+    return `${protocol}//${host}:${port}`;
+  } else {
+    // New format "IP:PORT"
+    if (!aggrEndpoint.startsWith('http://') && !aggrEndpoint.startsWith('https://')) {
+      return `${protocol}//${aggrEndpoint}`;
+    }
+    return aggrEndpoint;
+  }
 }
 
 /**
@@ -485,32 +504,32 @@ export async function joinGuarGroup(
     if (!user || !user.accountId) {
       return { success: false, error: t('error.userNotLoggedIn') };
     }
-    
+
     // Get public keys from user data
     const pubXHex = user.pubXHex || user.keys?.pubXHex;
     const pubYHex = user.pubYHex || user.keys?.pubYHex;
-    
+
     if (!pubXHex || !pubYHex) {
       return { success: false, error: t('error.publicKeyIncomplete') };
     }
-    
+
     // Get decrypted private key with custom prompt for joining group
     const privHex = await getDecryptedPrivateKeyWithPrompt(
       user.accountId,
       t('encryption.unlockForSigning', '解锁私钥进行签名'),
       t('encryption.unlockForJoinGroup', '加入担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。')
     );
-    
+
     if (!privHex) {
       // User cancelled password input - return special error code
       return { success: false, error: 'USER_CANCELLED' };
     }
-    
+
     // 2. Build AddressMsg from user's sub-addresses only
     // ⚠️ IMPORTANT: user.address is the account address (not a wallet address)
     // Only wallet.addressMsg contains actual usable wallet addresses
     const addressMsg: AddressMsg = {};
-    
+
     // Add sub-addresses from wallet (these are the actual usable addresses)
     if (user.wallet?.addressMsg) {
       for (const [addr, data] of Object.entries(user.wallet.addressMsg)) {
@@ -523,14 +542,14 @@ export async function joinGuarGroup(
         }
       }
     }
-    
+
     if (Object.keys(addressMsg).length === 0) {
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: t('join.noSubAddressDesc', '加入担保组织前需要至少一个钱包子地址。请先在"我的钱包"页面创建子地址。')
       };
     }
-    
+
     // 3. Build request body (without signature first)
     const timestamp = getTimestamp();
     const requestBody: FlowApplyRequest = {
@@ -543,7 +562,7 @@ export async function joinGuarGroup(
       TimeStamp: timestamp
       // Note: UserSig will be added after signing
     };
-    
+
     // 4. Sign the request (UserSig field will be excluded automatically)
     const signature = signStruct(
       requestBody as unknown as Record<string, unknown>,
@@ -551,7 +570,7 @@ export async function joinGuarGroup(
       ['UserSig']
     );
     requestBody.UserSig = signature;
-    
+
     // 5. Determine API endpoint
     let apiUrl: string;
     if (groupInfo.assignAPIEndpoint) {
@@ -560,10 +579,10 @@ export async function joinGuarGroup(
     } else {
       apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
     }
-    
+
     // 6. Send request
     const serializedBody = serializeForBackend(requestBody);
-    
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -572,12 +591,12 @@ export async function joinGuarGroup(
       },
       body: serializedBody
     });
-    
+
     const responseData = await response.json() as FlowApplyResponse;
-    
+
     console.log(`[Group] Response status: ${response.status}, ok: ${response.ok}`);
     console.log(`[Group] Response data:`, JSON.stringify(responseData));
-    
+
     if (!response.ok) {
       console.error(`[Group] ✗ Join failed (HTTP ${response.status}):`, responseData);
       // 后端错误响应格式: {"error": "..."} 或 {"message": "..."}
@@ -588,7 +607,7 @@ export async function joinGuarGroup(
         error: errorMsg
       };
     }
-    
+
     if (!responseData.result) {
       // 业务逻辑失败，后端返回 {"result": false, "message": "..."}
       const errorMsg = responseData.error || responseData.message || t('error.joinGroupFailed');
@@ -598,10 +617,10 @@ export async function joinGuarGroup(
         error: errorMsg
       };
     }
-    
+
     console.info(`[Group] ✓ Join succeeded`);
     return { success: true, data: responseData };
-    
+
   } catch (error) {
     console.error(`[Group] ✗ Join error:`, error);
     if (error instanceof ApiRequestError) {
@@ -635,34 +654,34 @@ export async function leaveGuarGroup(
     if (!user || !user.accountId) {
       return { success: false, error: t('error.userNotLoggedIn') };
     }
-    
+
     // Get public keys from user data
     const pubXHex = user.pubXHex || user.keys?.pubXHex;
     const pubYHex = user.pubYHex || user.keys?.pubYHex;
-    
+
     if (!pubXHex || !pubYHex) {
       return { success: false, error: t('error.publicKeyIncomplete') };
     }
-    
+
     // Get decrypted private key with custom prompt for leaving group
     const privHex = await getDecryptedPrivateKeyWithPrompt(
       user.accountId,
       t('encryption.unlockForSigning', '解锁私钥进行签名'),
       t('encryption.unlockForLeaveGroup', '退出担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。')
     );
-    
+
     if (!privHex) {
       // User cancelled password input - return special error code
       return { success: false, error: 'USER_CANCELLED' };
     }
-    
+
     // 2. Build request body
     // ⚠️ 重要：退出时 AddressMsg 必须是空对象 {}
     // 原因：如果发送带数据的 AddressMsg，后端反序列化后会填充零值字段
     // 导致后端重新序列化的 JSON 与前端签名的 JSON 不一致，签名验证失败
     const timestamp = getTimestamp();
     const userPublicKey = convertPublicKeyToBackendFormat(pubXHex, pubYHex);
-    
+
     const requestBody: FlowApplyRequest = {
       Status: 0, // Leave
       UserID: user.accountId,
@@ -672,7 +691,7 @@ export async function leaveGuarGroup(
       AddressMsg: {},  // ⚠️ 退出时必须是空对象！
       TimeStamp: timestamp
     };
-    
+
     // 3. Sign the request
     const signature = signStruct(
       requestBody as unknown as Record<string, unknown>,
@@ -680,7 +699,7 @@ export async function leaveGuarGroup(
       ['UserSig']
     );
     requestBody.UserSig = signature;
-    
+
     // 4. Local verification (debug only)
     if (process.env.NODE_ENV === 'development') {
       const derivedPubKey = getPublicKeyHexFromPrivate(privHex);
@@ -696,7 +715,7 @@ export async function leaveGuarGroup(
         return { success: false, error: t('error.localSignatureVerificationFailed') };
       }
     }
-    
+
     // 5. Determine API endpoint
     let apiUrl: string;
     if (groupInfo?.assignAPIEndpoint) {
@@ -705,10 +724,10 @@ export async function leaveGuarGroup(
     } else {
       apiUrl = `${API_BASE_URL}${API_ENDPOINTS.ASSIGN_FLOW_APPLY(groupId)}`;
     }
-    
+
     // 6. Send request
     const serializedBody = serializeForBackend(requestBody);
-    
+
     const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
@@ -717,9 +736,9 @@ export async function leaveGuarGroup(
       },
       body: serializedBody
     });
-    
+
     const responseData = await response.json() as FlowApplyResponse;
-    
+
     if (!response.ok) {
       console.error(`[Group] ✗ Leave failed:`, responseData);
       // 后端错误响应格式: {"error": "..."} 或 {"message": "..."}
@@ -729,7 +748,7 @@ export async function leaveGuarGroup(
         error: errorMsg
       };
     }
-    
+
     if (!responseData.result) {
       // 业务逻辑失败，后端返回 {"result": false, "message": "..."}
       const errorMsg = responseData.error || responseData.message || t('error.leaveGroupFailed');
@@ -739,10 +758,10 @@ export async function leaveGuarGroup(
         error: errorMsg
       };
     }
-    
+
     console.info(`[Group] ✓ Successfully left organization ${groupId}`);
     return { success: true, data: responseData };
-    
+
   } catch (error) {
     console.error(`[Group] ✗ Leave error:`, error);
     if (error instanceof ApiRequestError) {
