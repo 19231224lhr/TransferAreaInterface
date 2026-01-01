@@ -40,20 +40,20 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
     notifyStatus('unsupported');
     return null;
   }
-  
+
   try {
     notifyStatus('installing');
-    
+
     const registration = await navigator.serviceWorker.register('/sw.js', {
       scope: '/'
     });
-    
+
     swRegistration = registration;
-    
+
     // Handle updates
     registration.addEventListener('updatefound', () => {
       const newWorker = registration.installing;
-      
+
       if (newWorker) {
         newWorker.addEventListener('statechange', () => {
           if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -64,17 +64,17 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
         });
       }
     });
-    
+
     // Check if there's an active service worker
     if (registration.active) {
       notifyStatus('active');
     }
-    
+
     // Check for updates periodically (every hour)
     setInterval(() => {
       registration.update().catch(console.error);
     }, 60 * 60 * 1000);
-    
+
     return registration;
   } catch (error) {
     console.error('[SW] Service worker registration failed:', error);
@@ -90,7 +90,7 @@ export async function unregisterServiceWorker(): Promise<boolean> {
   if (!swRegistration) {
     return false;
   }
-  
+
   try {
     const success = await swRegistration.unregister();
     if (success) {
@@ -113,7 +113,7 @@ export async function checkForUpdates(): Promise<void> {
   if (!swRegistration) {
     return;
   }
-  
+
   try {
     await swRegistration.update();
   } catch (error) {
@@ -135,7 +135,7 @@ export function skipWaiting(): void {
  */
 export function onUpdateAvailable(callback: UpdateCallback): () => void {
   updateCallbacks.push(callback);
-  
+
   return () => {
     const index = updateCallbacks.indexOf(callback);
     if (index > -1) {
@@ -149,7 +149,7 @@ export function onUpdateAvailable(callback: UpdateCallback): () => void {
  */
 export function onStatusChange(callback: (status: ServiceWorkerStatus) => void): () => void {
   statusCallbacks.push(callback);
-  
+
   return () => {
     const index = statusCallbacks.indexOf(callback);
     if (index > -1) {
@@ -197,13 +197,13 @@ export function sendMessage(message: any): Promise<any> {
       reject(new Error('No active service worker'));
       return;
     }
-    
+
     const messageChannel = new MessageChannel();
-    
+
     messageChannel.port1.onmessage = (event) => {
       resolve(event.data);
     };
-    
+
     navigator.serviceWorker.controller.postMessage(message, [messageChannel.port2]);
   });
 }
@@ -300,7 +300,7 @@ export function onOnlineStatusChange(callback: (isOnline: boolean) => void): () 
   } catch {
     // best-effort
   }
-  
+
   return () => {
     const index = onlineCallbacks.indexOf(callback);
     if (index > -1) {
@@ -323,11 +323,11 @@ function initOnlineDetection(): void {
       }
     }
   };
-  
+
   window.addEventListener('online', () => {
     notifyOnlineStatus(true);
   });
-  
+
   window.addEventListener('offline', () => {
     notifyOnlineStatus(false);
   });
@@ -335,33 +335,37 @@ function initOnlineDetection(): void {
   // Heartbeat: combines browser signal + external probe.
   // Goal: show offline indicator when the Internet is actually unreachable (common expectation for “断网”),
   // even if localhost remains reachable.
-  let intervalId: number | null = null;
-  const schedule = (ms: number) => {
-    if (intervalId !== null) window.clearInterval(intervalId);
-    intervalId = window.setInterval(() => {
-      tick().catch(() => {});
-    }, ms);
-  };
+  /* 
+   * [MODIFIED] Active probing (Baidu favicon) disabled per user request to avoid network log spam.
+   * Relying on native navigator.onLine for now.
+   */
+  // let intervalId: number | null = null;
+  // const schedule = (ms: number) => {
+  //   if (intervalId !== null) window.clearInterval(intervalId);
+  //   intervalId = window.setInterval(() => {
+  //     tick().catch(() => {});
+  //   }, ms);
+  // };
 
-  const tick = async () => {
-    // Fast path: if the browser reports offline, trust it.
-    if (!navigator.onLine) {
-      if (lastKnownOnline !== false) notifyOnlineStatus(false);
-      schedule(5000);
-      return;
-    }
+  // const tick = async () => {
+  //   // Fast path: if the browser reports offline, trust it.
+  //   if (!navigator.onLine) {
+  //     if (lastKnownOnline !== false) notifyOnlineStatus(false);
+  //     schedule(5000);
+  //     return;
+  //   }
 
-    const reachable = await probeInternetReachability();
-    if (reachable !== lastKnownOnline) {
-      notifyOnlineStatus(reachable);
-    }
-    // Probe less often when stable online to reduce traffic.
-    schedule(reachable ? 15000 : 5000);
-  };
+  //   const reachable = await probeInternetReachability();
+  //   if (reachable !== lastKnownOnline) {
+  //     notifyOnlineStatus(reachable);
+  //   }
+  //   // Probe less often when stable online to reduce traffic.
+  //   schedule(reachable ? 15000 : 5000);
+  // };
 
-  // Run once soon after init.
-  tick().catch(() => {});
-  schedule(15000);
+  // // Run once soon after init.
+  // tick().catch(() => {});
+  // schedule(15000);
 }
 
 // ========================================
@@ -374,7 +378,7 @@ function initOnlineDetection(): void {
 export function initServiceWorker(): void {
   // Initialize online detection
   initOnlineDetection();
-  
+
   // Handle controller change (when new SW takes over)
   navigator.serviceWorker?.addEventListener('controllerchange', () => {
     // Optionally reload the page when new SW takes control

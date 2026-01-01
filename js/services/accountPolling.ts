@@ -516,17 +516,21 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     // After a tx is verified by GuarNode, interest is re-assigned (gas deducted) even if
     // there is no explicit interest delta in WalletChangeData. Refresh canonical interest
     // from ComNode so UI shows the correct GAS (e.g. 13.00 instead of stale 10.00).
-    try {
-      const addrs = Object.keys(user.wallet.addressMsg || {});
-      if (addrs.length) {
-        const qr = await queryAddressBalances(addrs);
-        if (qr.success) {
-          applyComNodeInterests(user.wallet as any, qr.data as any);
-        }
-      }
-    } catch (e) {
-      console.debug('[AccountPolling] ComNode interest refresh failed, using local accrual only:', e);
-    }
+    /* 
+     * [DISABLED] Automatic ComNode refresh disabled per user request.
+     * Users will need to manually refresh to sync exact GAS interest if needed.
+     */
+    // try {
+    //   const addrs = Object.keys(user.wallet.addressMsg || {});
+    //   if (addrs.length) {
+    //     const qr = await queryAddressBalances(addrs);
+    //     if (qr.success) {
+    //       applyComNodeInterests(user.wallet as any, qr.data as any);
+    //     }
+    //   }
+    // } catch (e) {
+    //   console.debug('[AccountPolling] ComNode interest refresh failed, using local accrual only:', e);
+    // }
 
     saveUser(user);
 
@@ -722,16 +726,142 @@ function recalculateTotalBalance(user: User): void {
 // ============================================================================
 
 /**
- * 启动账户更新轮询
- * 
- * 仅对已加入担保组织的用户启用
- * 同时启动跨组织TXCer轮询
- */
+* SSE 连接实例
+*/
+let eventSource: EventSource | null = null;
+let eventSourceUserId: string | null = null;
+let eventSourceGroupId: string | null = null;
+
+/**
+* 启动 SSE 实时同步
+*/
+function startSSESync(userId: string, group: any): void {
+  if (eventSource) {
+    // 如果已经连接且参数一致，则复用
+    if (eventSourceUserId === userId && eventSourceGroupId === group.groupID && eventSource.readyState !== EventSource.CLOSED) {
+      console.debug('[AccountSSE] Already connected');
+      return;
+    }
+    // 否则先关闭旧连接
+    stopSSESync();
+  }
+
+  eventSourceUserId = userId;
+  eventSourceGroupId = group.groupID;
+
+  // 构造 SSE URL
+  let baseUrl = '';
+  if (group.assignAPIEndpoint) {
+    baseUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
+  } else {
+    // Fallback using API_BASE_URL via relative path if needed, 
+    // but direct URL is preferred.
+    // Note: API_ENDPOINTS.ASSIGN_ACCOUNT_UPDATE returns path without host.
+    // We need to construct the full URL for EventSource.
+
+    // If no direct endpoint, we assume we can't use SSE efficiently or at all properly via proxy if proxy doesn't support it,
+    // but let's try relative path if running on same origin.
+    // Ideally assignAPIEndpoint should be present.
+    const { API_BASE_URL } = require('../config/api');
+    baseUrl = API_BASE_URL || '';
+  }
+
+  const url = `${baseUrl}/api/v1/${group.groupID}/assign/account-update-stream?userID=${userId}`;
+  console.info(`[AccountSSE] Connecting to ${url}`);
+
+  try {
+    eventSource = new EventSource(url);
+
+    eventSource.onopen = () => {
+      console.info('[AccountSSE] Connection opened');
+      consecutiveFailures = 0;
+    };
+
+    eventSource.onerror = (err) => {
+      console.error('[AccountSSE] Connection error:', err);
+      // EventSource automatically retries, but we might want to handle persistent failures
+      // For now, let it retry.
+    };
+
+    // 1. Account Update Events
+    eventSource.addEventListener('account_update', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        // console.debug('[AccountSSE] Received account_update:', data);
+        processAccountUpdate(data);
+      } catch (e) {
+        console.error('[AccountSSE] Failed to parse account_update:', e);
+      }
+    });
+
+    // 2. TXCer Change Events
+    eventSource.addEventListener('txcer_change', (event) => {
+      try {
+        const user = getCurrentUser();
+        if (user) {
+          const data = JSON.parse(event.data);
+          // console.debug('[AccountSSE] Received txcer_change:', data);
+          processTXCerChange(user, data);
+
+          // Trigger UI refresh if needed (processTXCerChange handles logic but we might need to recalculate totals)
+          recalculateTotalBalance(user);
+          saveUser(user);
+          renderWallet();
+          refreshSrcAddrList();
+          updateWalletBrief();
+        }
+      } catch (e) {
+        console.error('[AccountSSE] Failed to parse txcer_change:', e);
+      }
+    });
+
+    // 3. Cross-Org TXCer Events
+    eventSource.addEventListener('cross_org_txcer', (event) => {
+      try {
+        const user = getCurrentUser();
+        if (user) {
+          const data = JSON.parse(event.data);
+          console.info('[AccountSSE] Received cross_org_txcer');
+          const result = processTXCerToUser(user, data);
+          if (result) {
+            recalculateTotalBalance(user);
+            saveUser(user);
+            renderWallet();
+            refreshSrcAddrList();
+            updateWalletBrief();
+          }
+        }
+      } catch (e) {
+        console.error('[AccountSSE] Failed to parse cross_org_txcer:', e);
+      }
+    });
+
+  } catch (e) {
+    console.error('[AccountSSE] Failed to create EventSource:', e);
+    isPollingStarted = false;
+  }
+}
+
+function stopSSESync(): void {
+  if (eventSource) {
+    console.info('[AccountSSE] Closing connection');
+    eventSource.close();
+    eventSource = null;
+    eventSourceUserId = null;
+    eventSourceGroupId = null;
+  }
+}
+
+/**
+* 启动账户更新 (SSE 模式)
+* 
+* 仅对已加入担保组织的用户启用
+*/
 export function startAccountPolling(): void {
-  // 检查是否已启动
+  // 检查是否已启动 (SSE 也会设置 isPollingStarted 标志)
   if (isPollingStarted) {
-    console.debug('[AccountPolling] Already started');
-    return;
+    console.debug('[AccountPolling] Already started (checking connection...)');
+    // 如果 SSE 断了，这里也可以尝试重连，但 startSSESync 内部有检查
   }
 
   // 检查用户是否加入了担保组织
@@ -747,26 +877,26 @@ export function startAccountPolling(): void {
     return;
   }
 
-  console.info(`[AccountPolling] Starting polling for user ${user.accountId} in group ${group.groupID}`);
+  console.info(`[AccountPolling] Starting SSE Sync for user ${user.accountId} in group ${group.groupID}`);
 
   isPollingStarted = true;
   consecutiveFailures = 0;
 
-  // 立即执行一次
+  // 1. 立即执行一次传统轮询，以获取离线期间的消息并消耗队列
   pollAccountUpdates();
+  // 同时执行一次跨组织轮询 (cleanup cached messages)
+  pollCrossOrgTXCers();
 
-  // 设置定时轮询
-  pollingTimer = setInterval(pollAccountUpdates, POLLING_INTERVAL);
-
-  // 同时启动跨组织TXCer轮询
-  startCrossOrgTXCerPolling();
+  // 2. 启动 SSE 长连接
+  startSSESync(user.accountId, group);
 }
 
 /**
- * 停止账户更新轮询
- * 同时停止跨组织TXCer轮询
- */
+* 停止账户更新
+*/
 export function stopAccountPolling(): void {
+  stopSSESync();
+
   if (pollingTimer) {
     clearInterval(pollingTimer);
     pollingTimer = null;
@@ -775,17 +905,17 @@ export function stopAccountPolling(): void {
   isPollingStarted = false;
   isPolling = false;
 
-  // 同时停止跨组织TXCer轮询
+  // 同时停止跨组织TXCer轮询 (legacy timer)
   stopCrossOrgTXCerPolling();
 
-  console.info('[AccountPolling] Polling stopped');
+  console.info('[AccountPolling] SSE Sync stopped');
 }
 
 /**
- * 重启账户更新轮询
- * 
- * 用于用户加入组织后或手动刷新后
- */
+* 重启账户更新
+* 
+* 用于用户加入组织后或手动刷新后
+*/
 export function restartAccountPolling(): void {
   stopAccountPolling();
   consecutiveFailures = 0;
@@ -793,10 +923,10 @@ export function restartAccountPolling(): void {
 }
 
 /**
- * 检查轮询是否正在运行
- */
+* 检查是否正在运行
+*/
 export function isAccountPollingActive(): boolean {
-  return isPollingStarted && pollingTimer !== null;
+  return isPollingStarted && (eventSource !== null && eventSource.readyState !== EventSource.CLOSED);
 }
 
 /**
