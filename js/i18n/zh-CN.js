@@ -337,7 +337,7 @@ export default {
   'wallet.copy': '复制',
   'wallet.copied': '已复制！',
   'wallet.syncing': '同步中...',
-  
+
   // UTXO 锁定相关
   'wallet.utxoLockedTooltip': '此 UTXO 已被锁定，等待交易确认',
   'wallet.lockedUtxoCount': '已锁定 {count} 个 UTXO',
@@ -548,7 +548,7 @@ export default {
   'transfer.unknownError': '未知错误',
   'transfer.onlyQuickTransferSupported': '目前只支持快速转账类型的交易',
   'transfer.joinOrgFirst': '请先加入担保组织后才能发送交易',
-  
+
   // 交易状态确认相关
   'transfer.txSubmittedWaitingConfirm': '交易已提交，正在后台等待确认...',
   'transfer.waitingForConfirmation': '等待交易确认...',
@@ -638,8 +638,8 @@ export default {
   'tx.insufficientGasNoMint': 'Gas不足：交易Gas与转移Gas超出钱包可用Gas',
   'tx.duplicateAddress': '地址重复',
   'tx.addressNotFound': '未找到该地址信息',
-  'tx.addressIsRetail': '该地址为散户地址，未加入担保组织',
-  'tx.addressIsRetailWithPubKey': '已获取公钥，该地址为散户（未加入担保组织）',
+  'tx.addressIsRetail': '散户地址 (无担保)',
+  'tx.addressIsRetailWithPubKey': '已获公钥 (散户地址)',
   'tx.queryFailed': '查询失败，请稍后重试',
   'tx.infoRetrieved': '已获取{info}信息',
   'tx.publicKey': '公钥',

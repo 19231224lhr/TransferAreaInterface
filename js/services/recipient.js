@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { showMiniToast } from '../utils/toast.js';
+import { showMiniToast, showInfoToast, showToast } from '../utils/toast.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { querySingleAddressGroup, GROUP_ID_NOT_EXIST, GROUP_ID_RETAIL } from './accountQuery';
@@ -37,23 +37,23 @@ async function fetchAddrInfo(addr) {
   if (!normalized || !isValidAddressFormat(normalized)) {
     return null;
   }
-  
+
   try {
     const result = await querySingleAddressGroup(normalized);
-    
+
     if (!result.success) {
       console.error('[Recipient] Query address group failed:', result.error);
       return null;
     }
-    
+
     const info = result.data;
-    
+
     // Check if address exists
     if (!info.exists) {
       console.debug('[Recipient] Address not found on chain:', normalized);
       return null;
     }
-    
+
     // Build public key string (X&Y format)
     // Note: accountQuery.ts now returns X/Y as 64-char hex strings
     let pubKey = '';
@@ -64,10 +64,10 @@ async function fetchAddrInfo(addr) {
       // Format as "X&Y" for the public key input field
       pubKey = `${x}&${y}`;
     }
-    
+
     // Get group ID (empty string for retail addresses)
     const groupId = info.isInGroup ? info.groupID : '';
-    
+
     console.debug('[Recipient] Address info retrieved:', {
       address: normalized,
       groupId,
@@ -75,14 +75,14 @@ async function fetchAddrInfo(addr) {
       isInGroup: info.isInGroup,
       hasPubKey: !!pubKey
     });
-    
+
     return {
       groupId,
       pubKey,
       isRetail: info.isRetail,
       isInGroup: info.isInGroup
     };
-    
+
   } catch (error) {
     console.error('[Recipient] Fetch address info error:', error);
     return null;
@@ -140,7 +140,7 @@ function updateCardIndices(billList) {
  */
 export function addRecipientCard(billList, computeCurrentOrgId) {
   if (!billList) return;
-  
+
   const g = computeCurrentOrgId ? (computeCurrentOrgId() || '') : '';
   const card = document.createElement('div');
   card.className = 'recipient-card';
@@ -240,7 +240,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   `;
 
   renderInto(card, template);
-  
+
   const addrInputEl = card.querySelector('[data-name="to"]');
   const gidInputEl = card.querySelector('[data-name="gid"]');
   const pubInputEl = card.querySelector('[data-name="pub"]');
@@ -248,7 +248,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   const expandBtn = card.querySelector('[data-role="expand"]');
   const removeBtn = card.querySelector('[data-role="remove"]');
   const addBtn = card.querySelector('[data-role="add"]');
-  
+
   // Address lookup button
   if (lookupBtn && addrInputEl) {
     lookupBtn.addEventListener('click', async () => {
@@ -278,27 +278,27 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           showMiniToast(t('tx.addressNotFound'), 'error');
           return;
         }
-        
+
         // Fill in public key if available
         if (pubInputEl && info.pubKey) {
           pubInputEl.value = info.pubKey;
         }
-        
+
         // Fill in group ID (empty for retail addresses)
         if (gidInputEl) {
           gidInputEl.value = info.groupId || '';
         }
-        
+
         // Auto-expand details section
         card.classList.add('expanded');
-        
+
         // Show appropriate toast message based on address status
         if (info.isRetail) {
           // GroupID = "1": Address exists but not in any guarantor group
           if (info.pubKey) {
-            showMiniToast(t('tx.addressIsRetailWithPubKey'), 'info');
+            showToast(t('tx.addressIsRetailWithPubKey'), 'info', '', 1000);
           } else {
-            showMiniToast(t('tx.addressIsRetail'), 'info');
+            showToast(t('tx.addressIsRetail'), 'info', '', 1000);
           }
         } else if (info.isInGroup) {
           // GroupID = other: Address is in a guarantor group
@@ -317,7 +317,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       }
     });
   }
-  
+
   // Expand/collapse button
   if (expandBtn) {
     expandBtn.addEventListener('click', () => {
@@ -328,7 +328,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       }
     });
   }
-  
+
   // Remove button
   if (removeBtn) {
     removeBtn.addEventListener('click', () => {
@@ -347,18 +347,18 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   if (addBtn) {
     addBtn.addEventListener('click', () => { addRecipientCard(billList, computeCurrentOrgId); });
   }
-  
+
   billList.appendChild(card);
   updateCardIndices(billList);
   updateRemoveState(billList);
-  
+
   // Currency selector
   const cs = card.querySelector('#' + idBase + '_mt');
   if (cs) {
-    cs.addEventListener('click', (e) => { 
-      e.stopPropagation(); 
+    cs.addEventListener('click', (e) => {
+      e.stopPropagation();
       const isOpening = !cs.classList.contains('open');
-      cs.classList.toggle('open'); 
+      cs.classList.toggle('open');
       // Toggle overflow class on card for dropdown visibility
       card.classList.toggle('has-dropdown-open', isOpening);
     });
@@ -382,8 +382,8 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         card.classList.remove('has-dropdown-open');
       });
     }
-    document.addEventListener('click', () => { 
-      cs.classList.remove('open'); 
+    document.addEventListener('click', () => {
+      cs.classList.remove('open');
       card.classList.remove('has-dropdown-open');
     });
   }
@@ -395,7 +395,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
 export function initRecipientCards() {
   const billList = document.getElementById(DOM_IDS.billList);
   if (!billList || billList.dataset._recipientBind) return;
-  
+
   // Compute current org ID helper
   const computeCurrentOrgId = () => {
     if (typeof window.computeCurrentOrgId === 'function') {
@@ -403,12 +403,12 @@ export function initRecipientCards() {
     }
     return '';
   };
-  
+
   // Add first card if empty
   if (billList.querySelectorAll('.recipient-card').length === 0) {
     addRecipientCard(billList, computeCurrentOrgId);
   }
-  
+
   billList.dataset._recipientBind = '1';
 }
 
@@ -418,10 +418,10 @@ export function initRecipientCards() {
 export function initAdvancedOptions() {
   const optionsToggle = document.getElementById(DOM_IDS.optionsToggle);
   const optionsContent = document.getElementById(DOM_IDS.optionsContent);
-  
+
   if (!optionsToggle || !optionsContent) return;
   if (optionsToggle.dataset._bind) return;
-  
+
   optionsToggle.addEventListener('click', () => {
     const isActive = optionsToggle.classList.contains('active');
     if (isActive) {
@@ -432,6 +432,6 @@ export function initAdvancedOptions() {
       optionsContent.classList.add('show');
     }
   });
-  
+
   optionsToggle.dataset._bind = '1';
 }

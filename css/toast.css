@@ -1,21 +1,23 @@
-/* ========================================
-   Toast 提示组件样式
+﻿/* ========================================
+   Toast ��ʾ�����ʽ
    
-   用途：全局通知提示、操作反馈
-   包含：成功/错误/警告/信息四种状态
+   ��;��ȫ��֪ͨ��ʾ����������
+   �������ɹ�/����/����/��Ϣ����״̬
    ======================================== */
 
 .toast-container {
   position: fixed;
-  top: 24px;
-  left: 50%;
-  transform: translateX(-50%);
+  top: 100px;
+  /* �����Աܿ�ͷ��� */
+  right: 24px;
+  /* �Ƴ����ж�λ����Ϊ���Ͻ� */
   z-index: 10000;
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
   pointer-events: none;
+  width: 300px;
 }
 
 .toast {
@@ -27,24 +29,26 @@
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
   border-radius: 14px;
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.12),
     0 4px 12px rgba(0, 0, 0, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -1px 0 rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.4);
   pointer-events: auto;
-  animation: toastSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  max-width: 420px;
+  animation: toastSlideIn 0.5s cubic-bezier(0.2, 0, 0, 1) both;
+  width: 300px;
+  overflow: hidden;
+  /* ȷ���˳�����ʱ�����ݲü� */
 }
 
-/* Toast 状态变体 - 增强玻璃质感 */
+/* Toast ״̬���� - ��ǿ�����ʸ� */
 .toast--error {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7), 
-    rgba(254, 242, 242, 0.8));
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.7),
+      rgba(254, 242, 242, 0.8));
   border-color: rgba(239, 68, 68, 0.25);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(239, 68, 68, 0.15),
     0 4px 12px rgba(239, 68, 68, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -52,11 +56,11 @@
 }
 
 .toast--success {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7), 
-    rgba(240, 253, 244, 0.8));
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.7),
+      rgba(240, 253, 244, 0.8));
   border-color: rgba(34, 197, 94, 0.25);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(34, 197, 94, 0.15),
     0 4px 12px rgba(34, 197, 94, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -64,11 +68,11 @@
 }
 
 .toast--warning {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7), 
-    rgba(255, 251, 235, 0.8));
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.7),
+      rgba(255, 251, 235, 0.8));
   border-color: rgba(251, 191, 36, 0.25);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(251, 191, 36, 0.15),
     0 4px 12px rgba(251, 191, 36, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -76,41 +80,44 @@
 }
 
 .toast--info {
-  background: linear-gradient(135deg, 
-    rgba(255, 255, 255, 0.7), 
-    rgba(239, 246, 255, 0.8));
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.7),
+      rgba(239, 246, 255, 0.8));
   border-color: rgba(59, 130, 246, 0.25);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(59, 130, 246, 0.15),
     0 4px 12px rgba(59, 130, 246, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
     inset 0 -1px 0 rgba(59, 130, 246, 0.1);
 }
 
-/* Toast 动画 */
+/* Toast ���� - �������Ĳ໬Ч�� */
 @keyframes toastSlideIn {
-  from {
+  0% {
     opacity: 0;
-    transform: translateY(-20px) scale(0.9);
+    transform: translateX(30px) scale(0.95);
   }
-  to {
+
+  100% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scale(1);
   }
 }
 
 @keyframes toastSlideOut {
-  from {
+  0% {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateX(0) scale(1);
   }
-  to {
+
+  100% {
     opacity: 0;
-    transform: translateY(-20px) scale(0.9);
+    transform: translateX(20px) scale(0.95);
+    /* ����������λ�ƣ����ٸı�߶� */
   }
 }
 
-/* Toast 图标 */
+/* Toast ͼ�� */
 .toast-icon {
   width: 36px;
   height: 36px;
@@ -144,7 +151,7 @@
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
-/* Toast 内容 */
+/* Toast ���� */
 .toast-content {
   flex: 1;
   min-width: 0;
@@ -164,7 +171,7 @@
   line-height: 1.4;
 }
 
-/* Toast 关闭按钮 */
+/* Toast �رհ�ť */
 .toast-close {
   width: 28px;
   height: 28px;
@@ -190,14 +197,14 @@
   height: 16px;
 }
 
-/* Toast 退出动画 */
+/* Toast �˳����� */
 .toast.toast--exiting {
-  animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: toastSlideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 
 /* ========================================
-   深色模式适配
+   ��ɫģʽ����
    ======================================== */
 
 [data-theme="dark"] .toast {
@@ -228,11 +235,11 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* 成功提示 - 深色模式 */
+/* �ɹ���ʾ - ��ɫģʽ */
 [data-theme="dark"] .toast--success {
-  background: linear-gradient(135deg, 
-    rgba(34, 197, 94, 0.15), 
-    rgba(34, 197, 94, 0.08));
+  background: linear-gradient(135deg,
+      rgba(34, 197, 94, 0.15),
+      rgba(34, 197, 94, 0.08));
   border-color: rgba(34, 197, 94, 0.3);
 }
 
@@ -244,11 +251,11 @@
   stroke: white;
 }
 
-/* 错误提示 - 深色模式 */
+/* ������ʾ - ��ɫģʽ */
 [data-theme="dark"] .toast--error {
-  background: linear-gradient(135deg, 
-    rgba(239, 68, 68, 0.15), 
-    rgba(239, 68, 68, 0.08));
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.15),
+      rgba(239, 68, 68, 0.08));
   border-color: rgba(239, 68, 68, 0.3);
 }
 
@@ -260,11 +267,11 @@
   stroke: white;
 }
 
-/* 警告提示 - 深色模式 */
+/* ������ʾ - ��ɫģʽ */
 [data-theme="dark"] .toast--warning {
-  background: linear-gradient(135deg, 
-    rgba(251, 191, 36, 0.15), 
-    rgba(251, 191, 36, 0.08));
+  background: linear-gradient(135deg,
+      rgba(251, 191, 36, 0.15),
+      rgba(251, 191, 36, 0.08));
   border-color: rgba(251, 191, 36, 0.3);
 }
 
@@ -276,11 +283,11 @@
   stroke: white;
 }
 
-/* 信息提示 - 深色模式 */
+/* ��Ϣ��ʾ - ��ɫģʽ */
 [data-theme="dark"] .toast--info {
-  background: linear-gradient(135deg, 
-    rgba(56, 189, 248, 0.15), 
-    rgba(56, 189, 248, 0.08));
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.15),
+      rgba(56, 189, 248, 0.08));
   border-color: rgba(56, 189, 248, 0.3);
 }
 
@@ -291,3 +298,276 @@
 [data-theme="dark"] .toast--info .toast-icon svg {
   stroke: white;
 }
+/* ========================================
+   ???? (Status Toast) - ???????????
+   ======================================== */
+
+.status-toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.status-toast {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: rgba(15, 23, 42, 0.85); /* ??????? */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 9999px; /* ??????? */
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 500;
+  pointer-events: auto;
+  animation: statusSlideIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: right center;
+}
+
+.status-toast-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3b82f6; /* ?????? */
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+}
+
+.status-toast--success .status-toast-dot {
+  background: #22c55e;
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+}
+
+.status-toast--warning .status-toast-dot {
+  background: #eab308;
+  box-shadow: 0 0 8px rgba(234, 179, 8, 0.6);
+}
+
+.status-toast--error .status-toast-dot {
+  background: #ef4444;
+  box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+}
+
+.status-toast.toast--exiting {
+  animation: statusSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes statusSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes statusSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(10px) scale(0.95);
+  }
+}
+
+
+/* 覆盖原有的退场动画，确保平滑补位 */
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 200px; /* 初始最大高度，确保包含内容 */
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+    max-height: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-width: 0;
+  }
+}
+
+/* 确保 .toast--exiting 使用这个动画 */
+.toast.toast--exiting {
+  animation: toastSlideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
+  overflow: hidden !important; /* 关键：防止内容溢出 */
+}
+
+
+/* 修复动画卡顿：使用 margin 代替 gap */
+.toast-container {
+  gap: 0 !important;
+}
+
+.toast {
+  margin-bottom: 12px; /* 替代 gap */
+}
+
+/* 确保退场动画完美消除 margin */
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 200px;
+    margin-bottom: 12px; /* 起始边距 */
+    padding: 16px;
+    border-width: 1px;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+    max-height: 0;
+    margin-bottom: 0; /* 最终边距为0 */
+    padding: 0;
+    border-width: 0;
+  }
+}
+
+
+/* 终极优化：幽灵折叠 (Ghost Collapse)
+   1. 前 40% 时间：快速淡出 (看不到挤压)
+   2. 后 60% 时间：平滑折叠空间 (平滑补位)
+*/
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+  
+  40% {
+    /* 视觉上消失 */
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+    /* 保持高度，防止视觉上的挤压 */
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+
+  100% {
+    /* 结构上折叠 */
+    opacity: 0;
+    transform: translateX(20px) scale(0.95);
+    max-height: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-width: 0;
+  }
+}
+
+
+/* 调优：更从容的退场 (Slower Fade)
+   将视觉淡出阶段延长到 70% 的时间 (0.35s)，与入场感更接近。
+   加大位移到 30px，增强动感。
+*/
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+  
+  70% {
+    /* 延长视觉停留时间，让淡出更优雅 */
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+    /* 仍保持高度 */
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(30px) scale(0.95);
+    max-height: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-width: 0;
+  }
+}
+
+
+/* 修复退场动画向下顿挫问题 */
+.toast {
+  transform-origin: top right !important; /* 关键：确保缩放时顶部固定，只向上/左收缩 */
+}
+
+
+/* 最终版退场动画：纯净淡出，无缩放 */
+@keyframes toastSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0); /* 移除 scale 防止尺寸跳变 */
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+  
+  70% {
+    opacity: 0;
+    transform: translateX(30px); /* 纯位移，无缩放 */
+    max-height: 200px;
+    margin-bottom: 12px;
+    padding: 16px;
+    border-width: 1px;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateX(30px);
+    max-height: 0;
+    margin-bottom: 0;
+    padding: 0;
+    border-width: 0;
+  }
+}
+
+
+/* 简化版动画系统 */
+
+/* 1. Toast 位置过渡：当其他 Toast 消失时，平滑滑动填补空位 */
+.toast {
+  transition: transform 0.3s ease-out !important;
+}
+
+/* 2. 纯淡出动画：退场只做透明度变化，无缩放无高度变化 */
+@keyframes toastFadeOnly {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* 3. 退场状态：不影响布局，只做淡出 */
+.toast.toast--exiting {
+  animation: toastFadeOnly 0.5s ease-out forwards !important;
+  pointer-events: none;
+}
+

@@ -10,7 +10,7 @@
 
 import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { t } from '../i18n/index.js';
-import { showErrorToast, showSuccessToast, showMiniToast } from '../utils/toast.js';
+import { showErrorToast, showSuccessToast, showMiniToast, showStatusToast } from '../utils/toast.js';
 
 // ============================================================================
 // Types
@@ -98,16 +98,16 @@ function readCache(): CachedEndpoint | null {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
-    
+
     const data = JSON.parse(cached) as CachedEndpoint;
     const age = Date.now() - data.timestamp;
-    
+
     // Check if cache is expired
     if (age > CACHE_TTL) {
       localStorage.removeItem(CACHE_KEY);
       return null;
     }
-    
+
     return data;
   } catch {
     return null;
@@ -151,17 +151,17 @@ function updateStatus(partial: Partial<ComNodeStatus>): void {
 export async function queryComNodeEndpoint(showToast: boolean = true): Promise<string | null> {
   try {
     console.info('[ComNodeEndpoint] Querying BootNode for ComNode endpoint...');
-    
+
     const response = await fetch(`${API_BASE_URL}${API_ENDPOINTS.COMMITTEE_ENDPOINT}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!response.ok) {
       let errorMsg = '';
-      
+
       if (response.status === 404) {
         errorMsg = t('comNode.notRegistered', 'ComNode 尚未启动或未注册');
       } else if (response.status === 503) {
@@ -169,64 +169,64 @@ export async function queryComNodeEndpoint(showToast: boolean = true): Promise<s
       } else {
         errorMsg = t('comNode.queryFailed', '查询 ComNode 端点失败');
       }
-      
+
       console.error('[ComNodeEndpoint] ✗ Query failed:', response.status, errorMsg);
-      
+
       updateStatus({
         isAvailable: false,
         errorMessage: errorMsg,
         lastCheck: Date.now()
       });
-      
+
       if (showToast) {
         showErrorToast(errorMsg, t('comNode.error', '服务连接失败'));
       }
-      
+
       return null;
     }
-    
+
     const data = await response.json() as CommitteeEndpointResponse;
     const comNodeURL = normalizeEndpoint(data.endpoint);
-    
+
     // Cache the result
     cachedComNodeURL = comNodeURL;
     writeCache(comNodeURL);
-    
+
     updateStatus({
       isAvailable: true,
       endpoint: comNodeURL,
       errorMessage: null,
       lastCheck: Date.now()
     });
-    
+
     console.info('[ComNodeEndpoint] ✓ ComNode endpoint:', comNodeURL);
-    
+
     if (showToast) {
-      showMiniToast(t('comNode.connected', '已连接到担保委员会节点'));
+      showStatusToast(t('comNode.connected', '已连接到担保委员会节点'), 'success');
     }
-    
+
     return comNodeURL;
-    
+
   } catch (error) {
     console.error('[ComNodeEndpoint] ✗ Query error:', error);
-    
-    const errorMsg = error instanceof Error 
-      ? error.message 
+
+    const errorMsg = error instanceof Error
+      ? error.message
       : t('error.networkError', '网络连接失败');
-    
+
     updateStatus({
       isAvailable: false,
       errorMessage: errorMsg,
       lastCheck: Date.now()
     });
-    
+
     if (showToast) {
       showErrorToast(
         t('comNode.connectionFailed', '无法连接到区块链节点，请检查网络连接或节点是否启动'),
         t('comNode.error', '服务连接失败')
       );
     }
-    
+
     return null;
   }
 }
@@ -252,7 +252,7 @@ export async function getComNodeURL(
     console.debug('[ComNodeEndpoint] Using in-memory cache:', cachedComNodeURL);
     return cachedComNodeURL;
   }
-  
+
   // 2. Check localStorage cache (unless force refresh)
   if (!forceRefresh) {
     const cached = readCache();
@@ -268,7 +268,7 @@ export async function getComNodeURL(
       return cached.url;
     }
   }
-  
+
   // 3. Query BootNode
   return await queryComNodeEndpoint(showToast);
 }
@@ -325,14 +325,14 @@ function isPageRefresh(): boolean {
       return navEntries[0].type === 'reload';
     }
   }
-  
+
   // Fallback for older browsers: use deprecated performance.navigation
   // @ts-ignore - deprecated but still works in many browsers
   if (typeof performance !== 'undefined' && performance.navigation) {
     // @ts-ignore
     return performance.navigation.type === 1; // 1 = TYPE_RELOAD
   }
-  
+
   return false;
 }
 
@@ -348,11 +348,11 @@ function isPageRefresh(): boolean {
 export async function initComNodeEndpoint(): Promise<boolean> {
   // Check if this is a page refresh
   const forceRefresh = isPageRefresh();
-  
+
   if (forceRefresh) {
     console.info('[ComNodeEndpoint] Page refresh detected, forcing endpoint refresh from BootNode');
   }
-  
+
   const url = await getComNodeURL(forceRefresh, true);
   return url !== null;
 }

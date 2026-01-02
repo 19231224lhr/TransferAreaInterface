@@ -15,6 +15,7 @@
  */
 
 import { apiClient, isNetworkError, isTimeoutError } from './api';
+import { parseBigIntJson } from '../utils/bigIntJson';
 import { API_ENDPOINTS } from '../config/api';
 import { saveUser, getJoinedGroup, User } from '../utils/storage';
 import { store, selectUser } from '../utils/store.js';
@@ -475,23 +476,9 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
 
 
   // 处理 TXCer 状态变更
-  if (update.TXCerChangeData && update.TXCerChangeData.length > 0) {
-    for (const txCerChange of update.TXCerChangeData) {
-      // 🔒 检查 TXCer 是否被锁定
-      if (shouldBlockTXCerUpdate(txCerChange.TXCerID, txCerChange.Status)) {
-        // 缓存此更新，等待解锁后处理
-        cacheTXCerUpdate(txCerChange.TXCerID, txCerChange.Status, txCerChange.UTXO);
-        console.warn(
-          `[AccountPolling] TXCer ${txCerChange.TXCerID.slice(0, 8)}... 被锁定，更新已缓存`
-        );
-        continue; // 跳过立即处理
-      }
-
-      processTXCerChange(user, txCerChange);
-      hasChanges = true;
-    }
-
-  }
+  // [DECOUPLED] TXCerChangeData is now sent via separate 'txcer_change' SSE events.
+  // We no longer process it inside account_update to ensure single responsibility.
+  // if (update.TXCerChangeData && update.TXCerChangeData.length > 0) { ... }
 
   // 处理已使用 TXCer 的利息返还
   if (update.UsedTXCerChangeData && update.UsedTXCerChangeData.length > 0) {
@@ -556,9 +543,9 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
       removeTXCerFromWallet(user, change.TXCerID);
       // 终态更新必须解锁，否则会出现“TXCer 已被链上替换但前端仍显示锁定”的永久锁问题。
       unlockTXCers([change.TXCerID], false);
-      showMiniToast(
-        `✅ TXCer 已上链\nID: ${change.TXCerID.slice(0, 8)}...\n已转换为 UTXO`,
-        'success'
+      showSuccessToast(
+        'TXCer 已上链',
+        `ID: ${change.TXCerID.slice(0, 8)}... 已转换为 UTXO`
       );
       break;
 
@@ -786,7 +773,8 @@ function startSSESync(userId: string, group: any): void {
     // 1. Account Update Events
     eventSource.addEventListener('account_update', (event) => {
       try {
-        const data = JSON.parse(event.data);
+        // ⚠️ 使用 BigInt 安全解析，防止 PublicKeyNew X/Y 精度丢失
+        const data = parseBigIntJson<AccountUpdateInfo>(event.data);
         // console.debug('[AccountSSE] Received account_update:', data);
         processAccountUpdate(data);
       } catch (e) {
@@ -799,7 +787,8 @@ function startSSESync(userId: string, group: any): void {
       try {
         const user = getCurrentUser();
         if (user) {
-          const data = JSON.parse(event.data);
+          // ⚠️ 使用 BigInt 安全解析
+          const data = parseBigIntJson<TXCerChangeToUser>(event.data);
           // console.debug('[AccountSSE] Received txcer_change:', data);
           processTXCerChange(user, data);
 
@@ -820,9 +809,10 @@ function startSSESync(userId: string, group: any): void {
       try {
         const user = getCurrentUser();
         if (user) {
-          const data = JSON.parse(event.data);
+          // ⚠️ 使用 BigInt 安全解析
+          const data = parseBigIntJson(event.data);
           console.info('[AccountSSE] Received cross_org_txcer');
-          const result = processTXCerToUser(user, data);
+          const result = processTXCerToUser(user, data as any);
           if (result) {
             recalculateTotalBalance(user);
             saveUser(user);
@@ -833,6 +823,22 @@ function startSSESync(userId: string, group: any): void {
         }
       } catch (e) {
         console.error('[AccountSSE] Failed to parse cross_org_txcer:', e);
+      }
+    });
+
+    // 4. TX Status Change Events
+    eventSource.addEventListener('tx_status_change', (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.info('[AccountSSE] Received tx_status_change:', data);
+
+        // Dispatch global event for listeners (e.g. txBuilder)
+        const customEvent = new CustomEvent('pangu_tx_status', {
+          detail: data
+        });
+        window.dispatchEvent(customEvent);
+      } catch (e) {
+        console.error('[AccountSSE] Failed to parse tx_status_change:', e);
       }
     });
 
