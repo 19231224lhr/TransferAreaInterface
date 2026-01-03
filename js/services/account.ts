@@ -94,31 +94,31 @@ export async function newUser(): Promise<AccountData> {
  */
 export async function importLocallyFromPrivHex(privHex: string): Promise<AccountData> {
   const normalized = privHex.replace(/^0x/i, '').toLowerCase();
-  
+
   // Validate private key format (64 hex characters)
   if (!/^[0-9a-f]{64}$/.test(normalized)) {
     throw new Error('Private key format incorrect: must be 64 hex characters');
   }
-  
+
   try {
     // Use pure JS implementation of P-256 point multiplication to derive public key
     const result = await computePublicKeyFromPrivate(normalized);
-    
+
     const uncompressedHex = '04' + result.x + result.y;
     const uncompressed = hexToBytes(uncompressedHex);
-    
+
     const sha = await crypto.subtle.digest('SHA-256', uncompressed as BufferSource);
     const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
     const accountId = generate8DigitFromInputHex(normalized);
-    
-    return { 
-      accountId, 
-      address, 
-      privHex: normalized, 
-      pubXHex: result.x, 
-      pubYHex: result.y 
+
+    return {
+      accountId,
+      address,
+      privHex: normalized,
+      pubXHex: result.x,
+      pubYHex: result.y
     };
-    
+
   } catch (e: any) {
     throw new Error('Private key format incorrect or cannot be parsed: ' + (e.message || e));
   }
@@ -131,7 +131,7 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
 async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string; y: string }> {
   // Normalize private key hex
   const normalizedPrivHex = privHex.replace(/^0x/i, '').toLowerCase();
-  
+
   // Try to use elliptic library if available (faster and more tested)
   if (window.elliptic?.ec) {
     try {
@@ -146,7 +146,7 @@ async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string
       console.warn('Elliptic library failed, falling back to pure JS implementation:', e);
     }
   }
-  
+
   // Fallback: Pure JavaScript implementation
   // P-256 curve parameters
   const p = BigInt('0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff');
@@ -154,24 +154,24 @@ async function computePublicKeyFromPrivate(privHex: string): Promise<{ x: string
   const Gx = BigInt('0x6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296');
   const Gy = BigInt('0x4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5');
   const n = BigInt('0xffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551');
-  
+
   const d = BigInt('0x' + normalizedPrivHex);
-  
+
   if (d <= 0n || d >= n) {
     throw new Error('Private key out of valid range');
   }
-  
+
   // Point multiplication: Q = d * G
   const Q = pointMultiply(Gx, Gy, d, p, a);
-  
+
   if (!Q) {
     throw new Error('Invalid private key');
   }
-  
+
   // Convert to hex, pad to 64 characters
   const xHex = Q.x.toString(16).padStart(64, '0');
   const yHex = Q.y.toString(16).padStart(64, '0');
-  
+
   return { x: xHex, y: yHex };
 }
 
@@ -182,13 +182,13 @@ function modInverse(a: bigint, m: bigint): bigint {
   // Handle negative inputs by normalizing to positive
   let [old_r, r] = [((a % m) + m) % m, m];
   let [old_s, s] = [1n, 0n];
-  
+
   while (r !== 0n) {
     const q = old_r / r;
     [old_r, r] = [r, old_r - q * r];
     [old_s, s] = [s, old_s - q * s];
   }
-  
+
   return ((old_s % m) + m) % m;
 }
 
@@ -203,8 +203,8 @@ function mod(a: bigint, m: bigint): bigint {
  * Point addition on elliptic curve
  */
 function pointAdd(
-  x1: bigint, y1: bigint, 
-  x2: bigint, y2: bigint, 
+  x1: bigint, y1: bigint,
+  x2: bigint, y2: bigint,
   p: bigint, a: bigint
 ): { x: bigint; y: bigint } | null {
   if (x1 === x2 && y1 === y2) {
@@ -230,13 +230,13 @@ function pointAdd(
  * Scalar multiplication using double-and-add algorithm
  */
 function pointMultiply(
-  Gx: bigint, Gy: bigint, 
-  k: bigint, 
+  Gx: bigint, Gy: bigint,
+  k: bigint,
   p: bigint, a: bigint
 ): { x: bigint; y: bigint } | null {
   let result: { x: bigint; y: bigint } | null = null;
   let addend: { x: bigint; y: bigint } | null = { x: Gx, y: Gy };
-  
+
   while (k > 0n) {
     if (k & 1n) {
       if (result === null) {
@@ -250,7 +250,7 @@ function pointMultiply(
     }
     k >>= 1n;
   }
-  
+
   return result;
 }
 
@@ -295,58 +295,58 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     alert(t('modal.pleaseLoginFirst'));
     return;
   }
-  
+
   // Show unified loading component
   showUnifiedLoading(t('modal.addingWalletAddress'));
-  
+
   try {
     const t0 = Date.now();
-    
+
     // Generate new keypair
     const keyPair = await crypto.subtle.generateKey(
       { name: 'ECDSA', namedCurve: 'P-256' },
       true,
       ['sign', 'verify']
     );
-    
+
     const jwkPub = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
     const jwkPriv = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
-    
+
     const dBytes = base64urlToBytes(jwkPriv.d!);
     const xBytes = base64urlToBytes(jwkPub.x!);
     const yBytes = base64urlToBytes(jwkPub.y!);
-    
+
     const privHex = bytesToHex(dBytes);
     const pubXHex = bytesToHex(xBytes);
     const pubYHex = bytesToHex(yBytes);
-    
+
     // Create uncompressed public key
     const uncompressed = new Uint8Array(1 + xBytes.length + yBytes.length);
     uncompressed[0] = 0x04;
     uncompressed.set(xBytes, 1);
     uncompressed.set(yBytes, 1 + xBytes.length);
-    
+
     // Generate address (SHA-256 of uncompressed public key, first 20 bytes)
     const sha = await crypto.subtle.digest('SHA-256', uncompressed);
     const addr = bytesToHex(new Uint8Array(sha).slice(0, 20));
-    
+
     console.info(`[Account] Generated new address: ${addr}`);
-    
+
     // Import address service dynamically to avoid circular dependency
     const { createNewAddressOnBackend, isUserInOrganization } = await import('./address');
-    
+
     // If user is in organization, must sync with backend first
     if (isUserInOrganization()) {
       console.info('[Account] User is in organization, syncing address with backend...');
-      
+
       // Hide loading temporarily to show password prompt if needed
       hideUnifiedOverlay();
-      
+
       const result = await createNewAddressOnBackend(addr, pubXHex, pubYHex, addressType);
-      
+
       // Show loading again
       showUnifiedLoading(t('modal.addingWalletAddress'));
-      
+
       if (!result.success) {
         // Check if user cancelled password input
         if (result.error === 'USER_CANCELLED') {
@@ -356,7 +356,7 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
           showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
           return; // Exit without saving locally
         }
-        
+
         // Backend failed - do NOT save locally, show error
         console.error('[Account] ✗ Backend sync failed:', result.error);
         hideUnifiedOverlay();
@@ -366,12 +366,12 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
         );
         return; // Exit without saving locally
       }
-      
+
       console.info('[Account] ✓ Address synced with backend successfully');
     } else {
       console.info('[Account] User not in organization, creating address locally only');
     }
-    
+
     // Backend succeeded (or user not in org) - now save locally
     const acc = toAccount({ accountId: u.accountId, address: u.address }, u);
     acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
@@ -388,17 +388,17 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     addrData.pubXHex = pubXHex;
     addrData.pubYHex = pubYHex;
     addrData.type = addressType;
-    
+
     // Single Source of Truth: Update Store first, let subscriptions handle UI
     setUser(acc);
     saveUser(acc);
-    
+
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;
     if (elapsed < 800) {
       await wait(800 - elapsed);
     }
-    
+
     // P0-1 Fix: Prompt user to encrypt the new sub-wallet private key
     // Note: Sub-wallet keys are stored per-address, encryption is optional
     try {
@@ -412,22 +412,23 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
       // Encryption is optional - don't block sub-wallet creation
       console.warn('Sub-wallet key encryption skipped:', encryptErr);
     }
-    
+
     // New address requires full wallet re-render (DOM structure change)
     // This is an exception where we call renderWallet directly because:
     // 1. We're adding a new card to the DOM, not just updating values
     // 2. Store subscription can't determine the insertion position
     try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
-    
+
     // Show success (smooth transition from loading state)
     // No success callback needed - Store subscription handles all reactive updates
-    showUnifiedSuccess(
-      t('modal.walletAddSuccess'), 
-      t('modal.walletAddSuccessDesc'), 
-      undefined,
-      undefined // no cancel callback
+    // Show success (smooth transition from loading state)
+    // No success callback needed - Store subscription handles all reactive updates
+    hideUnifiedOverlay(); // Ensure overlay is hidden before showing toast
+    showSuccessToast(
+      t('modal.walletAddSuccessDesc'),
+      t('modal.walletAddSuccess')
     );
-    
+
   } catch (e: any) {
     hideUnifiedOverlay();
     showErrorToast(
@@ -446,24 +447,24 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
 export async function handleCreate(showToastNotification: boolean = true): Promise<AccountData | null> {
   const btn = document.getElementById(DOM_IDS.createBtn) as HTMLButtonElement | null;
   if (btn) btn.disabled = true;
-  
+
   try {
     const loader = document.getElementById(DOM_IDS.newLoader);
     const resultEl = document.getElementById(DOM_IDS.result);
     const nextBtn = document.getElementById(DOM_IDS.newNextBtn);
-    
+
     if (btn) btn.classList.add('hidden');
     if (nextBtn) nextBtn.classList.add('hidden');
     if (resultEl) resultEl.classList.add('hidden');
     if (loader) loader.classList.remove('hidden');
-    
+
     const t0 = Date.now();
     let data: AccountData;
-    
+
     // Try backend API first, fall back to local
     try {
-      const res = await secureFetchWithRetry('/api/account/new', { 
-        method: 'POST' 
+      const res = await secureFetchWithRetry('/api/account/new', {
+        method: 'POST'
       }, { timeout: 10000, retries: 2 });
       if (res.ok) {
         data = await res.json();
@@ -473,39 +474,39 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     } catch (_) {
       data = await newUser();
     }
-    
+
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) await wait(1000 - elapsed);
-    
+
     if (loader) loader.classList.add('hidden');
-    
+
     // Hide success banner, use top toast notification instead
     const successBanner = resultEl?.querySelector('.new-result-success');
     if (successBanner) {
       (successBanner as HTMLElement).style.display = 'none';
     }
-    
+
     if (resultEl) {
       resultEl.classList.remove('hidden');
       resultEl.classList.remove('fade-in');
       resultEl.classList.remove('reveal');
       requestAnimationFrame(() => resultEl.classList.add('reveal'));
     }
-    
+
     // Update UI with account data
     const accountIdEl = document.getElementById(DOM_IDS.accountId);
     const addressEl = document.getElementById(DOM_IDS.address);
     const privHexEl = document.getElementById(DOM_IDS.privHex);
     const pubXEl = document.getElementById(DOM_IDS.pubX);
     const pubYEl = document.getElementById(DOM_IDS.pubY);
-    
+
     if (accountIdEl) accountIdEl.textContent = data.accountId;
     if (addressEl) addressEl.textContent = data.address;
     if (privHexEl) privHexEl.textContent = data.privHex;
     if (pubXEl) pubXEl.textContent = data.pubXHex;
     if (pubYEl) pubYEl.textContent = data.pubYHex;
-    
+
     // Save user data first (with plaintext key for backward compatibility)
     saveUser({
       accountId: data.accountId,
@@ -515,15 +516,15 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
       pubYHex: data.pubYHex,
       flowOrigin: 'new'
     });
-    
+
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
-    
+
     // Show success notification if requested
     if (showToastNotification) {
       showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
     }
-    
+
     // P0-1 Fix: Prompt user to encrypt private key after account creation
     // This is non-blocking - user can skip encryption
     try {
@@ -544,9 +545,9 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
       // Encryption is optional - don't block account creation
       console.warn('Private key encryption skipped:', encryptErr);
     }
-    
+
     return data;
-    
+
   } catch (err: any) {
     alert('Failed to create user: ' + err);
     console.error(err);
@@ -554,7 +555,7 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     if (btn) btn.classList.remove('hidden');
     if (nextBtn) nextBtn.classList.remove('hidden');
     return null;
-    
+
   } finally {
     if (btn) btn.disabled = false;
     const loader = document.getElementById(DOM_IDS.newLoader);

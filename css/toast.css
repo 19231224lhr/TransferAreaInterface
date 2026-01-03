@@ -298,6 +298,7 @@
 [data-theme="dark"] .toast--info .toast-icon svg {
   stroke: white;
 }
+
 /* ========================================
    ???? (Status Toast) - ???????????
    ======================================== */
@@ -310,7 +311,8 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 6px;
+  /* Tighten spacing */
   pointer-events: none;
 }
 
@@ -318,12 +320,16 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 240px;
+  /* Fixed uniform width */
   padding: 8px 16px;
-  background: rgba(15, 23, 42, 0.85); /* ??????? */
+  background: rgba(15, 23, 42, 0.85);
+  /* 半透明背景 */
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-radius: 9999px; /* ??????? */
-  box-shadow: 
+  border-radius: 9999px;
+  /* ??????? */
+  box-shadow:
     0 4px 12px rgba(0, 0, 0, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -339,7 +345,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #3b82f6; /* ?????? */
+  background: #3b82f6;
+  /* ?????? */
   box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
 }
 
@@ -367,6 +374,7 @@
     opacity: 0;
     transform: translateY(10px) scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -378,6 +386,7 @@
     opacity: 1;
     transform: translateY(0) scale(1);
   }
+
   to {
     opacity: 0;
     transform: translateY(10px) scale(0.95);
@@ -390,11 +399,13 @@
   0% {
     opacity: 1;
     transform: translateX(0) scale(1);
-    max-height: 200px; /* 初始最大高度，确保包含内容 */
+    max-height: 200px;
+    /* 初始最大高度，确保包含内容 */
     margin-bottom: 12px;
     padding: 16px;
     border-width: 1px;
   }
+
   100% {
     opacity: 0;
     transform: translateX(20px) scale(0.95);
@@ -408,7 +419,8 @@
 /* 确保 .toast--exiting 使用这个动画 */
 .toast.toast--exiting {
   animation: toastSlideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards !important;
-  overflow: hidden !important; /* 关键：防止内容溢出 */
+  overflow: hidden !important;
+  /* 关键：防止内容溢出 */
 }
 
 
@@ -418,7 +430,8 @@
 }
 
 .toast {
-  margin-bottom: 12px; /* 替代 gap */
+  margin-bottom: 12px;
+  /* 替代 gap */
 }
 
 /* 确保退场动画完美消除 margin */
@@ -427,15 +440,18 @@
     opacity: 1;
     transform: translateX(0) scale(1);
     max-height: 200px;
-    margin-bottom: 12px; /* 起始边距 */
+    margin-bottom: 12px;
+    /* 起始边距 */
     padding: 16px;
     border-width: 1px;
   }
+
   100% {
     opacity: 0;
     transform: translateX(20px) scale(0.95);
     max-height: 0;
-    margin-bottom: 0; /* 最终边距为0 */
+    margin-bottom: 0;
+    /* 最终边距为0 */
     padding: 0;
     border-width: 0;
   }
@@ -455,7 +471,7 @@
     padding: 16px;
     border-width: 1px;
   }
-  
+
   40% {
     /* 视觉上消失 */
     opacity: 0;
@@ -492,7 +508,7 @@
     padding: 16px;
     border-width: 1px;
   }
-  
+
   70% {
     /* 延长视觉停留时间，让淡出更优雅 */
     opacity: 0;
@@ -517,7 +533,8 @@
 
 /* 修复退场动画向下顿挫问题 */
 .toast {
-  transform-origin: top right !important; /* 关键：确保缩放时顶部固定，只向上/左收缩 */
+  transform-origin: top right !important;
+  /* 关键：确保缩放时顶部固定，只向上/左收缩 */
 }
 
 
@@ -525,16 +542,18 @@
 @keyframes toastSlideOut {
   0% {
     opacity: 1;
-    transform: translateX(0); /* 移除 scale 防止尺寸跳变 */
+    transform: translateX(0);
+    /* 移除 scale 防止尺寸跳变 */
     max-height: 200px;
     margin-bottom: 12px;
     padding: 16px;
     border-width: 1px;
   }
-  
+
   70% {
     opacity: 0;
-    transform: translateX(30px); /* 纯位移，无缩放 */
+    transform: translateX(30px);
+    /* 纯位移，无缩放 */
     max-height: 200px;
     margin-bottom: 12px;
     padding: 16px;
@@ -561,8 +580,13 @@
 
 /* 2. 纯淡出动画：退场只做透明度变化，无缩放无高度变化 */
 @keyframes toastFadeOnly {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 /* 3. 退场状态：不影响布局，只做淡出 */
@@ -570,4 +594,3 @@
   animation: toastFadeOnly 0.5s ease-out forwards !important;
   pointer-events: none;
 }
-

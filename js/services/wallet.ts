@@ -27,18 +27,18 @@ import { scheduleBatchUpdate } from '../utils/performanceMode.js';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { globalEventManager } from '../utils/eventUtils.js';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
-import { 
-  showAddressListSkeleton, 
-  showSrcAddrSkeleton, 
+import {
+  showAddressListSkeleton,
+  showSrcAddrSkeleton,
   clearSkeletonState,
   isShowingSkeleton
 } from '../utils/walletSkeleton';
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
 import { updateTransferButtonState } from './transfer';
-import { 
-  getLockedUTXOsByAddress, 
-  getLockedBalanceByAddress, 
+import {
+  getLockedUTXOsByAddress,
+  getLockedBalanceByAddress,
   isUTXOLocked,
   clearAllLockedUTXOs,
   clearLockedUTXOsByAddress,
@@ -143,24 +143,24 @@ export function resetWalletBindings(): void {
   // Reset binding flags so events can be re-bound when returning to main page
   // This is necessary because cleanupPageListeners() removes the event handlers
   // but the dataset flags remain, preventing re-binding
-  
+
   // Reset transfer mode tabs binding
   const modeTabsContainer = document.querySelector('.transfer-mode-tabs') as HTMLElement | null;
   if (modeTabsContainer) {
     delete modeTabsContainer.dataset._bind;
   }
-  
+
   // Reset custom select bindings
   document.querySelectorAll('.custom-select').forEach((el) => {
     delete (el as HTMLElement).dataset._bind;
   });
-  
+
   // Reset source address list change binding
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList) as HTMLElement | null;
   if (srcAddrList) {
     delete srcAddrList.dataset._changeBind;
   }
-  
+
   // Reset wallet button bindings
   const walletButtons = [
     DOM_IDS.openCreateAddrBtn,
@@ -176,13 +176,13 @@ export function resetWalletBindings(): void {
       delete el.dataset._walletBind;
     }
   });
-  
+
   // Reset transfer submit button binding
   const tfSendBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLElement | null;
   if (tfSendBtn) {
     delete tfSendBtn.dataset._bind;
   }
-  
+
   // Reset recipient list binding
   const billList = document.getElementById(DOM_IDS.billList) as HTMLElement | null;
   if (billList) {
@@ -203,11 +203,11 @@ export function updateWalletBrief(): void {
   const brief = document.getElementById(DOM_IDS.walletBriefList);
   const tip = document.getElementById(DOM_IDS.walletEmptyTip);
   const addrs = u?.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
-  
+
   if (countEl) {
     countEl.textContent = String(addrs.length);
   }
-  
+
   if (brief) {
     if (addrs.length === 0) {
       brief.replaceChildren();
@@ -251,22 +251,22 @@ export function refreshOrgPanel(): void {
   const joinBtn = document.getElementById(DOM_IDS.woJoinBtn);
   const g = getJoinedGroup();
   const joined = !!(g && g.groupID);
-  
+
   if (woCard) woCard.classList.toggle('hidden', !joined);
   if (woExit) woExit.classList.toggle('hidden', !joined);
   if (woEmpty) woEmpty.classList.toggle('hidden', joined);
   if (joinBtn) joinBtn.classList.toggle('hidden', joined);
-  
+
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
   const tfModeQuick = document.getElementById(DOM_IDS.tfModeQuick) as HTMLInputElement | null;
   const tfModeCross = document.getElementById(DOM_IDS.tfModeCross) as HTMLInputElement | null;
   const tfModePledge = document.getElementById(DOM_IDS.tfModePledge) as HTMLInputElement | null;
   const isPledgeSel = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
   const hasOrg = joined;
-  
+
   // Update transfer mode tabs UI
   const modeTabsContainer = document.getElementById(DOM_IDS.transferModeTabs);
-  
+
   if (modeTabsContainer) {
     if (hasOrg) {
       modeTabsContainer.classList.remove('no-org-mode');
@@ -274,7 +274,7 @@ export function refreshOrgPanel(): void {
       modeTabsContainer.classList.add('no-org-mode');
     }
   }
-  
+
   if (tfModeQuick?.parentNode) {
     const quickLabel = tfModeQuick.parentNode as HTMLElement;
     const span = quickLabel.querySelector('.segment-content');
@@ -287,7 +287,7 @@ export function refreshOrgPanel(): void {
       }
     }
   }
-  
+
   if (tfMode && tfModeQuick) {
     if (!hasOrg) {
       if (tfModeCross) {
@@ -322,7 +322,7 @@ export function refreshOrgPanel(): void {
       if (tfMode.value === 'quick') tfModeQuick.checked = true;
       if (isPledgeSel) isPledgeSel.value = tfMode.value === 'pledge' ? 'true' : 'false';
     }
-    
+
     // Update organization info display
     const orgFields: [string, string][] = [
       [DOM_IDS.woGroupID, joined && g ? g.groupID : ''],
@@ -330,13 +330,13 @@ export function refreshOrgPanel(): void {
       [DOM_IDS.woAssign, joined && g ? (g.assignNode || '') : ''],
       [DOM_IDS.woPledge, joined && g ? (g.pledgeAddress || '') : '']
     ];
-    
+
     orgFields.forEach(([id, val]) => {
       const el = document.getElementById(id);
       if (el) el.textContent = val;
     });
   }
-  
+
   // Update transfer button state based on organization membership
   updateTransferButtonState();
 }
@@ -359,52 +359,52 @@ export function renderWallet(): void {
   const priv = document.getElementById(DOM_IDS.walletPrivHex);
   const px = document.getElementById(DOM_IDS.walletPubX);
   const py = document.getElementById(DOM_IDS.walletPubY);
-  
+
   if (!u) return;
-  
+
   if (aid) aid.textContent = u.accountId || '';
   if (org) org.textContent = u.orgNumber || t('header.noOrg');
   if (addr) addr.textContent = u.address || '';
   if (priv) priv.textContent = u.privHex || '';
   if (px) px.textContent = u.pubXHex || '';
   if (py) py.textContent = u.pubYHex || '';
-  
+
   const list = document.getElementById(DOM_IDS.walletAddrList);
   if (!list) return;
 
   // Preserve expanded state across re-renders (e.g., when TXCer arrives)
   const expandedBeforeRender = getExpandedAddresses();
-  
+
   const addresses = Object.keys((u.wallet?.addressMsg) || {});
-  
+
   // 更新地址数量显示
   const addrCountEl = document.getElementById(DOM_IDS.addrCount);
   if (addrCountEl) {
     addrCountEl.textContent = t('wallet.addressCount', { count: addresses.length }) || `${addresses.length} 个地址`;
   }
-  
+
   // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
-  
+
   addresses.forEach((a) => {
     const item = document.createElement('div');
     item.className = 'addr-card';
     item.dataset.addr = a; // Store address on card for event delegation
     const meta = u.wallet?.addressMsg?.[a] || null;
-    
+
     const typeId0 = Number(meta?.type ?? 0);
     const amtCash0 = Number(meta?.value?.utxoValue || 0);
     const gas0 = readAddressInterest(meta);
     const coinType = getCoinName(typeId0);
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
-    
+
     // 获取锁定 UTXO 信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
     const lockedBalance = getLockedBalanceByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
     const unlockedUtxoBalance = Math.max(0, amtCash0 - lockedBalance);
-    
+
     // 获取 TXCer 信息（仅主货币地址有 TXCer）
     const txCers = meta?.txCers || {};
     const txCerIds = Object.keys(txCers);
@@ -418,17 +418,17 @@ export function renderWallet(): void {
       return sum + (Number((txCers as any)[id]) || 0);
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
-    
+
     // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
     const totalBalance = amtCash0 + txCerBalance;
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
-    
+
     // 如果有锁定的 UTXO，添加标记类
     if (hasLockedUtxos) {
       item.classList.add('has-locked-utxos');
     }
-    
+
     // 如果有 TXCer，添加标记类
     if (hasTXCers) {
       item.classList.add('has-txcers');
@@ -545,15 +545,15 @@ export function renderWallet(): void {
               </div>
               <div class="txcer-list">
                 ${txCerIds.map(id => {
-                  const value = txCers[id] as number;
-                  const locked = isTXCerLocked(id);
-                  return viewHtml`
+      const value = txCers[id] as number;
+      const locked = isTXCerLocked(id);
+      return viewHtml`
                     <div class="txcer-item">
                       <span class="txcer-id" title="${id}">${id.slice(0, 8)}...${id.slice(-6)}</span>
                       <span class="txcer-value">${value.toFixed(4)}${locked ? ' (锁定)' : ''}</span>
                     </div>
                   `;
-                })}
+    })}
               </div>
             </div>
           ` : ''}
@@ -573,27 +573,27 @@ export function renderWallet(): void {
     `;
 
     renderInto(item, template);
-    
+
     // Add operations menu (also uses event delegation)
     const metaEl = item.querySelector('.addr-ops-container');
     if (metaEl) {
       addAddressOperationsMenu(metaEl as HTMLElement, a);
     }
-    
+
     // Append to fragment instead of directly to DOM
     fragment.appendChild(item);
   });
-  
+
   // 清除骨架屏状态
   clearSkeletonState(list);
-  
+
   // Single DOM update
   list.replaceChildren();
   list.appendChild(fragment);
 
   // Restore expanded state after re-render
   restoreExpandedAddresses(expandedBeforeRender);
-  
+
   // Update wallet chart after rendering
   try { window.PanguPay?.charts?.updateWalletChart?.(u); } catch (_) { }
 }
@@ -611,7 +611,7 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
   const ops = document.createElement('div');
   ops.className = 'addr-ops';
   ops.dataset.addr = address;
-  
+
   // Use innerHTML with data-action for event delegation
   ops.innerHTML = `
     <button class="ops-toggle" data-action="toggleOpsMenu" data-addr="${escapeHtml(address)}">
@@ -626,7 +626,7 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
       <button class="ops-item danger" data-action="deleteAddress" data-addr="${escapeHtml(address)}">${escapeHtml(t('wallet.deleteAddress'))}</button>
     </div>
   `;
-  
+
   container.appendChild(ops);
 }
 
@@ -651,73 +651,73 @@ export function handleDeleteAddress(address: string): void {
   const okBtn = document.getElementById(DOM_IDS.confirmDelOk);
   const cancelBtn = document.getElementById(DOM_IDS.confirmDelCancel);
   const textEl = document.getElementById(DOM_IDS.confirmDelText);
-  
+
   // Close any open ops menus
   closeAllOpsMenus();
-  
+
   if (textEl) textEl.textContent = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
   if (modal) modal.classList.remove('hidden');
-  
+
   const doDel = async () => {
     if (modal) modal.classList.add('hidden');
     const current = getCurrentUser();
     if (!current) return;
-    
+
     const key = String(address).toLowerCase();
-    
+
     // Get address metadata for backend API
-    const addressData = current.wallet?.addressMsg?.[address] || 
-                        current.wallet?.addressMsg?.[key] ||
-                        Object.entries(current.wallet?.addressMsg || {}).find(
-                          ([k]) => String(k).toLowerCase() === key
-                        )?.[1];
-    
+    const addressData = current.wallet?.addressMsg?.[address] ||
+      current.wallet?.addressMsg?.[key] ||
+      Object.entries(current.wallet?.addressMsg || {}).find(
+        ([k]) => String(k).toLowerCase() === key
+      )?.[1];
+
     // Check if user is in a guarantor organization
     const group = getJoinedGroup();
     const isInOrg = !!(group && group.groupID);
-    
+
     if (isInOrg && addressData) {
       // User is in organization - need to call backend API first
       const pubXHex = addressData.pubXHex;
       const pubYHex = addressData.pubYHex;
       const addressType = Number(addressData.type || 0);
-      
+
       if (!pubXHex || !pubYHex) {
         // No public key info - show error
         const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
         if (at) at.textContent = t('wallet.deleteFailed', '删除失败');
-        if (ax) { 
-          ax.classList.add('tip--error'); 
-          ax.textContent = t('error.addressPublicKeyMissing', '地址公钥信息缺失，无法解绑'); 
+        if (ax) {
+          ax.classList.add('tip--error');
+          ax.textContent = t('error.addressPublicKeyMissing', '地址公钥信息缺失，无法解绑');
         }
         if (am) am.classList.remove('hidden');
         const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
         ok1?.addEventListener('click', h2);
         return;
       }
-      
+
       // Show loading animation
       const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
       showUnifiedLoading(t('address.unbinding', '正在解绑地址...'));
-      
+
       try {
         // Call backend unbind API
         const { unbindAddressOnBackend } = await import('./address');
         const result = await unbindAddressOnBackend(address, pubXHex, pubYHex, addressType);
-        
+
         hideUnifiedOverlay();
-        
+
         if (!result.success) {
           // Type narrowing: result is now { success: false; error: string }
           const errorMsg = 'error' in result ? result.error : t('error.unknownError', '未知错误');
-          
+
           // Check if user cancelled password input
           if (errorMsg === 'USER_CANCELLED') {
             console.info('[Wallet] User cancelled password input for unbind');
             showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
             return;
           }
-          
+
           // Backend failed - show error, don't delete locally
           showUnifiedError(
             t('wallet.deleteFailed', '删除失败'),
@@ -725,10 +725,10 @@ export function handleDeleteAddress(address: string): void {
           );
           return;
         }
-        
+
         // Backend succeeded - proceed with local deletion
         console.info('[Wallet] ✓ Address unbound on backend, proceeding with local deletion');
-        
+
       } catch (error) {
         hideUnifiedOverlay();
         console.error('[Wallet] ✗ Unbind address error:', error);
@@ -739,44 +739,44 @@ export function handleDeleteAddress(address: string): void {
         return;
       }
     }
-    
+
     // Proceed with local deletion (either not in org, or backend succeeded)
     const u = deepClone(current);
     const isMain = (u.address && u.address.toLowerCase() === key);
-    
+
     if (u.wallet?.addressMsg) {
       u.wallet.addressMsg = Object.fromEntries(
         Object.entries(u.wallet.addressMsg).filter(([k]) => String(k).toLowerCase() !== key)
       );
     }
-    
+
     if (isMain) {
       u.address = '';
     }
-    
+
     // Single Source of Truth: Update Store, let subscriptions handle UI updates
     setUser(u);
     saveUser(u);
-    
+
     // Address deletion requires full re-render since DOM structure changes
     // This is an exception where we call renderWallet directly because:
     // 1. We're removing elements from DOM, not just updating values
     // 2. Store subscription can't know which specific card to remove
     renderWallet();
-    
+
     // Show success toast (supports dark mode automatically via CSS)
     showSuccessToast(
       t('wallet.deleteSuccessDesc', '已删除该地址及其相关本地数据'),
       t('wallet.deleteSuccess', '删除成功')
     );
   };
-  
+
   const cancel = () => {
     if (modal) modal.classList.add('hidden');
     okBtn?.removeEventListener('click', doDel);
     cancelBtn?.removeEventListener('click', cancel);
   };
-  
+
   okBtn?.addEventListener('click', doDel, { once: true });
   cancelBtn?.addEventListener('click', cancel, { once: true });
 }
@@ -800,14 +800,14 @@ export function toggleOpsMenu(address: string, element: HTMLElement): void {
   // Find the menu within the same ops container
   const opsContainer = element.closest('.addr-ops');
   const menu = opsContainer?.querySelector('.ops-menu');
-  
+
   if (!menu) return;
-  
+
   // Close all other menus first
   document.querySelectorAll('.ops-menu').forEach(m => {
     if (m !== menu) m.classList.add('hidden');
   });
-  
+
   // Toggle this menu
   menu.classList.toggle('hidden');
 }
@@ -831,14 +831,14 @@ export function handleExportPrivateKey(address: string): void {
   const u = getCurrentUser();
   const key = String(address).toLowerCase();
   let priv = '';
-  
+
   // Close any open ops menus
   closeAllOpsMenus();
-  
+
   if (u) {
     const map = u.wallet?.addressMsg || {};
     let found = map[address] || map[key] || null;
-    
+
     if (!found) {
       for (const k in map) {
         if (String(k).toLowerCase() === key) {
@@ -847,7 +847,7 @@ export function handleExportPrivateKey(address: string): void {
         }
       }
     }
-    
+
     // AddressMetadata interface includes privHex field
     if (found && found.privHex) {
       priv = found.privHex;
@@ -855,13 +855,13 @@ export function handleExportPrivateKey(address: string): void {
       priv = (u.keys?.privHex) || u.privHex || '';
     }
   }
-  
+
   const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
-  
+
   const keyRow = document.getElementById(DOM_IDS.successKeyRow);
   const keyCode = document.getElementById(DOM_IDS.successKeyCode);
   const copyBtn = document.getElementById(DOM_IDS.successCopyBtn);
-  
+
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
     // 隐藏普通文本，显示私钥行
@@ -869,14 +869,14 @@ export function handleExportPrivateKey(address: string): void {
       text.classList.add('hidden');
       text.classList.remove('tip--error');
     }
-    
+
     // 显示私钥行
     if (keyRow) keyRow.classList.remove('hidden');
     if (keyCode) keyCode.textContent = priv;
-    
+
     if (copyBtn) {
       copyBtn.classList.remove('copied');
-      
+
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(priv).then(() => {
           copyBtn.classList.add('copied');
@@ -908,12 +908,12 @@ export function handleExportPrivateKey(address: string): void {
     }
     if (keyRow) keyRow.classList.add('hidden');
   }
-  
+
   if (modal) modal.classList.remove('hidden');
-  
-  const handler = () => { 
-    modal?.classList.add('hidden'); 
-    ok?.removeEventListener('click', handler); 
+
+  const handler = () => {
+    modal?.classList.add('hidden');
+    ok?.removeEventListener('click', handler);
     // 重置状态
     if (keyRow) keyRow.classList.add('hidden');
     if (text) text.classList.remove('hidden');
@@ -990,10 +990,10 @@ function getExpandedAddresses(): string[] {
  */
 function restoreExpandedAddresses(addresses: string[]): void {
   if (!addresses.length) return;
-  
+
   const addrSet = new Set(addresses.map(a => a.toLowerCase()));
   const cards = document.querySelectorAll('.addr-card');
-  
+
   cards.forEach(card => {
     const addr = (card as HTMLElement).dataset.addr?.toLowerCase();
     if (addr && addrSet.has(addr)) {
@@ -1012,11 +1012,11 @@ export function handleAddToAddress(address: string): void {
   const current = getCurrentUser();
   if (!current?.wallet?.addressMsg) return;
   const u = deepClone(current);
-  
+
   const key = String(address).toLowerCase();
   const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
   if (!found) return;
-  
+
   const typeId = Number(found.type ?? 0);
   const inc = typeId === 1 ? 1 : (typeId === 2 ? 5 : 10);
 
@@ -1032,12 +1032,12 @@ export function handleAddToAddress(address: string): void {
   // 生成逼真的交易数据
   const txid = generateRandomHex(8); // 16字符的TXID
   const prevTxid = generateRandomHex(8); // 模拟前置交易ID
-  
+
   // 模拟逼真的区块位置 (随机生成合理范围内的值)
   const blockNum = Math.floor(Math.random() * 10000) + 1000; // 区块号 1000-11000
   const indexX = Math.floor(Math.random() * 50); // 担保交易序号 0-49
   const indexY = Math.floor(Math.random() * 10); // 内部序号 0-9
-  
+
   // 模拟时间戳 (最近7天内的随机时间)
   const now = Date.now();
   const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
@@ -1084,15 +1084,15 @@ export function handleAddToAddress(address: string): void {
   // 构造完整的 UTXOData
   const utxoKey = `${txid}_0`;
   const utxoData: UTXOData = {
-    UTXO: { 
-      TXID: txid, 
+    UTXO: {
+      TXID: txid,
       TXType: 0,
       TXInputsNormal: [mockInput],
       TXInputsCertificate: [],
       TXOutputs: [txOutput],
-      InterestAssign: { 
+      InterestAssign: {
         Gas: 0.1, // 模拟Gas费
-        Output: 0, 
+        Output: 0,
         BackAssign: { [key]: 1.0 } // 利息回退给当前地址
       },
       ExTXCerID: [],
@@ -1102,11 +1102,11 @@ export function handleAddToAddress(address: string): void {
     Value: inc,
     Type: typeId,
     Time: randomTime,
-    Position: { 
-      Blocknum: blockNum, 
-      IndexX: indexX, 
-      IndexY: indexY, 
-      IndexZ: 0 
+    Position: {
+      Blocknum: blockNum,
+      IndexX: indexX,
+      IndexY: indexY,
+      IndexZ: 0
     },
     IsTXCerUTXO: false,
     TXOutputHash: generateRandomHex(32) // 输出哈希
@@ -1133,10 +1133,10 @@ export function handleAddToAddress(address: string): void {
 
   // Recalculate Wallet ValueDivision
   recalculateWalletValue(u);
-  
+
   // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
   setUser(u);
-  
+
   // Legacy persistence for backward compatibility (Store persistence will also run)
   saveUser(u);
 
@@ -1148,7 +1148,7 @@ export function handleAddToAddress(address: string): void {
   // Show toast notification (not a state-driven UI element)
   const coinType = getCoinName(typeId);
   showMiniToast(`+${inc} ${coinType} (已锁定)`, 'success');
-  
+
   // All other UI updates (currency display, address cards, charts, etc.) 
   // are handled by store.subscribe() in bootstrap.ts
 }
@@ -1161,7 +1161,7 @@ export function handleZeroAddress(address: string): void {
   const current = getCurrentUser();
   if (!current?.wallet?.addressMsg) return;
   const u = deepClone(current);
-  
+
   const key = String(address).toLowerCase();
   const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
   if (!found) return;
@@ -1179,7 +1179,7 @@ export function handleZeroAddress(address: string): void {
 
   // Recalculate ValueDivision
   recalculateWalletValue(u);
-  
+
   // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
   setUser(u);
 
@@ -1190,10 +1190,10 @@ export function handleZeroAddress(address: string): void {
   const expandedAddrs = getExpandedAddresses();
   renderWallet();
   restoreExpandedAddresses(expandedAddrs);
-  
+
   // Show toast notification (not a state-driven UI element)
   showMiniToast(t('address.clear'), 'info');
-  
+
   // All other UI updates (currency display, address cards, charts, etc.) 
   // are handled by store.subscribe() in bootstrap.ts
 }
@@ -1235,7 +1235,7 @@ export function updateCurrencyDisplay(u: User): void {
   const walletBTCEl = document.getElementById(DOM_IDS.walletBTC);
   const walletETHEl = document.getElementById(DOM_IDS.walletETH);
   const vdUpdated = u.wallet?.valueDivision || { 0: 0, 1: 0, 2: 0 };
-  
+
   if (walletPGCEl) walletPGCEl.textContent = Number(vdUpdated[0] || 0).toLocaleString();
   if (walletBTCEl) walletBTCEl.textContent = Number(vdUpdated[1] || 0).toLocaleString();
   if (walletETHEl) walletETHEl.textContent = Number(vdUpdated[2] || 0).toLocaleString();
@@ -1266,10 +1266,10 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
   const totalBalance = utxoBalance + txCerBalance;
   const gas = Number(found.estInterest || found.gas || 0);
-  
+
   const list = document.getElementById(DOM_IDS.walletAddrList);
   if (!list) return;
-  
+
   const cards = list.querySelectorAll('.addr-card');
   cards.forEach(card => {
     const btn = card.querySelector('.btn-add') || card.querySelector('.btn-zero');
@@ -1331,7 +1331,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       if (txcerHeaderValue) {
         txcerHeaderValue.textContent = `${txCerIds.length}个 / ${txCerBalance.toFixed(4)} ${coinType}`;
       }
-      
+
       // 直接更新详情行
       const detailRows = card.querySelectorAll('.addr-detail-row');
       detailRows.forEach(row => {
@@ -1357,7 +1357,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
  */
 export function updateAllAddressCardBalances(u: User | null): void {
   if (!u?.wallet?.addressMsg) return;
-  
+
   const addressMsg = u.wallet.addressMsg;
   for (const [address, data] of Object.entries(addressMsg)) {
     if (data) {
@@ -1377,11 +1377,11 @@ function updateUSDTDisplay(u: User): void {
     const btcA = Number(vdAll[1] || 0);
     const ethA = Number(vdAll[2] || 0);
     const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
-    
+
     scheduleBatchUpdate('usdt-display', () => {
       usdtEl.textContent = usdt.toLocaleString();
     });
-    
+
     const bd = document.querySelector('.currency-breakdown');
     if (bd) {
       scheduleBatchUpdate('currency-breakdown', () => {
@@ -1409,16 +1409,16 @@ export function showAddrModal(mode: 'create' | 'import'): void {
   const addrTitle = document.getElementById(DOM_IDS.addrModalTitle);
   const addrCreateBox = document.getElementById(DOM_IDS.addrCreateBox);
   const addrImportBox = document.getElementById(DOM_IDS.addrImportBox);
-  
+
   if (addrTitle) addrTitle.textContent = mode === 'import' ? t('walletModal.importAddress') : t('walletModal.createAddress');
   if (addrCreateBox) addrCreateBox.classList.toggle('hidden', mode !== 'create');
   if (addrImportBox) addrImportBox.classList.toggle('hidden', mode !== 'import');
-  
+
   if (mode === 'import') {
     const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
     if (input) input.value = '';
   }
-  
+
   if (addrModal) addrModal.classList.remove('hidden');
   setAddrError('');
 }
@@ -1446,12 +1446,12 @@ function showImportPreviewModal(data: PendingImportData): void {
   const pubXEl = document.getElementById(DOM_IDS.importPreviewPubX);
   const pubYEl = document.getElementById(DOM_IDS.importPreviewPubY);
   const coinTypeEl = document.getElementById(DOM_IDS.importPreviewCoinType);
-  
+
   if (addressEl) addressEl.textContent = data.address;
   if (pubXEl) pubXEl.textContent = data.pubXHex || '-';
   if (pubYEl) pubYEl.textContent = data.pubYHex || '-';
   if (coinTypeEl) coinTypeEl.textContent = getCoinName(data.coinType);
-  
+
   if (modal) modal.classList.remove('hidden');
 }
 
@@ -1473,50 +1473,50 @@ async function handleImportPreviewConfirm(): Promise<void> {
     hideImportPreviewModal();
     return;
   }
-  
+
   const { privHex, address, pubXHex, pubYHex, coinType } = __pendingImport;
-  
+
   hideImportPreviewModal();
-  
+
   // Show loading animation
   const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
   showUnifiedLoading(t('walletModal.importing', '正在导入...'));
-  
+
   try {
     // Check if user is in organization - if so, sync with backend first
     if (isUserInOrganization()) {
       console.debug('[Wallet] User is in organization, syncing with backend...');
-      
+
       const result = await createNewAddressOnBackend(address, pubXHex, pubYHex, coinType);
-      
+
       if (!result.success) {
         hideUnifiedOverlay();
         // Type narrowing: result is now { success: false; error: string }
         const errorMsg = 'error' in result ? result.error : t('error.unknownError');
-        
+
         // Check if user cancelled password input
         if (errorMsg === 'USER_CANCELLED') {
           console.info('[Wallet] User cancelled password input for import');
           showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
           return;
         }
-        
+
         showUnifiedError(
           t('toast.importFailed', '导入失败'),
           errorMsg
         );
         return;
       }
-      
+
       console.info('[Wallet] ✓ Address synced with backend');
     }
-    
+
     // Proceed with local import
     await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
-    
+
     hideUnifiedOverlay();
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
-    
+
   } catch (error) {
     hideUnifiedOverlay();
     console.error('[Wallet] ✗ Import address error:', error);
@@ -1538,30 +1538,30 @@ async function importAddressInPlaceWithData(
   coinType: number
 ): Promise<void> {
   const u2 = getCurrentUser();
-  if (!u2?.accountId) { 
-    throw new Error(t('modal.pleaseLoginFirst')); 
+  if (!u2?.accountId) {
+    throw new Error(t('modal.pleaseLoginFirst'));
   }
-  
+
   const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
   const addr = address.toLowerCase();
-  
-  acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { 
-    type: coinType, 
-    utxos: {}, 
-    txCers: {}, 
-    value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, 
-    estInterest: 0, 
-    origin: 'imported' 
+
+  acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
+    type: coinType,
+    utxos: {},
+    txCers: {},
+    value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+    estInterest: 0,
+    origin: 'imported'
   };
-  
+
   const normPriv = priv.replace(/^0x/i, '');
   const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
   addrMeta.privHex = normPriv;
   addrMeta.pubXHex = pubXHex;
   addrMeta.pubYHex = pubYHex;
-  
+
   saveUser(acc);
-  
+
   // Encrypt the imported address private key
   try {
     if (normPriv && u2.accountId && !hasEncryptedKey(u2.accountId)) {
@@ -1570,9 +1570,9 @@ async function importAddressInPlaceWithData(
   } catch (encryptErr) {
     console.warn('Imported address key encryption skipped:', encryptErr);
   }
-  
+
   try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-  
+
   renderWallet();
   try { updateWalletBrief(); } catch { }
 }
@@ -1583,12 +1583,12 @@ async function importAddressInPlaceWithData(
 export function initImportPreviewModal(): void {
   const cancelBtn = document.getElementById(DOM_IDS.importPreviewCancelBtn);
   const confirmBtn = document.getElementById(DOM_IDS.importPreviewConfirmBtn);
-  
+
   if (cancelBtn && !cancelBtn.dataset._previewBind) {
     cancelBtn.onclick = hideImportPreviewModal;
     cancelBtn.dataset._previewBind = '1';
   }
-  
+
   if (confirmBtn && !confirmBtn.dataset._previewBind) {
     confirmBtn.onclick = handleImportPreviewConfirm;
     confirmBtn.dataset._previewBind = '1';
@@ -1615,65 +1615,65 @@ function setAddrError(msg: string): void {
  */
 async function importAddressInPlace(priv: string): Promise<void> {
   const u2 = getCurrentUser();
-  if (!u2?.accountId) { 
-    showErrorToast(t('modal.pleaseLoginFirst'), t('common.notLoggedIn')); 
-    return; 
+  if (!u2?.accountId) {
+    showErrorToast(t('modal.pleaseLoginFirst'), t('common.notLoggedIn'));
+    return;
   }
-  
+
   const ov = document.getElementById(DOM_IDS.actionOverlay);
   const ovt = document.getElementById(DOM_IDS.actionOverlayText);
   if (ovt) ovt.textContent = t('modal.addingWalletAddress');
   if (ov) ov.classList.remove('hidden');
-  
+
   try {
     const data = await importFromPrivHex(priv);
     const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
     const addr = (data.address || '').toLowerCase();
-    
-    if (!addr) { 
-      showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed')); 
-      return; 
+
+    if (!addr) {
+      showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed'));
+      return;
     }
-    
+
     const map = acc.wallet?.addressMsg || {};
     let dup = false;
     const lowerMain = (u2.address || '').toLowerCase();
-    
+
     if (lowerMain && lowerMain === addr) dup = true;
     if (!dup) {
-      for (const k in map) { 
-        if (Object.prototype.hasOwnProperty.call(map, k)) { 
-          if (String(k).toLowerCase() === addr) { 
-            dup = true; 
-            break; 
-          } 
-        } 
+      for (const k in map) {
+        if (Object.prototype.hasOwnProperty.call(map, k)) {
+          if (String(k).toLowerCase() === addr) {
+            dup = true;
+            break;
+          }
+        }
       }
     }
-    
-    if (dup) { 
-      showErrorToast(t('toast.addressExists'), t('toast.importFailed')); 
-      return; 
+
+    if (dup) {
+      showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+      return;
     }
-    
-    acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || { 
-      type: 0, 
-      utxos: {}, 
-      txCers: {}, 
-      value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, 
-      estInterest: 0, 
-      origin: 'imported' 
+
+    acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
+      type: 0,
+      utxos: {},
+      txCers: {},
+      value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+      estInterest: 0,
+      origin: 'imported'
     };
-    
+
     const normPriv = (data.privHex || priv).replace(/^0x/i, '');
     // AddressMetadata interface includes these fields
     const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
     addrMeta.privHex = normPriv;
     addrMeta.pubXHex = data.pubXHex || '';
     addrMeta.pubYHex = data.pubYHex || '';
-    
+
     saveUser(acc);
-    
+
     // Encrypt the imported address private key
     try {
       if (normPriv && u2.accountId && !hasEncryptedKey(u2.accountId)) {
@@ -1682,12 +1682,12 @@ async function importAddressInPlace(priv: string): Promise<void> {
     } catch (encryptErr) {
       console.warn('Imported address key encryption skipped:', encryptErr);
     }
-    
+
     try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-    
+
     renderWallet();
     try { updateWalletBrief(); } catch { }
-    
+
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
   } catch (err) {
     showErrorToast((err as Error).message || String(err), t('toast.importFailed'));
@@ -1701,61 +1701,61 @@ async function importAddressInPlace(priv: string): Promise<void> {
  * Handle address modal OK button
  */
 export async function handleAddrModalOk(): Promise<void> {
-  if (__addrMode === 'create') { 
-    hideAddrModal(); 
+  if (__addrMode === 'create') {
+    hideAddrModal();
     if (typeof window.PanguPay?.account?.addNewSubWallet === 'function') {
       await window.PanguPay.account.addNewSubWallet();
     }
   } else {
     const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
     const v = input?.value.trim() || '';
-    
+
     if (!v) {
       showErrorToast(t('walletModal.pleaseEnterPrivateKey'), t('toast.importFailed'));
       input?.focus();
       return;
     }
-    
+
     const normalized = v.replace(/^0x/i, '');
     if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
       showErrorToast(t('walletModal.privateKeyFormatError'), t('toast.importFailed'));
       input?.focus();
       return;
     }
-    
+
     setAddrError('');
-    
+
     // Parse the private key to get address info for preview
     try {
       const data = await importFromPrivHex(v);
       const addr = (data.address || '').toLowerCase();
-      
+
       if (!addr) {
         showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed'));
         return;
       }
-      
+
       // Check for duplicate address
       const u2 = getCurrentUser();
       if (u2) {
         const map = u2.wallet?.addressMsg || {};
         const lowerMain = (u2.address || '').toLowerCase();
-        
+
         if (lowerMain && lowerMain === addr) {
           showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
           return;
         }
-        
-        for (const k in map) { 
-          if (Object.prototype.hasOwnProperty.call(map, k)) { 
-            if (String(k).toLowerCase() === addr) { 
+
+        for (const k in map) {
+          if (Object.prototype.hasOwnProperty.call(map, k)) {
+            if (String(k).toLowerCase() === addr) {
               showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
               return;
-            } 
-          } 
+            }
+          }
         }
       }
-      
+
       // Store pending import data and show preview modal
       __pendingImport = {
         privHex: v,
@@ -1764,10 +1764,10 @@ export async function handleAddrModalOk(): Promise<void> {
         pubYHex: data.pubYHex || '',
         coinType: 0 // Default to PGC
       };
-      
+
       hideAddrModal();
       showImportPreviewModal(__pendingImport);
-      
+
     } catch (err) {
       showErrorToast((err as Error).message || String(err), t('toast.importFailed'));
     }
@@ -1784,17 +1784,17 @@ export function initAddressModal(): void {
   const refreshWalletBtn = document.getElementById(DOM_IDS.refreshWalletBtn);
   const addrCancelBtn = document.getElementById(DOM_IDS.addrCancelBtn);
   const addrOkBtn = document.getElementById(DOM_IDS.addrOkBtn);
-  
+
   if (openCreateAddrBtn && !openCreateAddrBtn.dataset._walletBind) {
     openCreateAddrBtn.onclick = () => showAddrModal('create');
     openCreateAddrBtn.dataset._walletBind = '1';
   }
-  
+
   if (openImportAddrBtn && !openImportAddrBtn.dataset._walletBind) {
     openImportAddrBtn.onclick = () => showAddrModal('import');
     openImportAddrBtn.dataset._walletBind = '1';
   }
-  
+
   if (openHistoryBtn && !openHistoryBtn.dataset._walletBind) {
     openHistoryBtn.onclick = () => {
       // Import routeTo at the top of file and use directly to avoid timing issues
@@ -1806,7 +1806,7 @@ export function initAddressModal(): void {
     };
     openHistoryBtn.dataset._walletBind = '1';
   }
-  
+
   // Refresh wallet balances button
   if (refreshWalletBtn && !refreshWalletBtn.dataset._walletBind) {
     refreshWalletBtn.onclick = () => {
@@ -1816,17 +1816,17 @@ export function initAddressModal(): void {
     };
     refreshWalletBtn.dataset._walletBind = '1';
   }
-  
+
   if (addrCancelBtn && !addrCancelBtn.dataset._walletBind) {
     addrCancelBtn.onclick = hideAddrModal;
     addrCancelBtn.dataset._walletBind = '1';
   }
-  
+
   if (addrOkBtn && !addrOkBtn.dataset._walletBind) {
     addrOkBtn.onclick = handleAddrModalOk;
     addrOkBtn.dataset._walletBind = '1';
   }
-  
+
   // Initialize import preview modal buttons
   initImportPreviewModal();
 }
@@ -1852,22 +1852,22 @@ function refreshWalletSnapshot(): Record<string, AddressMetadata> {
 function fillChange(): void {
   const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
-  
+
   const chPGC = document.getElementById(DOM_IDS.chAddrPGC) as HTMLSelectElement | null;
   const chBTC = document.getElementById(DOM_IDS.chAddrBTC) as HTMLSelectElement | null;
   const chETH = document.getElementById(DOM_IDS.chAddrETH) as HTMLSelectElement | null;
   const csPGC = document.getElementById(DOM_IDS.csChPGC);
   const csBTC = document.getElementById(DOM_IDS.csChBTC);
   const csETH = document.getElementById(DOM_IDS.csChETH);
-  
+
   const sel = Array.from(addrList.querySelectorAll('input[type="checkbox"]'))
     .filter((x: Element) => (x as HTMLInputElement).checked)
     .map((x: Element) => (x as HTMLInputElement).value);
-  
+
   // Update label selected state
-  Array.from(addrList.querySelectorAll('label')).forEach(l => { 
-    const inp = l.querySelector('input[type="checkbox"]') as HTMLInputElement | null; 
-    if (inp) l.classList.toggle('selected', inp.checked); 
+  Array.from(addrList.querySelectorAll('label')).forEach(l => {
+    const inp = l.querySelector('input[type="checkbox"]') as HTMLInputElement | null;
+    if (inp) l.classList.toggle('selected', inp.checked);
   });
 
   // Filter addresses by type
@@ -1943,7 +1943,7 @@ function fillChange(): void {
   buildMenu(csPGC, optsPGC, chPGC);
   buildMenu(csBTC, optsBTC, chBTC);
   buildMenu(csETH, optsETH, chETH);
-  
+
   // summary UI is updated by transfer panel code when present
 }
 
@@ -1955,23 +1955,23 @@ export function rebuildAddrList(): void {
   refreshWalletSnapshot();
   const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
-  
+
   // 清除骨架屏状态
   clearSkeletonState(addrList);
-  
+
   const fragment = document.createDocumentFragment();
-  
+
   srcAddrs.forEach(a => {
     const meta = walletMap[a] || {};
     const tId = Number(meta.type ?? 0);
     const utxoAmt = Number(meta.value?.utxoValue || 0);
-    
+
     // 获取锁定信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
     const lockedBalance = getLockedBalanceByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
     const unlockedUtxoBalance = Math.max(0, utxoAmt - lockedBalance);
-    
+
     // 获取 TXCer 余额
     const txCers = meta.txCers || {};
     const txCerIds = Object.keys(txCers);
@@ -1981,16 +1981,16 @@ export function rebuildAddrList(): void {
       return sum + (Number((txCers as any)[id]) || 0);
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
-    
+
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
-    
+
     const coinInfo = getCoinInfo(tId);
     const color = coinInfo.className;
     const coinName = coinInfo.name;
     const coinLetter = coinName.charAt(0);
     const shortAddr = a;
-    
+
     const label = document.createElement('label');
     label.className = `src-addr-item item-type-${color}`;
     label.dataset.addr = a;
@@ -2027,20 +2027,20 @@ export function rebuildAddrList(): void {
     `;
 
     renderInto(label, template);
-    
+
     fragment.appendChild(label);
   });
-  
+
   addrList.replaceChildren();
   addrList.appendChild(fragment);
-  
+
   autoSelectFromAddress(addrList);
-  
+
   if (!addrList.dataset._changeBind) {
     globalEventManager.add(addrList, 'change', fillChange);
     addrList.dataset._changeBind = '1';
   }
-  
+
   fillChange();
 }
 
@@ -2050,10 +2050,10 @@ export function rebuildAddrList(): void {
 function autoSelectFromAddress(addrList: HTMLElement): void {
   const checkboxes = addrList.querySelectorAll('input[type="checkbox"]');
   const labels = addrList.querySelectorAll('label.src-addr-item');
-  
+
   const alreadySelected = Array.from(checkboxes).some(cb => (cb as HTMLInputElement).checked);
   if (alreadySelected) return;
-  
+
   if (srcAddrs.length === 1) {
     const cb = checkboxes[0] as HTMLInputElement;
     const label = labels[0];
@@ -2063,7 +2063,7 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
     }
     return;
   }
-  
+
   const addrsWithBalance = srcAddrs.filter(addr => {
     const meta = walletMap[addr];
     const utxoAmt = Number(meta?.value?.utxoValue || 0);
@@ -2080,7 +2080,7 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
     const availableBalance = unlockedUtxo + unlockedTxCerBalance;
     return availableBalance > 0;
   });
-  
+
   if (addrsWithBalance.length === 1) {
     const targetAddr = addrsWithBalance[0];
     labels.forEach((label, idx) => {
@@ -2108,7 +2108,7 @@ export function initTransferModeTabs(): void {
   if (!modeTabsContainer || modeTabsContainer.dataset._bind) return;
 
   const isCompactMode = () => window.matchMedia('(max-width: 860px)').matches;
-  
+
   const ensureDropdown = (): HTMLElement => {
     let dd = modeTabsContainer.querySelector('.mode-dropdown') as HTMLElement | null;
     if (!dd) {
@@ -2118,7 +2118,7 @@ export function initTransferModeTabs(): void {
     }
     return dd;
   };
-  
+
   const rebuildDropdown = (): void => {
     const dd = ensureDropdown();
     const btns: HTMLButtonElement[] = [];
@@ -2132,7 +2132,7 @@ export function initTransferModeTabs(): void {
     });
     dd.replaceChildren(...btns);
   };
-  
+
   const applyMode = (mode: string): void => {
     modeTabsContainer.querySelectorAll('.transfer-mode-tab, .mode-tab').forEach(t => t.classList.remove('active'));
     const btn = modeTabsContainer.querySelector(`.transfer-mode-tab[data-mode="${mode}"]`);
@@ -2151,7 +2151,7 @@ export function initTransferModeTabs(): void {
     const radios = document.querySelectorAll('input[name="tfModeChoice"]');
     radios.forEach(r => { (r as HTMLInputElement).checked = (r as HTMLInputElement).value === mode; });
   };
-  
+
   const updateModeTabsLayout = (): void => {
     if (isCompactMode()) {
       modeTabsContainer.classList.add('compact');
@@ -2163,7 +2163,7 @@ export function initTransferModeTabs(): void {
       if (dd) dd.remove();
     }
   };
-  
+
   globalEventManager.add(modeTabsContainer, 'click', (e: Event) => {
     const tab = (e.target as HTMLElement).closest('.transfer-mode-tab') || (e.target as HTMLElement).closest('.mode-tab');
     if (tab) {
@@ -2181,14 +2181,14 @@ export function initTransferModeTabs(): void {
       modeTabsContainer.classList.remove('open');
     }
   });
-  
+
   let layoutTimer: ReturnType<typeof setTimeout>;
   const onResize = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout(updateModeTabsLayout, 50); };
   // Use native addEventListener for window events (globalEventManager expects Element)
   window.addEventListener('resize', onResize);
   window.addEventListener('orientationchange', onResize);
   updateModeTabsLayout();
-  
+
   const activeTab = modeTabsContainer.querySelector('.transfer-mode-tab.active');
   if (activeTab) {
     const allTabs = Array.from(modeTabsContainer.querySelectorAll('.transfer-mode-tab'));
@@ -2199,7 +2199,7 @@ export function initTransferModeTabs(): void {
   } else {
     modeTabsContainer.setAttribute('data-active', '0');
   }
-  
+
   modeTabsContainer.dataset._bind = '1';
 }
 
@@ -2213,15 +2213,15 @@ export function initTransferModeTabs(): void {
  */
 function bindCustomSelect(box: HTMLElement | null, hidden: HTMLSelectElement | null): void {
   if (!box || box.dataset._bind) return;
-  
-  globalEventManager.add(box, 'click', (e: Event) => { 
-    e.stopPropagation(); 
-    const sec = box.closest('.tx-section'); 
-    const opening = !box.classList.contains('open'); 
-    box.classList.toggle('open'); 
-    if (sec) sec.classList.toggle('has-open', opening); 
+
+  globalEventManager.add(box, 'click', (e: Event) => {
+    e.stopPropagation();
+    const sec = box.closest('.tx-section');
+    const opening = !box.classList.contains('open');
+    box.classList.toggle('open');
+    if (sec) sec.classList.toggle('has-open', opening);
   });
-  
+
   const menu = box.querySelector('.custom-select__menu');
   if (menu) {
     globalEventManager.add(menu, 'click', (ev: Event) => {
@@ -2232,19 +2232,19 @@ function bindCustomSelect(box: HTMLElement | null, hidden: HTMLSelectElement | n
       const valEl = box.querySelector('.addr-val');
       if (valEl) valEl.textContent = v || '';
       if (hidden) hidden.value = v || '';
-      box.classList.remove('open'); 
-      const sec = box.closest('.tx-section'); 
-      if (sec) sec.classList.remove('has-open'); 
+      box.classList.remove('open');
+      const sec = box.closest('.tx-section');
+      if (sec) sec.classList.remove('has-open');
       // summary UI is updated by transfer panel code when present
     });
   }
-  
-  globalEventManager.add(document.body, 'click', () => { 
-    box.classList.remove('open'); 
-    const sec = box.closest('.tx-section'); 
-    if (sec) sec.classList.remove('has-open'); 
+
+  globalEventManager.add(document.body, 'click', () => {
+    box.classList.remove('open');
+    const sec = box.closest('.tx-section');
+    if (sec) sec.classList.remove('has-open');
   });
-  
+
   box.dataset._bind = '1';
 }
 
@@ -2258,7 +2258,7 @@ export function initChangeAddressSelects(): void {
   const csPGC = document.getElementById(DOM_IDS.csChPGC);
   const csBTC = document.getElementById(DOM_IDS.csChBTC);
   const csETH = document.getElementById(DOM_IDS.csChETH);
-  
+
   bindCustomSelect(csPGC, chPGC);
   bindCustomSelect(csBTC, chBTC);
   bindCustomSelect(csETH, chETH);
@@ -2300,7 +2300,7 @@ export function showWalletSkeletons(): void {
   if (addrList && !isShowingSkeleton(addrList)) {
     showAddressListSkeleton(addrList, { count: 3 });
   }
-  
+
   // 转账来源地址骨架屏
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList && !isShowingSkeleton(srcAddrList)) {
@@ -2317,7 +2317,7 @@ export function hideWalletSkeletons(): void {
   if (addrList) {
     clearSkeletonState(addrList);
   }
-  
+
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList) {
     clearSkeletonState(srcAddrList);
@@ -2348,7 +2348,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
     );
     return false;
   }
-  
+
   const addresses = Object.keys(current.wallet.addressMsg);
   if (addresses.length === 0) {
     showErrorToast(
@@ -2357,26 +2357,27 @@ export async function refreshWalletBalances(): Promise<boolean> {
     );
     return false;
   }
-  
-  // 清除所有锁定的 UTXO（刷新后从后端获取最新数据）
-  clearAllLockedUTXOs();
-  console.info('[Wallet] Cleared all locked UTXOs before refresh');
-  
+
+  // NOTE: We no longer clear locked UTXOs before refresh.
+  // Locked UTXOs represent in-flight transactions and must be preserved
+  // until the transaction is confirmed on-chain.
+  console.info('[Wallet] Refreshing balances (locked UTXOs will be preserved)');
+
   // Show loading state on refresh button
   const refreshBtn = document.getElementById(DOM_IDS.refreshWalletBtn);
   if (refreshBtn) {
     refreshBtn.classList.add('loading');
     refreshBtn.setAttribute('disabled', 'true');
   }
-  
+
   try {
     // Import the query function dynamically to avoid circular dependencies
     const { queryAddressBalances, convertUtxosForStorage, calculateTotalBalance } = await import('./accountQuery');
-    
+
     console.info('[Wallet] Refreshing balances for', addresses.length, 'addresses');
-    
+
     const result = await queryAddressBalances(addresses);
-    
+
     if (!result.success) {
       // Type narrowing: result is now { success: false; error: string }
       const errorMsg = 'error' in result ? result.error : t('error.unknownError', '未知错误');
@@ -2386,16 +2387,16 @@ export async function refreshWalletBalances(): Promise<boolean> {
       );
       return false;
     }
-    
+
     // Update local storage with fetched data
     const u = deepClone(current);
     const balances = result.data;
-    
+
     let updatedCount = 0;
-    
+
     for (const balanceInfo of balances) {
       const addr = balanceInfo.address.toLowerCase();
-      
+
       // Find the address in wallet (case-insensitive)
       let foundKey: string | null = null;
       for (const key of Object.keys(u.wallet?.addressMsg || {})) {
@@ -2404,10 +2405,10 @@ export async function refreshWalletBalances(): Promise<boolean> {
           break;
         }
       }
-      
+
       if (foundKey && u.wallet?.addressMsg?.[foundKey]) {
         const meta = u.wallet.addressMsg[foundKey] as AddressMetadata;
-        
+
         // Update balance
         if (!meta.value) {
           meta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
@@ -2416,40 +2417,62 @@ export async function refreshWalletBalances(): Promise<boolean> {
         // totalValue should be balance only, NOT including interest/gas
         // Interest/gas is stored separately in meta.gas/meta.estInterest
         meta.value.totalValue = balanceInfo.balance;
-        
+
         // Update interest/gas (stored separately, not included in totalValue)
         meta.estInterest = balanceInfo.interest;
         meta.gas = balanceInfo.interest;
-        
+
         // Update type
         meta.type = balanceInfo.type;
-        
-        // Update UTXOs if available
+
+        // Update UTXOs if available, but PRESERVE locked UTXOs
         if (balanceInfo.utxoCount > 0) {
-          meta.utxos = convertUtxosForStorage(balanceInfo);
+          const newUtxos = convertUtxosForStorage(balanceInfo);
+          const existingUtxos = meta.utxos || {};
+          const { isUTXOLocked } = await import('../utils/utxoLock');
+
+          // Merge logic: keep locked UTXOs from existing, update/add non-locked
+          const mergedUtxos: Record<string, UTXOData> = {};
+
+          // First, preserve all locked existing UTXOs
+          for (const [key, utxo] of Object.entries(existingUtxos)) {
+            if (isUTXOLocked(key)) {
+              mergedUtxos[key] = utxo as UTXOData;
+              console.debug(`[Wallet] Preserving locked UTXO: ${key.slice(0, 16)}...`);
+            }
+          }
+
+          // Then, add/update non-locked UTXOs from backend
+          for (const [key, utxo] of Object.entries(newUtxos)) {
+            if (!isUTXOLocked(key)) {
+              mergedUtxos[key] = utxo;
+            }
+          }
+
+          meta.utxos = mergedUtxos;
         }
-        
+
         updatedCount++;
       }
     }
-    
+
     // Recalculate totals
     recalculateWalletValue(u);
-    
+
     // Update Store (SSOT) - this will trigger UI updates via subscriptions
     setUser(u);
     saveUser(u);
-    
+
     // Force re-render wallet to show updated balances
     renderWallet();
-    
+
     // Update currency display
     updateCurrencyDisplay(u);
     updateTotalGasBadge(u);
-    
+
     // Refresh source address list
     try { window.PanguPay?.wallet?.refreshSrcAddrList?.(); } catch (_) { }
-    
+
     // Calculate and log totals
     const totals = calculateTotalBalance(balances);
     console.info('[Wallet] ✓ Refresh complete:', {
@@ -2458,14 +2481,14 @@ export async function refreshWalletBalances(): Promise<boolean> {
       totalInterest: totals.totalInterest,
       byType: totals.byType
     });
-    
+
     showSuccessToast(
       t('wallet.refreshSuccessDesc', { count: updatedCount }),
       t('wallet.refreshSuccess', '刷新成功')
     );
-    
+
     return true;
-    
+
   } catch (error) {
     console.error('[Wallet] ✗ Refresh failed:', error);
     showErrorToast(
@@ -2473,7 +2496,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
       t('wallet.refreshFailed', '刷新失败')
     );
     return false;
-    
+
   } finally {
     // Remove loading state from refresh button
     if (refreshBtn) {
@@ -2495,24 +2518,24 @@ let globalClickHandlerInitialized = false;
 
 export function initGlobalClickHandler(): void {
   if (globalClickHandlerInitialized) return;
-  
+
   // Use setTimeout to ensure this runs after event delegation handlers
   document.addEventListener('click', (e: MouseEvent) => {
     const target = e.target as HTMLElement;
-    
+
     // Don't close if clicking on ops-toggle or inside ops-menu
     if (target.closest('.ops-toggle') || target.closest('.ops-menu')) {
       return;
     }
-    
+
     // Don't close if clicking on addr-card-summary (card toggle)
     if (target.closest('.addr-card-summary')) {
       return;
     }
-    
+
     // Close all ops menus
     closeAllOpsMenus();
   }, { capture: false });
-  
+
   globalClickHandlerInitialized = true;
 }

@@ -59,6 +59,7 @@ export default {
   'encryption.wrongPassword': '密码错误',
   'encryption.setPasswordDesc': '请设置密码保护您的私钥（至少6位）',
   'encryption.enterPasswordDesc': '请输入密码解锁私钥',
+  'encryption.usingCachedPassword': '已使用缓存授权，无需重复输入',
   'encryption.unlockForSigning': '解锁私钥进行签名',
   'encryption.unlockForJoinGroup': '加入担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',
   'encryption.unlockForLeaveGroup': '退出担保组织需要使用您的账户私钥进行签名验证。请输入密码解锁私钥。',

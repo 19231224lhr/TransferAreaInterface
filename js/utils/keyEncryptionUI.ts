@@ -9,7 +9,7 @@
 
 import { t } from '../i18n/index.js';
 import { showSuccessToast, showErrorToast, showWarningToast } from './toast.js';
-import { 
+import {
   encryptPrivateKey,
   saveEncryptedKey,
   hasEncryptedKey,
@@ -27,6 +27,21 @@ import { DOM_IDS } from '../config/domIds';
 // Password Prompt Functions
 // ========================================
 
+// Cache for password (grace period)
+let cachedPassword: string | null = null;
+let cachedTimestamp: number = 0;
+const PASSWORD_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+/**
+ * Clear the password cache
+ * Should be called on logout or when explicit re-entry is required
+ */
+export function clearPasswordCache(): void {
+  cachedPassword = null;
+  cachedTimestamp = 0;
+  console.debug('[EncryptionUI] Password cache cleared');
+}
+
 /**
  * Show a password prompt modal
  * @param options - Prompt options
@@ -40,13 +55,21 @@ export function showPasswordPrompt(options: {
 }): Promise<string | null> {
   return new Promise((resolve) => {
     const { title, description, confirmMode = false, placeholder = '' } = options;
-    
+
+    // Check cache (only if NOT in confirm mode, which implies setting/changing password)
+    if (!confirmMode && cachedPassword && (Date.now() - cachedTimestamp < PASSWORD_CACHE_DURATION)) {
+      console.debug('[EncryptionUI] Using cached password (grace period active)');
+      showSuccessToast(t('encryption.usingCachedPassword') || '已使用缓存授权，无需重复输入');
+      resolve(cachedPassword);
+      return;
+    }
+
     // Check if modal already exists, remove it
     const existingModal = document.getElementById(DOM_IDS.passwordPromptModal);
     if (existingModal) {
       existingModal.remove();
     }
-    
+
     // Create modal HTML
     const modal = document.createElement('div');
     modal.id = DOM_IDS.passwordPromptModal;
@@ -77,7 +100,7 @@ export function showPasswordPrompt(options: {
         </div>
 
         ${confirmMode
-          ? viewHtml`
+        ? viewHtml`
               <div class="password-input-group" style="margin-top: 12px;">
                 <input
                   type="password"
@@ -88,7 +111,7 @@ export function showPasswordPrompt(options: {
                 />
               </div>
             `
-          : nothing}
+        : nothing}
 
         <div class="modal-error hidden" id=${DOM_IDS.pwdPromptError}></div>
         <div class="modal-actions">
@@ -97,9 +120,9 @@ export function showPasswordPrompt(options: {
         </div>
       </div>
     `);
-    
+
     document.body.appendChild(modal);
-    
+
     // Get elements
     const input = document.getElementById(DOM_IDS.pwdPromptInput) as HTMLInputElement;
     const confirmInput = document.getElementById(DOM_IDS.pwdConfirmInput) as HTMLInputElement | null;
@@ -107,13 +130,13 @@ export function showPasswordPrompt(options: {
     const cancelBtn = document.getElementById(DOM_IDS.pwdCancelBtn);
     const confirmBtn = document.getElementById(DOM_IDS.pwdConfirmBtn);
     const errorEl = document.getElementById(DOM_IDS.pwdPromptError);
-    
+
     // Show modal with animation
     requestAnimationFrame(() => {
       modal.classList.add('visible');
       input?.focus();
     });
-    
+
     // Toggle password visibility
     toggleBtn?.addEventListener('click', () => {
       const eyeOpen = toggleBtn.querySelector('.eye-open');
@@ -130,7 +153,7 @@ export function showPasswordPrompt(options: {
         eyeClosed?.classList.remove('hidden');
       }
     });
-    
+
     // Show error message
     const showError = (msg: string) => {
       if (errorEl) {
@@ -138,34 +161,34 @@ export function showPasswordPrompt(options: {
         errorEl.classList.remove('hidden');
       }
     };
-    
+
     // Hide and cleanup
     const closeModal = (result: string | null) => {
       modal.classList.remove('visible');
       setTimeout(() => modal.remove(), 200);
       resolve(result);
     };
-    
+
     // Cancel handler
     cancelBtn?.addEventListener('click', () => closeModal(null));
-    
+
     // Confirm handler
     confirmBtn?.addEventListener('click', () => {
       const password = input?.value || '';
-      
+
       // Validation
       if (!password) {
         showError(t('encryption.passwordRequired'));
         input?.focus();
         return;
       }
-      
+
       if (password.length < 6) {
         showError(t('encryption.passwordTooShort'));
         input?.focus();
         return;
       }
-      
+
       if (confirmMode && confirmInput) {
         if (password !== confirmInput.value) {
           showError(t('encryption.passwordMismatch'));
@@ -173,10 +196,17 @@ export function showPasswordPrompt(options: {
           return;
         }
       }
-      
+
+      if (!confirmMode) {
+        // Update cache on successful entry
+        cachedPassword = password;
+        cachedTimestamp = Date.now();
+        console.debug('[EncryptionUI] Password cached for grace period');
+      }
+
       closeModal(password);
     });
-    
+
     // Enter key to confirm
     const handleKeydown = (e: KeyboardEvent) => {
       if (e.key === 'Enter') {
@@ -185,10 +215,10 @@ export function showPasswordPrompt(options: {
         closeModal(null);
       }
     };
-    
+
     input?.addEventListener('keydown', handleKeydown);
     confirmInput?.addEventListener('keydown', handleKeydown);
-    
+
     // Click overlay to close
     modal.querySelector('.modal-overlay')?.addEventListener('click', () => closeModal(null));
   });
@@ -215,12 +245,12 @@ export async function encryptAndSavePrivateKey(
     description: t('encryption.setPasswordDesc'),
     confirmMode: true
   });
-  
+
   if (!password) {
     // User cancelled - save without encryption for now (backward compatible)
     return false;
   }
-  
+
   try {
     const encryptedData = await encryptPrivateKey(privHex, password);
     saveEncryptedKey(accountId, encryptedData);
@@ -250,17 +280,17 @@ export async function getDecryptedPrivateKey(accountId: string): Promise<string 
     }
     return null;
   }
-  
+
   // Prompt for password
   const password = await showPasswordPrompt({
     title: t('encryption.enterPassword'),
     description: t('encryption.enterPasswordDesc')
   });
-  
+
   if (!password) {
     return null;
   }
-  
+
   try {
     return await getPrivateKey(accountId, password);
   } catch (err) {
@@ -291,17 +321,17 @@ export async function getDecryptedPrivateKeyWithPrompt(
     }
     return null;
   }
-  
+
   // Prompt for password with custom message
   const password = await showPasswordPrompt({
     title: title,
     description: description
   });
-  
+
   if (!password) {
     return null;
   }
-  
+
   try {
     return await getPrivateKey(accountId, password);
   } catch (err) {
@@ -320,29 +350,29 @@ export async function checkAndPromptMigration(): Promise<boolean> {
   if (!user || !user.accountId) {
     return false;
   }
-  
+
   const status = checkEncryptionStatus(user);
-  
+
   if (!status.needsMigration) {
     return false; // No migration needed
   }
-  
+
   // Show migration prompt
   const password = await showPasswordPrompt({
     title: t('encryption.migrationTitle'),
     description: t('encryption.migrationDesc'),
     confirmMode: true
   });
-  
+
   if (!password) {
     // User declined migration
     showWarningToast(t('encryption.migrationDesc'));
     return false;
   }
-  
+
   try {
     const result = await migrateToEncrypted(user, password);
-    
+
     if (result.success) {
       // Clear plaintext key from storage
       const updatedUser = clearLegacyKey(user);
@@ -374,7 +404,7 @@ export async function saveUserWithEncryption(
 ): Promise<void> {
   // Save basic user data first
   saveUser(userData);
-  
+
   // If this is a new account with private key and encryption is enabled
   if (promptEncryption && userData.accountId && userData.privHex) {
     // Check if already encrypted
@@ -384,7 +414,7 @@ export async function saveUserWithEncryption(
         userData.accountId,
         userData.privHex
       );
-      
+
       if (encrypted) {
         // Clear plaintext key from storage
         const user = loadUser();
