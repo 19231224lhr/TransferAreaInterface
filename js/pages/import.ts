@@ -12,7 +12,7 @@
 
 import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { importFromPrivHex } from '../services/account';
-import { showErrorToast, showMiniToast } from '../utils/toast.js';
+import { showErrorToast, showToast } from '../utils/toast.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { t } from '../i18n/index.js';
 import { wait } from '../utils/helpers.js';
@@ -27,8 +27,8 @@ import {
   runParallelAnimations,
   type ReactiveState
 } from '../utils/reactive';
-import { 
-  querySingleAddressGroup, 
+import {
+  querySingleAddressGroup,
   isInGuarGroup
 } from '../services/accountQuery';
 import { queryGroupInfoSafe, type GroupInfo } from '../services/group';
@@ -52,16 +52,16 @@ interface ImportPageState {
   showLoader: boolean;
   showResult: boolean;
   showButtons: boolean;
-  
+
   // 私钥可见性
   privKeyVisible: boolean;
-  
+
   // 私钥折叠状态
   privKeyCollapsed: boolean;
-  
+
   // 导入模式
   mode: ImportMode;
-  
+
   // 结果数据
   accountId: string;
   address: string;
@@ -150,26 +150,26 @@ async function checkAddressOrganization(address: string): Promise<{
 } | null> {
   try {
     console.info(`[Import] 🔍 Checking if address ${address} belongs to an organization...`);
-    
+
     const result = await querySingleAddressGroup(address);
-    
+
     if (!result.success) {
       console.warn(`[Import] ⚠️ Failed to query address organization:`, result.error);
       return null;
     }
-    
+
     const addressInfo = result.data;
-    
+
     if (!isInGuarGroup(addressInfo.groupID)) {
       console.info(`[Import] ✓ Address is not in any organization (GroupID: ${addressInfo.groupID})`);
       return null;
     }
-    
+
     console.info(`[Import] ✓ Address belongs to organization: ${addressInfo.groupID}`);
-    
+
     // Query the organization info
     const groupResult = await queryGroupInfoSafe(addressInfo.groupID);
-    
+
     if (groupResult.success) {
       console.info(`[Import] ✓ Got organization info:`, groupResult.data);
       return {
@@ -276,14 +276,14 @@ async function animateResultCollapse(): Promise<void> {
 function updateVisibilityUI(visible: boolean): void {
   const toggle = document.getElementById(DOM_IDS.importToggleVisibility);
   const input = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
-  
+
   if (toggle) {
     const eyeOpen = toggle.querySelector('.eye-open');
     const eyeClosed = toggle.querySelector('.eye-closed');
     eyeOpen?.classList.toggle('hidden', visible);
     eyeClosed?.classList.toggle('hidden', !visible);
   }
-  
+
   if (input) {
     input.type = visible ? 'text' : 'password';
   }
@@ -298,7 +298,7 @@ function updateVisibilityUI(visible: boolean): void {
  */
 function handleVisibilityToggle(): void {
   if (!pageState) return;
-  
+
   const newVisible = !pageState.getValue('privKeyVisible');
   pageState.set({ privKeyVisible: newVisible });
   updateVisibilityUI(newVisible);
@@ -330,13 +330,13 @@ function handleNextClick(): void {
  */
 async function handleCancelClick(): Promise<void> {
   if (!pageState) return;
-  
+
   // 隐藏结果
   await animateResultCollapse();
-  
+
   // 展开表单
   await animateFormExpand();
-  
+
   // 重置状态
   resetImportState('account');
 }
@@ -346,7 +346,7 @@ async function handleCancelClick(): Promise<void> {
  */
 function handlePrivKeyToggle(): void {
   if (!pageState) return;
-  
+
   const newCollapsed = !pageState.getValue('privKeyCollapsed');
   pageState.set({ privKeyCollapsed: newCollapsed });
 }
@@ -359,12 +359,12 @@ async function handleImport(): Promise<void> {
   if (!pageState) {
     pageState = createReactiveState(initialState, stateBindings);
   }
-  
+
   const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   const mode = importBtn?.dataset.mode as ImportMode || 'account';
   const inputEl = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   const priv = inputEl?.value.trim() || '';
-  
+
   // 验证私钥
   const validationError = quickValidate(priv, ['required', 'privateKey']);
   if (validationError) {
@@ -375,16 +375,16 @@ async function handleImport(): Promise<void> {
     }
     return;
   }
-  
+
   const normalized = priv.replace(/^0x/i, '');
-  
+
   // 开始加载
   if (importBtn) {
     importBtn.disabled = true;
     showElementLoading(importBtn, t('common.processing') || '处理中...');
   }
   const loadingId = showLoading(t('modal.importing') || '正在导入...');
-  
+
   try {
     // 更新状态：隐藏结果和按钮
     pageState.set({
@@ -393,27 +393,27 @@ async function handleImport(): Promise<void> {
       showButtons: false,
       mode
     });
-    
+
     if (mode === 'account') {
       // 表单折叠动画
       await animateFormCollapse();
-      
+
       // 显示加载器
       pageState.set({ showLoader: true });
     } else {
       showUnifiedLoading(t('modal.addingWalletAddress'));
     }
-    
+
     const t0 = Date.now();
     const data = await importFromPrivHex(priv);
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) await wait(1000 - elapsed);
-    
+
     // 隐藏加载器
     const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
     pageState.set({ showLoader: false });
-    
+
     if (mode === 'account') {
       // 更新结果数据
       pageState.set({
@@ -424,27 +424,27 @@ async function handleImport(): Promise<void> {
         pubY: data.pubYHex || '',
         privKeyCollapsed: true
       });
-      
+
       // 显示结果
       await animateResultReveal();
       pageState.set({
         showResult: true,
         showButtons: true
       });
-      
+
       // 检查用户是否已存在
       const existingUser = loadUser();
       const addr = (data.address || '').toLowerCase();
-      
+
       let acc: ReturnType<typeof toAccount>;
       if (existingUser && existingUser.accountId) {
         // 用户已存在 - 添加地址到现有账户
         acc = toAccount({ accountId: existingUser.accountId, address: existingUser.address }, existingUser);
-        
+
         // 检查地址是否已存在
-        const addressExists = (acc.wallet?.addressMsg?.[addr]) || 
-                             (existingUser.address && String(existingUser.address).toLowerCase() === addr);
-        
+        const addressExists = (acc.wallet?.addressMsg?.[addr]) ||
+          (existingUser.address && String(existingUser.address).toLowerCase() === addr);
+
         if (addressExists) {
           hideUnifiedOverlay();
           showErrorToast(t('toast.addressExists'), t('modal.operationFailed'));
@@ -463,17 +463,17 @@ async function handleImport(): Promise<void> {
         if (typeof window.PanguPay?.storage?.clearAccountStorage === 'function') {
           window.PanguPay.storage.clearAccountStorage();
         }
-        
-        const accountData = { 
-          accountId: data.accountId, 
-          address: data.address, 
-          privHex: data.privHex, 
-          pubXHex: data.pubXHex, 
-          pubYHex: data.pubYHex 
+
+        const accountData = {
+          accountId: data.accountId,
+          address: data.address,
+          privHex: data.privHex,
+          pubXHex: data.pubXHex,
+          pubYHex: data.pubYHex
         };
         acc = toAccount(accountData, null);
       }
-      
+
       // 添加导入的地址到 wallet.addressMsg
       if (addr && acc.wallet?.addressMsg) {
         acc.wallet.addressMsg[addr] = {
@@ -488,36 +488,39 @@ async function handleImport(): Promise<void> {
           pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
         };
       }
-      
+
       saveUser(acc);
-      
+
       // 更新 header
       const user = loadUser();
       updateHeaderUser(user);
-      
+
       // 检查导入的地址是否已经属于某个担保组织
       // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
       if (addr) {
         console.info(`[Import] Checking if imported address belongs to an organization...`);
         const orgInfo = await checkAddressOrganization(addr);
-        
+
         if (orgInfo) {
           // 地址已经属于某个组织，显示提示但不自动保存
           console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
-          
+
           // 显示提示信息
-          showMiniToast(
-            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) || 
-            `注意：该地址已属于组织 ${orgInfo.groupID}`,
-            'info'
+          // 显示提示信息
+          showToast(
+            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) ||
+            `已属组织 ${orgInfo.groupID}`,
+            'info',
+            '',
+            3000
           );
         }
       }
-      
+
     } else {
       // 钱包模式 - 添加到现有账户
       const u2 = loadUser();
-      if (!u2 || !u2.accountId) { 
+      if (!u2 || !u2.accountId) {
         hideUnifiedOverlay();
         showErrorToast(t('modal.pleaseLoginFirst'), t('modal.operationFailed'));
         // 重置按钮状态
@@ -527,12 +530,12 @@ async function handleImport(): Promise<void> {
           hideElementLoading(importBtn);
         }
         hideLoading(loadingId);
-        return; 
+        return;
       }
-      
+
       const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
       const addr = (data.address || '').toLowerCase();
-      
+
       if (!addr) {
         showUnifiedSuccess(t('toast.importFailed'), t('toast.cannotParseAddress'), () => {
           // 重置按钮状态
@@ -545,9 +548,9 @@ async function handleImport(): Promise<void> {
         }, undefined, true);
         return;
       }
-      
-      const exists = (acc.wallet?.addressMsg?.[addr]) || 
-                     (u2.address && String(u2.address).toLowerCase() === addr);
+
+      const exists = (acc.wallet?.addressMsg?.[addr]) ||
+        (u2.address && String(u2.address).toLowerCase() === addr);
       if (exists) {
         showUnifiedSuccess(t('toast.importFailed'), t('toast.addressExists'), () => {
           // 重置按钮状态
@@ -560,50 +563,50 @@ async function handleImport(): Promise<void> {
         }, undefined, true);
         return;
       }
-      
+
       if (addr && acc.wallet?.addressMsg) {
-        acc.wallet.addressMsg[addr] = { 
-          type: 0, 
-          utxos: {}, 
-          txCers: {}, 
-          value: { totalValue: 0, utxoValue: 0, txCerValue: 0 }, 
-          estInterest: 0, 
-          origin: 'imported', 
+        acc.wallet.addressMsg[addr] = {
+          type: 0,
+          utxos: {},
+          txCers: {},
+          value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+          estInterest: 0,
+          origin: 'imported',
           privHex: (data.privHex || normalized),
           pubXHex: data.pubXHex || '',  // 保存公钥 X 坐标
           pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
         };
       }
-      
+
       saveUser(acc);
       updateWalletBrief();
-      
+
       // 检查导入的地址是否已经属于某个担保组织
       // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
       if (addr) {
         console.info(`[Import] Checking if imported address belongs to an organization...`);
         const orgInfo = await checkAddressOrganization(addr);
-        
+
         if (orgInfo) {
           // 地址已经属于某个组织，显示提示但不自动保存
           console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
-          
+
           // 显示成功提示，包含组织信息提示
           showUnifiedSuccess(
-            t('toast.importSuccess'), 
-            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) || 
-            `地址导入成功！注意：该地址已属于担保组织 ${orgInfo.groupID}，加入组织时请选择该组织。`, 
+            t('toast.importSuccess'),
+            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) ||
+            `地址导入成功！注意：该地址已属于担保组织 ${orgInfo.groupID}，加入组织时请选择该组织。`,
             () => {
               if (typeof window.PanguPay?.router?.routeTo === 'function') {
                 window.PanguPay.router.routeTo('#/entry');
               }
-            }, 
+            },
             undefined
           );
           return;
         }
       }
-      
+
       showUnifiedSuccess(t('toast.importSuccess'), t('toast.importSuccessDesc'), () => {
         if (typeof window.PanguPay?.router?.routeTo === 'function') {
           window.PanguPay.router.routeTo('#/entry');
@@ -615,23 +618,23 @@ async function handleImport(): Promise<void> {
     const errorMsg = (err as Error).message || t('modal.cannotRecognizeKey') || '无法识别私钥';
     showErrorToast(errorMsg, t('modal.importFailed') || '导入失败');
     console.error(err);
-    
+
     // 隐藏加载器
     const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
-    
+
     // 恢复表单状态
     pageState.set({
       isLoading: false,
       showLoader: false
     });
-    
+
     // 展开表单
     await animateFormExpand();
-    
+
   } finally {
     pageState?.set({ isLoading: false });
-    
+
     // 确保按钮状态被重置
     if (importBtn) {
       importBtn.disabled = false;
@@ -639,7 +642,7 @@ async function handleImport(): Promise<void> {
       hideElementLoading(importBtn);
     }
     hideLoading(loadingId);
-    
+
     // 确保加载器隐藏
     const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
@@ -657,18 +660,18 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   // 重置响应式状态
   pageState?.reset();
   pageState?.set({ mode });
-  
+
   // 重置导入按钮模式
   const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   if (importBtn) importBtn.dataset.mode = mode;
-  
+
   // 重置表单输入
   const inputEl = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   if (inputEl) {
     inputEl.value = '';
     inputEl.type = 'password';
   }
-  
+
   // 重置钱包简介
   const brief = document.getElementById(DOM_IDS.walletBriefList);
   const toggleBtn = document.getElementById(DOM_IDS.briefToggleBtn);
@@ -677,25 +680,25 @@ export function resetImportState(mode: ImportMode = 'account'): void {
     brief.replaceChildren();
   }
   if (toggleBtn) toggleBtn.classList.add('hidden');
-  
+
   // 重置错误提示
   const addrError = document.getElementById(DOM_IDS.addrError);
   if (addrError) {
     addrError.textContent = '';
     addrError.classList.add('hidden');
   }
-  
+
   const addrPrivHex = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
   if (addrPrivHex) addrPrivHex.value = '';
-  
+
   // 重置可见性 UI
   updateVisibilityUI(false);
-  
+
   // 重置表单卡片状态
   const formCard = document.querySelector('.import-form-card');
   const tipBlock = document.querySelector('.import-tip-block');
   const resultEl = document.getElementById(DOM_IDS.importResult);
-  
+
   formCard?.classList.remove('import-form-card--hidden', 'collapsing', 'expanding');
   tipBlock?.classList.remove('import-tip-block--hidden', 'collapsing', 'expanding');
   resultEl?.classList.add('hidden');
@@ -719,9 +722,9 @@ function addEvent<K extends keyof HTMLElementEventMap>(
   handler: (e: HTMLElementEventMap[K]) => void
 ): void {
   if (!element) return;
-  
+
   element.addEventListener(event, handler as EventListener);
-  
+
   eventCleanups.push(() => {
     element.removeEventListener(event, handler as EventListener);
   });
@@ -733,7 +736,7 @@ function addEvent<K extends keyof HTMLElementEventMap>(
 function bindEvents(): void {
   // 先清理旧的事件绑定
   cleanupEvents();
-  
+
   // 导入按钮
   const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
   if (importBtn) {
@@ -741,23 +744,23 @@ function bindEvents(): void {
     importBtn.classList.remove('is-loading');
     addEvent(importBtn, 'click', handleImport);
   }
-  
+
   // 私钥可见性切换
   const importToggleVisibility = document.getElementById(DOM_IDS.importToggleVisibility);
   addEvent(importToggleVisibility, 'click', handleVisibilityToggle);
-  
+
   // 返回按钮
   const importBackBtn = document.getElementById(DOM_IDS.importBackBtn);
   addEvent(importBackBtn, 'click', handleBackClick);
-  
+
   // 下一步按钮
   const importNextBtn = document.getElementById(DOM_IDS.importNextBtn);
   addEvent(importNextBtn, 'click', handleNextClick);
-  
+
   // 取消按钮
   const importCancelBtn = document.getElementById(DOM_IDS.importCancelBtn);
   addEvent(importCancelBtn, 'click', handleCancelClick);
-  
+
   // 私钥折叠切换
   const importPrivateKeyToggle = document.getElementById(DOM_IDS.importPrivateKeyToggle);
   addEvent(importPrivateKeyToggle, 'click', handlePrivKeyToggle);
@@ -769,22 +772,22 @@ function bindEvents(): void {
 export function initImportPage(): void {
   // 清理旧的事件绑定
   cleanupEvents();
-  
+
   // 销毁旧实例
   pageState?.destroy();
-  
+
   // 创建新的响应式状态
   pageState = createReactiveState(initialState, stateBindings);
-  
+
   // 重置页面状态
   resetImportState('account');
-  
+
   // 设置表单验证
   addInlineValidation('#importPrivHex', [
     { validator: 'required', message: t('modal.pleaseEnterPrivateKey') || '请输入私钥' },
     { validator: 'privateKey', message: t('modal.privateKeyFormatError') || '私钥格式错误，需要64位十六进制' }
   ], { showOnInput: true, debounceMs: 200 });
-  
+
   // 绑定事件
   bindEvents();
 }

@@ -42,6 +42,10 @@ export default {
   'comNode.queryFailed': '查询 ComNode 端点失败',
   'comNode.connectionFailed': '无法连接到区块链节点，请检查网络连接或节点是否启动',
   'comNode.connected': '已连接到担保委员会节点',
+  'assignNode.connected': '已连接到担保组织节点',
+  'assignNode.disconnected': '已断开与担保组织的连接',
+  'bootNode.connected': '成功连接区块链网络',
+  'bootNode.disconnected': '无法连接区块链网络',
   'comNode.notAvailable': 'ComNode 端点不可用，请稍后重试',
   'comNode.refreshing': '正在刷新节点连接...',
 
@@ -535,7 +539,7 @@ export default {
   'import.addressAlreadyInOrg': '地址已属于组织 {groupID}，已自动关联',
   'import.addressAlreadyInOrgDesc': '地址导入成功！该地址已属于担保组织 {groupID}，已自动关联。',
   'import.checkingOrg': '正在检查地址所属组织...',
-  'import.addressBelongsToOrgHint': '注意：该地址已属于担保组织 {groupID}，加入组织时请选择该组织。',
+  'import.addressBelongsToOrgHint': '已属组织 {groupID}，请加入该组',
 
   // 交易发送相关
   'transfer.confirmSendTx': '确认发送交易',

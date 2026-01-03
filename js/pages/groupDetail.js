@@ -11,7 +11,7 @@ import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/st
 import { t } from '../i18n/index.js';
 import { showModalTip, showConfirmModal, showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
-import { showMiniToast } from '../utils/toast.js';
+import { showMiniToast, showStatusToast } from '../utils/toast.js';
 import { routeTo } from '../router';
 import { DOM_IDS, idSelector } from '../config/domIds';
 import { leaveGuarGroup, queryGroupInfoSafe } from '../services/group';
@@ -25,19 +25,19 @@ let currentTab = 'myorg';
 export function updateGroupDetailDisplay() {
   const g1 = getJoinedGroup();
   const joined1 = !!(g1 && g1.groupID);
-  
+
   const groupJoinedPane = document.getElementById(DOM_IDS.groupJoinedPane);
   const groupEmptyPane = document.getElementById(DOM_IDS.groupEmptyPane);
-  
+
   if (joined1) {
     if (groupJoinedPane) groupJoinedPane.classList.remove('hidden');
     if (groupEmptyPane) groupEmptyPane.classList.add('hidden');
-    
+
     const groupDetailID = document.getElementById(DOM_IDS.groupDetailID);
     const groupDetailAggre = document.getElementById(DOM_IDS.groupDetailAggre);
     const groupDetailAssign = document.getElementById(DOM_IDS.groupDetailAssign);
     const groupDetailPledge = document.getElementById(DOM_IDS.groupDetailPledge);
-    
+
     if (groupDetailID) groupDetailID.textContent = g1.groupID || '-';
     if (groupDetailAggre) groupDetailAggre.textContent = g1.aggreNode || '-';
     if (groupDetailAssign) groupDetailAssign.textContent = g1.assignNode || '-';
@@ -53,16 +53,16 @@ export function updateGroupDetailDisplay() {
  */
 function switchTab(tabName) {
   currentTab = tabName;
-  
+
   const tabs = document.getElementById(DOM_IDS.groupTabs);
   const myOrgPane = document.getElementById(DOM_IDS.groupMyOrgPane);
   const searchPane = document.getElementById(DOM_IDS.groupSearchPane);
-  
+
   // Update tabs data attribute for slider animation
   if (tabs) {
     tabs.dataset.active = tabName;
   }
-  
+
   // Update tab button states
   const tabButtons = document.querySelectorAll(`${idSelector(DOM_IDS.groupTabs)} .group-tab`);
   tabButtons.forEach(btn => {
@@ -72,7 +72,7 @@ function switchTab(tabName) {
       btn.classList.remove('group-tab--active');
     }
   });
-  
+
   // Show/hide panels
   if (tabName === 'myorg') {
     if (myOrgPane) myOrgPane.classList.remove('hidden');
@@ -95,44 +95,44 @@ async function handleSearch() {
   const notFoundEl = document.getElementById(DOM_IDS.groupSearchNotFound);
   const resultEl = document.getElementById(DOM_IDS.groupSearchResult);
   const emptyEl = document.getElementById(DOM_IDS.groupSearchEmpty);
-  
+
   const groupId = searchInput?.value?.trim();
   if (!groupId) return;
-  
+
   // Validate input (8 digits)
   if (!/^\d{8}$/.test(groupId)) {
     showMiniToast(t('groupDetail.invalidOrgId') || '请输入8位数字组织编号', 'error');
     return;
   }
-  
+
   // Show loading state
   if (loadingEl) loadingEl.classList.remove('hidden');
   if (notFoundEl) notFoundEl.classList.add('hidden');
   if (resultEl) resultEl.classList.add('hidden');
   if (emptyEl) emptyEl.classList.add('hidden');
   if (searchBtn) searchBtn.disabled = true;
-  
+
   try {
     // Always use BootNode API to query other organizations
     // AssignNode's group-info endpoint only returns current group info, not other groups
     console.debug(`[GroupDetail] Querying group ${groupId} via BootNode API`);
     const result = await queryGroupInfoSafe(groupId);
-    
+
     // Hide loading
     if (loadingEl) loadingEl.classList.add('hidden');
     if (searchBtn) searchBtn.disabled = false;
-    
+
     if (result.success && result.data) {
       // Show result
       if (resultEl) resultEl.classList.remove('hidden');
-      
+
       const idEl = document.getElementById(DOM_IDS.groupSearchResultID);
       const aggreEl = document.getElementById(DOM_IDS.groupSearchResultAggre);
       const assignEl = document.getElementById(DOM_IDS.groupSearchResultAssign);
       const aggrAPIEl = document.getElementById(DOM_IDS.groupSearchResultAggrAPI);
       const assignAPIEl = document.getElementById(DOM_IDS.groupSearchResultAssignAPI);
       const pledgeEl = document.getElementById(DOM_IDS.groupSearchResultPledge);
-      
+
       if (idEl) idEl.textContent = result.data.groupID || groupId;
       if (aggreEl) aggreEl.textContent = result.data.aggreNode || '-';
       if (assignEl) assignEl.textContent = result.data.assignNode || '-';
@@ -161,28 +161,28 @@ function handleSearchInputChange() {
   const emptyEl = document.getElementById(DOM_IDS.groupSearchEmpty);
   const notFoundEl = document.getElementById(DOM_IDS.groupSearchNotFound);
   const resultEl = document.getElementById(DOM_IDS.groupSearchResult);
-  
+
   let value = searchInput?.value || '';
-  
+
   // Only allow digits, remove any non-digit characters
   const digitsOnly = value.replace(/\D/g, '');
-  
+
   // Limit to 8 digits
   const limitedValue = digitsOnly.slice(0, 8);
-  
+
   // Update input value if it was modified
   if (searchInput && value !== limitedValue) {
     searchInput.value = limitedValue;
     value = limitedValue;
   }
-  
+
   // Enable button only when exactly 8 digits
   const isValid = /^\d{8}$/.test(value);
-  
+
   if (searchBtn) {
     searchBtn.disabled = !isValid;
   }
-  
+
   // Reset states when input changes
   if (value.length === 0) {
     if (emptyEl) emptyEl.classList.remove('hidden');
@@ -200,20 +200,20 @@ export async function handleLeaveOrg() {
     showModalTip(t('common.notLoggedIn'), t('modal.pleaseLoginFirst'), true);
     return;
   }
-  
+
   // Get current group info
   const group = getJoinedGroup();
   if (!group || !group.groupID) {
     showModalTip(t('toast.notInOrg') || '未加入组织', t('toast.notInOrgDesc') || '您当前未加入任何担保组织', true);
     return;
   }
-  
+
   try {
     // Show loading animation
     showUnifiedLoading(t('join.leavingOrg') || '正在退出组织...');
-    
+
     console.info(`[GroupDetail] 🚀 Attempting to leave organization ${group.groupID}...`);
-    
+
     // Build GroupInfo for API call
     const groupInfo = {
       groupID: group.groupID,
@@ -226,13 +226,13 @@ export async function handleLeaveOrg() {
       assignAPIEndpoint: group.assignAPIEndpoint,
       aggrAPIEndpoint: group.aggrAPIEndpoint
     };
-    
+
     // Call leave API
     const result = await leaveGuarGroup(group.groupID, groupInfo);
-    
+
     // Hide loading
     hideUnifiedOverlay();
-    
+
     if (!result.success) {
       // Check if user cancelled password input
       if (result.error === 'USER_CANCELLED') {
@@ -240,7 +240,7 @@ export async function handleLeaveOrg() {
         showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
         return;
       }
-      
+
       console.error(`[GroupDetail] ✗ Failed to leave organization:`, result.error);
       showUnifiedError(
         t('join.leaveFailed') || '退出失败',
@@ -248,15 +248,15 @@ export async function handleLeaveOrg() {
       );
       return;
     }
-    
+
     console.info(`[GroupDetail] ✓ Successfully left organization ${group.groupID}`);
-    
+
     // Clear local storage
     if (u.accountId) {
       saveUser({ accountId: u.accountId, orgNumber: '', guarGroup: null });
     }
     clearGuarChoice();
-    
+
     // Update UI
     if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
       window.PanguPay.wallet.updateWalletBrief();
@@ -267,14 +267,17 @@ export async function handleLeaveOrg() {
     if (typeof window.updateOrgDisplay === 'function') {
       window.updateOrgDisplay();
     }
-    
+
     showModalTip(t('toast.leftOrg'), t('toast.leftOrgDesc'), false);
-    
+
+    // Show disconnection status toast
+    showStatusToast(t('assignNode.disconnected') || '已断开与担保组织的连接', 'warning');
+
     // Navigate back to main
     if (typeof window.PanguPay?.router?.routeTo === 'function') {
       window.PanguPay.router.routeTo('#/main');
     }
-    
+
   } catch (error) {
     console.error(`[GroupDetail] ✗ Unexpected error:`, error);
     hideUnifiedOverlay();
@@ -290,7 +293,7 @@ export async function handleLeaveOrg() {
  */
 export function initGroupDetailPage() {
   updateGroupDetailDisplay();
-  
+
   // Initialize tab switching
   const tabButtons = document.querySelectorAll(`${idSelector(DOM_IDS.groupTabs)} .group-tab`);
   tabButtons.forEach(btn => {
@@ -302,11 +305,11 @@ export function initGroupDetailPage() {
       });
     }
   });
-  
+
   // Initialize search functionality
   const searchInput = document.getElementById(DOM_IDS.groupDetailSearch);
   const searchBtn = document.getElementById(DOM_IDS.groupDetailSearchBtn);
-  
+
   if (searchInput && !searchInput.dataset._groupBind) {
     searchInput.dataset._groupBind = 'true';
     searchInput.addEventListener('input', handleSearchInputChange);
@@ -316,12 +319,12 @@ export function initGroupDetailPage() {
       }
     });
   }
-  
+
   if (searchBtn && !searchBtn.dataset._groupBind) {
     searchBtn.dataset._groupBind = 'true';
     searchBtn.addEventListener('click', handleSearch);
   }
-  
+
   // Bind leave button event
   const leaveBtn = document.getElementById(DOM_IDS.groupLeaveBtn);
   if (leaveBtn && !leaveBtn.dataset._groupBind) {
@@ -332,7 +335,7 @@ export function initGroupDetailPage() {
       if (modal) modal.classList.remove('hidden');
     });
   }
-  
+
   // Bind confirm leave button
   const confirmLeaveBtn = document.getElementById(DOM_IDS.confirmLeaveBtn);
   if (confirmLeaveBtn && !confirmLeaveBtn.dataset._groupBind) {
@@ -343,7 +346,7 @@ export function initGroupDetailPage() {
       handleLeaveOrg();
     });
   }
-  
+
   // Bind cancel leave button
   const cancelLeaveBtn = document.getElementById(DOM_IDS.cancelLeaveBtn);
   if (cancelLeaveBtn && !cancelLeaveBtn.dataset._groupBind) {
@@ -353,7 +356,7 @@ export function initGroupDetailPage() {
       if (modal) modal.classList.add('hidden');
     });
   }
-  
+
   // Bind copy buttons
   const groupCopyBtns = document.querySelectorAll(`${idSelector(DOM_IDS.groupDetailCard)} .info-copy-btn`);
   groupCopyBtns.forEach(btn => {
@@ -372,7 +375,7 @@ export function initGroupDetailPage() {
       });
     }
   });
-  
+
   // Bind back button
   const backBtn = document.getElementById(DOM_IDS.groupDetailBackBtn);
   if (backBtn && !backBtn.dataset._groupBind) {
@@ -383,7 +386,7 @@ export function initGroupDetailPage() {
       }
     });
   }
-  
+
   // Bind join now button (for empty state)
   const joinNowBtn = document.getElementById(DOM_IDS.groupJoinNowBtn);
   if (joinNowBtn && !joinNowBtn.dataset._groupBind) {
@@ -394,7 +397,7 @@ export function initGroupDetailPage() {
       }
     });
   }
-  
+
   // Initialize additional group detail buttons (copied from backup)
   initGroupDetailButtons();
 }
@@ -407,7 +410,7 @@ function initGroupDetailButtons() {
   const groupBackBtn = document.getElementById(DOM_IDS.groupBackBtn);
   const groupJoinBtn = document.getElementById(DOM_IDS.groupJoinBtn);
   const groupEmptyBackBtn = document.getElementById(DOM_IDS.groupEmptyBackBtn);
-  
+
   if (groupExitBtn && !groupExitBtn.dataset._bind) {
     groupExitBtn.addEventListener('click', async () => {
       const u3 = loadUser();
@@ -422,27 +425,27 @@ function initGroupDetailButtons() {
         t('common.cancel')
       );
       if (!confirmed) return;
-      
+
       // Call the API-backed leave function
       await handleLeaveOrg();
     });
     groupExitBtn.dataset._bind = '1';
   }
-  
+
   if (groupBackBtn && !groupBackBtn.dataset._bind) {
     groupBackBtn.addEventListener('click', () => {
       routeTo('#/main');
     });
     groupBackBtn.dataset._bind = '1';
   }
-  
+
   if (groupJoinBtn && !groupJoinBtn.dataset._bind) {
     groupJoinBtn.addEventListener('click', () => {
       routeTo('#/join-group');
     });
     groupJoinBtn.dataset._bind = '1';
   }
-  
+
   if (groupEmptyBackBtn && !groupEmptyBackBtn.dataset._bind) {
     groupEmptyBackBtn.addEventListener('click', () => {
       routeTo('#/main');

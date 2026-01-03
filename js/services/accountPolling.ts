@@ -19,7 +19,7 @@ import { parseBigIntJson } from '../utils/bigIntJson';
 import { API_ENDPOINTS } from '../config/api';
 import { saveUser, getJoinedGroup, User } from '../utils/storage';
 import { store, selectUser } from '../utils/store.js';
-import { showSuccessToast, showMiniToast, showErrorToast } from '../utils/toast.js';
+import { showSuccessToast, showMiniToast, showErrorToast, showStatusToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
 import { renderWallet, refreshSrcAddrList, updateWalletBrief } from './wallet';
@@ -762,6 +762,8 @@ function startSSESync(userId: string, group: any): void {
     eventSource.onopen = () => {
       console.info('[AccountSSE] Connection opened');
       consecutiveFailures = 0;
+      // Show connection status toast
+      showStatusToast(t('assignNode.connected') || '已连接到担保组织节点', 'success');
     };
 
     eventSource.onerror = (err) => {

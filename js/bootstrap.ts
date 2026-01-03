@@ -7,7 +7,7 @@
 
 import { t, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
 import { initUserStateFromStorage, User } from './utils/storage';
-import { showErrorToast } from './utils/toast.js';
+import { showErrorToast, showStatusToast } from './utils/toast.js';
 import { initErrorBoundary } from './utils/security';
 import performanceModeManager from './utils/performanceMode.js';
 import performanceMonitor from './utils/performanceMonitor.js';
@@ -172,29 +172,25 @@ function setupServiceWorkerUpdates(): void {
 async function performGatewayHealthCheck(): Promise<void> {
   try {
     const isHealthy = await performStartupHealthCheck();
-    
-    if (!isHealthy) {
-      // Import toast lazily to avoid circular dependency
-      const { showErrorToast } = await import('./utils/toast.js');
-      
-      // Construct detailed error message with API endpoints
-      const errorMessage = [
-        t('gateway.unavailable'),
-        '',
-        t('gateway.healthCheckEndpoint'),
-        t('gateway.bootNodeEndpoint')
-      ].join('\n');
-      
-      showErrorToast(
-        errorMessage,
-        t('gateway.error')
+
+    if (isHealthy) {
+      // Show success connection toast
+      showStatusToast(t('bootNode.connected') || '成功连接区块链网络', 'success');
+    } else {
+      // Show failure connection toast (Status Pill Style)
+      // Import toast lazily to avoid circular dependency (although we imported it above, safety first if inside logic)
+      const { showStatusToast } = await import('./utils/toast.js');
+
+      showStatusToast(
+        t('bootNode.disconnected') || '无法连接区块链网络',
+        'error'
       );
     }
   } catch (error) {
     console.warn('[Bootstrap] Gateway health check error:', error);
     // Don't show toast for check errors, just log
   }
-  
+
   // Subscribe to future status changes
   onGatewayStatusChange((status) => {
     if (!status.isOnline && status.errorMessage) {
@@ -374,10 +370,10 @@ function init(): void {
     const flushUi = () => {
       scheduled = false;
       const u = selectUser(store.getState()) as User | null;
-      
+
       // Single Source of Truth: All UI updates driven by Store changes
       // This ensures UI and state are always in sync
-      
+
       try {
         updateHeaderUser(u);
       } catch {
@@ -386,16 +382,16 @@ function init(): void {
 
       // Wallet/Org panels: safe no-op on pages where elements are absent
       const pp = window.PanguPay;
-      
+
       // Organization panel
       try { pp?.wallet?.refreshOrgPanel?.(); } catch { }
-      
+
       // Source address list for transfer
       try { pp?.wallet?.refreshSrcAddrList?.(); } catch { }
-      
+
       // Wallet brief/summary (entry page)
       try { pp?.wallet?.updateWalletBrief?.(); } catch { }
-      
+
       // Currency display (PGC/BTC/ETH badges)
       try {
         const updateCurrency = (window as any).__updateCurrencyDisplay;
@@ -403,7 +399,7 @@ function init(): void {
           updateCurrency(u);
         }
       } catch { }
-      
+
       // Gas badge
       try {
         const updateGas = (window as any).__updateTotalGasBadge;
@@ -414,10 +410,10 @@ function init(): void {
 
       // Charts
       try { pp?.charts?.updateWalletChart?.(u); } catch { }
-      
+
       // Address card balances (实时更新地址卡片余额)
       try { updateAllAddressCardBalances(u); } catch { }
-      
+
       // Note: We intentionally do NOT call renderWallet() here because:
       // 1. It would re-render the entire address list, collapsing expanded cards
       // 2. Address card updates are handled incrementally by renderWallet's internal logic
@@ -452,8 +448,8 @@ function init(): void {
     if (u && u.accountId) {
       initScreenLock({
         lockOnStart: true,
-        onLock: () => {},
-        onUnlock: () => {}
+        onLock: () => { },
+        onUnlock: () => { }
       });
     }
   });
