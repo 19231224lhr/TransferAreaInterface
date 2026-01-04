@@ -392,6 +392,29 @@ export function getTXHash(tx: Transaction): number[] {
   // Go 的 []byte 序列化为 Base64，所以前端也必须这样做
   convertByteArraysToBase64(copy);
 
+  // 3.6 ⚠️ 重要：过滤 ValueDivision 和 NewValueDiv 中的 0 值
+  // 这必须与发送给后端的 JSON (serializeUserNewTX) 以及后端的验证逻辑保持一致
+  if (copy.ValueDivision && typeof copy.ValueDivision === 'object') {
+    const clean: Record<string, number> = {};
+    for (const k of Object.keys(copy.ValueDivision)) {
+      const val = copy.ValueDivision[k];
+      if (typeof val === 'number' && val > 0) {
+        clean[k] = val;
+      }
+    }
+    copy.ValueDivision = clean;
+  }
+  if (copy.NewValueDiv && typeof copy.NewValueDiv === 'object') {
+    const clean: Record<string, number> = {};
+    for (const k of Object.keys(copy.NewValueDiv)) {
+      const val = copy.NewValueDiv[k];
+      if (typeof val === 'number' && val > 0) {
+        clean[k] = val;
+      }
+    }
+    copy.NewValueDiv = clean;
+  }
+
   // 4. 序列化（对 ValueDivision, NewValueDiv, BackAssign 排序）
   const jsonStr = serializeToJSON(copy, ['ValueDivision', 'NewValueDiv', 'BackAssign']);
 
@@ -500,13 +523,20 @@ export function signUserNewTX(
 
   // 4. 递归处理嵌套的 TX 对象中的 map 字段
   if (copy.TX) {
-    // 对 TX 内部的 map 字段排序
+    // 对 TX 内部的 map 字段排序，同时过滤 ValueDivision 和 NewValueDiv 中的 0 值
+    // ⚠️ 重要：此逻辑必须与 serializeUserNewTX 保持一致！
     const mapFields = ['ValueDivision', 'NewValueDiv', 'BackAssign'];
     for (const field of mapFields) {
       if (copy.TX[field] && typeof copy.TX[field] === 'object') {
         const sorted: Record<string, unknown> = {};
         for (const k of Object.keys(copy.TX[field]).sort()) {
-          sorted[k] = copy.TX[field][k];
+          const val = copy.TX[field][k];
+          // 对 ValueDivision 和 NewValueDiv 过滤 0 值
+          if ((field === 'ValueDivision' || field === 'NewValueDiv') &&
+            typeof val === 'number' && val <= 0) {
+            continue;
+          }
+          sorted[k] = val;
         }
         copy.TX[field] = sorted;
       }
@@ -1320,7 +1350,7 @@ export async function buildTransaction(
       FromAddress: address,
       IsGuarMake: false,
       IsCommitteeMake: false,
-      IsCrossChain: isCrossChain,
+      IsCrossChain: false, // 必须为 false：这是 UTXO -> Light 交易，Input 消耗的是本地 UTXO，不是跨链铸币
       // ⚠️ 重要：字段顺序必须与 Go 结构体一致！
       // Go: InputSignature 在 TXOutputHash 前面
       InputSignature: signatureToJSON(signature),
@@ -1374,7 +1404,7 @@ export async function buildTransaction(
     Size: 0,   // 后端会重新计算
     Version: 1.0,
     GuarantorGroup: guarGroupID,
-    TXType: txType,  // 0=普通转账, 1=使用了TXCer
+    TXType: isCrossChain ? 6 : txType,  // 6=跨链, 0=普通转账, 1=使用了TXCer
     Value: totalValue,
     ValueDivision: requiredAmounts,
     NewValue: 0,
@@ -1474,7 +1504,12 @@ export function serializeUserNewTX(userNewTX: UserNewTX): string {
       if (copy.TX[field] && typeof copy.TX[field] === 'object') {
         const sorted: Record<string, unknown> = {};
         for (const k of Object.keys(copy.TX[field]).sort()) {
-          sorted[k] = copy.TX[field][k];
+          const val = copy.TX[field][k];
+          // Filter out zero values to satisfy backend strict length checks (e.g. for cross-chain TX)
+          if (typeof val === 'number' && val <= 0) {
+            continue;
+          }
+          sorted[k] = val;
         }
         copy.TX[field] = sorted;
       }

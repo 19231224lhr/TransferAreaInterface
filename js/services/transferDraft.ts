@@ -233,9 +233,22 @@ async function applyDraft(draft: TransferDraft): Promise<void> {
   setInputValue(DOM_IDS.chAddrETH, draft.advanced?.chAddrETH ?? '');
 
   const chk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
-  if (chk) chk.checked = !!draft.advanced?.useTXCerChk;
+  // Default to true (checked) if no draft value exists
+  if (chk) chk.checked = draft.advanced?.useTXCerChk ?? true;
 
   setInputValue(DOM_IDS.tfMode, draft.advanced?.tfMode ?? 'quick');
+
+  // Sync UI tabs with restored mode
+  // We need to trigger a click on the tab to ensure all UI states (like field visibility) are updated
+  const restoredMode = draft.advanced?.tfMode || 'quick';
+  const modeTabsContainer = document.getElementById(DOM_IDS.transferModeTabs);
+  if (modeTabsContainer) {
+    const tab = modeTabsContainer.querySelector(`.transfer-mode-tab[data-mode="${restoredMode}"]`);
+    if (tab) {
+      (tab as HTMLElement).click();
+    }
+  }
+
   // Keep the hidden select consistent with the checkbox state.
   setInputValue(DOM_IDS.useTXCer, chk?.checked ? 'true' : (draft.advanced?.useTXCer ?? 'true'));
   setInputValue(DOM_IDS.isPledge, draft.advanced?.isPledge ?? 'false');

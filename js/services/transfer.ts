@@ -7,7 +7,7 @@
 import { t } from '../i18n/index.js';
 import { loadUser, User, AddressData, getJoinedGroup } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
-import { showModalTip, showConfirmModal } from '../ui/modal';
+import { showConfirmModal } from '../ui/modal';
 import { BuildTXInfo } from './transaction';
 import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX, waitForTXConfirmation, TXStatusResponse } from './txBuilder';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
@@ -61,7 +61,7 @@ function normalizeAddrInput(addr: string): string {
 }
 
 /**
- * Show transaction validation error
+ * Show transaction validation error as a toast notification
  */
 function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: string = '参数校验失败'): void {
   const txErr = document.getElementById(DOM_IDS.txError);
@@ -69,7 +69,8 @@ function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: 
     txErr.textContent = msg;
     txErr.classList.remove('hidden');
   }
-  showModalTip(title, msg, true);
+  // Use toast notification instead of modal popup for better UX
+  showToast(msg, 'error', title);
   if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
 }
 
@@ -79,6 +80,18 @@ function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: 
 function getWalletSnapshot(): WalletSnapshot {
   const u0 = loadUser();
   let walletMap = (u0 && u0.wallet && u0.wallet.addressMsg) || {};
+
+  // Debug: Log all address gas values
+  console.debug('[Transfer] getWalletSnapshot - address gas values:',
+    Object.entries(walletMap).map(([addr, meta]) => ({
+      addr: addr.slice(0, 10) + '...',
+      EstInterest: (meta as any).EstInterest,
+      estInterest: (meta as any).estInterest,
+      gas: (meta as any).gas,
+      computed: readAddressInterest(meta as any)
+    }))
+  );
+
   const getWalletGasSum = (map: Record<string, AddressData>): number => Object.keys(map).reduce((sum, addr) => {
     const meta = map[addr];
     return sum + readAddressInterest(meta);
@@ -135,13 +148,15 @@ export function updateTransferButtonState(): void {
   const user = loadUser();
   const hasJoined = !!(guarGroup && guarGroup.groupID && (user?.orgNumber || user?.guarGroup?.groupID));
 
-  // Get the mode selector to check if it's quick transfer
+  // Get the mode selector to check transfer type
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
   const currentMode = tfMode?.value || 'quick';
-  const isQuickTransfer = currentMode === 'quick';
+  // Allow both 'quick' (快速转账) and 'cross' (跨链转账) modes
+  // Only 'pledge' (质押交易) is disabled for now
+  const isSupportedMode = currentMode === 'quick' || currentMode === 'cross';
 
-  // Enable button only if user has joined org AND is using quick transfer mode
-  const shouldEnable = hasJoined && isQuickTransfer;
+  // Enable button only if user has joined org AND is using a supported transfer mode
+  const shouldEnable = hasJoined && isSupportedMode;
 
   tfBtn.disabled = !shouldEnable;
 
@@ -153,8 +168,8 @@ export function updateTransferButtonState(): void {
     tfBtn.classList.add('btn-disabled');
     if (!hasJoined) {
       tfBtn.title = t('transfer.joinOrgFirst') || '请先加入担保组织后才能发送交易';
-    } else if (!isQuickTransfer) {
-      tfBtn.title = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型';
+    } else if (!isSupportedMode) {
+      tfBtn.title = t('transfer.pledgeNotSupported') || '质押交易功能暂未开放';
     }
   }
 }
@@ -188,6 +203,15 @@ export function initTransferSubmit(): void {
     if (!useTXCer || !useTXCerChk) return;
     useTXCer.value = useTXCerChk.checked ? 'true' : 'false';
   };
+
+  // Ensure useTXCerChk is checked by default for quick transfer mode
+  if (useTXCerChk && !useTXCerChk.checked) {
+    const currentMode = tfMode?.value || 'quick';
+    if (currentMode === 'quick' || currentMode === 'pledge') {
+      useTXCerChk.checked = true;
+    }
+  }
+
   syncUseTXCer();
   if (useTXCerChk) {
     useTXCerChk.addEventListener('change', syncUseTXCer);
@@ -311,6 +335,15 @@ export function initTransferSubmit(): void {
           return;
         }
 
+        // Cross-chain specific: Eth-style address validation (0x + 40 hex chars)
+        if (isCross) {
+          const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/i;
+          if (!ethAddressRegex.test(to)) {
+            showTxValidationError(t('tx.invalidEthAddress') || '跨链地址必须为以太坊格式 (0x...)', toEl, t('tx.crossChainAddressFormat') || '地址格式错误');
+            return;
+          }
+        }
+
         // Currency validation
         if (![0, 1, 2].includes(mt)) {
           showTxValidationError(t('transfer.currency'), null, t('tx.currencyError'));
@@ -324,6 +357,12 @@ export function initTransferSubmit(): void {
           return;
         }
 
+        // Cross-chain specific: Amount must be integer
+        if (isCross && !Number.isInteger(val)) {
+          showTxValidationError(t('tx.crossChainIntegerAmount') || '跨链金额必须为整数', valEl, t('tx.amountMustBeInteger') || '金额错误');
+          return;
+        }
+
         // Organization ID validation using security.ts
         if (gid) {
           const orgValidation = validateOrgId(gid);
@@ -333,8 +372,9 @@ export function initTransferSubmit(): void {
           }
         }
 
-        // Public key validation
-        if (!pubOk) {
+        // Public key validation - skip for cross-chain transactions
+        // Cross-chain transactions don't need recipient public key as per backend logic
+        if (!isCross && !pubOk) {
           showTxValidationError(t('transfer.publicKey'), pubEl, t('tx.publicKeyFormatError'));
           return;
         }
@@ -357,15 +397,21 @@ export function initTransferSubmit(): void {
           return;
         }
 
+        // For cross-chain transactions, use empty/default values for fields not supported by backend
+        const effectivePx = isCross ? '' : px;
+        const effectivePy = isCross ? '' : py;
+        const effectiveGid = isCross ? '' : gid;
+        const effectiveInterest = isCross ? 0 : tInt;
+
         bills[normalizedTo] = {
           MoneyType: mt,
           Value: val,
-          GuarGroupID: gid,
-          PublicKey: { Curve: 'P256', XHex: px, YHex: py },
-          ToInterest: tInt
+          GuarGroupID: effectiveGid,
+          PublicKey: { Curve: 'P256', XHex: effectivePx, YHex: effectivePy },
+          ToInterest: effectiveInterest
         };
         vd[mt] += val;
-        outInterest += Math.max(0, tInt || 0);
+        outInterest += Math.max(0, effectiveInterest || 0);
       }
 
       const extraPGC = Number(gasInput?.value || 0);
@@ -433,10 +479,34 @@ export function initTransferSubmit(): void {
       const totalGasNeed = baseTxGas + outInterest;
       const totalGasBudget = availableGas + mintedGas;
 
+      // Debug log for gas calculation
+      console.debug('[Transfer] Gas calculation:', {
+        availableGas,
+        mintedGas,
+        totalGasBudget,
+        baseTxGas,
+        outInterest,
+        totalGasNeed,
+        selectedAddresses: sel,
+        addressGasDetails: sel.map(addr => {
+          const meta = getAddrMeta(addr);
+          return {
+            addr: addr.slice(0, 10) + '...',
+            gas: meta ? readAddressInterest(meta) : 0
+          };
+        })
+      });
+
       if (totalGasNeed > totalGasBudget + 1e-8) {
         const msg = mintedGas > 0
           ? t('tx.insufficientGasWithMint')
           : t('tx.insufficientGasNoMint');
+        console.warn('[Transfer] Gas insufficient:', {
+          need: totalGasNeed,
+          have: totalGasBudget,
+          availableGas,
+          mintedGas
+        });
         showTxValidationError(t('tx.insufficientGas'), null, msg);
         return;
       }
@@ -500,7 +570,8 @@ export function initTransferSubmit(): void {
         showToast(
           t('transfer.optimizedAddresses', { count: String(removedAddrs.length) }),
           'info',
-          t('toast.addressOptimized')
+          t('toast.addressOptimized'),
+          2000
         );
       }
 
@@ -561,14 +632,14 @@ export function initTransferSubmit(): void {
       if (!user) {
         const errMsg = '用户数据不存在，请先登录';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('common.notLoggedIn'), errMsg, true);
+        showToast(errMsg, 'error', t('common.notLoggedIn'), 2000);
         return;
       }
 
       if (!user.accountId) {
         const errMsg = '账户 ID 不存在，请重新登录';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('common.notLoggedIn'), errMsg, true);
+        showToast(errMsg, 'error', t('common.notLoggedIn'), 2000);
         return;
       }
 
@@ -576,7 +647,7 @@ export function initTransferSubmit(): void {
       if (!user.orgNumber && !user.guarGroup?.groupID) {
         const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
         return;
       }
 
@@ -610,13 +681,13 @@ export function initTransferSubmit(): void {
           hideLoading(newLoadingId);
           const errMsg = t('encryption.wrongPassword') || '密码错误，无法解密私钥';
           console.error('[构造交易] 私钥解密失败:', decryptErr);
-          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
           return;
         }
       } else if (!accountPrivKey) {
         const errMsg = t('txBuilder.noAccountPrivKey') || '账户私钥不存在';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
         return;
       }
 
@@ -625,7 +696,7 @@ export function initTransferSubmit(): void {
       if (Object.keys(walletData).length === 0) {
         const errMsg = t('txBuilder.noWalletData') || '钱包数据为空';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
         return;
       }
 
@@ -634,7 +705,7 @@ export function initTransferSubmit(): void {
       if (fromAddresses.length === 0) {
         const errMsg = t('txBuilder.noFromAddress') || '未选择发送地址';
         console.error('[构造交易] 错误:', errMsg);
-        showModalTip(t('toast.buildTxFailed'), errMsg, true);
+        showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
         return;
       }
 
@@ -644,13 +715,13 @@ export function initTransferSubmit(): void {
         if (!addrData) {
           const errMsg = (t('txBuilder.addressNotFound') || '地址不存在: ') + addr.slice(0, 16) + '...';
           console.error('[构造交易] 错误:', errMsg);
-          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
           return;
         }
         if (!addrData.privHex) {
           const errMsg = (t('txBuilder.noAddressPrivKey') || '地址缺少私钥: ') + addr.slice(0, 16) + '...';
           console.error('[构造交易] 错误:', errMsg);
-          showModalTip(t('toast.buildTxFailed'), errMsg, true);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
           return;
         }
       }
@@ -708,20 +779,25 @@ export function initTransferSubmit(): void {
         }
         const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织，无法发送交易';
         console.error('[发送交易] 错误:', errMsg);
-        showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
+        showToast(errMsg, 'error', t('toast.sendTxFailed') || '发送失败', 2000);
         return;
       }
 
-      // 检查交易模式，只支持快速转账
+      // 检查交易模式，目前支持快速转账和跨链转账
       const currentTfMode = tfMode?.value || 'quick';
-      if (currentTfMode !== 'quick') {
+      if (currentTfMode !== 'quick' && currentTfMode !== 'cross') {
         // 🔓 不支持的模式，解锁 TXCer
         if (lockedTXCerIds.length > 0) {
           unlockTXCers(lockedTXCerIds, false);
         }
-        const errMsg = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型的交易';
-        console.error('[发送交易] 错误:', errMsg);
-        showModalTip(t('toast.sendTxFailed') || '发送失败', errMsg, true);
+        // 如果是 pledge 模式，显示特定的不支持消息
+        if (currentTfMode === 'pledge') {
+          const errMsg = t('transfer.pledgeNotSupported') || '目前不支持质押交易';
+          showToast(errMsg, 'error', t('toast.sendTxFailed'), 2000);
+        } else {
+          const errMsg = t('transfer.onlyQuickTransferSupported') || '目前只支持快速转账类型的交易';
+          showToast(errMsg, 'error', t('toast.sendTxFailed'), 2000);
+        }
         return;
       }
 
@@ -877,12 +953,14 @@ export function initTransferSubmit(): void {
             // 锁定失败不影响交易发送
           }
 
-          // 显示成功提示，告知用户交易已提交
-          showToast(
-            t('transfer.txSubmittedWaitingConfirm') || '交易已提交，正在后台等待确认...',
-            'success',
-            t('toast.sendTxSuccess') || '交易发送成功'
-          );
+          // 显示成功提示，根据交易类型显示不同消息
+          const successMsg = isCross
+            ? (t('transfer.txSubmittedCrossChain') || '跨链转账交易已提交，正在后台等待确认...')
+            : (t('transfer.txSubmittedQuick') || '快速转账交易已提交，正在后台等待确认...');
+          const successTitle = isCross
+            ? (t('toast.sendTxSuccessCrossChain') || '跨链交易发送成功')
+            : (t('toast.sendTxSuccessQuick') || '快速转账发送成功');
+          showToast(successMsg, 'success', successTitle);
 
           // 清除草稿（交易已提交）
           try { clearTransferDraft(); } catch (_) { }
@@ -952,29 +1030,42 @@ export function initTransferSubmit(): void {
             userFriendlyMsg = t('transfer.utxoAlreadySpent') || 'UTXO 已被使用，请刷新页面后重试';
           }
 
+          // Intercept complex backend error messages and replace with user-friendly ones
+          if (errMsg.includes('no alternative guarantor available') || errMsg.includes('failed to reassign user')) {
+            userFriendlyMsg = t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
+          }
+
           // 🔓 发送失败，解锁 TXCer（不删除）
           if (lockedTXCerIds.length > 0) {
             unlockTXCers(lockedTXCerIds, false);
             console.log(`[发送交易] 发送失败，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
           }
 
-          showModalTip(title, userFriendlyMsg, true);
+          showToast(userFriendlyMsg, 'error', title);
         }
       } catch (sendErr: any) {
         hideLoading(sendLoadingId);
-        
+
         // 🔓 发送异常，解锁 TXCer（不删除）
         if (lockedTXCerIds.length > 0) {
           unlockTXCers(lockedTXCerIds, false);
           console.log(`[发送交易] 发送异常，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
         }
-        
+
         const errMsg = sendErr?.message || String(sendErr);
         console.error('[发送交易] 发送异常:', errMsg);
-        showModalTip(
-          t('toast.sendTxFailed') || '交易发送失败',
-          t('transfer.networkError') || '网络错误，请检查网络连接后重试：' + errMsg,
-          true
+
+        let finalDisplayMsg = t('transfer.networkError') || '网络错误，请检查网络连接后重试：' + errMsg;
+
+        // Intercept complex backend error messages (e.g. from RPC)
+        if (errMsg.includes('no alternative guarantor available') || errMsg.includes('failed to reassign user')) {
+          finalDisplayMsg = t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
+        }
+
+        showToast(
+          finalDisplayMsg,
+          'error',
+          t('toast.sendTxFailed') || '交易发送失败'
         );
       }
     } catch (err: any) {
@@ -986,7 +1077,7 @@ export function initTransferSubmit(): void {
       try { restoreCheckpoint(checkpointId); } catch (_) { }
 
       const msg = err?.message || String(err);
-      showModalTip(t('toast.buildTxFailed') || '操作失败', msg, true);
+      showToast(msg, 'error', t('toast.buildTxFailed') || '操作失败');
     } finally {
       // Restore button state (restore span text to preserve SVG)
       tfBtn.disabled = false;

@@ -69,6 +69,8 @@ export default {
   'encryption.migrationDesc': '检测到未加密的私钥，请设置密码以加密存储',
   'encryption.encryptSuccess': '私钥已加密保存',
   'encryption.decryptFailed': '解密失败，请检查密码',
+  'encryption.wrongPasswordRetry': '密码错误，请重新输入',
+  'encryption.maxRetriesExceeded': '密码错误次数过多，请稍后再试',
   'encryption.decryptForTx': '构造交易需要使用您的账户私钥进行签名。请输入密码解锁私钥。',
   'encryption.passwordPlaceholder': '请输入您的密码',
 
@@ -553,9 +555,16 @@ export default {
   'transfer.unknownError': '未知错误',
   'transfer.onlyQuickTransferSupported': '目前只支持快速转账类型的交易',
   'transfer.joinOrgFirst': '请先加入担保组织后才能发送交易',
+  'transfer.pledgeNotSupported': '质押交易功能暂未开放',
 
   // 交易状态确认相关
   'transfer.txSubmittedWaitingConfirm': '交易已提交，正在后台等待确认...',
+  'transfer.txSubmittedCrossChain': '跨链转账交易已提交，正在后台等待确认...',
+  'transfer.txSubmittedQuick': '快速转账交易已提交，正在后台等待确认...',
+  'transfer.txTypeCrossChain': '跨链转账',
+  'transfer.txTypeQuick': '快速转账',
+  'toast.sendTxSuccessCrossChain': '跨链交易发送成功',
+  'toast.sendTxSuccessQuick': '快速转账发送成功',
   'transfer.waitingForConfirmation': '等待交易确认...',
   'transfer.txPendingVerification': '交易正在由担保节点验证中...',
   'transfer.txConfirmedSuccess': '交易确认成功',
@@ -624,6 +633,10 @@ export default {
   'tx.addressError': '地址错误',
   'tx.missingTransferInfo': '转账信息缺失',
   'tx.crossChainLimit': '跨链交易限制',
+  'tx.invalidEthAddress': '跨链地址必须为以太坊格式 (0x...)',
+  'tx.crossChainAddressFormat': '跨链地址格式错误',
+  'tx.crossChainIntegerAmount': '跨链金额必须为整数',
+  'tx.amountMustBeInteger': '金额必须为整数',
   'tx.changeAddressMissing': '找零地址缺失',
   'tx.changeAddressError': '找零地址错误',
   'tx.incompleteInfo': '账单信息不完整',
@@ -785,6 +798,7 @@ export default {
 
   // 错误消息
   'error.unexpected': '发生意外错误',
+  'error.guarantorReassignFailed': '担保组织无法正确分配处理交易的担保人，请稍后',
   'error.pleaseRefresh': '请刷新页面后重试',
   'error.networkError': '网络错误',
   'error.checkNetwork': '请检查网络连接后重试',
@@ -828,5 +842,7 @@ export default {
   'polling.txCerCleared': 'TXCer {id}... 已解除怀疑',
   'polling.interestReceived': '收到利息: {amount}',
   'polling.newUtxoReceived': '收到新的 UTXO',
-  'polling.utxoConfirmed': 'UTXO 已确认使用'
+  'polling.utxoConfirmed': 'UTXO 已确认使用',
+  'notification.receivedCrossChain': '收到跨链转账交易',
+  'notification.accountUpdate': '账户更新',
 };

@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { showMiniToast, showInfoToast, showToast } from '../utils/toast.js';
+import { showMiniToast, showInfoToast, showToast, showErrorToast } from '../utils/toast.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { querySingleAddressGroup, GROUP_ID_NOT_EXIST, GROUP_ID_RETAIL } from './accountQuery';
@@ -98,9 +98,8 @@ function showTxValidationError(msg, focusEl, title = '参数校验失败') {
     txErr.textContent = msg;
     txErr.classList.remove('hidden');
   }
-  if (typeof window.PanguPay?.ui?.showModalTip === 'function') {
-    window.PanguPay.ui.showModalTip(title, msg, true);
-  }
+  // Use toast instead of modal for consistent error display
+  showToast(msg, 'error', title);
   if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
 }
 
@@ -275,7 +274,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         }
         if (!info) {
           // GroupID = "0": Address does not exist
-          showMiniToast(t('tx.addressNotFound'), 'error');
+          showErrorToast(t('tx.addressNotFound'));
           return;
         }
 
@@ -309,7 +308,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           showMiniToast(t('tx.infoRetrieved', { info: found }), 'success');
         }
       } catch (e) {
-        showMiniToast(t('tx.queryFailed'), 'error');
+        showErrorToast(t('tx.queryFailed'));
       } finally {
         lookupBtn.disabled = false;
         lookupBtn.classList.remove('is-loading');
@@ -387,6 +386,74 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       card.classList.remove('has-dropdown-open');
     });
   }
+
+  // Check if we're in cross-chain mode and hide/show fields accordingly
+  const tfModeSelect = document.getElementById(DOM_IDS.tfMode);
+  const isCrossChainMode = tfModeSelect && tfModeSelect.value === 'cross';
+  applyModeToCard(card, isCrossChainMode);
+}
+
+/**
+ * Apply transfer mode (cross-chain vs normal) to a recipient card
+ * Controls visibility of fields and coin options
+ */
+function applyModeToCard(card, isCrossChain) {
+  const displayStyle = isCrossChain ? 'none' : '';
+
+  // 1. Toggle field visibility
+  // Public key field
+  const pubField = card.querySelector('[data-name="pub"]')?.closest('.recipient-field');
+  if (pubField) pubField.style.display = displayStyle;
+
+  // Guarantor org ID field
+  const gidField = card.querySelector('[data-name="gid"]')?.closest('.recipient-field');
+  if (gidField) gidField.style.display = displayStyle;
+
+  // Transfer gas field
+  const gasField = card.querySelector('[data-name="gas"]')?.closest('.recipient-field');
+  if (gasField) gasField.style.display = displayStyle;
+
+  // Expand button (no advanced options for cross-chain)
+  const expandBtn = card.querySelector('[data-role="expand"]');
+  if (expandBtn) expandBtn.style.display = displayStyle;
+
+  // 2. Restrict coin selection (Cross-chain only supports PGC)
+  const coinItems = card.querySelectorAll('.recipient-coin-item');
+  coinItems.forEach(item => {
+    const val = item.getAttribute('data-val');
+    // val '0' is PGC. Hide others if cross-chain.
+    if (val !== '0') {
+      item.style.display = displayStyle;
+    }
+  });
+
+  // 3. Enforce PGC selection if cross-chain
+  if (isCrossChain) {
+    const cs = card.querySelector('.recipient-coin-select');
+    const hiddenMt = card.querySelector('[data-name="mt-hidden"]');
+    const valEl = cs ? cs.querySelector('.recipient-coin-value .coin-label') : null;
+
+    // If currently not PGC (val != '0'), switch to PGC
+    if (cs && cs.dataset.val !== '0') {
+      cs.dataset.val = '0';
+      if (hiddenMt) hiddenMt.value = '0';
+      if (valEl) valEl.textContent = 'PGC';
+    }
+  }
+}
+
+/**
+ * Update all recipient cards based on current transfer mode
+ */
+function updateAllCardsMode() {
+  const tfMode = document.getElementById(DOM_IDS.tfMode);
+  const isCross = tfMode && tfMode.value === 'cross';
+  const billList = document.getElementById(DOM_IDS.billList);
+
+  if (billList) {
+    const cards = billList.querySelectorAll('.recipient-card');
+    cards.forEach(card => applyModeToCard(card, isCross));
+  }
 }
 
 /**
@@ -395,6 +462,12 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
 export function initRecipientCards() {
   const billList = document.getElementById(DOM_IDS.billList);
   if (!billList || billList.dataset._recipientBind) return;
+
+  // Listen for mode changes to update cards
+  const tfMode = document.getElementById(DOM_IDS.tfMode);
+  if (tfMode) {
+    tfMode.addEventListener('change', updateAllCardsMode);
+  }
 
   // Compute current org ID helper
   const computeCurrentOrgId = () => {

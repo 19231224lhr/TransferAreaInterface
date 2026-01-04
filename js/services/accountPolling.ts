@@ -320,17 +320,26 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   const deltaHeight = nextHeight > prevHeight && prevHeight > 0 ? (nextHeight - prevHeight) : 0;
 
   // Accrue interest BEFORE applying wallet changes (new UTXO shouldn't generate interest until next block)
+  let interestAccrued = false;
   if (deltaHeight > 0) {
     // Normalize legacy fields first so reads/writes are consistent
     for (const meta of Object.values(user.wallet.addressMsg || {})) {
       normalizeInterestFields(meta as any);
     }
-    accrueWalletInterest(user.wallet as any, deltaHeight);
+    const { changed } = accrueWalletInterest(user.wallet as any, deltaHeight);
+    interestAccrued = changed;
   } else {
     // Still normalize fields so UI won't be stuck on stale `gas`
     for (const meta of Object.values(user.wallet.addressMsg || {})) {
       normalizeInterestFields(meta as any);
     }
+  }
+
+  // IMPORTANT: If interest was accrued, save immediately to ensure Store consistency
+  // This prevents the mismatch between UI display (reading mutated object) and 
+  // transfer validation (reading from Store which might have stale data)
+  if (interestAccrued) {
+    saveUser(user);
   }
 
   // 只更新区块高度
@@ -423,6 +432,18 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
         hasChanges = true;
 
         console.info(`[AccountPolling] Added new UTXO: ${utxoId}, value: ${inUtxo.UTXOData.Value}, type: ${inUtxo.UTXOData.Type}`);
+
+        // 🔔 跨链转入通知：如果是来自轻计算区的交易 (TXType 7 或 FromAddress="Lightweight Computing Zone")
+        const tx = inUtxo.UTXOData.UTXO;
+        const isCrossChainInbound = tx?.TXType === 7 ||
+          (tx?.TXInputsNormal && tx.TXInputsNormal.length > 0 && tx.TXInputsNormal[0].FromAddress === "Lightweight Computing Zone");
+
+        if (isCrossChainInbound) {
+          showSuccessToast(
+            t('notification.receivedCrossChain') || '收到跨链转账交易',
+            t('notification.accountUpdate') || '账户更新'
+          );
+        }
       }
 
       // 重新计算地址余额

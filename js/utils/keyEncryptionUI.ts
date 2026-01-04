@@ -267,9 +267,10 @@ export async function encryptAndSavePrivateKey(
  * Get decrypted private key with password prompt
  * Used when signing transactions
  * @param accountId - Account identifier
+ * @param maxRetries - Maximum number of password retry attempts (default: 3)
  * @returns Decrypted private key or null if failed/cancelled
  */
-export async function getDecryptedPrivateKey(accountId: string): Promise<string | null> {
+export async function getDecryptedPrivateKey(accountId: string, maxRetries: number = 3): Promise<string | null> {
   // Check if we have encrypted key
   if (!hasEncryptedKey(accountId)) {
     // Check legacy storage
@@ -281,22 +282,40 @@ export async function getDecryptedPrivateKey(accountId: string): Promise<string 
     return null;
   }
 
-  // Prompt for password
-  const password = await showPasswordPrompt({
-    title: t('encryption.enterPassword'),
-    description: t('encryption.enterPasswordDesc')
-  });
+  let attempts = 0;
 
-  if (!password) {
-    return null;
+  while (attempts < maxRetries) {
+    // Prompt for password
+    const password = await showPasswordPrompt({
+      title: t('encryption.enterPassword'),
+      description: attempts > 0
+        ? t('encryption.wrongPasswordRetry') || `密码错误，请重试 (${maxRetries - attempts} 次机会)`
+        : t('encryption.enterPasswordDesc')
+    });
+
+    if (!password) {
+      return null; // User cancelled
+    }
+
+    try {
+      const result = await getPrivateKey(accountId, password);
+      return result; // Success
+    } catch (err) {
+      attempts++;
+      // Clear password cache on failure to ensure fresh input next time
+      clearPasswordCache();
+
+      if (attempts >= maxRetries) {
+        showErrorToast(t('encryption.maxRetriesExceeded') || '密码错误次数过多，请稍后再试');
+        return null;
+      } else {
+        showErrorToast(t('encryption.decryptFailed'));
+        // Loop will continue to prompt again
+      }
+    }
   }
 
-  try {
-    return await getPrivateKey(accountId, password);
-  } catch (err) {
-    showErrorToast(t('encryption.decryptFailed'));
-    return null;
-  }
+  return null;
 }
 
 /**
@@ -304,12 +323,14 @@ export async function getDecryptedPrivateKey(accountId: string): Promise<string 
  * @param accountId - Account identifier
  * @param title - Custom title for password prompt
  * @param description - Custom description for password prompt
+ * @param maxRetries - Maximum number of password retry attempts (default: 3)
  * @returns Decrypted private key or null
  */
 export async function getDecryptedPrivateKeyWithPrompt(
   accountId: string,
   title: string,
-  description: string
+  description: string,
+  maxRetries: number = 3
 ): Promise<string | null> {
   // Check if we have encrypted key
   if (!hasEncryptedKey(accountId)) {
@@ -322,22 +343,40 @@ export async function getDecryptedPrivateKeyWithPrompt(
     return null;
   }
 
-  // Prompt for password with custom message
-  const password = await showPasswordPrompt({
-    title: title,
-    description: description
-  });
+  let attempts = 0;
 
-  if (!password) {
-    return null;
+  while (attempts < maxRetries) {
+    // Prompt for password with custom message (show retry hint after first failure)
+    const password = await showPasswordPrompt({
+      title: title,
+      description: attempts > 0
+        ? t('encryption.wrongPasswordRetry') || `密码错误，请重试 (${maxRetries - attempts} 次机会)`
+        : description
+    });
+
+    if (!password) {
+      return null; // User cancelled
+    }
+
+    try {
+      const result = await getPrivateKey(accountId, password);
+      return result; // Success
+    } catch (err) {
+      attempts++;
+      // Clear password cache on failure to ensure fresh input next time
+      clearPasswordCache();
+
+      if (attempts >= maxRetries) {
+        showErrorToast(t('encryption.maxRetriesExceeded') || '密码错误次数过多，请稍后再试');
+        return null;
+      } else {
+        showErrorToast(t('encryption.decryptFailed'));
+        // Loop will continue to prompt again
+      }
+    }
   }
 
-  try {
-    return await getPrivateKey(accountId, password);
-  } catch (err) {
-    showErrorToast(t('encryption.decryptFailed'));
-    return null;
-  }
+  return null;
 }
 
 /**

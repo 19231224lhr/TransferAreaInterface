@@ -6,9 +6,9 @@
  * @module utils/storage
  */
 
-import { 
-  STORAGE_KEY, 
-  PROFILE_STORAGE_KEY, 
+import {
+  STORAGE_KEY,
+  PROFILE_STORAGE_KEY,
   GUAR_CHOICE_KEY,
   DEFAULT_GROUP,
   GROUP_LIST,
@@ -130,10 +130,10 @@ export interface GuarChoice {
  * @returns Full account structure
  */
 export function toAccount(basic: Partial<User>, prev: User | null): User {
-  const isSame = prev && prev.accountId && basic && basic.accountId && 
-                 prev.accountId === basic.accountId;
+  const isSame = prev && prev.accountId && basic && basic.accountId &&
+    prev.accountId === basic.accountId;
   const acc: any = isSame ? (prev ? JSON.parse(JSON.stringify(prev)) : {}) : {};
-  
+
   acc.accountId = basic.accountId || acc.accountId || '';
   acc.orgNumber = (basic.orgNumber !== undefined ? basic.orgNumber : (acc.orgNumber || ''));
   acc.flowOrigin = basic.flowOrigin || acc.flowOrigin || '';
@@ -141,7 +141,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   if (basic.guarGroup !== undefined) {
     acc.guarGroup = basic.guarGroup;
   }
-  
+
   // Handle new fields for login tracking
   if (basic.entrySource !== undefined) {
     acc.entrySource = basic.entrySource;
@@ -152,22 +152,22 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   if (basic.guarGroupBootMsg !== undefined) {
     acc.guarGroupBootMsg = basic.guarGroupBootMsg;
   }
-  
+
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };
   acc.keys.privHex = basic.privHex || acc.keys.privHex || '';
   acc.keys.pubXHex = basic.pubXHex || acc.keys.pubXHex || '';
   acc.keys.pubYHex = basic.pubYHex || acc.keys.pubYHex || '';
-  
-  acc.wallet = acc.wallet || { 
-    addressMsg: {}, 
-    totalTXCers: {}, 
-    totalValue: 0, 
-    valueDivision: { 0: 0, 1: 0, 2: 0 }, 
-    updateTime: Date.now(), 
-    updateBlock: 0 
+
+  acc.wallet = acc.wallet || {
+    addressMsg: {},
+    totalTXCers: {},
+    totalValue: 0,
+    valueDivision: { 0: 0, 1: 0, 2: 0 },
+    updateTime: Date.now(),
+    updateBlock: 0
   };
   acc.wallet.addressMsg = acc.wallet.addressMsg || {};
-  
+
   const mainAddr = basic.address || acc.address || '';
   if (mainAddr) {
     acc.address = mainAddr;
@@ -178,7 +178,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   if (basic.privHex !== undefined && basic.privHex) acc.privHex = basic.privHex;
   if (basic.pubXHex !== undefined && basic.pubXHex) acc.pubXHex = basic.pubXHex;
   if (basic.pubYHex !== undefined && basic.pubYHex) acc.pubYHex = basic.pubYHex;
-  
+
   if (basic.wallet) {
     if (basic.wallet.addressMsg !== undefined) {
       acc.wallet.addressMsg = { ...basic.wallet.addressMsg };
@@ -197,7 +197,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
       acc.wallet.history = [...basic.wallet.history];
     }
   }
-  
+
   return acc as User;
 }
 
@@ -257,9 +257,37 @@ function writeUserToStorage(user: User | null): void {
 /**
  * Initialize in-memory state from localStorage once at app startup.
  * After this, Store becomes the single source of truth.
+ * 
+ * IMPORTANT: TXCer data is NOT persisted because it is temporary state.
+ * TXCers are received in real-time via SSE and will be converted to UTXOs.
+ * The blockchain StoragePoint (UTXO data) is the only source of truth for permanent balances.
  */
 export function initUserStateFromStorage(): User | null {
   const user = readUserFromStorage();
+
+  // Clear stale TXCer data - TXCers should only be received via real-time SSE
+  // This prevents "ghost" TXCers from reappearing after page refresh
+  if (user?.wallet) {
+    // Clear totalTXCers at wallet level
+    user.wallet.totalTXCers = {};
+
+    // Clear txCers from each address
+    if (user.wallet.addressMsg) {
+      for (const addr of Object.keys(user.wallet.addressMsg)) {
+        const addrData = user.wallet.addressMsg[addr];
+        if (addrData) {
+          addrData.txCers = {};
+          // Also reset txCerValue in value breakdown
+          if (addrData.value) {
+            addrData.value.txCerValue = 0;
+          }
+        }
+      }
+    }
+
+    console.info('[Storage] Cleared stale TXCer data on startup. TXCers will be received via SSE.');
+  }
+
   setUser(user);
   return user;
 }
@@ -292,13 +320,13 @@ export function saveUser(user: Partial<User>): void {
     // Initialize wallet history if needed
     // Note: toAccount() always initializes wallet, but we keep this check for safety
     if (!acc.wallet) {
-      acc.wallet = { 
-        addressMsg: {}, 
-        totalTXCers: {}, 
-        totalValue: 0, 
-        valueDivision: { 0: 0, 1: 0, 2: 0 }, 
-        updateTime: Date.now(), 
-        updateBlock: 0 
+      acc.wallet = {
+        addressMsg: {},
+        totalTXCers: {},
+        totalValue: 0,
+        valueDivision: { 0: 0, 1: 0, 2: 0 },
+        updateTime: Date.now(),
+        updateBlock: 0
       };
     }
     if (!acc.wallet.history) acc.wallet.history = [];
@@ -337,7 +365,7 @@ export function clearAccountStorage(): void {
   try { localStorage.removeItem('walletUser'); } catch { }
   try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { }
   try { localStorage.removeItem('guarChoice'); } catch { }
-  
+
   // Sync to centralized store for state management
   setUser(null);
 }
@@ -404,7 +432,7 @@ export function getJoinedGroup(): GuarantorGroup | null {
     console.debug('[Storage] getJoinedGroup from user.guarGroup:', result);
     return result;
   }
-  
+
   // 2. Try guarChoice from localStorage
   try {
     const raw = localStorage.getItem(GUAR_CHOICE_KEY);
@@ -424,7 +452,7 @@ export function getJoinedGroup(): GuarantorGroup | null {
           console.debug('[Storage] getJoinedGroup from guarChoice (full info):', result);
           return result;
         }
-        
+
         // Check if user has guarGroup with this ID
         if (u?.guarGroup && u.guarGroup.groupID === c.groupID) {
           const result = {
@@ -439,8 +467,8 @@ export function getJoinedGroup(): GuarantorGroup | null {
           return result;
         }
         // Fallback to GROUP_LIST lookup
-        const g = Array.isArray(GROUP_LIST) 
-          ? GROUP_LIST.find(x => x.groupID === c.groupID) 
+        const g = Array.isArray(GROUP_LIST)
+          ? GROUP_LIST.find(x => x.groupID === c.groupID)
           : null;
         const result = g || DEFAULT_GROUP;
         console.debug('[Storage] getJoinedGroup from GROUP_LIST/DEFAULT_GROUP:', result);
@@ -448,18 +476,18 @@ export function getJoinedGroup(): GuarantorGroup | null {
       }
     }
   } catch { }
-  
+
   // 3. Try user.orgNumber
   const gid = u && u.orgNumber;
   if (gid) {
-    const g = Array.isArray(GROUP_LIST) 
-      ? GROUP_LIST.find(x => x.groupID === gid) 
+    const g = Array.isArray(GROUP_LIST)
+      ? GROUP_LIST.find(x => x.groupID === gid)
       : null;
     const result = g || DEFAULT_GROUP;
     console.debug('[Storage] getJoinedGroup from orgNumber + GROUP_LIST:', result);
     return result;
   }
-  
+
   console.debug('[Storage] getJoinedGroup: no group found');
   return null;
 }
@@ -492,21 +520,21 @@ export function clearGuarChoice(): void {
  */
 export function resetOrgSelectionForNewUser(): boolean {
   let changed = false;
-  
+
   try {
     if (localStorage.getItem(GUAR_CHOICE_KEY)) {
       localStorage.removeItem(GUAR_CHOICE_KEY);
       changed = true;
     }
   } catch (_) { }
-  
+
   const current = loadUser();
   if (current && (current.orgNumber || current.guarGroup)) {
     const next = { ...current, orgNumber: '', guarGroup: undefined } as User;
     setUser(next);
     changed = true;
   }
-  
+
   return changed;
 }
 

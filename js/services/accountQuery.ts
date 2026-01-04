@@ -13,6 +13,7 @@ import { ApiRequestError, isNetworkError, isTimeoutError } from './api';
 import { t } from '../i18n/index.js';
 import { UTXOData } from '../types/blockchain';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
+import { showToast } from '../utils/toast';
 
 // ============================================================================
 // Types
@@ -128,7 +129,7 @@ export type QueryResult<T> =
  */
 function normalizeAddressData(address: string, data: PointAddressData): AddressBalanceInfo {
   const exists = data.Value > 0 || data.Interest > 0 || data.LastHeight > 0 || Object.keys(data.UTXO || {}).length > 0;
-  
+
   return {
     address,
     balance: data.Value || 0,
@@ -169,7 +170,7 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
   // 注意：key 只用于提取 TXID，Position 必须从 queryUtxo.Position 获取！
   let txid: string;
   let indexZFromKey: number = 0;
-  
+
   if (utxoKey.includes(' + ')) {
     // 后端实际格式: "TXID + IndexZ"
     const parts = utxoKey.split(' + ');
@@ -190,24 +191,24 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
     txid = utxoKey;
     indexZFromKey = 0;
   }
-  
+
   // 使用后端返回的 Position，如果没有则用 key 解析的 IndexZ 作为 fallback
-  const position: { Blocknum: number; IndexX: number; IndexY: number; IndexZ: number } = queryUtxo.Position 
+  const position: { Blocknum: number; IndexX: number; IndexY: number; IndexZ: number } = queryUtxo.Position
     ? {
-        Blocknum: queryUtxo.Position.Blocknum || 0,
-        IndexX: queryUtxo.Position.IndexX || 0,
-        IndexY: queryUtxo.Position.IndexY || 0,
-        IndexZ: queryUtxo.Position.IndexZ ?? indexZFromKey
-      }
+      Blocknum: queryUtxo.Position.Blocknum || 0,
+      IndexX: queryUtxo.Position.IndexX || 0,
+      IndexY: queryUtxo.Position.IndexY || 0,
+      IndexZ: queryUtxo.Position.IndexZ ?? indexZFromKey
+    }
     : { Blocknum: 0, IndexX: 0, IndexY: 0, IndexZ: indexZFromKey };
-  
+
   console.log(`[UTXO解析] key="${utxoKey}" => txid="${txid}", Position=${JSON.stringify(position)}`);
-  
+
   // 如果后端没有返回 Position，打印警告
   if (!queryUtxo.Position) {
     console.warn(`[UTXO解析] 警告：后端未返回 Position 数据，使用 fallback 值`);
   }
-  
+
   // ⚠️ 重要修复：如果后端返回了完整的 UTXO（SubATX）数据，必须使用它！
   // 这对于签名验证至关重要，因为 TXOutput 哈希必须与后端存储的完全一致
   if (queryUtxo.UTXO && typeof queryUtxo.UTXO === 'object') {
@@ -215,7 +216,7 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
     console.log(`[UTXO解析] ✓ 使用后端返回的完整 UTXO 数据`);
     console.log(`[UTXO解析] 后端 UTXO.TXID: ${backendUTXO.TXID}`);
     console.log(`[UTXO解析] 后端 UTXO.TXOutputs 长度: ${backendUTXO.TXOutputs?.length || 0}`);
-    
+
     // 使用后端原始数据，但确保 TXID 正确（从 key 解析的纯 TXID）
     return {
       UTXO: {
@@ -237,12 +238,12 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
       IsTXCerUTXO: queryUtxo.IsTXCerUTXO || false
     };
   }
-  
+
   // Fallback：如果后端没有返回完整 UTXO 数据，构造简化版本
   // 注意：这种情况下签名验证可能会失败！
   console.warn(`[UTXO解析] ⚠️ 警告：后端未返回完整 UTXO 数据，使用 fallback 构造`);
   console.warn(`[UTXO解析] 这可能导致签名验证失败，因为 TXOutput 哈希可能不匹配！`);
-  
+
   return {
     UTXO: {
       TXID: txid,
@@ -301,20 +302,20 @@ export async function queryAddressInfo(
     // Get ComNode endpoint (from cache or query BootNode)
     const comNodeURL = await getComNodeURL(false, false);
     if (!comNodeURL) {
-      return { 
-        success: false, 
-        error: t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试') 
+      return {
+        success: false,
+        error: t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试')
       };
     }
 
     // Normalize addresses (remove 0x prefix, lowercase)
-    const normalizedAddresses = addresses.map(addr => 
+    const normalizedAddresses = addresses.map(addr =>
       addr.replace(/^0x/i, '').toLowerCase()
     );
 
     // Build full URL: {comNodeURL}/api/v1/com/query-address
     const endpoint = `${comNodeURL}/api/v1/com/query-address`;
-    
+
     console.debug('[AccountQuery] Querying addresses:', normalizedAddresses);
     console.debug('[AccountQuery] Endpoint:', endpoint);
 
@@ -340,7 +341,7 @@ export async function queryAddressInfo(
           isLeaderUnavailable: true
         };
       }
-      
+
       const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
@@ -355,7 +356,7 @@ export async function queryAddressInfo(
     const responseText = await response.text();
     const data = parseBigIntJson(responseText) as QueryAddressResponse;
 
-    console.info('[AccountQuery] ✓ Query successful, received data for', 
+    console.info('[AccountQuery] ✓ Query successful, received data for',
       Object.keys(data.AddressData || {}).length, 'addresses');
 
     return { success: true, data };
@@ -373,14 +374,14 @@ export async function queryAddressInfo(
           isLeaderUnavailable: true
         };
       }
-      
+
       if (isNetworkError(error)) {
         return {
           success: false,
           error: t('error.networkError', '网络连接失败，请检查后端服务是否运行')
         };
       }
-      
+
       if (isTimeoutError(error)) {
         return {
           success: false,
@@ -414,7 +415,7 @@ export async function queryAddressBalances(
   addresses: string[]
 ): Promise<QueryResult<AddressBalanceInfo[]>> {
   const result = await queryAddressInfo(addresses);
-  
+
   if (!result.success) {
     return result;
   }
@@ -439,7 +440,7 @@ export async function querySingleAddress(
   address: string
 ): Promise<QueryResult<AddressBalanceInfo>> {
   const result = await queryAddressBalances([address]);
-  
+
   if (!result.success) {
     return result;
   }
@@ -492,7 +493,7 @@ export function calculateTotalBalance(balances: AddressBalanceInfo[]): {
   for (const balance of balances) {
     totalBalance += balance.balance;
     totalInterest += balance.interest;
-    
+
     const type = balance.type || 0;
     if (byType[type] !== undefined) {
       byType[type] += balance.balance;
@@ -517,11 +518,11 @@ export function convertUtxosForStorage(
   addressInfo: AddressBalanceInfo
 ): Record<string, UTXOData> {
   const result: Record<string, UTXOData> = {};
-  
+
   for (const [key, utxo] of Object.entries(addressInfo.utxos)) {
     result[key] = convertToStorageUTXO(key, utxo, addressInfo.address);
   }
-  
+
   return result;
 }
 
@@ -608,18 +609,18 @@ function bigIntToHex64(value: number | string): string {
   if (!value || value === '0' || value === 0) {
     return '0'.repeat(64);
   }
-  
+
   try {
     // Value should be a string (preserved by parseBigIntJson)
     // If it's a number, it may have lost precision
     const strValue = String(value);
-    
+
     // Check if it looks like a valid decimal number
     if (!/^\d+$/.test(strValue)) {
       console.error('[AccountQuery] Invalid decimal value:', strValue);
       return '0'.repeat(64);
     }
-    
+
     // Convert decimal string to BigInt, then to hex
     const bigIntValue = BigInt(strValue);
     let hex = bigIntValue.toString(16);
@@ -660,7 +661,7 @@ function normalizeAddressGroupData(address: string, data: AddressGroupInfo): Nor
   const exists = addressExists(data.GroupID);
   const isRetail = isRetailAddress(data.GroupID);
   const isInGroup = isInGuarGroup(data.GroupID);
-  
+
   // Convert public key X/Y from decimal to hex format
   let publicKey: NormalizedAddressGroupInfo['publicKey'] = null;
   if (exists && data.PublicKey && data.PublicKey.X && data.PublicKey.Y) {
@@ -670,7 +671,7 @@ function normalizeAddressGroupData(address: string, data: AddressGroupInfo): Nor
       y: bigIntToHex64(data.PublicKey.Y)
     };
   }
-  
+
   return {
     address,
     groupID: data.GroupID,
@@ -703,20 +704,20 @@ export async function queryAddressGroup(
     // Get ComNode endpoint (from cache or query BootNode)
     const comNodeURL = await getComNodeURL(false, false);
     if (!comNodeURL) {
-      return { 
-        success: false, 
-        error: t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试') 
+      return {
+        success: false,
+        error: t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试')
       };
     }
 
     // Normalize addresses (remove 0x prefix, lowercase)
-    const normalizedAddresses = addresses.map(addr => 
+    const normalizedAddresses = addresses.map(addr =>
       addr.replace(/^0x/i, '').toLowerCase()
     );
 
     // Build full URL: {comNodeURL}/api/v1/com/query-address-group
     const endpoint = `${comNodeURL}/api/v1/com/query-address-group`;
-    
+
     console.debug('[AccountQuery] Querying address groups:', normalizedAddresses);
     console.debug('[AccountQuery] Endpoint:', endpoint);
 
@@ -742,7 +743,7 @@ export async function queryAddressGroup(
           isLeaderUnavailable: true
         };
       }
-      
+
       const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
@@ -754,13 +755,16 @@ export async function queryAddressGroup(
     const responseText = await response.text();
     const data = parseBigIntJson(responseText) as QueryAddressGroupResponse;
 
-    console.info('[AccountQuery] ✓ Query address group successful, received data for', 
+    console.info('[AccountQuery] ✓ Query address group successful, received data for',
       Object.keys(data.Addresstogroup || {}).length, 'addresses');
 
     return { success: true, data };
 
   } catch (error) {
     console.error('[AccountQuery] ✗ Query address group failed:', error);
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    showToast(t('error.queryFailed', '查询失败') + ': ' + errorMessage, 'error');
 
     if (error instanceof ApiRequestError) {
       if (error.status === 503) {
@@ -771,14 +775,14 @@ export async function queryAddressGroup(
           isLeaderUnavailable: true
         };
       }
-      
+
       if (isNetworkError(error)) {
         return {
           success: false,
           error: t('error.networkError', '网络连接失败，请检查后端服务是否运行')
         };
       }
-      
+
       if (isTimeoutError(error)) {
         return {
           success: false,
@@ -812,7 +816,7 @@ export async function queryAddressGroupInfo(
   addresses: string[]
 ): Promise<QueryResult<NormalizedAddressGroupInfo[]>> {
   const result = await queryAddressGroup(addresses);
-  
+
   if (!result.success) {
     return result;
   }
@@ -837,7 +841,7 @@ export async function querySingleAddressGroup(
   address: string
 ): Promise<QueryResult<NormalizedAddressGroupInfo>> {
   const result = await queryAddressGroupInfo([address]);
-  
+
   if (!result.success) {
     return result;
   }

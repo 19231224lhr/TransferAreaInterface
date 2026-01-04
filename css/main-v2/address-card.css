@@ -10,7 +10,7 @@
 .main-v2 .addr-card {
   background: var(--neutral-100) !important;
   border-radius: var(--radius-md) !important;
-  overflow: hidden !important;
+  overflow: visible !important;
   /* 收起时裁剪内容 */
   cursor: pointer !important;
   border: none !important;

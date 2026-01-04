@@ -64,6 +64,8 @@ export default {
   'encryption.migrationDesc': 'Unencrypted private key detected. Please set a password to encrypt it.',
   'encryption.encryptSuccess': 'Private key encrypted successfully',
   'encryption.decryptFailed': 'Decryption failed, please check your password',
+  'encryption.wrongPasswordRetry': 'Wrong password, please try again',
+  'encryption.maxRetriesExceeded': 'Too many failed password attempts, please try again later',
   'encryption.decryptForTx': 'Building a transaction requires signing with your account private key. Please enter password to unlock it.',
   'encryption.passwordPlaceholder': 'Enter your password',
 
@@ -337,7 +339,7 @@ export default {
   'wallet.copy': 'Copy',
   'wallet.copied': 'Copied!',
   'wallet.syncing': 'Syncing...',
-  
+
   // UTXO Locking
   'wallet.utxoLockedTooltip': 'This UTXO is locked, waiting for transaction confirmation',
   'wallet.lockedUtxoCount': '{count} UTXO(s) locked',
@@ -548,7 +550,8 @@ export default {
   'transfer.unknownError': 'Unknown error',
   'transfer.onlyQuickTransferSupported': 'Only quick transfer type is currently supported',
   'transfer.joinOrgFirst': 'Please join a guarantor organization first to send transactions',
-  
+  'transfer.pledgeNotSupported': 'Pledge transaction is not available yet',
+
   // Transaction Status Confirmation
   'transfer.txSubmittedWaitingConfirm': 'Transaction submitted, confirming in background...',
   'transfer.waitingForConfirmation': 'Waiting for transaction confirmation...',
@@ -619,6 +622,10 @@ export default {
   'tx.addressError': 'Address error',
   'tx.missingTransferInfo': 'Transfer information missing',
   'tx.crossChainLimit': 'Cross-chain transaction limit',
+  'tx.invalidEthAddress': 'Cross-chain address must be Ethereum format (0x...)',
+  'tx.crossChainAddressFormat': 'Cross-chain address format error',
+  'tx.crossChainIntegerAmount': 'Cross-chain amount must be an integer',
+  'tx.amountMustBeInteger': 'Amount must be an integer',
   'tx.changeAddressMissing': 'Change address missing',
   'tx.changeAddressError': 'Change address error',
   'tx.incompleteInfo': 'Incomplete transaction info',
@@ -780,6 +787,7 @@ export default {
 
   // Error messages
   'error.unexpected': 'An unexpected error occurred',
+  'error.guarantorReassignFailed': 'The guarantor organization cannot correctly assign a guarantor to process the transaction, please try again later',
   'error.pleaseRefresh': 'Please refresh the page and try again',
   'error.networkError': 'Network error',
   'error.checkNetwork': 'Please check your network connection and try again',

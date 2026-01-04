@@ -13,6 +13,8 @@
  * @module services/txCerLockManager
  */
 
+import { loadUser } from '../utils/storage';
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -58,6 +60,86 @@ const DRAFT_LOCK_TIMEOUT = 30000;
 
 /** 已提交交易锁定超时（毫秒）- 默认 24 小时（与 UTXO 锁一致级别） */
 const SUBMITTED_LOCK_TIMEOUT = 24 * 60 * 60 * 1000;
+
+/** 存储键前缀 */
+const STORAGE_KEY_PREFIX = 'txcer_locks_';
+const STORAGE_VERSION = 1;
+
+interface LockedTXCerStorage {
+    version: number;
+    locks: TXCerLock[];
+    lastUpdate: number;
+}
+
+/**
+ * Get storage key for current user
+ */
+function getStorageKey(): string | null {
+    const user = loadUser();
+    if (!user?.accountId) return null;
+    return `${STORAGE_KEY_PREFIX}${user.accountId}`;
+}
+
+/**
+ * Load locks from local storage
+ */
+function loadLocksFromStorage(): void {
+    const key = getStorageKey();
+    if (!key) return;
+
+    try {
+        const raw = localStorage.getItem(key);
+        if (!raw) return;
+
+        const data = JSON.parse(raw) as LockedTXCerStorage;
+        if (data.version !== STORAGE_VERSION) {
+            console.warn('[TXCerLock] Storage version mismatch, clearing');
+            localStorage.removeItem(key);
+            return;
+        }
+
+        const now = Date.now();
+        let restoredCount = 0;
+
+        for (const lock of data.locks) {
+            // Check expiry during load
+            const timeout = lock.mode === 'submitted' ? SUBMITTED_LOCK_TIMEOUT : DRAFT_LOCK_TIMEOUT;
+            if (now - lock.lockTime < timeout) {
+                lockedTXCers.set(lock.txCerId, lock);
+                restoredCount++;
+            }
+        }
+
+        if (restoredCount > 0) {
+            console.info(`[TXCerLock] Restored ${restoredCount} locks from storage`);
+            ensureCleanupTimer();
+        }
+    } catch (e) {
+        console.error('[TXCerLock] Failed to load locks:', e);
+    }
+}
+
+/**
+ * Save locks to local storage
+ */
+function saveLocksToStorage(): void {
+    const key = getStorageKey();
+    if (!key) return;
+
+    try {
+        const data: LockedTXCerStorage = {
+            version: STORAGE_VERSION,
+            locks: Array.from(lockedTXCers.values()),
+            lastUpdate: Date.now()
+        };
+        localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+        console.error('[TXCerLock] Failed to save locks:', e);
+    }
+}
+
+// Initialize persistence
+loadLocksFromStorage();
 
 /** 清理定时器 */
 let cleanupTimer: ReturnType<typeof setInterval> | null = null;
@@ -107,6 +189,11 @@ export function lockTXCers(
     // 启动清理定时器（如果还没启动）
     ensureCleanupTimer();
 
+    // 保存到本地存储
+    if (lockedIds.length > 0) {
+        saveLocksToStorage();
+    }
+
     return lockedIds;
 }
 
@@ -138,6 +225,7 @@ export function markTXCersSubmitted(txCerIds: string[], relatedTXID: string, rea
         }
     }
     ensureCleanupTimer();
+    saveLocksToStorage(); // 保存状态变更
 }
 
 /** 获取某笔交易关联锁定的 TXCer IDs */
@@ -192,6 +280,10 @@ export function unlockTXCers(
             // 删除已处理的更新
             pendingUpdates.delete(txCerId);
         }
+    }
+
+    if (unlocked > 0) {
+        saveLocksToStorage(); // 保存解锁状态
     }
 
     return unlocked;
@@ -364,6 +456,7 @@ export function forceUnlockAll(): void {
     }
 
     console.warn(`[TXCerLock] 强制解锁所有 TXCer (${count} 个)`);
+    saveLocksToStorage(); // 保存清空状态
 }
 
 /**

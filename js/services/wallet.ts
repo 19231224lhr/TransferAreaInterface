@@ -395,6 +395,15 @@ export function renderWallet(): void {
     const typeId0 = Number(meta?.type ?? 0);
     const amtCash0 = Number(meta?.value?.utxoValue || 0);
     const gas0 = readAddressInterest(meta);
+
+    // Debug: Log gas values for comparison with transfer.ts
+    console.debug('[Wallet] renderWallet - address gas values:', {
+      addr: a.slice(0, 10) + '...',
+      EstInterest: (meta as any)?.EstInterest,
+      estInterest: (meta as any)?.estInterest,
+      gas: (meta as any)?.gas,
+      computed: gas0
+    });
     const coinType = getCoinName(typeId0);
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
@@ -2146,10 +2155,66 @@ export function initTransferModeTabs(): void {
     }
     const tfModeSelect = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
     const isPledgeSelect = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
-    if (tfModeSelect) tfModeSelect.value = mode;
+    if (tfModeSelect) {
+      tfModeSelect.value = mode;
+      // Trigger change event so transfer.ts updateTransferButtonState gets called
+      tfModeSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     if (isPledgeSelect) isPledgeSelect.value = mode === 'pledge' ? 'true' : 'false';
     const radios = document.querySelectorAll('input[name="tfModeChoice"]');
     radios.forEach(r => { (r as HTMLInputElement).checked = (r as HTMLInputElement).value === mode; });
+
+    // Cross-chain mode: Hide unnecessary fields (public key, guarantor org ID, transfer gas)
+    // These fields are not used in cross-chain transactions as per backend logic
+    const isCrossChainMode = mode === 'cross';
+
+    // Hide/show fields in recipient cards
+    const billList = document.getElementById(DOM_IDS.billList);
+    if (billList) {
+      // Public key fields
+      billList.querySelectorAll('[data-name="pub"]').forEach(el => {
+        const field = (el as HTMLElement).closest('.recipient-field');
+        if (field) (field as HTMLElement).style.display = isCrossChainMode ? 'none' : '';
+      });
+      // Guarantor org ID fields
+      billList.querySelectorAll('[data-name="gid"]').forEach(el => {
+        const field = (el as HTMLElement).closest('.recipient-field');
+        if (field) (field as HTMLElement).style.display = isCrossChainMode ? 'none' : '';
+      });
+      // Transfer gas fields
+      billList.querySelectorAll('[data-name="gas"]').forEach(el => {
+        const field = (el as HTMLElement).closest('.recipient-field');
+        if (field) (field as HTMLElement).style.display = isCrossChainMode ? 'none' : '';
+      });
+
+      // For cross-chain, also hide the expand button since there are no advanced options
+      billList.querySelectorAll('[data-role="expand"]').forEach(el => {
+        (el as HTMLElement).style.display = isCrossChainMode ? 'none' : '';
+      });
+      // Collapse any expanded cards in cross-chain mode
+      if (isCrossChainMode) {
+        billList.querySelectorAll('.recipient-card.expanded').forEach(card => {
+          card.classList.remove('expanded');
+        });
+      }
+    }
+
+    // Hide/show "Use TXCer" checkbox (cross-chain doesn't support TXCer)
+    const useTXCerChk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
+    if (useTXCerChk) {
+      // Logic update: PreTXCer option is now hidden from UI but defaults to true for Quick Transfer
+      // We no longer toggle display style here since it's hidden by default in HTML
+
+      // Auto-set state based on mode:
+      // Cross-Chain -> unchecked (not supported)
+      // Quick Transfer -> checked (default requirement)
+      const shouldBeChecked = !isCrossChainMode;
+
+      if (useTXCerChk.checked !== shouldBeChecked) {
+        useTXCerChk.checked = shouldBeChecked;
+        useTXCerChk.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
   };
 
   const updateModeTabsLayout = (): void => {
@@ -2181,6 +2246,15 @@ export function initTransferModeTabs(): void {
       modeTabsContainer.classList.remove('open');
     }
   });
+
+  // Automatically sync state with active tab on init
+  // This fixes the issue where browser autofill might set tfMode to 'cross' while UI shows 'quick'
+  const initialActiveTab = modeTabsContainer.querySelector('.transfer-mode-tab.active');
+  if (initialActiveTab) {
+    // Force apply mode to ensure tfMode input matches the UI tab
+    const mode = (initialActiveTab as HTMLElement).dataset.mode || '';
+    if (mode) applyMode(mode);
+  }
 
   let layoutTimer: ReturnType<typeof setTimeout>;
   const onResize = () => { clearTimeout(layoutTimer); layoutTimer = setTimeout(updateModeTabsLayout, 50); };
@@ -2419,6 +2493,8 @@ export async function refreshWalletBalances(): Promise<boolean> {
         meta.value.totalValue = balanceInfo.balance;
 
         // Update interest/gas (stored separately, not included in totalValue)
+        // IMPORTANT: Must update canonical 'EstInterest' field too, as readAddressInterest checks it first!
+        (meta as any).EstInterest = balanceInfo.interest;
         meta.estInterest = balanceInfo.interest;
         meta.gas = balanceInfo.interest;
 
