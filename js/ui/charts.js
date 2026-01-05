@@ -336,6 +336,8 @@ export function updateWalletChart(user) {
           tooltip.style.left = `${tooltipX}px`;
           tooltip.style.top = `${Math.max(0, tooltipY - 28)}px`;
         }
+      } else if (tooltip) {
+        tooltip.classList.remove('visible');
       }
     };
     
@@ -348,6 +350,7 @@ export function updateWalletChart(user) {
 
     svg.addEventListener('mousemove', handleMouseMove, { passive: true });
     svg.addEventListener('mouseleave', handleMouseLeave);
+    chartEl.addEventListener('mouseleave', handleMouseLeave);
 
     svg.dataset._bindChart = 'true';
   }

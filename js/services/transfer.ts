@@ -431,24 +431,34 @@ export function initTransferSubmit(): void {
           showTxValidationError(t('wallet.crossChain'), null, t('tx.crossChainLimit'));
           return;
         }
-        if (bills[normalizedTo]) {
-          showTxValidationError(t('toast.addressExists'), null, t('tx.duplicateAddress'));
-          return;
-        }
-
         // For cross-chain transactions, use empty/default values for fields not supported by backend
         const effectivePx = isCross ? '' : px;
         const effectivePy = isCross ? '' : py;
         const effectiveGid = isCross ? '' : gid;
         const effectiveInterest = isCross ? 0 : tInt;
 
-        bills[normalizedTo] = {
-          MoneyType: mt,
-          Value: val,
-          GuarGroupID: effectiveGid,
-          PublicKey: { Curve: 'P256', XHex: effectivePx, YHex: effectivePy },
-          ToInterest: effectiveInterest
-        };
+        const existingBill = bills[normalizedTo];
+        if (existingBill) {
+          const sameType = existingBill.MoneyType === mt;
+          const sameGroup = existingBill.GuarGroupID === effectiveGid;
+          const samePubKey = existingBill.PublicKey.XHex === effectivePx
+            && existingBill.PublicKey.YHex === effectivePy;
+          if (!sameType || !sameGroup || !samePubKey) {
+            showTxValidationError(t('tx.duplicateAddress'), null, t('tx.duplicateAddress'));
+            return;
+          }
+          // Merge duplicate recipients for the same address
+          existingBill.Value += val;
+          existingBill.ToInterest += Math.max(0, effectiveInterest || 0);
+        } else {
+          bills[normalizedTo] = {
+            MoneyType: mt,
+            Value: val,
+            GuarGroupID: effectiveGid,
+            PublicKey: { Curve: 'P256', XHex: effectivePx, YHex: effectivePy },
+            ToInterest: effectiveInterest
+          };
+        }
         vd[mt] += val;
         outInterest += Math.max(0, effectiveInterest || 0);
       }
