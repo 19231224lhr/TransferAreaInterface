@@ -269,6 +269,8 @@ export default {
   'login.reOnlineSuccessInGroup': 'Connected to guarantor organization {gid}',
   'login.reOnlineSuccessNoGroup': 'Connected. Current mode: individual',
   'login.reOnlineFailed': 'Backend connection failed',
+  'login.noGuarantorNodesTitle': 'No guarantor nodes online',
+  'login.noGuarantorNodesDesc': 'No guarantor nodes are online; account information may be inaccurate.',
 
   // Screen Lock
   'lock.title': 'Wallet Locked',

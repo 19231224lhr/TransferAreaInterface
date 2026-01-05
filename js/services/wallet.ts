@@ -180,6 +180,15 @@ export function resetWalletBindings(): void {
   // Reset transfer submit button binding
   const tfSendBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLElement | null;
   if (tfSendBtn) {
+    const handler = (tfSendBtn as any)._transferSubmitHandler as ((event?: Event) => void) | undefined;
+    if (handler) {
+      tfSendBtn.removeEventListener('click', handler);
+      delete (tfSendBtn as any)._transferSubmitHandler;
+    } else if (tfSendBtn.dataset._bind) {
+      const cloned = tfSendBtn.cloneNode(true) as HTMLElement;
+      delete cloned.dataset._bind;
+      tfSendBtn.replaceWith(cloned);
+    }
     delete tfSendBtn.dataset._bind;
   }
 
@@ -249,8 +258,10 @@ export function refreshOrgPanel(): void {
   const woEmpty = document.getElementById(DOM_IDS.woEmpty);
   const woExit = document.getElementById(DOM_IDS.woExitBtn);
   const joinBtn = document.getElementById(DOM_IDS.woJoinBtn);
-  const g = getJoinedGroup();
-  const joined = !!(g && g.groupID);
+  const u = getCurrentUser();
+  const hasJoined = !!(u?.orgNumber || u?.guarGroup?.groupID);
+  const g = hasJoined ? getJoinedGroup() : null;
+  const joined = hasJoined;
 
   if (woCard) woCard.classList.toggle('hidden', !joined);
   if (woExit) woExit.classList.toggle('hidden', !joined);
@@ -272,7 +283,15 @@ export function refreshOrgPanel(): void {
       modeTabsContainer.classList.remove('no-org-mode');
     } else {
       modeTabsContainer.classList.add('no-org-mode');
+      modeTabsContainer.classList.remove('open');
+      const dd = modeTabsContainer.querySelector('.mode-dropdown');
+      if (dd) dd.remove();
     }
+  }
+
+  const noOrgWarning = document.getElementById('noOrgWarning');
+  if (noOrgWarning) {
+    noOrgWarning.classList.toggle('hidden', hasOrg);
   }
 
   if (tfModeQuick?.parentNode) {
@@ -2117,6 +2136,7 @@ export function initTransferModeTabs(): void {
   if (!modeTabsContainer || modeTabsContainer.dataset._bind) return;
 
   const isCompactMode = () => window.matchMedia('(max-width: 860px)').matches;
+  const isNoOrgMode = () => modeTabsContainer.classList.contains('no-org-mode');
 
   const ensureDropdown = (): HTMLElement => {
     let dd = modeTabsContainer.querySelector('.mode-dropdown') as HTMLElement | null;
@@ -2129,6 +2149,12 @@ export function initTransferModeTabs(): void {
   };
 
   const rebuildDropdown = (): void => {
+    if (isNoOrgMode()) {
+      const dd = modeTabsContainer.querySelector('.mode-dropdown');
+      if (dd) dd.remove();
+      modeTabsContainer.classList.remove('open');
+      return;
+    }
     const dd = ensureDropdown();
     const btns: HTMLButtonElement[] = [];
     modeTabsContainer.querySelectorAll('.transfer-mode-tab').forEach(b => {

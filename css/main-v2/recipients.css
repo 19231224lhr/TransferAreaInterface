@@ -134,7 +134,8 @@
   background: var(--neutral-100);
   border-radius: var(--radius-md);
   border: none;
-  overflow: visible; /* 允许下拉菜单溢出 */
+  overflow: visible;
+  /* 允许下拉菜单溢出 */
 }
 
 /* 收款方卡片 - 简洁灰色背景 */
@@ -143,6 +144,7 @@
   background: var(--bg-card-solid);
   border-radius: 10px;
   overflow: hidden;
+  --field-label-width: 96px;
   transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   animation: recipientCardEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -164,7 +166,6 @@
 /* 卡片内容 - 移除左侧序号空间 */
 .recipient-content {
   padding: 12px 14px;
-  --field-label-width: 96px;
 }
 
 /* 主要输入区 - 地址行 */
@@ -195,6 +196,8 @@
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: 0.2px;
+  line-height: 1.2;
+  padding-top: 2px;
 }
 
 .recipient-addr-input-wrap {
@@ -482,7 +485,7 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 8px;
-  padding-top: 10px;
+  padding: 10px 0;
   border-top: 1px dashed var(--neutral-200);
 }
 
@@ -499,7 +502,7 @@
   justify-content: flex-start;
   gap: 6px;
   margin-top: 10px;
-  padding-top: 10px;
+  padding: 10px 14px;
   border-top: 1px solid var(--neutral-100);
 }
 

@@ -9,7 +9,8 @@ import { loadUser, User, AddressData, getJoinedGroup } from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showConfirmModal } from '../ui/modal';
 import { BuildTXInfo } from './transaction';
-import { buildTransactionFromLegacy, serializeUserNewTX, submitTransaction, UserNewTX, waitForTXConfirmation, TXStatusResponse } from './txBuilder';
+import { buildTransactionFromLegacy, buildNormalTransaction, serializeUserNewTX, serializeAggregateGTX, submitTransaction, UserNewTX, waitForTXConfirmation, TXStatusResponse, AggregateGTXForSubmit, BuildTransactionParams } from './txBuilder';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { validateAddress, validateTransferAmount, validateOrgId, createSubmissionGuard } from '../utils/security';
 import { createCheckpoint, restoreCheckpoint, createDOMSnapshot, restoreFromSnapshot } from '../utils/transaction';
 import { clearTransferDraft } from './transferDraft';
@@ -22,6 +23,7 @@ import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 import { buildAssignNodeUrl } from './group';
 import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
+import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 
 // ========================================
 // Type Definitions
@@ -138,7 +140,8 @@ function parsePub(raw: string): { x: string; y: string; ok: boolean } {
 
 /**
  * Update transfer button state based on user's organization membership
- * Disables the button if user hasn't joined a guarantor organization
+ * - For users in guarantor org: enable for quick and cross transfers
+ * - For users NOT in guarantor org: enable for normal transfer (quick mode only)
  */
 export function updateTransferButtonState(): void {
   const tfBtn = document.getElementById(DOM_IDS.tfSendBtn) as HTMLButtonElement | null;
@@ -150,13 +153,44 @@ export function updateTransferButtonState(): void {
 
   // Get the mode selector to check transfer type
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
-  const currentMode = tfMode?.value || 'quick';
-  // Allow both 'quick' (快速转账) and 'cross' (跨链转账) modes
-  // Only 'pledge' (质押交易) is disabled for now
-  const isSupportedMode = currentMode === 'quick' || currentMode === 'cross';
+  let currentMode = tfMode?.value || 'quick';
 
-  // Enable button only if user has joined org AND is using a supported transfer mode
-  const shouldEnable = hasJoined && isSupportedMode;
+  // Enforce normal-transfer-only when user is not in a guarantor org.
+  if (!hasJoined && currentMode !== 'quick') {
+    currentMode = 'quick';
+    if (tfMode) tfMode.value = 'quick';
+
+    const isPledgeSel = document.getElementById(DOM_IDS.isPledge) as HTMLSelectElement | null;
+    if (isPledgeSel) isPledgeSel.value = 'false';
+
+    const modeTabsContainer = document.getElementById(DOM_IDS.transferModeTabs);
+    if (modeTabsContainer) {
+      modeTabsContainer.setAttribute('data-active', '0');
+      modeTabsContainer.querySelectorAll('.transfer-mode-tab').forEach((tab) => {
+        const isQuick = (tab as HTMLElement).dataset.mode === 'quick';
+        tab.classList.toggle('active', isQuick);
+      });
+    }
+  }
+
+  // Determine if button should be enabled
+  let shouldEnable = false;
+  let disableReason = '';
+
+  if (hasJoined) {
+    // User is in guarantor org: allow quick and cross transfer
+    const isSupportedMode = currentMode === 'quick' || currentMode === 'cross';
+    shouldEnable = isSupportedMode;
+    if (!isSupportedMode) {
+      disableReason = t('transfer.pledgeNotSupported') || '质押交易功能暂未开放';
+    }
+  } else {
+    // User is NOT in guarantor org: allow quick mode only (normal transfer to ComNode)
+    shouldEnable = currentMode === 'quick';
+    if (!shouldEnable) {
+      disableReason = t('transfer.normalTransferOnly') || '散户模式仅支持普通转账';
+    }
+  }
 
   tfBtn.disabled = !shouldEnable;
 
@@ -166,11 +200,7 @@ export function updateTransferButtonState(): void {
     tfBtn.title = '';
   } else {
     tfBtn.classList.add('btn-disabled');
-    if (!hasJoined) {
-      tfBtn.title = t('transfer.joinOrgFirst') || '请先加入担保组织后才能发送交易';
-    } else if (!isSupportedMode) {
-      tfBtn.title = t('transfer.pledgeNotSupported') || '质押交易功能暂未开放';
-    }
+    tfBtn.title = disableReason;
   }
 }
 
@@ -192,7 +222,16 @@ export function initTransferSubmit(): void {
   const txGasInput = document.getElementById(DOM_IDS.txGasInput) as HTMLInputElement | null;
   const txErr = document.getElementById(DOM_IDS.txError);
 
-  if (!tfBtn || tfBtn.dataset._bind) return;
+  if (!tfBtn) return;
+
+  const existingHandler = (tfBtn as any)._transferSubmitHandler as ((event?: Event) => void) | undefined;
+  if (existingHandler) {
+    tfBtn.removeEventListener('click', existingHandler);
+    delete (tfBtn as any)._transferSubmitHandler;
+    delete tfBtn.dataset._bind;
+  }
+
+  if (tfBtn.dataset._bind) return;
 
   // Initial button state check
   updateTransferButtonState();
@@ -225,7 +264,7 @@ export function initTransferSubmit(): void {
   // Create submission guard to prevent double-submit
   const transferSubmitGuard = createSubmissionGuard('transfer-submit');
 
-  tfBtn.addEventListener('click', async () => {
+  const onTransferSubmit = async () => {
     const checkpointId = `transfer-generate-${Date.now()}`;
     // Persisted draft keys we may want to restore quickly on unexpected failure
     createCheckpoint(checkpointId, ['auto-save-transfer-v1', 'form-draft-transfer-v1']);
@@ -643,12 +682,10 @@ export function initTransferSubmit(): void {
         return;
       }
 
-      // 检查必要条件
-      if (!user.orgNumber && !user.guarGroup?.groupID) {
-        const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织';
-        console.error('[构造交易] 错误:', errMsg);
-        showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
-        return;
+      // 检查是否是普通转账模式（未加入担保组织的用户）
+      const isNormalTransferMode = !user.orgNumber && !user.guarGroup?.groupID;
+      if (isNormalTransferMode) {
+        console.log('[构造交易] 用户未加入担保组织，使用普通转账模式 (TXType=8)');
       }
 
       // 检查账户私钥（支持加密私钥）
@@ -747,12 +784,42 @@ export function initTransferSubmit(): void {
       }
 
       // 使用新的交易构造器
-      let userNewTX: UserNewTX;
+      let userNewTX: UserNewTX | null = null;
+      let aggregateGTX: AggregateGTXForSubmit | null = null;
+
       try {
-        userNewTX = await buildTransactionFromLegacy(build, user);
-        console.log('[构造交易] 交易构造成功');
-        console.log('[构造交易] TXID:', userNewTX.TX.TXID);
-        console.log('[构造交易] TXType:', userNewTX.TX.TXType, userNewTX.TX.TXType === 1 ? '(使用了TXCer)' : '(仅UTXO)');
+        if (isNormalTransferMode) {
+          // ========== 普通转账模式：构建 AggregateGTX ==========
+          console.log('[构造交易] 普通转账模式，构建 AggregateGTX...');
+
+          const buildParams: BuildTransactionParams = {
+            fromAddresses: build.UserAddress,
+            recipients: Object.entries(build.Bill).map(([address, bill]) => ({
+              address,
+              amount: bill.Value,
+              coinType: bill.MoneyType,
+              publicKeyX: bill.PublicKey?.XHex || '',
+              publicKeyY: bill.PublicKey?.YHex || '',
+              guarGroupID: bill.GuarGroupID || '',
+              interest: bill.ToInterest || 0
+            })),
+            changeAddresses: build.ChangeAddress,
+            gas: build.InterestAssign.Gas,
+            isCrossChain: false,
+            howMuchPayForGas: build.HowMuchPayForGas || 0,
+            preferTXCer: false
+          };
+
+          aggregateGTX = await buildNormalTransaction(buildParams, user);
+          console.log('[构造交易] 普通转账交易构造成功');
+          console.log('[构造交易] TXHash:', aggregateGTX.TXHash);
+        } else {
+          // ========== 担保交易模式：构建 UserNewTX ==========
+          userNewTX = await buildTransactionFromLegacy(build, user);
+          console.log('[构造交易] 交易构造成功');
+          console.log('[构造交易] TXID:', userNewTX.TX.TXID);
+          console.log('[构造交易] TXType:', userNewTX.TX.TXType, userNewTX.TX.TXType === 1 ? '(使用了TXCer)' : '(仅UTXO)');
+        }
       } catch (buildErr) {
         // 🔓 构造失败，解锁 TXCer
         if (lockedTXCerIds.length > 0) {
@@ -765,32 +832,46 @@ export function initTransferSubmit(): void {
       // Save transaction data and show view button
       const txInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
       if (txInfoBtn) {
-        txInfoBtn.dataset.txData = serializeUserNewTX(userNewTX);
+        if (userNewTX) {
+          txInfoBtn.dataset.txData = serializeUserNewTX(userNewTX);
+        } else if (aggregateGTX) {
+          txInfoBtn.dataset.txData = JSON.stringify(aggregateGTX, null, 2);
+        }
         txInfoBtn.classList.remove('hidden');
       }
 
       // ========== Step 2: 确认并发送交易 ==========
-      // 获取担保组织信息
-      const guarGroup = getJoinedGroup();
-      if (!guarGroup || !guarGroup.groupID) {
-        // 🔓 无担保组织，解锁 TXCer
-        if (lockedTXCerIds.length > 0) {
-          unlockTXCers(lockedTXCerIds, false);
-        }
-        const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织，无法发送交易';
-        console.error('[发送交易] 错误:', errMsg);
-        showToast(errMsg, 'error', t('toast.sendTxFailed') || '发送失败', 2000);
-        return;
+      // 获取交易ID用于显示
+      let displayTxId = '';
+      if (userNewTX) {
+        displayTxId = userNewTX.TX.TXID;
+      } else if (aggregateGTX && aggregateGTX.AllTransactions.length > 0) {
+        displayTxId = aggregateGTX.AllTransactions[0].TXID || aggregateGTX.TXHash.substring(0, 16);
       }
 
-      // 检查交易模式，目前支持快速转账和跨链转账
+      // 对于担保交易，检查担保组织信息
+      let guarGroup: ReturnType<typeof getJoinedGroup> = null;
+      if (!isNormalTransferMode) {
+        guarGroup = getJoinedGroup();
+        if (!guarGroup || !guarGroup.groupID) {
+          // 🔓 无担保组织，解锁 TXCer
+          if (lockedTXCerIds.length > 0) {
+            unlockTXCers(lockedTXCerIds, false);
+          }
+          const errMsg = t('txBuilder.noGuarGroup') || '用户未加入担保组织，无法发送交易';
+          console.error('[发送交易] 错误:', errMsg);
+          showToast(errMsg, 'error', t('toast.sendTxFailed') || '发送失败', 2000);
+          return;
+        }
+      }
+
+      // 检查交易模式（仅对担保交易检查）
       const currentTfMode = tfMode?.value || 'quick';
-      if (currentTfMode !== 'quick' && currentTfMode !== 'cross') {
+      if (!isNormalTransferMode && currentTfMode !== 'quick' && currentTfMode !== 'cross') {
         // 🔓 不支持的模式，解锁 TXCer
         if (lockedTXCerIds.length > 0) {
           unlockTXCers(lockedTXCerIds, false);
         }
-        // 如果是 pledge 模式，显示特定的不支持消息
         if (currentTfMode === 'pledge') {
           const errMsg = t('transfer.pledgeNotSupported') || '目前不支持质押交易';
           showToast(errMsg, 'error', t('toast.sendTxFailed'), 2000);
@@ -809,8 +890,8 @@ export function initTransferSubmit(): void {
       const confirmMessage = t('transfer.confirmSendTxDesc', {
         amount: totalAmount.toFixed(4),
         recipients: String(recipientCount),
-        txid: userNewTX.TX.TXID
-      }) || `确认发送交易？\n\n交易ID: ${userNewTX.TX.TXID}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount.toFixed(4)}`;
+        txid: displayTxId
+      }) || `确认发送交易？\n\n交易ID: ${displayTxId}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount.toFixed(4)}`;
 
       const confirmed = await showConfirmModal(
         t('transfer.confirmSendTx') || '确认发送交易',
@@ -832,23 +913,76 @@ export function initTransferSubmit(): void {
 
       // ========== Step 3: 发送交易到后端 ==========
       console.log('[发送交易] 开始发送交易到后端...');
-      console.log('[发送交易] 担保组织ID:', guarGroup.groupID);
-
-      // 获取 AssignNode URL
-      let assignNodeUrl: string | undefined;
-      if (guarGroup.assignAPIEndpoint) {
-        assignNodeUrl = buildAssignNodeUrl(guarGroup.assignAPIEndpoint);
-        console.log('[发送交易] AssignNode URL:', assignNodeUrl);
-      } else {
-        console.warn('[发送交易] 警告: 担保组织缺少 assignAPIEndpoint，将使用默认 API_BASE_URL');
-      }
 
       // 更新 loading 提示
       hideLoading(loadingId);
       const sendLoadingId = showLoading(t('transfer.sendingTx') || '正在发送交易...');
 
       try {
-        const result = await submitTransaction(userNewTX, guarGroup.groupID, assignNodeUrl);
+        let result: { success: boolean; tx_id?: string; error?: string };
+
+        if (isNormalTransferMode && aggregateGTX) {
+          // ========== 普通转账：发送到 ComNode ==========
+          console.log('[发送交易] 普通转账模式，发送到 ComNode...');
+
+          const comNodeBaseURL = await getComNodeURL(false, false);
+          if (!comNodeBaseURL) {
+            result = {
+              success: false,
+              error: t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试')
+            };
+          } else {
+            const comNodeUrl = `${comNodeBaseURL}${API_ENDPOINTS.COM_SUBMIT_NOGUARGROUP_TX}`;
+            console.log('[发送交易] ComNode URL:', comNodeUrl);
+
+            const response = await fetch(comNodeUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: serializeAggregateGTX(aggregateGTX)
+            });
+
+            if (response.status === 503) {
+              clearComNodeCache();
+            }
+
+            const respData = await response.json().catch(() => ({}));
+            console.log('[发送交易] ComNode 响应:', respData);
+
+            if (response.ok && respData.success) {
+              result = {
+                success: true,
+                tx_id: respData.tx_hash || displayTxId
+              };
+            } else if (response.status === 503) {
+              result = {
+                success: false,
+                error: t('error.leaderUnavailable', 'Leader 节点暂时不可用，请稍后重试')
+              };
+            } else {
+              result = {
+                success: false,
+                error: respData.error || '提交失败'
+              };
+            }
+          }
+        } else if (userNewTX && guarGroup) {
+          // ========== 担保交易：发送到 AssignNode ==========
+          console.log('[发送交易] 担保组织ID:', guarGroup.groupID);
+
+          let assignNodeUrl: string | undefined;
+          if (guarGroup.assignAPIEndpoint) {
+            assignNodeUrl = buildAssignNodeUrl(guarGroup.assignAPIEndpoint);
+            console.log('[发送交易] AssignNode URL:', assignNodeUrl);
+          } else {
+            console.warn('[发送交易] 警告: 担保组织缺少 assignAPIEndpoint，将使用默认 API_BASE_URL');
+          }
+
+          result = await submitTransaction(userNewTX, guarGroup.groupID, assignNodeUrl);
+        } else {
+          throw new Error('交易数据不完整');
+        }
 
         // 立即隐藏 loading，不等待轮询
         hideLoading(sendLoadingId);
@@ -856,10 +990,8 @@ export function initTransferSubmit(): void {
         if (result.success) {
           console.log('[发送交易] 交易发送成功，TXID:', result.tx_id);
 
-          // 🔒 发送成功：
-          // - 未使用的 TXCer 立即解锁（可再次选择）
-          // - 已使用的 TXCer 进入“已提交交易长锁”，直到明确成功/失败才解锁/处理
-          if (lockedTXCerIds.length > 0) {
+          // 🔒 发送成功 - TXCer 处理（仅担保交易使用 TXCer）
+          if (lockedTXCerIds.length > 0 && userNewTX) {
             const usedTxCerIds: string[] = [];
             if (userNewTX.TX.TXInputsCertificate) {
               for (const txCer of userNewTX.TX.TXInputsCertificate as any[]) {
@@ -881,76 +1013,78 @@ export function initTransferSubmit(): void {
             }
           }
 
-          const txIdToQuery = result.tx_id || userNewTX.TX.TXID;
+          const txIdToQuery = result.tx_id || displayTxId;
 
-          // 🔒 锁定使用到的 UTXO
-          try {
-            const utxosToLock: Omit<LockedUTXO, 'lockTime' | 'txId'>[] = [];
-            const txInputs = userNewTX.TX.TXInputsNormal || [];
+          // 🔒 锁定使用到的 UTXO（仅担保交易需要，普通转账 ComNode 会处理）
+          if (userNewTX) {
+            try {
+              const utxosToLock: Omit<LockedUTXO, 'lockTime' | 'txId'>[] = [];
+              const txInputs = userNewTX.TX.TXInputsNormal || [];
 
-            for (const input of txInputs) {
-              const fromAddrHint = input.FromAddress?.toLowerCase() || '';
-              const fromTxId = input.FromTXID || '';
-              const indexZ = input.FromTxPosition?.IndexZ ?? 0;
+              for (const input of txInputs) {
+                const fromAddrHint = input.FromAddress?.toLowerCase() || '';
+                const fromTxId = input.FromTXID || '';
+                const indexZ = input.FromTxPosition?.IndexZ ?? 0;
 
-              // 构造 UTXO ID (与 utxoLock.ts 中的格式一致)
-              const utxoId = `${fromTxId}_${indexZ}`;
+                // 构造 UTXO ID (与 utxoLock.ts 中的格式一致)
+                const utxoId = `${fromTxId}_${indexZ}`;
 
-              if (!fromTxId) {
-                console.warn('[发送交易] 跳过锁定：TXInputsNormal 缺少 FromTXID');
-                continue;
-              }
+                if (!fromTxId) {
+                  console.warn('[发送交易] 跳过锁定：TXInputsNormal 缺少 FromTXID');
+                  continue;
+                }
 
-              // 兼容后端格式 key
-              const backendKey = `${fromTxId} + ${indexZ}`;
+                // 兼容后端格式 key
+                const backendKey = `${fromTxId} + ${indexZ}`;
 
-              // 在钱包中定位该 UTXO（优先 FromAddress，其次全表扫描）
-              let resolvedAddr = fromAddrHint;
-              let resolvedAddrData: any = (user.wallet?.addressMsg as any)?.[resolvedAddr];
+                // 在钱包中定位该 UTXO（优先 FromAddress，其次全表扫描）
+                let resolvedAddr = fromAddrHint;
+                let resolvedAddrData: any = (user.wallet?.addressMsg as any)?.[resolvedAddr];
 
-              let utxoData: any = resolvedAddrData?.utxos?.[utxoId] || resolvedAddrData?.utxos?.[backendKey];
+                let utxoData: any = resolvedAddrData?.utxos?.[utxoId] || resolvedAddrData?.utxos?.[backendKey];
 
-              if (!utxoData) {
-                const allAddrs = (user.wallet?.addressMsg || {}) as Record<string, any>;
-                for (const [addrKey, addrData] of Object.entries(allAddrs)) {
-                  const candidate = addrData?.utxos?.[utxoId] || addrData?.utxos?.[backendKey];
-                  if (candidate) {
-                    resolvedAddr = String(addrKey).toLowerCase();
-                    resolvedAddrData = addrData;
-                    utxoData = candidate;
-                    break;
+                if (!utxoData) {
+                  const allAddrs = (user.wallet?.addressMsg || {}) as Record<string, any>;
+                  for (const [addrKey, addrData] of Object.entries(allAddrs)) {
+                    const candidate = addrData?.utxos?.[utxoId] || addrData?.utxos?.[backendKey];
+                    if (candidate) {
+                      resolvedAddr = String(addrKey).toLowerCase();
+                      resolvedAddrData = addrData;
+                      utxoData = candidate;
+                      break;
+                    }
                   }
                 }
+
+                if (!resolvedAddr) {
+                  // 兜底：仍然用 hint
+                  resolvedAddr = fromAddrHint;
+                }
+
+                // 获取 UTXO 的金额和类型
+                const value = Number(utxoData?.Value ?? 0) || 0;
+                const type = Number(utxoData?.Type ?? resolvedAddrData?.type ?? 0) || 0;
+
+                if (!utxoData) {
+                  console.warn('[发送交易] 未在钱包中找到 UTXO，仍会锁定以防双花，但锁定金额可能为 0:', utxoId);
+                }
+
+                utxosToLock.push({
+                  utxoId,
+                  address: resolvedAddr,
+                  value,
+                  type
+                });
               }
 
-              if (!resolvedAddr) {
-                // 兜底：仍然用 hint
-                resolvedAddr = fromAddrHint;
+              if (utxosToLock.length > 0) {
+                lockUTXOs(utxosToLock, txIdToQuery);
+                console.log('[发送交易] 已锁定', utxosToLock.length, '个 UTXO');
               }
-
-              // 获取 UTXO 的金额和类型
-              const value = Number(utxoData?.Value ?? 0) || 0;
-              const type = Number(utxoData?.Type ?? resolvedAddrData?.type ?? 0) || 0;
-
-              if (!utxoData) {
-                console.warn('[发送交易] 未在钱包中找到 UTXO，仍会锁定以防双花，但锁定金额可能为 0:', utxoId);
-              }
-
-              utxosToLock.push({
-                utxoId,
-                address: resolvedAddr,
-                value,
-                type
-              });
+            } catch (lockErr) {
+              console.warn('[发送交易] 锁定 UTXO 失败:', lockErr);
+              // 锁定失败不影响交易发送
             }
-
-            if (utxosToLock.length > 0) {
-              lockUTXOs(utxosToLock, txIdToQuery);
-              console.log('[发送交易] 已锁定', utxosToLock.length, '个 UTXO');
-            }
-          } catch (lockErr) {
-            console.warn('[发送交易] 锁定 UTXO 失败:', lockErr);
-            // 锁定失败不影响交易发送
           }
 
           // 显示成功提示，根据交易类型显示不同消息
@@ -998,12 +1132,21 @@ export function initTransferSubmit(): void {
           } catch (_) { }
 
           // 🔄 后台异步轮询交易状态（不阻塞用户界面）
-          console.log('[发送交易] 开始后台轮询交易状态:', txIdToQuery);
+          // 注：普通转账暂不支持状态轮询（ComNode 不提供此接口）
+          if (!isNormalTransferMode && guarGroup) {
+            console.log('[发送交易] 开始后台轮询交易状态:', txIdToQuery);
 
-          // 使用 setTimeout 0 确保 UI 先更新
-          setTimeout(() => {
-            pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, assignNodeUrl);
-          }, 0);
+            const pollingAssignUrl = guarGroup.assignAPIEndpoint
+              ? buildAssignNodeUrl(guarGroup.assignAPIEndpoint)
+              : undefined;
+
+            // 使用 setTimeout 0 确保 UI 先更新
+            setTimeout(() => {
+              pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, pollingAssignUrl);
+            }, 0);
+          } else {
+            console.log('[发送交易] 普通转账模式，跳过状态轮询');
+          }
 
         } else {
           const errMsg = result.error || t('transfer.unknownError') || '未知错误';
@@ -1090,7 +1233,10 @@ export function initTransferSubmit(): void {
       transferSubmitGuard.end();
       hideLoading(loadingId);
     }
-  });
+  };
+
+  (tfBtn as any)._transferSubmitHandler = onTransferSubmit;
+  tfBtn.addEventListener('click', onTransferSubmit);
 
   tfBtn.dataset._bind = '1';
 }

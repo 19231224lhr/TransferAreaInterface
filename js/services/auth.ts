@@ -71,6 +71,8 @@ export interface ReturnUserReOnlineMsg {
   GuarantorGroupID: string;
   GuarGroupBootMsg: GuarGroupTable | null;
   UserWalletData: UserWalletData;
+  /** Gateway notice header (e.g. "no-guarantor-nodes") */
+  GatewayNotice?: string;
 }
 
 // ============================================================================
@@ -139,8 +141,12 @@ export async function userReOnline(
   // ⚠️ 重要：使用 BigInt 安全解析
   // 后端返回的 UserWalletData 中包含 UTXO 数据，其中的 PublicKeyNew X/Y 是 256 位整数
   // JavaScript 原生 JSON.parse 会丢失精度，导致后续 TXOutputHash 计算错误
+  const gatewayNotice = response.headers.get('X-Gateway-Notice') || '';
   const text = await response.text();
   const result: ReturnUserReOnlineMsg = parseBigIntJson(text);
+  if (gatewayNotice) {
+    result.GatewayNotice = gatewayNotice;
+  }
   return result;
 }
 

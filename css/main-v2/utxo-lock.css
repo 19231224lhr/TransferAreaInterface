@@ -35,9 +35,12 @@
 }
 
 @keyframes utxo-lock-pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 1;
   }
+
   50% {
     opacity: 0.6;
   }
@@ -99,7 +102,7 @@
   gap: 6px;
   margin-top: 8px;
   padding: 10px 12px;
-  background: var(--balance-breakdown-bg, rgba(255, 255, 255, 0.03));
+  background: var(--balance-breakdown-bg, rgba(16, 185, 129, 0.08));
   border-radius: 8px;
   font-size: 13px;
   border: 1px solid rgba(255, 255, 255, 0.06);
@@ -128,13 +131,13 @@
 .main-v2 .addr-card-detail .balance-breakdown .balance-value {
   font-size: 13px !important;
   font-weight: 500 !important;
-  color: #ffffff !important;
+  color: #1e293b !important;
   font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace !important;
   /* 关键：覆盖 wallet.css 中的渐变文字效果 */
   background: none !important;
   -webkit-background-clip: unset !important;
   background-clip: unset !important;
-  -webkit-text-fill-color: #ffffff !important;
+  -webkit-text-fill-color: #1e293b !important;
   padding: 0 !important;
 }
 
@@ -200,13 +203,11 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(245, 158, 11, 0.03) 10px,
-    rgba(245, 158, 11, 0.03) 20px
-  );
+  background: repeating-linear-gradient(45deg,
+      transparent,
+      transparent 10px,
+      rgba(245, 158, 11, 0.03) 10px,
+      rgba(245, 158, 11, 0.03) 20px);
   pointer-events: none;
   border-radius: inherit;
 }
@@ -316,6 +317,14 @@
   --card-bg: rgba(255, 255, 255, 0.05);
 }
 
+[data-theme="dark"] .balance-breakdown .balance-value,
+[data-theme="dark"] .main-v2 .balance-breakdown .balance-value,
+[data-theme="dark"] .main-v2 .addr-card .balance-breakdown .balance-value,
+[data-theme="dark"] .main-v2 .addr-card-detail .balance-breakdown .balance-value {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
 /* ============================================================================
    响应式适配
    ============================================================================ */
@@ -325,17 +334,17 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .balance-summary-item {
     flex-direction: row;
     justify-content: space-between;
     padding: 10px 12px;
   }
-  
+
   .balance-summary-item .label {
     margin-bottom: 0;
   }
-  
+
   .balance-summary-item .value {
     font-size: 16px;
   }

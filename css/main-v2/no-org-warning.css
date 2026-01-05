@@ -17,6 +17,11 @@
   display: flex !important;
 }
 
+/* no-org 模式下不需要滑动指示器 */
+.transfer-mode-tabs.no-org-mode::before {
+  display: none;
+}
+
 /* 警告模块容器 */
 .no-org-warning {
   display: none;
@@ -25,6 +30,8 @@
   justify-content: center;
   gap: 0;
   animation: noOrgFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  z-index: 1;
 }
 
 @keyframes noOrgFadeIn {
@@ -57,10 +64,14 @@
   gap: 8px;
   transition: all var(--duration-fast) ease;
   margin-right: 10px;
+  position: relative;
+  z-index: 1;
+  min-width: 0;
 }
 
 .no-org-tab-text {
   letter-spacing: 0.3px;
+  white-space: nowrap;
 }
 
 /* 警告图标按钮 */

@@ -5,7 +5,7 @@
  */
 
 import { t } from '../i18n/index.js';
-import { showMiniToast, showInfoToast, showToast, showErrorToast } from '../utils/toast.js';
+import { showMiniToast, showInfoToast, showToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { querySingleAddressGroup, GROUP_ID_NOT_EXIST, GROUP_ID_RETAIL } from './accountQuery';
@@ -305,7 +305,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           if (info.pubKey) items.push(t('tx.publicKey'));
           if (info.groupId) items.push(t('tx.guarantorOrg'));
           const found = items.join(t('common.separator') || '、');
-          showMiniToast(t('tx.infoRetrieved', { info: found }), 'success');
+          showSuccessToast(t('tx.infoRetrieved', { info: found }));
         }
       } catch (e) {
         showErrorToast(t('tx.queryFailed'));

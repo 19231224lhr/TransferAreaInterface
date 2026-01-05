@@ -553,6 +553,13 @@ async function handleNextClick(): Promise<void> {
       );
     }
     
+    if (result.GatewayNotice === 'no-guarantor-nodes') {
+      window.PanguPay?.ui?.showWarningToast?.(
+        t('login.noGuarantorNodesDesc', '系统内没有在线的担保节点，账户信息可能不准确'),
+        t('login.noGuarantorNodesTitle', '无担保节点在线')
+      );
+    }
+
     // Navigate to entry page
     (window as unknown as Record<string, unknown>).__skipExitConfirm = true;
     if (typeof window.PanguPay?.router?.routeTo === 'function') {
@@ -604,6 +611,15 @@ function handlePrivKeyToggle(): void {
 /**
  * 处理登录按钮点击
  */
+function resetNextButtonState(): void {
+  const nextBtn = document.getElementById(DOM_IDS.loginNextBtn) as HTMLButtonElement | null;
+  if (!nextBtn) return;
+
+  hideElementLoading(nextBtn);
+  nextBtn.classList.remove('is-loading');
+  nextBtn.disabled = false;
+}
+
 async function handleLoginClick(): Promise<void> {
   // 确保 pageState 存在，如果不存在则重新初始化
   if (!pageState) {
@@ -841,6 +857,7 @@ export function resetLoginPageState(): void {
   // 重置强度和匹配 UI
   updateStrengthUI('');
   updateMatchUI(false, false);
+  resetNextButtonState();
 }
 
 /**
@@ -947,6 +964,7 @@ function bindEvents(): void {
   
   // 下一步按钮
   const loginNextBtn = document.getElementById(DOM_IDS.loginNextBtn);
+  resetNextButtonState();
   addEvent(loginNextBtn, 'click', handleNextClick);
   
   // 取消按钮

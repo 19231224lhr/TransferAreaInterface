@@ -264,6 +264,8 @@ export default {
   'login.reOnlineSuccessInGroup': '已连接到担保组织 {gid}',
   'login.reOnlineSuccessNoGroup': '已连接，当前为散户模式',
   'login.reOnlineFailed': '连接后端失败',
+  'login.noGuarantorNodesTitle': '无担保节点在线',
+  'login.noGuarantorNodesDesc': '系统内没有在线的担保节点，账户信息可能不准确',
   'login.passwordTooShort': '密码至少需要6位',
   'login.confirmPassword': '确认密码',
   'login.enterConfirmPassword': '请再次输入密码...',

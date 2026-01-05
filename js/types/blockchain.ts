@@ -172,6 +172,31 @@ export interface SubATX {
 }
 
 // ============================================================================
+// Aggregate GTX (for non-guarantor transactions)
+// ============================================================================
+
+/**
+ * Aggregate GTX structure for non-guarantor (散户) transactions
+ * Corresponds to Go: AggregateGTX
+ * 
+ * Used when submitting transactions to ComNode for users who haven't joined
+ * a guarantor organization.
+ */
+export interface AggregateGTX {
+  AggrTXType: number;           // 2 for normal transfer (散户交易聚合)
+  IsGuarCommittee: boolean;     // false for user-submitted transactions
+  IsNoGuarGroupTX: boolean;     // true for non-guarantor transactions
+  GuarantorGroupID: string;     // "" for non-guarantor transactions
+  GuarantorGroupSig: EcdsaSignature | NullableEcdsaSignature; // Empty signature
+  TXNum: number;                // Number of transactions (1 for single transfer)
+  TotalGas: number;             // Total gas (0 for non-guarantor)
+  TXHash: string;               // Base64 encoded SHA-256 hash
+  TXSize: number;               // Transaction size (0, computed by backend)
+  Version: number;              // Version (1.0)
+  AllTransactions: SubATX[];    // Array of SubATX transactions
+}
+
+// ============================================================================
 // Main Transaction
 // ============================================================================
 
@@ -190,19 +215,19 @@ export interface Transaction {
   ValueDivision: Record<number, number>; // Transfer amount by currency type
   NewValue: number;                   // Amount modified by guarantor (not included in user signature)
   NewValueDiv: Record<number, number>; // Amount type modified by guarantor (not in signature)
-  
+
   InterestAssign: InterestAssign;     // Transaction fees
-  
+
   // Signature
   UserSignature: EcdsaSignature;      // User signature
-  
+
   // Inputs
   TXInputsNormal: TXInputNormal[];    // Normal inputs
   TXInputsCertificate: TxCertificate[]; // Certificate inputs
-  
+
   // Outputs
   TXOutputs: TXOutput[];              // Transaction outputs
-  
+
   // Extra data
   Data: number[];                     // Extra data field (cross-chain transfers), byte array
 }

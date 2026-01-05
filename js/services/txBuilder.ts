@@ -1533,6 +1533,19 @@ export function serializeUserNewTX(userNewTX: UserNewTX): string {
   return json;
 }
 
+/**
+ * Serialize AggregateGTX for submit (convert []byte fields to Base64).
+ */
+export function serializeAggregateGTX(atx: AggregateGTXForSubmit): string {
+  const copy = JSON.parse(JSON.stringify(atx, bigintReplacer));
+  convertByteArraysToBase64(copy);
+
+  let json = JSON.stringify(copy);
+  json = json.replace(/"(X|Y|R|S)":"(\d+)"/g, '"$1":$2');
+
+  return json;
+}
+
 // ============================================================================
 // 交易状态查询
 // ============================================================================
@@ -1924,4 +1937,413 @@ export async function buildTransactionFromLegacy(
   console.log('[buildTransactionFromLegacy] 转换后的 params:', JSON.stringify(params, null, 2));
 
   return buildTransaction(params, user);
+}
+
+// ============================================================================
+// AggregateGTX 构造（普通转账 - 散户交易）
+// ============================================================================
+
+/**
+ * SubATX 结构（聚合交易中的子交易）
+ */
+export interface SubATXForSubmit {
+  TXID: string;
+  TXType: number;
+  TXInputsNormal: TXInputNormal[];
+  TXInputsCertificate: any[];
+  TXOutputs: TXOutput[];
+  InterestAssign: InterestAssign;
+  ExTXCerID: string[];
+  Data: number[] | string;
+}
+
+/**
+ * AggregateGTX 结构（用于提交到 ComNode）
+ */
+export interface AggregateGTXForSubmit {
+  AggrTXType: number;
+  IsGuarCommittee: boolean;
+  IsNoGuarGroupTX: boolean;
+  GuarantorGroupID: string;
+  GuarantorGroupSig: EcdsaSignatureJSON;
+  TXNum: number;
+  TotalGas: number;
+  TXHash: string;
+  TXSize: number;
+  Version: number;
+  AllTransactions: SubATXForSubmit[];
+}
+
+/**
+ * 计算 AggregateGTX 的哈希值
+ * 
+ * 模拟后端 GetATXHash：
+ * 1. 排除字段：GuarantorGroupSig, TXHash, TXSize
+ * 2. JSON 序列化
+ * 3. SHA-256 哈希
+ * 4. 返回 Base64 编码
+ * 
+ * @param atx AggregateGTX 对象（不含 TXHash）
+ * @returns Base64 编码的哈希值
+ */
+export function calculateATXHash(atx: Omit<AggregateGTXForSubmit, 'TXHash' | 'TXSize' | 'GuarantorGroupSig'>): string {
+  // 深拷贝并移除排除字段
+  const hashPayload = JSON.parse(JSON.stringify(atx, bigintReplacer));
+
+  // 确保不包含排除字段
+  delete hashPayload.GuarantorGroupSig;
+  delete hashPayload.TXHash;
+  delete hashPayload.TXSize;
+
+  // 转换字节数组为 Base64
+  convertByteArraysToBase64(hashPayload);
+
+  // JSON 序列化
+  let json = JSON.stringify(hashPayload);
+
+  // 把 X/Y/R/S 字段的引号去掉，变成 JSON number
+  json = json.replace(/"(X|Y|R|S)":"(\d+)"/g, '"$1":$2');
+
+  console.log('[calculateATXHash] 序列化后的 JSON:', json.substring(0, 200) + '...');
+
+  // 计算 SHA-256
+  const hashHex = sha256(json);
+
+  // 转为字节数组再转 Base64
+  const hashBytes = new Uint8Array(hashHex.match(/.{2}/g)!.map(byte => parseInt(byte, 16)));
+  let binary = '';
+  for (let i = 0; i < hashBytes.length; i++) {
+    binary += String.fromCharCode(hashBytes[i]);
+  }
+  const base64Hash = btoa(binary);
+
+  console.log('[calculateATXHash] 哈希值 (Base64):', base64Hash);
+
+  return base64Hash;
+}
+
+/**
+ * 将 Transaction 转换为 SubATX 格式
+ * 
+ * @param tx Transaction 对象
+ * @returns SubATX 格式
+ */
+function transactionToSubATX(tx: Transaction): SubATXForSubmit {
+  return {
+    TXID: tx.TXID,
+    TXType: tx.TXType,
+    TXInputsNormal: tx.TXInputsNormal,
+    TXInputsCertificate: tx.TXInputsCertificate || [],
+    TXOutputs: tx.TXOutputs,
+    InterestAssign: tx.InterestAssign,
+    ExTXCerID: [],
+    Data: tx.Data || []
+  };
+}
+
+/**
+ * 构建 AggregateGTX（用于普通转账/散户交易）
+ * 
+ * @param tx Transaction 对象（TXType 应该是 8）
+ * @returns AggregateGTX 对象
+ */
+export function buildAggregateGTX(tx: Transaction): AggregateGTXForSubmit {
+  console.log('[buildAggregateGTX] 开始构建 AggregateGTX...');
+
+  // 构建基础结构（不含 TXHash）
+  const subATX = transactionToSubATX(tx);
+
+  const atxBase = {
+    AggrTXType: 2,           // 散户交易聚合
+    IsGuarCommittee: false,
+    IsNoGuarGroupTX: true,
+    GuarantorGroupID: '',
+    TXNum: 1,
+    TotalGas: 0,
+    Version: 1.0,
+    AllTransactions: [subATX]
+  };
+
+  // 计算哈希
+  const txHash = calculateATXHash(atxBase);
+
+  // 构建完整的 AggregateGTX
+  const atx: AggregateGTXForSubmit = {
+    ...atxBase,
+    GuarantorGroupSig: { R: null, S: null },  // 散户交易不需要担保签名
+    TXHash: txHash,
+    TXSize: 0  // 由后端计算
+  };
+
+  console.log('[buildAggregateGTX] 构建完成，TXHash:', txHash);
+
+  return atx;
+}
+
+/**
+ * 构建普通转账交易（散户模式，未加入担保组织）
+ * 
+ * 与 buildTransaction 的区别：
+ * 1. TXType = 8（散户交易）
+ * 2. 不需要担保组织 ID
+ * 3. 返回 AggregateGTX 而非 UserNewTX
+ * 4. 提交到 ComNode 而非 AssignNode
+ * 
+ * @param params 构建参数
+ * @param user 用户数据
+ * @returns AggregateGTX
+ */
+export async function buildNormalTransaction(
+  params: BuildTransactionParams,
+  user: User
+): Promise<AggregateGTXForSubmit> {
+  console.log('[普通转账] 开始构建交易...');
+  console.log('[普通转账] 参数:', JSON.stringify(params, null, 2));
+
+  const {
+    fromAddresses,
+    recipients,
+    changeAddresses,
+    gas,
+    howMuchPayForGas = 0
+  } = params;
+
+  // 获取钱包数据
+  const walletData = user.wallet?.addressMsg || {};
+  const userID = user.accountId || '';
+
+  console.log('[普通转账] 用户ID:', userID);
+  console.log('[普通转账] 钱包地址数量:', Object.keys(walletData).length);
+  console.log('[普通转账] 发送地址:', fromAddresses);
+
+  if (!userID) {
+    throw new Error('用户 ID 不存在');
+  }
+
+  // 获取账户私钥
+  const accountPrivKey = user.keys?.privHex || user.privHex || '';
+  if (!accountPrivKey) {
+    throw new Error('账户私钥不存在');
+  }
+
+  // ========== Step 1: 计算各币种需要的金额 ==========
+  const requiredAmounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+  for (const recipient of recipients) {
+    requiredAmounts[recipient.coinType] = (requiredAmounts[recipient.coinType] || 0) + recipient.amount;
+  }
+
+  // 额外兑换 Gas 的 PGC
+  if (howMuchPayForGas > 0) {
+    requiredAmounts[0] += howMuchPayForGas;
+  }
+
+  console.log('[普通转账] 需要金额:', requiredAmounts);
+
+  // ========== Step 2: 选择 UTXO（散户只能使用 UTXO，不能用 TXCer）==========
+  const selectedUTXOs: Array<{
+    address: string;
+    utxoKey: string;
+    utxoData: UTXOData;
+    coinType: number;
+  }> = [];
+
+  const collectedAmounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+
+  for (const address of fromAddresses) {
+    const addrData = walletData[address];
+    if (!addrData) continue;
+
+    const coinType = addrData.type || 0;
+    const utxoMap = addrData.utxos || {};
+
+    for (const [utxoKey, utxoData] of Object.entries(utxoMap)) {
+      if (collectedAmounts[coinType] >= requiredAmounts[coinType]) break;
+      if (isUtxoLockedAnyFormat(utxoKey)) continue;
+
+      selectedUTXOs.push({
+        address,
+        utxoKey,
+        utxoData: utxoData as UTXOData,
+        coinType
+      });
+
+      collectedAmounts[coinType] += (utxoData as UTXOData).Value || 0;
+    }
+  }
+
+  // 检查余额是否足够
+  for (const coinType of [0, 1, 2]) {
+    if (collectedAmounts[coinType] < requiredAmounts[coinType]) {
+      throw new Error(`币种 ${coinType} 余额不足：需要 ${requiredAmounts[coinType]}，可用 ${collectedAmounts[coinType]}`);
+    }
+  }
+
+  console.log('[普通转账] 选择了', selectedUTXOs.length, '个 UTXO');
+
+  // ========== Step 3: 构造 TXInputNormal ==========
+  const txInputs: TXInputNormal[] = [];
+
+  for (const utxoItem of selectedUTXOs) {
+    const { address, utxoData } = utxoItem;
+    const addrData = walletData[address];
+    if (!addrData) continue;
+
+    // 获取地址私钥
+    const addrPrivKey = addrData.privHex || '';
+    if (!addrPrivKey) {
+      throw new Error(`地址 ${address} 私钥不存在`);
+    }
+
+    // 获取被引用的 TXOutput
+    const position = utxoData.Position;
+    const utxoTx = utxoData.UTXO;
+    if (!utxoTx || !utxoTx.TXOutputs || utxoTx.TXOutputs.length <= position.IndexZ) {
+      throw new Error(`UTXO 数据不完整: ${utxoItem.utxoKey}`);
+    }
+
+    const referencedOutput = utxoTx.TXOutputs[position.IndexZ];
+
+    // 计算 TXOutput 哈希并签名
+    // Cast to any to handle type difference between blockchain.TXOutput and txBuilder.TXOutput
+    const { hash: outputHash, signature: inputSigRaw } = signTXOutput(referencedOutput as any, addrPrivKey);
+    const inputSig: EcdsaSignatureJSON = {
+      R: inputSigRaw.R.toString(10),
+      S: inputSigRaw.S.toString(10)
+    };
+
+    const input: TXInputNormal = {
+      FromTXID: utxoTx.TXID,
+      FromTxPosition: position,
+      FromAddress: address,
+      IsGuarMake: false,
+      IsCommitteeMake: false,
+      IsCrossChain: false,
+      InputSignature: inputSig,
+      TXOutputHash: outputHash
+    };
+
+    txInputs.push(input);
+  }
+
+  // ========== Step 4: 构造 TXOutputs ==========
+  const txOutputs: TXOutput[] = [];
+
+  // 收款方输出
+  for (const recipient of recipients) {
+    const output: TXOutput = {
+      ToAddress: recipient.address,
+      ToValue: recipient.amount,
+      ToGuarGroupID: recipient.guarGroupID || '',
+      ToPublicKey: {
+        CurveName: 'P256',
+        X: recipient.publicKeyX ? BigInt('0x' + recipient.publicKeyX).toString(10) : '0',
+        Y: recipient.publicKeyY ? BigInt('0x' + recipient.publicKeyY).toString(10) : '0'
+      },
+      ToInterest: recipient.interest || 0,
+      Type: recipient.coinType,
+      ToPeerID: '',
+      IsPayForGas: false,
+      IsCrossChain: false,
+      IsGuarMake: false
+    };
+    txOutputs.push(output);
+  }
+
+  // 找零输出
+  for (const coinType of [0, 1, 2]) {
+    const changeAmount = collectedAmounts[coinType] - requiredAmounts[coinType];
+    if (changeAmount > 0 && changeAddresses[coinType]) {
+      const changeAddr = changeAddresses[coinType];
+      const changeAddrData = walletData[changeAddr];
+
+      const output: TXOutput = {
+        ToAddress: changeAddr,
+        ToValue: changeAmount,
+        ToGuarGroupID: '',
+        ToPublicKey: changeAddrData ? {
+          CurveName: 'P256',
+          X: changeAddrData.pubXHex ? BigInt('0x' + changeAddrData.pubXHex).toString(10) : '0',
+          Y: changeAddrData.pubYHex ? BigInt('0x' + changeAddrData.pubYHex).toString(10) : '0'
+        } : { CurveName: 'P256', X: '0', Y: '0' },
+        ToInterest: 0,
+        Type: coinType,
+        ToPeerID: '',
+        IsPayForGas: false,
+        IsCrossChain: false,
+        IsGuarMake: false
+      };
+      txOutputs.push(output);
+    }
+  }
+
+  // Gas 输出
+  if (howMuchPayForGas > 0) {
+    const gasOutput: TXOutput = {
+      ToAddress: '',
+      ToValue: howMuchPayForGas,
+      ToGuarGroupID: '',
+      ToPublicKey: { CurveName: 'P256', X: '0', Y: '0' },
+      ToInterest: 0,
+      Type: 0,
+      ToPeerID: '',
+      IsPayForGas: true,
+      IsCrossChain: false,
+      IsGuarMake: false
+    };
+    txOutputs.push(gasOutput);
+  }
+
+  // ========== Step 5: 构造 InterestAssign ==========
+  const backAssign: Record<string, number> = {};
+  const addressCount = fromAddresses.length;
+  for (const addr of fromAddresses) {
+    backAssign[addr] = 1 / addressCount;
+  }
+
+  const interestAssign: InterestAssign = {
+    Gas: gas,
+    Output: 0,
+    BackAssign: backAssign
+  };
+
+  // ========== Step 6: 构造 Transaction ==========
+  const valueDivision: Record<number, number> = {};
+  for (const recipient of recipients) {
+    valueDivision[recipient.coinType] = (valueDivision[recipient.coinType] || 0) + recipient.amount;
+  }
+  if (howMuchPayForGas > 0) {
+    valueDivision[0] = (valueDivision[0] || 0) + howMuchPayForGas;
+  }
+
+  const tx: Transaction = {
+    TXID: '',  // 待计算
+    Size: 0,
+    Version: 1.0,
+    GuarantorGroup: '',  // 散户没有担保组织
+    TXType: 8,           // 散户交易类型
+    Value: Object.values(valueDivision).reduce((a, b) => a + b, 0),
+    ValueDivision: valueDivision,
+    NewValue: 0,
+    NewValueDiv: {},
+    InterestAssign: interestAssign,
+    UserSignature: { R: null, S: null },  // 待签名
+    TXInputsNormal: txInputs,
+    TXInputsCertificate: [],
+    TXOutputs: txOutputs,
+    Data: []
+  };
+
+  // 计算 TXID
+  tx.TXID = calculateTXID(tx);
+  console.log('[普通转账] TXID:', tx.TXID);
+
+  // 用户签名（跳过，AggregateGTX 不需要外层 UserSignature，内部的 InputSignature 已签名）
+  // tx.UserSignature = signTransaction(tx, accountPrivKey);
+
+  // ========== Step 7: 构建 AggregateGTX ==========
+  const atx = buildAggregateGTX(tx);
+
+  console.log('[普通转账] 交易构建完成');
+
+  return atx;
 }
