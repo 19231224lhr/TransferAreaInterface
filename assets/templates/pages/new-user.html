@@ -119,7 +119,16 @@
                 </svg>
                 <span>Account ID</span>
               </div>
-              <code id="accountId" class="new-info-value"></code>
+              <div class="result-val">
+                <code id="accountId" class="new-info-value"></code>
+                <button class="copy-btn" data-copy="accountId" title="复制" data-i18n-title="common.clickToCopy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 16px; height: 16px; min-width: 16px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="new-info-card">
@@ -130,7 +139,16 @@
                 </svg>
                 <span data-i18n="new.mainAddress">主地址</span>
               </div>
-              <code id="address" class="new-info-value"></code>
+              <div class="result-val">
+                <code id="address" class="new-info-value"></code>
+                <button class="copy-btn" data-copy="address" title="复制" data-i18n-title="common.clickToCopy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 16px; height: 16px; min-width: 16px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -150,7 +168,16 @@
                   <polyline points="6 9 12 15 18 9" />
                 </svg>
               </div>
-              <code id="privHex" class="new-key-value"></code>
+              <div class="result-val">
+                <code id="privHex" class="new-key-value"></code>
+                <button class="copy-btn" data-copy="privHex" title="复制" data-i18n-title="common.clickToCopy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 16px; height: 16px; min-width: 16px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             <div class="new-key-card new-key-card--public">
@@ -163,15 +190,34 @@
                   <span data-i18n="new.publicKey">公钥（X / Y Hex）</span>
                 </div>
               </div>
-              <code id="pubX" class="new-key-value"></code>
-              <code id="pubY" class="new-key-value"></code>
+              <div class="result-val">
+                <code id="pubX" class="new-key-value"></code>
+                <button class="copy-btn" data-copy="pubX" title="复制" data-i18n-title="common.clickToCopy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 16px; height: 16px; min-width: 16px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
+              <div class="result-val" style="margin-top: 8px;">
+                <code id="pubY" class="new-key-value"></code>
+                <button class="copy-btn" data-copy="pubY" title="复制" data-i18n-title="common.clickToCopy">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="width: 16px; height: 16px; min-width: 16px;">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 提示信息 -->
         <div id="newKeyTip" class="new-result-tip hidden">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
             <circle cx="12" cy="12" r="10" />
             <path d="M12 12v4" />
             <path d="M12 8h.01" />

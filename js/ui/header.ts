@@ -12,6 +12,11 @@
 
 import { t } from '../i18n/index.js';
 import { loadUser, loadUserProfile, computeCurrentOrgId, clearAccountStorage } from '../utils/storage';
+import { getDecryptedPrivateKey } from '../utils/keyEncryptionUI';
+import { html as viewHtml } from '../utils/view';
+import { showModalTip } from '../ui/modal';
+import { copyToClipboard } from '../utils/helpers.js';
+import { showSuccessToast } from '../utils/toast.js';
 import { globalEventManager } from '../utils/eventUtils.js';
 import {
   createReactiveState,
@@ -69,25 +74,25 @@ interface UserProfile {
 interface HeaderState {
   // 用户登录状态
   isLoggedIn: boolean;
-  
+
   // 用户信息
   nickname: string;
   bio: string;
   avatar: string;
   accountId: string;
-  
+
   // 地址信息
   addressCount: number;
-  
+
   // 组织信息
   orgId: string;
-  
+
   // 余额信息
   totalUsdt: string;
   pgcBalance: string;
   btcBalance: string;
   ethBalance: string;
-  
+
   // 弹出框状态
   showAddressPopup: boolean;
   showBalancePopup: boolean;
@@ -171,7 +176,7 @@ let headerState: ReactiveState<HeaderState> | null = null;
 function updateAvatarUI(avatar: string, isLoggedIn: boolean): void {
   const avatarEl = document.getElementById(DOM_IDS.userAvatar);
   const menuHeaderAvatar = document.getElementById(DOM_IDS.menuHeaderAvatar);
-  
+
   if (avatarEl) {
     avatarEl.classList.toggle('avatar--active', isLoggedIn);
     const avatarImg = avatarEl.querySelector('.avatar-img') as HTMLImageElement | null;
@@ -184,7 +189,7 @@ function updateAvatarUI(avatar: string, isLoggedIn: boolean): void {
       }
     }
   }
-  
+
   if (menuHeaderAvatar) {
     menuHeaderAvatar.classList.toggle('avatar--active', isLoggedIn);
     const menuAvatarImg = menuHeaderAvatar.querySelector('.avatar-img') as HTMLImageElement | null;
@@ -212,9 +217,9 @@ function updateMenuVisibility(isLoggedIn: boolean): void {
   const menuEmpty = document.getElementById(DOM_IDS.menuEmpty);
   const logoutEl = document.getElementById(DOM_IDS.logoutBtn) as HTMLButtonElement | null;
   const menuOrgEl = document.getElementById(DOM_IDS.menuOrg);
-  
+
   if (menuHeader) menuHeader.classList.remove('hidden');
-  
+
   if (isLoggedIn) {
     if (menuCards) menuCards.classList.remove('hidden');
     if (menuAccountItem) menuAccountItem.classList.remove('hidden');
@@ -259,23 +264,23 @@ function clearUIState(): void {
   // 清除新用户页面
   const newResult = document.getElementById(DOM_IDS.result);
   if (newResult) newResult.classList.add('hidden');
-  
+
   const ids1 = [DOM_IDS.accountId, DOM_IDS.address, DOM_IDS.privHex, DOM_IDS.pubX, DOM_IDS.pubY];
   ids1.forEach((id) => {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
-  
+
   const newLoader = document.getElementById(DOM_IDS.newLoader);
   if (newLoader) newLoader.classList.add('hidden');
-  
+
   // 清除导入页面
   const importInput = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   if (importInput) importInput.value = '';
-  
+
   const importResult = document.getElementById(DOM_IDS.importResult);
   if (importResult) importResult.classList.add('hidden');
-  
+
   const ids2 = [
     DOM_IDS.importAccountId,
     DOM_IDS.importAddress,
@@ -287,26 +292,26 @@ function clearUIState(): void {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
-  
+
   const importLoader = document.getElementById(DOM_IDS.importLoader);
   if (importLoader) importLoader.classList.add('hidden');
-  
+
   const importNextBtn2 = document.getElementById(DOM_IDS.importNextBtn);
   if (importNextBtn2) importNextBtn2.classList.add('hidden');
-  
+
   // 清除创建/新建按钮
   const createBtnEl = document.getElementById(DOM_IDS.createBtn);
   const newNextBtnEl = document.getElementById(DOM_IDS.newNextBtn);
   if (createBtnEl) createBtnEl.classList.add('hidden');
   if (newNextBtnEl) newNextBtnEl.classList.add('hidden');
-  
+
   // 清除登录页面
   const loginInput = document.getElementById(DOM_IDS.loginPrivHex) as HTMLInputElement | null;
   if (loginInput) loginInput.value = '';
-  
+
   const loginResult = document.getElementById(DOM_IDS.loginResult);
   if (loginResult) loginResult.classList.add('hidden');
-  
+
   const ids3 = [
     DOM_IDS.loginAccountId,
     DOM_IDS.loginAddress,
@@ -318,10 +323,10 @@ function clearUIState(): void {
     const el = document.getElementById(id);
     if (el) el.textContent = '';
   });
-  
+
   const loginLoader = document.getElementById(DOM_IDS.loginLoader);
   if (loginLoader) loginLoader.classList.add('hidden');
-  
+
   const loginNextBtn2 = document.getElementById(DOM_IDS.loginNextBtn);
   if (loginNextBtn2) loginNextBtn2.classList.add('hidden');
 }
@@ -335,15 +340,15 @@ function clearUIState(): void {
  */
 function handleAddressPopupClick(e: MouseEvent): void {
   e.stopPropagation();
-  
+
   // 关闭余额弹出框
   headerState?.set({ showBalancePopup: false });
-  
+
   const u = loadUser() as UserInfo | null;
   const popup = document.getElementById(DOM_IDS.menuAddressPopup);
   const list = document.getElementById(DOM_IDS.menuAddressList);
   if (!popup || !list) return;
-  
+
   const map = (u?.wallet?.addressMsg) || {};
 
   list.replaceChildren();
@@ -398,7 +403,7 @@ function handleAddressPopupClick(e: MouseEvent): void {
     empty.textContent = t('wallet.noAddress');
     list.appendChild(empty);
   }
-  
+
   // 切换弹出框
   const currentShow = headerState?.getValue('showAddressPopup') || false;
   headerState?.set({ showAddressPopup: !currentShow });
@@ -409,10 +414,10 @@ function handleAddressPopupClick(e: MouseEvent): void {
  */
 function handleBalancePopupClick(e: MouseEvent): void {
   e.stopPropagation();
-  
+
   // 关闭地址弹出框
   headerState?.set({ showAddressPopup: false });
-  
+
   // 切换弹出框
   const currentShow = headerState?.getValue('showBalancePopup') || false;
   headerState?.set({ showBalancePopup: !currentShow });
@@ -423,10 +428,10 @@ function handleBalancePopupClick(e: MouseEvent): void {
  */
 function handleOrgClick(e: MouseEvent): void {
   e.stopPropagation();
-  
+
   // 关闭用户菜单
   headerState?.set({ showUserMenu: false });
-  
+
   // 导航到组织详情页
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/group-detail');
@@ -440,10 +445,10 @@ function handleOrgClick(e: MouseEvent): void {
  */
 function handleMenuHeaderClick(e: MouseEvent): void {
   e.stopPropagation();
-  
+
   // 关闭用户菜单
   headerState?.set({ showUserMenu: false });
-  
+
   // 导航到个人资料页
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/profile');
@@ -457,7 +462,7 @@ function handleMenuHeaderClick(e: MouseEvent): void {
  */
 function handleUserButtonClick(e: MouseEvent): void {
   e.stopPropagation();
-  
+
   const currentShow = headerState?.getValue('showUserMenu') || false;
   headerState?.set({ showUserMenu: !currentShow });
 }
@@ -468,7 +473,7 @@ function handleUserButtonClick(e: MouseEvent): void {
 function handleDocumentClick(e: Event): void {
   const userMenu = document.getElementById(DOM_IDS.userMenu);
   const userButton = document.getElementById(DOM_IDS.userButton);
-  
+
   if (userMenu && userButton) {
     if (!userMenu.contains(e.target as Node) && !userButton.contains(e.target as Node)) {
       headerState?.set({ showUserMenu: false });
@@ -482,25 +487,25 @@ function handleDocumentClick(e: Event): void {
 function handleLogoutClick(e: MouseEvent): void {
   e.preventDefault();
   e.stopPropagation();
-  
+
   const logoutBtn = document.getElementById(DOM_IDS.logoutBtn) as HTMLButtonElement | null;
   if (logoutBtn?.disabled) return;
-  
+
   // 清除账户存储
   clearAccountStorage();
-  
+
   // 重置首次访问标记，以便下次登录后进入 main 页面时自动刷新
   resetFirstMainPageVisit();
-  
+
   // 更新头部显示登出状态
   updateHeaderUser(null);
-  
+
   // 清除 UI 状态
   clearUIState();
-  
+
   // 关闭用户菜单
   headerState?.set({ showUserMenu: false });
-  
+
   // 重定向到欢迎页
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/welcome');
@@ -519,32 +524,32 @@ function handleLogoutClick(e: MouseEvent): void {
 export function updateHeaderUser(user: UserInfo | null): void {
   const labelEl = document.getElementById(DOM_IDS.userLabel);
   const avatarEl = document.getElementById(DOM_IDS.userAvatar);
-  
+
   if (!labelEl || !avatarEl) return; // 头部不存在
-  
+
   // 确保 headerState 存在
   if (!headerState) {
     headerState = createReactiveState(initialState, stateBindings);
   }
-  
+
   if (user && user.accountId) {
     // 显示用户昵称
     const profile = loadUserProfile() as UserProfile;
     const nickname = profile.nickname || 'Amiya';
     const bio = profile.signature || t('profile.signature.placeholder') || '';
     const avatar = profile.avatar || '';
-    
+
     // 计算地址数量
     const subMap = (user.wallet?.addressMsg) || {};
     const addrCount = Object.keys(subMap).length;
-    
+
     // 计算余额
     const vd = (user.wallet?.valueDivision) || { 0: 0, 1: 0, 2: 0 };
     const pgc = Number(vd[0] || 0);
     const btc = Number(vd[1] || 0);
     const eth = Number(vd[2] || 0);
     const totalUsdt = Math.round(pgc * 1 + btc * 100 + eth * 10);
-    
+
     // 更新状态
     headerState.set({
       isLoggedIn: true,
@@ -561,16 +566,16 @@ export function updateHeaderUser(user: UserInfo | null): void {
       showAddressPopup: false,
       showBalancePopup: false
     });
-    
+
     // 更新头像 UI
     updateAvatarUI(avatar, true);
-    
+
     // 更新菜单可见性
     updateMenuVisibility(true);
-    
+
     // 更新地址数量
     updateAddressCountUI(addrCount);
-    
+
   } else {
     // 未登录
     headerState.set({
@@ -588,23 +593,86 @@ export function updateHeaderUser(user: UserInfo | null): void {
       showAddressPopup: false,
       showBalancePopup: false
     });
-    
+
     // 更新头像 UI
     updateAvatarUI('', false);
-    
+
     // 更新菜单可见性
     updateMenuVisibility(false);
-    
+
     // 清空地址列表
     const menuAddrList = document.getElementById(DOM_IDS.menuAddressList);
     if (menuAddrList) menuAddrList.replaceChildren();
   }
-  
+
   // 绑定事件
   bindAddressPopupEvent();
   bindBalancePopupEvent();
   bindOrgClickEvent();
   bindMenuHeaderClickEvent();
+  bindAccountKeyBtnEvent();
+}
+
+/**
+ * Handle show private key button click
+ */
+async function handleShowPrivateKeyClick(e: MouseEvent): Promise<void> {
+  e.stopPropagation();
+
+  const u = loadUser();
+  if (!u || !u.accountId) return;
+
+  // Close user menu
+  headerState?.set({ showUserMenu: false });
+
+  try {
+    const privKey = await getDecryptedPrivateKey(u.accountId);
+    if (!privKey) return; // Cancelled or failed
+
+    showModalTip(
+      t('header.accountPrivateKey'),
+      viewHtml`
+        <div class="result-row">
+          <div class="result-val">
+            <code class="break-all" id="temp-account-priv-key">${privKey}</code>
+            <button class="copy-btn" id="privKeyCopyBtn" title="${t('common.clickToCopy')}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; min-width: 16px;">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="tip" style="margin-top: 16px; color: #ef4444;">
+          ${t('wallet.privateKeyWarning')}
+        </div>
+      `,
+      false
+    );
+
+    // Bind copy button event
+    setTimeout(() => {
+      const copyBtn = document.getElementById('privKeyCopyBtn');
+      if (copyBtn) {
+        copyBtn.onclick = async () => {
+          await copyToClipboard(privKey);
+          showSuccessToast(t('wallet.copied'));
+        };
+      }
+    }, 100);
+  } catch (err) {
+    console.error('Failed to export account private key:', err);
+  }
+}
+
+/**
+ * Bind account key button event
+ */
+function bindAccountKeyBtnEvent(): void {
+  const btn = document.getElementById(DOM_IDS.menuAccountKeyBtn);
+  if (btn) {
+    globalEventManager.add(btn, 'click', handleShowPrivateKeyClick);
+  }
 }
 
 /**
@@ -615,7 +683,7 @@ function bindAddressPopupEvent(): void {
   if (menuAddressItem) {
     // 每次都重新绑定，因为 globalEventManager 在路由切换时会清理事件
     globalEventManager.add(menuAddressItem, 'click', handleAddressPopupClick);
-    
+
     const popup = document.getElementById(DOM_IDS.menuAddressPopup);
     if (popup) {
       globalEventManager.add(popup, 'click', (e: Event) => e.stopPropagation());
@@ -631,7 +699,7 @@ function bindBalancePopupEvent(): void {
   if (menuBalanceItem) {
     // 每次都重新绑定，因为 globalEventManager 在路由切换时会清理事件
     globalEventManager.add(menuBalanceItem, 'click', handleBalancePopupClick);
-    
+
     const popup = document.getElementById(DOM_IDS.menuBalancePopup);
     if (popup) {
       globalEventManager.add(popup, 'click', (e: Event) => e.stopPropagation());
@@ -666,20 +734,20 @@ function bindMenuHeaderClickEvent(): void {
 export function initUserMenu(): void {
   const userButton = document.getElementById(DOM_IDS.userButton);
   const userMenu = document.getElementById(DOM_IDS.userMenu);
-  
+
   if (!userButton || !userMenu) return;
-  
+
   // 确保 headerState 存在
   if (!headerState) {
     headerState = createReactiveState(initialState, stateBindings);
   }
-  
+
   // 绑定用户按钮点击
   globalEventManager.add(userButton, 'click', handleUserButtonClick);
-  
+
   // 点击外部关闭菜单
   globalEventManager.add(document as unknown as Element, 'click', handleDocumentClick);
-  
+
   // 绑定登出按钮
   const logoutBtn = document.getElementById(DOM_IDS.logoutBtn);
   if (logoutBtn) {
@@ -693,22 +761,22 @@ export function initUserMenu(): void {
 export function initHeaderScroll(): void {
   const header = document.querySelector('.header');
   if (!header) return;
-  
+
   let lastScrollY = window.scrollY;
   let ticking = false;
   const scrollDelta = 8;
-  
+
   function isHomePage(): boolean {
     const welcomeHero = document.querySelector('.welcome-hero');
     return !!(welcomeHero && !welcomeHero.classList.contains('hidden'));
   }
-  
+
   function updateHeader(): void {
     if (!header) return;
-    
+
     const currentScrollY = window.scrollY;
     const delta = currentScrollY - lastScrollY;
-    
+
     // 首页始终显示头部
     if (isHomePage()) {
       header.classList.add('header--visible');
@@ -716,7 +784,7 @@ export function initHeaderScroll(): void {
       ticking = false;
       return;
     }
-    
+
     // 其他页面逻辑
     if (currentScrollY <= 10) {
       header.classList.add('header--visible');
@@ -725,14 +793,14 @@ export function initHeaderScroll(): void {
     } else if (delta < -scrollDelta) {
       header.classList.add('header--visible');
     }
-    
+
     lastScrollY = currentScrollY;
     ticking = false;
   }
-  
+
   // 只绑定一次滚动监听器
   if (!(window as unknown as Record<string, boolean>)._headerScrollBind) {
-    globalEventManager.add(window as unknown as Element, 'scroll', function() {
+    globalEventManager.add(window as unknown as Element, 'scroll', function () {
       if (!ticking) {
         requestAnimationFrame(updateHeader);
         ticking = true;
@@ -740,11 +808,11 @@ export function initHeaderScroll(): void {
     }, { passive: true });
     (window as unknown as Record<string, boolean>)._headerScrollBind = true;
   }
-  
+
   // 监听页面变化
   if (!(window as unknown as Record<string, boolean>)._headerHashChangeBind) {
-    globalEventManager.add(window as unknown as Element, 'hashchange', function() {
-      setTimeout(function() {
+    globalEventManager.add(window as unknown as Element, 'hashchange', function () {
+      setTimeout(function () {
         lastScrollY = window.scrollY;
         if (isHomePage() || window.scrollY <= 10) {
           header.classList.add('header--visible');
@@ -753,9 +821,9 @@ export function initHeaderScroll(): void {
     });
     (window as unknown as Record<string, boolean>)._headerHashChangeBind = true;
   }
-  
+
   // 初始状态
-  setTimeout(function() {
+  setTimeout(function () {
     if (isHomePage() || window.scrollY <= 10) {
       header.classList.add('header--visible');
     }

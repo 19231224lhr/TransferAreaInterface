@@ -176,6 +176,7 @@ export const DOM_IDS = {
   main: 'main',
   menuAccountItem: 'menuAccountItem',
   menuAccountId: 'menuAccountId',
+  menuAccountKeyBtn: 'menuAccountKeyBtn',
   menuAddress: 'menuAddress',
   menuAddressItem: 'menuAddressItem',
   menuAddressList: 'menuAddressList',

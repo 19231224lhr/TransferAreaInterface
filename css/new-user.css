@@ -27,7 +27,7 @@
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
   /* 进场动画 - 简洁优雅 */
@@ -39,6 +39,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -65,7 +66,7 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -76,7 +77,7 @@
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -339,12 +340,10 @@
 .loader-logo-glow {
   position: absolute;
   inset: -8px;
-  background: radial-gradient(
-    circle at center,
-    rgba(139, 92, 246, 0.2) 0%,
-    rgba(6, 182, 212, 0.1) 50%,
-    transparent 70%
-  );
+  background: radial-gradient(circle at center,
+      rgba(139, 92, 246, 0.2) 0%,
+      rgba(6, 182, 212, 0.1) 50%,
+      transparent 70%);
   border-radius: 50%;
   animation: logoGlowFlash 1.5s ease-in-out infinite;
   pointer-events: none;
@@ -355,6 +354,7 @@
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
@@ -362,10 +362,13 @@
 
 /* 发光闪烁动画 - 间歇性闪光 */
 @keyframes logoGlowFlash {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
     transform: scale(1);
   }
+
   50% {
     opacity: 1;
     transform: scale(1.15);
@@ -396,13 +399,31 @@
   animation: newDotBounce 1.4s infinite ease-in-out both;
 }
 
-.new-loader-dots i:nth-child(1) { animation-delay: -0.32s; }
-.new-loader-dots i:nth-child(2) { animation-delay: -0.16s; }
-.new-loader-dots i:nth-child(3) { animation-delay: 0s; }
+.new-loader-dots i:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.new-loader-dots i:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.new-loader-dots i:nth-child(3) {
+  animation-delay: 0s;
+}
 
 @keyframes newDotBounce {
-  0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-  40% { transform: scale(1); opacity: 1; }
+
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.4;
+  }
+
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 /* ========================================
@@ -466,12 +487,10 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.4),
-    transparent
-  );
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.4),
+      transparent);
   animation: successShimmer 1.5s ease-in-out 0.5s;
 }
 
@@ -479,6 +498,7 @@
   0% {
     left: -100%;
   }
+
   100% {
     left: 100%;
   }
@@ -494,6 +514,7 @@
     opacity: 0;
     transform: translateX(-10px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -527,9 +548,11 @@
     transform: scale(0) rotate(-45deg);
     opacity: 0;
   }
+
   50% {
     transform: scale(1.2) rotate(0deg);
   }
+
   100% {
     transform: scale(1) rotate(0deg);
     opacity: 1;
@@ -588,11 +611,50 @@
   color: #1e293b;
   word-break: break-all;
   line-height: 1.6;
+  /* Remove background/padding here if it's moved to .result-val, or keep it if code element itself has background */
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  flex: 1;
+  /* Allow it to grow */
+}
+
+.result-val {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   background: #f8fafc;
   padding: 10px 12px;
   border-radius: 8px;
-  display: block;
+  border: 1px solid transparent;
+  /* Optional, for consistency */
 }
+
+.result-val .copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: white;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  border: 1px solid #cbd5e1;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.result-val .copy-btn:hover {
+  background: #f8fafc;
+  color: #0ea5e9;
+  border-color: #0ea5e9;
+  transform: translateY(-1px);
+}
+
+
 
 /* 密钥区域 */
 .new-keys-section {
@@ -664,15 +726,30 @@
 
 .new-key-value {
   display: block;
-  padding: 14px 18px;
+  /* padding moved to container or keep if needed, but we have result-val now */
   font-family: 'SF Mono', 'Monaco', monospace;
   font-size: 12px;
   color: #334155;
-  background: #f8fafc;
+  background: transparent;
   word-break: break-all;
   line-height: 1.7;
-  border-top: 1px solid #e2e8f0;
+  flex: 1;
 }
+
+/* Override for public key result-val to match existing layout style if needed */
+.new-key-card .result-val {
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-radius: 0;
+  padding: 10px 18px;
+}
+
+.new-key-card--private .result-val {
+  background: #fef2f2;
+  border-color: #fecaca;
+}
+
+
 
 .new-key-card--private .new-key-value {
   background: #fef2f2;
@@ -862,6 +939,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1038,9 +1116,17 @@
   min-width: 60px;
 }
 
-.strength-text.weak { color: #ef4444; }
-.strength-text.medium { color: #f59e0b; }
-.strength-text.strong { color: #22c55e; }
+.strength-text.weak {
+  color: #ef4444;
+}
+
+.strength-text.medium {
+  color: #f59e0b;
+}
+
+.strength-text.strong {
+  color: #22c55e;
+}
 
 /* 密码提示 */
 .new-password-tip {
@@ -1089,11 +1175,11 @@
 }
 
 [data-theme="dark"] .new-sidebar::before {
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
 }
 
 [data-theme="dark"] .new-sidebar::after {
-  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
 }
 
 /* 右侧主区域 */
