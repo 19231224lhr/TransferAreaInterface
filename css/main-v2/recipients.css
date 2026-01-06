@@ -499,10 +499,10 @@
 .recipient-actions {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 6px;
   margin-top: 10px;
-  padding: 10px 14px;
+  padding: 10px 0;
   border-top: 1px solid var(--neutral-100);
 }
 

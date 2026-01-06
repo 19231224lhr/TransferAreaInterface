@@ -44,6 +44,7 @@ export default {
   'comNode.connected': 'Connected to committee node',
   'comNode.notAvailable': 'ComNode endpoint unavailable, please try again later',
   'comNode.refreshing': 'Refreshing node connection...',
+  'assignNode.connected': 'Connected to guarantor organization',
 
   // Password and Encryption
   'encryption.setPassword': 'Set Password',

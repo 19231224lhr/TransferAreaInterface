@@ -73,12 +73,12 @@ function filterTransactions(period, transactions) {
 function renderTransactionList(transactions) {
   const listEl = document.getElementById(DOM_IDS.historyList);
   if (!listEl) return;
-  
+
   if (transactions.length === 0) {
     // Use lit-html for safe and efficient rendering
     const template = viewHtml`
       <div style="text-align: center; padding: 60px 20px; color: #94a3b8;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5;">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: block; width: 48px; height: 48px; margin: 0 auto 16px; opacity: 0.5; overflow: visible;">
           <circle cx="12" cy="12" r="10"></circle>
           <line x1="12" y1="8" x2="12" y2="12"></line>
           <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -90,16 +90,16 @@ function renderTransactionList(transactions) {
     renderInto(listEl, template);
     return;
   }
-  
+
   // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
-  
+
   transactions.forEach(tx => {
     const item = document.createElement('div');
     item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
     item.dataset.txId = tx.id;
     const modeLabel = getTransferModeLabel(resolveTransferMode(tx));
-    
+
     // Use lit-html for safe and efficient rendering
     const template = viewHtml`
       <div class="history-item-header">
@@ -143,21 +143,21 @@ function renderTransactionList(transactions) {
     `;
 
     renderInto(item, template);
-    
+
     // Bind click event
     item.addEventListener('click', (e) => {
       // Prevent default behavior and stop propagation
       e.preventDefault();
       e.stopPropagation();
-      
+
       if (tx) {
         toggleTransactionDetail(item, tx);
       }
     });
-    
+
     fragment.appendChild(item);
   });
-  
+
   // Single DOM update
   listEl.replaceChildren();
   listEl.appendChild(fragment);
@@ -258,7 +258,7 @@ function toggleTransactionDetail(itemEl, tx) {
       el.classList.remove('expanded');
     }
   });
-  
+
   // Toggle current item
   if (isExpanded) {
     itemEl.classList.remove('expanded');
@@ -267,7 +267,7 @@ function toggleTransactionDetail(itemEl, tx) {
     itemEl.classList.add('expanded');
     selectedTransaction = tx;
   }
-  
+
   // Do NOT scroll - let the page stay where it is
 }
 
@@ -278,14 +278,14 @@ function toggleTransactionDetail(itemEl, tx) {
 function updateStatistics(transactions) {
   const totalCountEl = document.getElementById(DOM_IDS.historyTotalCount);
   const totalVolumeEl = document.getElementById(DOM_IDS.historyTotalVolume);
-  
+
   // Use scheduleBatchUpdate to batch DOM updates for better performance
   scheduleBatchUpdate('history-total-count', () => {
     if (totalCountEl) {
       totalCountEl.textContent = transactions.length;
     }
   });
-  
+
   scheduleBatchUpdate('history-total-volume', () => {
     if (totalVolumeEl) {
       const totalVolume = transactions.reduce((sum, tx) => {
@@ -296,7 +296,7 @@ function updateStatistics(transactions) {
         }
         return sum;
       }, 0);
-      
+
       totalVolumeEl.textContent = totalVolume.toLocaleString();
     }
   });
@@ -316,40 +316,40 @@ export function initHistoryPage() {
       }
     });
   }
-  
+
   // Bind filter buttons with rafDebounce for performance optimization
   const filterButtons = document.querySelectorAll('.history-filter-btn');
-  
+
   // Create debounced filter handler to prevent rapid re-renders
   const handleFilterChange = rafDebounce((period) => {
     currentFilter = period;
-    
+
     // Filter and render
     const allTransactions = getTxHistory();
     const filtered = filterTransactions(period, allTransactions);
     renderTransactionList(filtered);
     updateStatistics(filtered);
-    
+
     // Reset selected transaction when filtering
     selectedTransaction = null;
   });
-  
+
   filterButtons.forEach(btn => {
     if (!btn.dataset._historyBind) {
       btn.dataset._historyBind = 'true';
       btn.addEventListener('click', () => {
         const period = btn.dataset.period;
-        
+
         // Update active state immediately for responsive UI
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        
+
         // Debounce the actual filtering and rendering
         handleFilterChange(period);
       });
     }
   });
-  
+
   if (!historyListenerBound) {
     historyListenerBound = true;
     window.addEventListener(getTxHistoryEventName(), () => {
@@ -373,12 +373,12 @@ export function initHistoryPage() {
 export function resetHistoryPageState() {
   currentFilter = 'all';
   selectedTransaction = null;
-  
+
   // Collapse all expanded items
   document.querySelectorAll('.history-item.expanded').forEach(item => {
     item.classList.remove('expanded');
   });
-  
+
   // Reset filter buttons
   document.querySelectorAll('.history-filter-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.period === 'all');

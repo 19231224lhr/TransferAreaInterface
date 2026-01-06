@@ -320,9 +320,10 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  width: 240px;
-  /* Fixed uniform width */
-  padding: 8px 16px;
+  width: auto;
+  max-width: 380px;
+  white-space: nowrap;
+  padding: 8px 14px;
   background: rgba(15, 23, 42, 0.85);
   /* 半透明背景 */
   backdrop-filter: blur(12px);
