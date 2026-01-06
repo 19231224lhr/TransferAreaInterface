@@ -684,7 +684,23 @@ export function handleDeleteAddress(address: string): void {
   // Close any open ops menus
   closeAllOpsMenus();
 
-  if (textEl) textEl.textContent = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
+  // Check if address has balance
+  const current = getCurrentUser();
+  const key = String(address).toLowerCase();
+  const addrData = current?.wallet?.addressMsg?.[address] ||
+    current?.wallet?.addressMsg?.[key] ||
+    Object.entries(current?.wallet?.addressMsg || {}).find(
+      ([k]) => String(k).toLowerCase() === key
+    )?.[1];
+  const balance = addrData?.value?.TotalValue ?? 0;
+  const coinType = addrData?.type === 1 ? 'BTC' : addrData?.type === 2 ? 'ETH' : 'PGC';
+
+  // Build confirmation text with balance warning if needed
+  let confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
+  if (balance > 0) {
+    confirmText = `⚠️ 该地址仍有 ${balance} ${coinType} 余额，删除后将无法直接访问这些资产！\n\n${confirmText}`;
+  }
+  if (textEl) textEl.textContent = confirmText;
   if (modal) modal.classList.remove('hidden');
 
   const doDel = async () => {
@@ -747,11 +763,8 @@ export function handleDeleteAddress(address: string): void {
             return;
           }
 
-          // Backend failed - show error, don't delete locally
-          showUnifiedError(
-            t('wallet.deleteFailed', '删除失败'),
-            errorMsg
-          );
+          // Backend failed - show error toast, don't delete locally
+          showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errorMsg}`);
           return;
         }
 
@@ -761,10 +774,8 @@ export function handleDeleteAddress(address: string): void {
       } catch (error) {
         hideUnifiedOverlay();
         console.error('[Wallet] ✗ Unbind address error:', error);
-        showUnifiedError(
-          t('wallet.deleteFailed', '删除失败'),
-          error instanceof Error ? error.message : t('error.unknownError', '未知错误')
-        );
+        const errMsg = error instanceof Error ? error.message : t('error.unknownError', 'Unknown error');
+        showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errMsg}`);
         return;
       }
     }
