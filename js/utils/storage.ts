@@ -64,6 +64,25 @@ export interface HistoryRecord {
   v: number;
 }
 
+/** Transaction history record */
+export interface TxHistoryRecord {
+  id: string;
+  type: 'send' | 'receive';
+  status: 'success' | 'pending' | 'failed';
+  transferMode?: 'normal' | 'quick' | 'cross' | 'incoming' | 'unknown';
+  amount: number;
+  currency: string;
+  from: string;
+  to: string;
+  timestamp: number;
+  txHash: string;
+  gas: number;
+  guarantorOrg?: string;
+  blockNumber?: number;
+  confirmations?: number;
+  failureReason?: string;
+}
+
 /** Wallet structure with strict typing */
 export interface Wallet {
   addressMsg: Record<string, AddressData>;
@@ -85,6 +104,7 @@ export interface User {
   flowOrigin: string;
   keys: WalletKeys;
   wallet: Wallet;
+  txHistory?: TxHistoryRecord[];
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
@@ -151,6 +171,9 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   }
   if (basic.guarGroupBootMsg !== undefined) {
     acc.guarGroupBootMsg = basic.guarGroupBootMsg;
+  }
+  if (basic.txHistory !== undefined) {
+    acc.txHistory = Array.isArray(basic.txHistory) ? [...basic.txHistory] : basic.txHistory;
   }
 
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };

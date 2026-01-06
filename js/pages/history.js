@@ -13,89 +13,11 @@ import { escapeHtml } from '../utils/security';
 import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
-
-// 模拟交易数据
-const MOCK_TRANSACTIONS = [
-  {
-    id: 'tx_001',
-    type: 'send',
-    status: 'success',
-    amount: 150.50,
-    currency: 'PGC',
-    from: '02dde4e42353b57b16ab904762d6b01ca0ce2d2e',
-    to: '8f3a7c9e1b4d6f2a5e8c0d3b7a9f1e4c6d2b8a5f',
-    timestamp: Date.now() - 2 * 60 * 60 * 1000, // 2 hours ago
-    txHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
-    gas: 0.5,
-    guarantorOrg: '12345678',
-    blockNumber: 1234567,
-    confirmations: 24
-  },
-  {
-    id: 'tx_002',
-    type: 'receive',
-    status: 'success',
-    amount: 500.00,
-    currency: 'PGC',
-    from: '3e7b9f2c5a8d1e6b4f7c0a3d9e2b5f8c1a4d7e0b',
-    to: '02dde4e42353b57b16ab904762d6b01ca0ce2d2e',
-    timestamp: Date.now() - 5 * 60 * 60 * 1000, // 5 hours ago
-    txHash: '0x3c2c2eb7b11a91385f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ea',
-    gas: 0.3,
-    guarantorOrg: '87654321',
-    blockNumber: 1234550,
-    confirmations: 48
-  },
-  {
-    id: 'tx_003',
-    type: 'send',
-    status: 'pending',
-    amount: 75.25,
-    currency: 'BTC',
-    from: '02dde4e42353b57b16ab904762d6b01ca0ce2d2e',
-    to: '1a4d7e0b3e7b9f2c5a8d1e6b4f7c0a3d9e2b5f8c',
-    timestamp: Date.now() - 30 * 60 * 1000, // 30 minutes ago
-    txHash: '0xd57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385f9fade1c0',
-    gas: 0.8,
-    guarantorOrg: '12345678',
-    blockNumber: null,
-    confirmations: 0
-  },
-  {
-    id: 'tx_004',
-    type: 'receive',
-    status: 'success',
-    amount: 1200.00,
-    currency: 'ETH',
-    from: '5f8c1a4d7e0b3e7b9f2c5a8d1e6b4f7c0a3d9e2b',
-    to: '02dde4e42353b57b16ab904762d6b01ca0ce2d2e',
-    timestamp: Date.now() - 24 * 60 * 60 * 1000, // 1 day ago
-    txHash: '0xab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385f9fade1c0d57a7af66',
-    gas: 1.2,
-    guarantorOrg: '87654321',
-    blockNumber: 1234400,
-    confirmations: 120
-  },
-  {
-    id: 'tx_005',
-    type: 'send',
-    status: 'failed',
-    amount: 250.00,
-    currency: 'PGC',
-    from: '02dde4e42353b57b16ab904762d6b01ca0ce2d2e',
-    to: '9e2b5f8c1a4d7e0b3e7b9f2c5a8d1e6b4f7c0a3d',
-    timestamp: Date.now() - 3 * 24 * 60 * 60 * 1000, // 3 days ago
-    txHash: '0x1a91385f9fade1c0d57a7af66ab4ead7c2c2eb7b11a91385f9fade1c0d57a7af6',
-    gas: 0.4,
-    guarantorOrg: '12345678',
-    blockNumber: 1234200,
-    confirmations: 0,
-    failureReason: 'Insufficient gas'
-  }
-];
+import { getTxHistory, getTxHistoryEventName } from '../services/txHistory.ts';
 
 let currentFilter = 'all';
 let selectedTransaction = null;
+let historyListenerBound = false;
 
 /**
  * Format address (show first 6 and last 4 characters)
@@ -105,28 +27,43 @@ function formatAddress(address) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
+function resolveTransferMode(tx) {
+  if (tx && tx.transferMode) return tx.transferMode;
+  if (tx && tx.type === 'receive') return 'incoming';
+  if (tx && tx.guarantorOrg) return 'quick';
+  return 'normal';
+}
+
+function getTransferModeLabel(mode) {
+  const key = mode ? `history.mode.${mode}` : 'history.mode.unknown';
+  const label = t(key);
+  if (label && label !== key) return label;
+  return t('history.mode.unknown');
+}
+
 /**
  * Filter transactions by time period
  */
-function filterTransactions(period) {
+function filterTransactions(period, transactions) {
   const now = Date.now();
-  
+  const list = Array.isArray(transactions) ? transactions : [];
+
   switch (period) {
     case 'today':
-      return MOCK_TRANSACTIONS.filter(tx => 
+      return list.filter(tx =>
         now - tx.timestamp < 24 * 60 * 60 * 1000
       );
     case 'week':
-      return MOCK_TRANSACTIONS.filter(tx => 
+      return list.filter(tx =>
         now - tx.timestamp < 7 * 24 * 60 * 60 * 1000
       );
     case 'month':
-      return MOCK_TRANSACTIONS.filter(tx => 
+      return list.filter(tx =>
         now - tx.timestamp < 30 * 24 * 60 * 60 * 1000
       );
     case 'all':
     default:
-      return MOCK_TRANSACTIONS;
+      return list;
   }
 }
 
@@ -161,6 +98,7 @@ function renderTransactionList(transactions) {
     const item = document.createElement('div');
     item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
     item.dataset.txId = tx.id;
+    const modeLabel = getTransferModeLabel(resolveTransferMode(tx));
     
     // Use lit-html for safe and efficient rendering
     const template = viewHtml`
@@ -171,6 +109,7 @@ function renderTransactionList(transactions) {
           </div>
           <span class="history-item-label">
             ${tx.type === 'send' ? t('history.send') : t('history.receive')} ${tx.currency}
+            <span class="history-item-mode">· ${modeLabel}</span>
           </span>
         </div>
         <div style="display: flex; align-items: center; gap: 12px;">
@@ -235,6 +174,10 @@ function renderTransactionDetail(tx) {
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.transactionType')}</span>
           <span class="history-detail-value">${tx.type === 'send' ? t('history.send') : t('history.receive')}</span>
+        </div>
+        <div class="history-detail-row">
+          <span class="history-detail-label">${t('history.transferMode')}</span>
+          <span class="history-detail-value">${escapeHtml(getTransferModeLabel(resolveTransferMode(tx)))}</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.status')}</span>
@@ -382,7 +325,8 @@ export function initHistoryPage() {
     currentFilter = period;
     
     // Filter and render
-    const filtered = filterTransactions(period);
+    const allTransactions = getTxHistory();
+    const filtered = filterTransactions(period, allTransactions);
     renderTransactionList(filtered);
     updateStatistics(filtered);
     
@@ -406,10 +350,21 @@ export function initHistoryPage() {
     }
   });
   
+  if (!historyListenerBound) {
+    historyListenerBound = true;
+    window.addEventListener(getTxHistoryEventName(), () => {
+      const allTransactions = getTxHistory();
+      const filtered = filterTransactions(currentFilter, allTransactions);
+      renderTransactionList(filtered);
+      updateStatistics(filtered);
+    });
+  }
+
   // Initial render
-  const transactions = filterTransactions(currentFilter);
+  const allTransactions = getTxHistory();
+  const transactions = filterTransactions(currentFilter, allTransactions);
   renderTransactionList(transactions);
-  updateStatistics(MOCK_TRANSACTIONS);
+  updateStatistics(transactions);
 }
 
 /**

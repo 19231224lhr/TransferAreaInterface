@@ -536,6 +536,8 @@ export default {
   'toast.copyFailed': '复制失败',
   'toast.leftOrg': '已退出担保组织',
   'toast.leftOrgDesc': '当前账户已退出担保组织，可稍后重新加入。',
+  'toast.notInOrg': '未加入组织',
+  'toast.notInOrgDesc': '您当前未加入任何担保组织',
   'toast.addressOptimized': '已优化来源地址',
   'toast.buildingTx': '正在构造交易...',
   'toast.buildTxSuccess': '交易构造成功',
@@ -567,6 +569,7 @@ export default {
   'transfer.networkError': '网络错误，请检查网络连接后重试',
   'transfer.unknownError': '未知错误',
   'transfer.onlyQuickTransferSupported': '目前只支持快速转账类型的交易',
+  'transfer.normalTransferOnly': '散户模式仅支持普通转账',
   'transfer.joinOrgFirst': '请先加入担保组织后才能发送交易',
   'transfer.pledgeNotSupported': '质押交易功能暂未开放',
 
@@ -764,10 +767,16 @@ export default {
   'history.addressInfo': '地址信息',
   'history.blockchainInfo': '区块链信息',
   'history.transactionType': '交易类型',
+  'history.transferMode': '转账类型',
   'history.status': '状态',
   'history.blockNumber': '区块高度',
   'history.confirmations': '确认数',
   'history.failureReason': '失败原因',
+  'history.mode.normal': '普通转账',
+  'history.mode.quick': '快速转账',
+  'history.mode.cross': '跨链转账',
+  'history.mode.incoming': '转入',
+  'history.mode.unknown': '未知',
 
   // 钱包操作按钮
   'wallet.history': '历史记录',

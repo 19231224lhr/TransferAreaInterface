@@ -24,6 +24,7 @@ import { buildAssignNodeUrl } from './group';
 import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
+import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 
 // ========================================
 // Type Definitions
@@ -74,6 +75,48 @@ function showTxValidationError(msg: string, focusEl: HTMLElement | null, title: 
   // Use toast notification instead of modal popup for better UX
   showToast(msg, 'error', title);
   if (focusEl && typeof focusEl.focus === 'function') focusEl.focus();
+}
+
+type HistoryStatus = 'success' | 'pending' | 'failed';
+
+function buildOutgoingHistoryRecords(
+  build: BuildTXInfo,
+  fromAddresses: string[],
+  txId: string,
+  status: HistoryStatus,
+  options: { failureReason?: string; guarantorOrg?: string; txMode?: string; transferMode?: string } = {}
+) {
+  const records = [];
+  const timestamp = Date.now();
+  const from = fromAddresses[0] || '';
+  const gas = Number(build.InterestAssign?.Gas || 0) || 0;
+  const txHash = txId || 'N/A';
+  const baseId = txId || `temp_${timestamp}`;
+  const fallbackMode = options.txMode === 'cross' ? 'cross' : (options.txMode === 'quick' ? 'quick' : 'normal');
+  const transferMode = options.transferMode || fallbackMode;
+  let idx = 0;
+
+  for (const [to, bill] of Object.entries(build.Bill || {})) {
+    const amount = Number(bill.Value || 0) || 0;
+    records.push({
+      id: `out_${baseId}_${idx}_${to}_${bill.MoneyType}`,
+      type: 'send',
+      status,
+      transferMode,
+      amount,
+      currency: getCoinName(bill.MoneyType),
+      from,
+      to,
+      timestamp,
+      txHash,
+      gas,
+      guarantorOrg: bill.GuarGroupID || options.guarantorOrg || '',
+      failureReason: options.failureReason || ''
+    });
+    idx += 1;
+  }
+
+  return records;
 }
 
 /**
@@ -1023,7 +1066,17 @@ export function initTransferSubmit(): void {
             }
           }
 
-          const txIdToQuery = result.tx_id || displayTxId;
+          const txIdToQuery = isNormalTransferMode ? displayTxId : (result.tx_id || displayTxId);
+          const historyStatus: HistoryStatus = 'pending';
+          const transferMode = isNormalTransferMode ? 'normal' : (currentTfMode === 'cross' ? 'cross' : 'quick');
+          const historyRecords = buildOutgoingHistoryRecords(build, finalSel, txIdToQuery, historyStatus, {
+            guarantorOrg: guarGroup?.groupID || '',
+            txMode: currentTfMode,
+            transferMode
+          });
+          if (historyRecords.length > 0) {
+            addTxHistoryRecords(historyRecords);
+          }
 
           // 🔒 锁定使用到的 UTXO（仅担保交易需要，普通转账 ComNode 会处理）
           if (userNewTX) {
@@ -1194,6 +1247,17 @@ export function initTransferSubmit(): void {
             console.log(`[发送交易] 发送失败，已解锁 ${lockedTXCerIds.length} 个 TXCer`);
           }
 
+          const transferMode = isNormalTransferMode ? 'normal' : (currentTfMode === 'cross' ? 'cross' : 'quick');
+          const failedRecords = buildOutgoingHistoryRecords(build, finalSel, displayTxId, 'failed', {
+            failureReason: userFriendlyMsg,
+            guarantorOrg: guarGroup?.groupID || '',
+            txMode: currentTfMode,
+            transferMode
+          });
+          if (failedRecords.length > 0) {
+            addTxHistoryRecords(failedRecords);
+          }
+
           showToast(userFriendlyMsg, 'error', title);
         }
       } catch (sendErr: any) {
@@ -1213,6 +1277,17 @@ export function initTransferSubmit(): void {
         // Intercept complex backend error messages (e.g. from RPC)
         if (errMsg.includes('no alternative guarantor available') || errMsg.includes('failed to reassign user')) {
           finalDisplayMsg = t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
+        }
+
+        const transferMode = isNormalTransferMode ? 'normal' : (currentTfMode === 'cross' ? 'cross' : 'quick');
+        const failedRecords = buildOutgoingHistoryRecords(build, finalSel, displayTxId, 'failed', {
+          failureReason: finalDisplayMsg,
+          guarantorOrg: guarGroup?.groupID || '',
+          txMode: currentTfMode,
+          transferMode
+        });
+        if (failedRecords.length > 0) {
+          addTxHistoryRecords(failedRecords);
         }
 
         showToast(
@@ -1292,6 +1367,13 @@ async function pollTXStatusInBackground(
     if (confirmResult.success) {
       // 交易确认成功 - 显示成功 toast
       console.log('[后台轮询] 交易确认成功:', txID);
+      const confirmedBlock = confirmResult.response?.block_height;
+      updateTxHistoryByTxId(txID, {
+        status: 'success',
+        blockNumber: confirmedBlock || undefined,
+        confirmations: confirmedBlock ? 1 : undefined,
+        failureReason: ''
+      });
       showToast(
         t('transfer.txConfirmedSuccessShort', { txid: txID.slice(0, 8) + '...' }) ||
         `交易 ${txID.slice(0, 8)}... 已确认成功！`,
@@ -1326,6 +1408,10 @@ async function pollTXStatusInBackground(
       // 交易验证失败 - 显示错误 toast 并解锁 UTXO
       const errorReason = confirmResult.errorReason || t('transfer.unknownError') || '未知错误';
       console.log('[后台轮询] 交易验证失败:', txID, errorReason);
+      updateTxHistoryByTxId(txID, {
+        status: 'failed',
+        failureReason: errorReason
+      });
 
       // 🔓 解锁与此交易相关的 UTXO（交易失败，UTXO 可以再次使用）
       try {

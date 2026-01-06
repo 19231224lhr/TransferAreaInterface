@@ -36,6 +36,7 @@ import {
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
 import { updateTransferButtonState } from './transfer';
+import { getTxHistory, updateTxHistoryByTxId } from './txHistory';
 import {
   getLockedUTXOsByAddress,
   getLockedBalanceByAddress,
@@ -1874,6 +1875,26 @@ function refreshWalletSnapshot(): Record<string, AddressMetadata> {
   return walletMap;
 }
 
+function extractTxIdFromUtxoKey(key: string): string {
+  if (!key) return '';
+  if (key.includes(' + ')) return key.split(' + ')[0].trim();
+  if (key.includes(':')) return key.split(':')[0].trim();
+  if (key.includes('_')) return key.split('_')[0].trim();
+  return key.trim();
+}
+
+function buildUtxoKeySet(utxos?: Record<string, unknown>): Set<string> {
+  return new Set(Object.keys(utxos || {}));
+}
+
+function setsEqual(a: Set<string>, b: Set<string>): boolean {
+  if (a.size !== b.size) return false;
+  for (const val of a) {
+    if (!b.has(val)) return false;
+  }
+  return true;
+}
+
 /**
  * Fill change address dropdowns based on selected addresses
  */
@@ -2458,6 +2479,11 @@ export async function refreshWalletBalances(): Promise<boolean> {
     return false;
   }
 
+  const prevUtxoByAddr: Record<string, Set<string>> = {};
+  for (const [addr, meta] of Object.entries(current.wallet.addressMsg)) {
+    prevUtxoByAddr[addr.toLowerCase()] = buildUtxoKeySet(meta?.utxos as Record<string, unknown>);
+  }
+
   // NOTE: We no longer clear locked UTXOs before refresh.
   // Locked UTXOs represent in-flight transactions and must be preserved
   // until the transaction is confirmed on-chain.
@@ -2491,6 +2517,50 @@ export async function refreshWalletBalances(): Promise<boolean> {
     // Update local storage with fetched data
     const u = deepClone(current);
     const balances = result.data;
+
+    const pendingSendTxs = getTxHistory()
+      .filter(tx => tx.type === 'send' && tx.status === 'pending')
+      .sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+
+    const txIdsToConfirm: string[] = [];
+    if (pendingSendTxs.length > 0) {
+      const observedTxIds = new Set<string>();
+      const changedAddresses = new Set<string>();
+
+      for (const balanceInfo of balances) {
+        const addr = String(balanceInfo.address || '').toLowerCase();
+        const utxoKeys = Object.keys(balanceInfo.utxos || {});
+
+        for (const key of utxoKeys) {
+          const txId = extractTxIdFromUtxoKey(key);
+          if (txId) observedTxIds.add(txId);
+        }
+
+        const beforeSet = prevUtxoByAddr[addr] || new Set<string>();
+        const afterSet = buildUtxoKeySet(balanceInfo.utxos as Record<string, unknown>);
+        if (!setsEqual(beforeSet, afterSet)) {
+          changedAddresses.add(addr);
+        }
+      }
+
+      const usedFallbackAddress = new Set<string>();
+      for (const tx of pendingSendTxs) {
+        const txId = String(tx.txHash || '').trim();
+        if (!txId) continue;
+
+        if (observedTxIds.has(txId)) {
+          txIdsToConfirm.push(txId);
+          continue;
+        }
+
+        const fromAddr = String(tx.from || '').toLowerCase();
+        const canFallback = !tx.guarantorOrg || String(tx.guarantorOrg).trim() === '';
+        if (canFallback && fromAddr && changedAddresses.has(fromAddr) && !usedFallbackAddress.has(fromAddr)) {
+          txIdsToConfirm.push(txId);
+          usedFallbackAddress.add(fromAddr);
+        }
+      }
+    }
 
     let updatedCount = 0;
 
@@ -2564,6 +2634,13 @@ export async function refreshWalletBalances(): Promise<boolean> {
     // Update Store (SSOT) - this will trigger UI updates via subscriptions
     setUser(u);
     saveUser(u);
+
+    if (txIdsToConfirm.length > 0) {
+      const uniqueTxIds = Array.from(new Set(txIdsToConfirm));
+      for (const txId of uniqueTxIds) {
+        updateTxHistoryByTxId(txId, { status: 'success', failureReason: '' });
+      }
+    }
 
     // Force re-render wallet to show updated balances
     renderWallet();
