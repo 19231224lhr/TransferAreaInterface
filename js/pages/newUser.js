@@ -8,7 +8,6 @@
 import { newUser } from '../services/account';
 import { showErrorToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
-import { t } from '../i18n/index.js';
 import { wait, copyToClipboard } from '../utils/helpers.js';
 import { showSuccessToast } from '../utils/toast.js';
 import { secureFetchWithRetry } from '../utils/security';

@@ -130,6 +130,9 @@ const stateBindings = {
 // 页面状态实例
 let pageState: ReactiveState<ImportPageState> | null = null;
 
+// 待保存的用户数据 (预览模式)
+let pendingUser: ReturnType<typeof toAccount> | null = null;
+
 // 事件清理函数数组
 let eventCleanups: (() => void)[] = [];
 
@@ -308,6 +311,7 @@ function handleVisibilityToggle(): void {
  * 处理返回按钮
  */
 function handleBackClick(): void {
+  pendingUser = null; // Clear pending data
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/entry');
   }
@@ -317,9 +321,24 @@ function handleBackClick(): void {
 }
 
 /**
- * 处理下一步按钮
+ * 处理下一步按钮 (确认保存)
  */
 function handleNextClick(): void {
+  if (pendingUser) {
+    // 只有在点击下一步时才真正保存
+    saveUser(pendingUser);
+
+    // 更新全局状态
+    const user = loadUser();
+    updateHeaderUser(user);
+
+    if (pageState?.getValue('mode') === 'wallet' && typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {
+      window.PanguPay.wallet.updateWalletBrief();
+    }
+
+    showToast(t('toast.importSuccess') || '导入成功', 'success');
+  }
+
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/entry');
   }
@@ -331,6 +350,8 @@ function handleNextClick(): void {
 async function handleCancelClick(): Promise<void> {
   if (!pageState) return;
 
+  pendingUser = null; // Clear pending data
+
   // 隐藏结果
   await animateResultCollapse();
 
@@ -338,7 +359,7 @@ async function handleCancelClick(): Promise<void> {
   await animateFormExpand();
 
   // 重置状态
-  resetImportState('account');
+  resetImportState(pageState.getValue('mode'));
 }
 
 /**
@@ -414,31 +435,27 @@ async function handleImport(): Promise<void> {
     if (loader) loader.classList.add('hidden');
     pageState.set({ showLoader: false });
 
+    // 统一处理逻辑：计算 pendingUser 并显示预览
+
+    // 更新结果数据 (Preview)
+    pageState.set({
+      accountId: data.accountId || '',
+      address: data.address || '',
+      privHex: data.privHex || normalized,
+      pubX: data.pubXHex || '',
+      pubY: data.pubYHex || '',
+      privKeyCollapsed: true
+    });
+
+    const addr = (data.address || '').toLowerCase();
+    let acc: ReturnType<typeof toAccount>;
+
     if (mode === 'account') {
-      // 更新结果数据
-      pageState.set({
-        accountId: data.accountId || '',
-        address: data.address || '',
-        privHex: data.privHex || normalized,
-        pubX: data.pubXHex || '',
-        pubY: data.pubYHex || '',
-        privKeyCollapsed: true
-      });
-
-      // 显示结果
-      await animateResultReveal();
-      pageState.set({
-        showResult: true,
-        showButtons: true
-      });
-
-      // 检查用户是否已存在
+      // --- 账户模式逻辑 ---
       const existingUser = loadUser();
-      const addr = (data.address || '').toLowerCase();
 
-      let acc: ReturnType<typeof toAccount>;
       if (existingUser && existingUser.accountId) {
-        // 用户已存在 - 添加地址到现有账户
+        // 用户已存在 - 添加地址到现有账户 (Merge)
         acc = toAccount({ accountId: existingUser.accountId, address: existingUser.address }, existingUser);
 
         // 检查地址是否已存在
@@ -446,24 +463,12 @@ async function handleImport(): Promise<void> {
           (existingUser.address && String(existingUser.address).toLowerCase() === addr);
 
         if (addressExists) {
-          hideUnifiedOverlay();
-          showErrorToast(t('toast.addressExists'), t('modal.operationFailed'));
-          // 重置按钮状态
-          if (importBtn) {
-            importBtn.disabled = false;
-            importBtn.classList.remove('is-loading');
-            hideElementLoading(importBtn);
-          }
-          hideLoading(loadingId);
-          resetImportState('account');
+          handleImportError(importBtn, loadingId, t('toast.addressExists'));
           return;
         }
       } else {
-        // 无现有用户 - 创建新账户
-        if (typeof window.PanguPay?.storage?.clearAccountStorage === 'function') {
-          window.PanguPay.storage.clearAccountStorage();
-        }
-
+        // 无现有用户 - 创建新账户 (New)
+        // 注意：这里也不要立即 clearAccountStorage，等到 Next 点击时覆盖即可
         const accountData = {
           accountId: data.accountId,
           address: data.address,
@@ -474,8 +479,34 @@ async function handleImport(): Promise<void> {
         acc = toAccount(accountData, null);
       }
 
-      // 添加导入的地址到 wallet.addressMsg
-      if (addr && acc.wallet?.addressMsg) {
+    } else {
+      // --- 钱包模式逻辑 ---
+      const u2 = loadUser();
+      if (!u2 || !u2.accountId) {
+        handleImportError(importBtn, loadingId, t('modal.pleaseLoginFirst'));
+        return;
+      }
+
+      acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
+
+      if (!addr) {
+        handleImportError(importBtn, loadingId, t('toast.cannotParseAddress'));
+        return;
+      }
+
+      const exists = (acc.wallet?.addressMsg?.[addr]) ||
+        (u2.address && String(u2.address).toLowerCase() === addr);
+
+      if (exists) {
+        handleImportError(importBtn, loadingId, t('toast.addressExists'));
+        return;
+      }
+    }
+
+    // 共同的构建逻辑：添加地址到 wallet.addressMsg
+    if (addr && acc.wallet?.addressMsg) {
+      // 如果已存在则不覆盖（上面已经由于 exists check return 了），这里是添加新地址
+      if (!acc.wallet.addressMsg[addr]) {
         acc.wallet.addressMsg[addr] = {
           type: 0,
           utxos: {},
@@ -484,29 +515,36 @@ async function handleImport(): Promise<void> {
           estInterest: 0,
           origin: 'imported',
           privHex: data.privHex || normalized,
-          pubXHex: data.pubXHex || '',  // 保存公钥 X 坐标
-          pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
+          pubXHex: data.pubXHex || '',
+          pubYHex: data.pubYHex || ''
         };
       }
+    }
 
-      saveUser(acc);
+    // [CRITICAL] Do NOT saveUser() here. Save to pendingUser instead.
+    pendingUser = acc;
 
-      // 更新 header
-      const user = loadUser();
-      updateHeaderUser(user);
+    // 显示结果预览 (Animation)
+    if (mode === 'account') {
+      // For account mode, we've already done collapse in the `try` block top
+    } else {
+      // For wallet mode, we need to collapse form now since we used UnifiedLoading before
+      hideUnifiedOverlay(); // Hide the full screen loader
+      await animateFormCollapse();
+    }
 
-      // 检查导入的地址是否已经属于某个担保组织
-      // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
-      if (addr) {
-        console.info(`[Import] Checking if imported address belongs to an organization...`);
-        const orgInfo = await checkAddressOrganization(addr);
+    // 显示结果卡片
+    await animateResultReveal();
+    pageState.set({
+      showResult: true,
+      showButtons: true, // Shows Next/Cancel buttons
+      showLoader: false
+    });
 
+    // 检查组织信息 (Informational Toast)
+    if (addr) {
+      checkAddressOrganization(addr).then(orgInfo => {
         if (orgInfo) {
-          // 地址已经属于某个组织，显示提示但不自动保存
-          console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
-
-          // 显示提示信息
-          // 显示提示信息
           showToast(
             t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) ||
             `已属组织 ${orgInfo.groupID}`,
@@ -515,138 +553,48 @@ async function handleImport(): Promise<void> {
             3000
           );
         }
-      }
-
-    } else {
-      // 钱包模式 - 添加到现有账户
-      const u2 = loadUser();
-      if (!u2 || !u2.accountId) {
-        hideUnifiedOverlay();
-        showErrorToast(t('modal.pleaseLoginFirst'), t('modal.operationFailed'));
-        // 重置按钮状态
-        if (importBtn) {
-          importBtn.disabled = false;
-          importBtn.classList.remove('is-loading');
-          hideElementLoading(importBtn);
-        }
-        hideLoading(loadingId);
-        return;
-      }
-
-      const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
-      const addr = (data.address || '').toLowerCase();
-
-      if (!addr) {
-        showUnifiedSuccess(t('toast.importFailed'), t('toast.cannotParseAddress'), () => {
-          // 重置按钮状态
-          if (importBtn) {
-            importBtn.disabled = false;
-            importBtn.classList.remove('is-loading');
-            hideElementLoading(importBtn);
-          }
-          hideLoading(loadingId);
-        }, undefined, true);
-        return;
-      }
-
-      const exists = (acc.wallet?.addressMsg?.[addr]) ||
-        (u2.address && String(u2.address).toLowerCase() === addr);
-      if (exists) {
-        showUnifiedSuccess(t('toast.importFailed'), t('toast.addressExists'), () => {
-          // 重置按钮状态
-          if (importBtn) {
-            importBtn.disabled = false;
-            importBtn.classList.remove('is-loading');
-            hideElementLoading(importBtn);
-          }
-          hideLoading(loadingId);
-        }, undefined, true);
-        return;
-      }
-
-      if (addr && acc.wallet?.addressMsg) {
-        acc.wallet.addressMsg[addr] = {
-          type: 0,
-          utxos: {},
-          txCers: {},
-          value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
-          estInterest: 0,
-          origin: 'imported',
-          privHex: (data.privHex || normalized),
-          pubXHex: data.pubXHex || '',  // 保存公钥 X 坐标
-          pubYHex: data.pubYHex || ''   // 保存公钥 Y 坐标
-        };
-      }
-
-      saveUser(acc);
-      updateWalletBrief();
-
-      // 检查导入的地址是否已经属于某个担保组织
-      // 只显示提示，不自动保存组织信息（让用户在加入组织页面自行选择）
-      if (addr) {
-        console.info(`[Import] Checking if imported address belongs to an organization...`);
-        const orgInfo = await checkAddressOrganization(addr);
-
-        if (orgInfo) {
-          // 地址已经属于某个组织，显示提示但不自动保存
-          console.info(`[Import] Address belongs to organization ${orgInfo.groupID}, showing info toast`);
-
-          // 显示成功提示，包含组织信息提示
-          showUnifiedSuccess(
-            t('toast.importSuccess'),
-            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) ||
-            `地址导入成功！注意：该地址已属于担保组织 ${orgInfo.groupID}，加入组织时请选择该组织。`,
-            () => {
-              if (typeof window.PanguPay?.router?.routeTo === 'function') {
-                window.PanguPay.router.routeTo('#/entry');
-              }
-            },
-            undefined
-          );
-          return;
-        }
-      }
-
-      showUnifiedSuccess(t('toast.importSuccess'), t('toast.importSuccessDesc'), () => {
-        if (typeof window.PanguPay?.router?.routeTo === 'function') {
-          window.PanguPay.router.routeTo('#/entry');
-        }
-      }, undefined);
+      });
     }
+
   } catch (err) {
-    hideUnifiedOverlay();
-    const errorMsg = (err as Error).message || t('modal.cannotRecognizeKey') || '无法识别私钥';
-    showErrorToast(errorMsg, t('modal.importFailed') || '导入失败');
-    console.error(err);
-
-    // 隐藏加载器
-    const loader = document.getElementById(DOM_IDS.importLoader);
-    if (loader) loader.classList.add('hidden');
-
-    // 恢复表单状态
-    pageState.set({
-      isLoading: false,
-      showLoader: false
-    });
-
-    // 展开表单
-    await animateFormExpand();
-
+    handleImportError(importBtn, loadingId, (err as Error).message);
   } finally {
     pageState?.set({ isLoading: false });
-
-    // 确保按钮状态被重置
     if (importBtn) {
       importBtn.disabled = false;
       importBtn.classList.remove('is-loading');
       hideElementLoading(importBtn);
     }
     hideLoading(loadingId);
-
-    // 确保加载器隐藏
     const loader = document.getElementById(DOM_IDS.importLoader);
     if (loader) loader.classList.add('hidden');
   }
+}
+
+/**
+ * 辅助：处理导入错误
+ */
+async function handleImportError(btn: HTMLButtonElement | null, loadingId: string, msg: string) {
+  hideUnifiedOverlay();
+  showErrorToast(msg, t('modal.operationFailed'));
+  if (btn) {
+    btn.disabled = false;
+    btn.classList.remove('is-loading');
+    hideElementLoading(btn);
+  }
+  hideLoading(loadingId);
+
+  // 恢复表单
+  const loader = document.getElementById(DOM_IDS.importLoader);
+  if (loader) loader.classList.add('hidden');
+
+  if (pageState) {
+    pageState.set({
+      isLoading: false,
+      showLoader: false
+    });
+  }
+  await animateFormExpand();
 }
 
 // ============================================================================

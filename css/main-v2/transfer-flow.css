@@ -150,8 +150,10 @@
 /* Dark theme disabled state */
 [data-theme="dark"] .submit-btn--primary:disabled,
 [data-theme="dark"] .submit-btn--primary.btn-disabled {
-  background: var(--neutral-700);
-  color: var(--neutral-500);
+  background: #334155;
+  /* Slate 700 - Dark Gray */
+  color: #94a3b8;
+  /* Slate 400 */
 }
 
 .submit-btn--secondary {
