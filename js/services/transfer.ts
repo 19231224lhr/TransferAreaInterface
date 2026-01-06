@@ -1202,10 +1202,11 @@ export function initTransferSubmit(): void {
             const pollingAssignUrl = guarGroup.assignAPIEndpoint
               ? buildAssignNodeUrl(guarGroup.assignAPIEndpoint)
               : undefined;
+            const submitBlockHeight = Number(user?.wallet?.updateBlock || 0);
 
             // 使用 setTimeout 0 确保 UI 先更新
             setTimeout(() => {
-              pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, pollingAssignUrl);
+              pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, pollingAssignUrl, submitBlockHeight);
             }, 0);
           } else {
             console.log('[发送交易] 普通转账模式，跳过状态轮询');
@@ -1342,7 +1343,8 @@ export function initTransferSubmit(): void {
 async function pollTXStatusInBackground(
   txID: string,
   groupID: string,
-  assignNodeUrl?: string
+  assignNodeUrl?: string,
+  minBlockHeight?: number
 ): Promise<void> {
   console.log('[后台轮询] 开始轮询交易状态:', txID);
 
@@ -1353,7 +1355,8 @@ async function pollTXStatusInBackground(
       assignNodeUrl,
       {
         pollInterval: 2000,   // 每 2 秒轮询一次
-        maxWaitTime: 60000,   // 最多等待 60 秒
+        maxWaitTime: 60000,
+        minBlockHeight: typeof minBlockHeight === 'number' ? minBlockHeight : 0,   // 最多等待 60 秒
         onStatusChange: (status: TXStatusResponse) => {
           // 状态变化时通过 toast 通知用户
           if (status.status === 'pending') {

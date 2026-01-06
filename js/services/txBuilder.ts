@@ -18,6 +18,7 @@ import { ec as EC } from 'elliptic';
 import { User, AddressData } from '../utils/storage';
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { isUTXOLocked } from '../utils/utxoLock';
+import { isAccountPollingActive } from './accountPolling';
 
 // 初始化 P-256 曲线
 const ec = new EC('p256');
@@ -1631,6 +1632,7 @@ export interface WaitForConfirmationOptions {
   maxWaitTime?: number;
   /** 状态变化回调 */
   onStatusChange?: (status: TXStatusResponse) => void;
+  minBlockHeight?: number;
 }
 
 /**
@@ -1669,7 +1671,8 @@ export function waitForTXConfirmation(
   const {
     pollInterval = 5000,
     maxWaitTime = 60000,
-    onStatusChange
+    onStatusChange,
+    minBlockHeight = 0
   } = options;
 
   console.log(`[等待交易确认] 开始监听 TXID=${txID} (SSE + Backup Poll)`);
@@ -1679,17 +1682,42 @@ export function waitForTXConfirmation(
     let lastStatus: TXStatusType | null = null;
     let timeoutTimer: any = null;
     let pollTimer: any = null;
+    let pollStartTimer: any = null;
     let sseHandler: any = null;
+    let pollInFlight = false;
+    let ssePreferredUntil = 0;
 
     const cleanup = () => {
       hasResolved = true;
       if (timeoutTimer) clearTimeout(timeoutTimer);
       if (pollTimer) clearInterval(pollTimer);
+      if (pollStartTimer) clearTimeout(pollStartTimer);
       if (sseHandler) window.removeEventListener('pangu_tx_status', sseHandler);
     };
 
     const handleStatusResponse = (response: TXStatusResponse) => {
       if (hasResolved) return;
+
+      if (
+        response.status === 'success' &&
+        minBlockHeight > 0 &&
+        (response.block_height || 0) <= minBlockHeight
+      ) {
+        console.log(
+          `[等待交易确认] 已验证但未上链，等待区块确认 (block_height=${response.block_height}, min=${minBlockHeight})`
+        );
+        if (lastStatus !== 'pending') {
+          lastStatus = 'pending';
+          if (onStatusChange) {
+            onStatusChange({
+              ...response,
+              status: 'pending',
+              result: false
+            });
+          }
+        }
+        return;
+      }
 
       if (response.status !== lastStatus) {
         lastStatus = response.status;
@@ -1755,10 +1783,49 @@ export function waitForTXConfirmation(
     };
     window.addEventListener('pangu_tx_status', sseHandler as EventListener);
 
+    const runPoll = async () => {
+      if (hasResolved || pollInFlight) return;
+      pollInFlight = true;
+      try {
+        const res = await queryTXStatus(txID, groupID, assignNodeUrl);
+        if (
+          ssePreferredUntil > 0 &&
+          (res.status === 'success' || res.status === 'failed') &&
+          Date.now() < ssePreferredUntil
+        ) {
+          return;
+        }
+        handleStatusResponse(res);
+      } catch (err) {
+        console.warn('[等待交易确认] 轮询查询失败 (忽略):', err);
+      } finally {
+        pollInFlight = false;
+      }
+    };
+
+    const startPolling = () => {
+      if (pollTimer) return;
+      pollTimer = setInterval(runPoll, pollInterval);
+      runPoll();
+    };
+
+    const sseActiveAtStart = isAccountPollingActive();
+    if (sseActiveAtStart) {
+      pollStartTimer = setTimeout(() => {
+        if (!hasResolved) {
+          console.warn('[等待交易确认] SSE 未推送，启用轮询兜底');
+          startPolling();
+        }
+      }, 6000);
+    } else {
+      startPolling();
+    }
+
     // 4. Initial Check (Only once, to catch if already confirmed)
     queryTXStatus(txID, groupID, assignNodeUrl)
       .then((res) => {
         if (res.status === 'success' || res.status === 'failed') {
+          ssePreferredUntil = Date.now() + 3000;
           // 延迟使用查询结果，优先等待 SSE 推送以验证 SSE 功能
           console.log('[等待交易确认] 初始查询已确认 (status=' + res.status + '). 等待 3秒 看是否收到 SSE 以验证被动推送...');
           setTimeout(() => {

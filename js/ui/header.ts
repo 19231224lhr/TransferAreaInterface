@@ -24,7 +24,7 @@ import {
 } from '../utils/reactive';
 import { DOM_IDS, idSelector } from '../config/domIds';
 import { resetFirstMainPageVisit } from '../pages/main.js';
-import { resetAssignNodeConnectFlag } from '../services/accountPolling';
+import { resetAssignNodeConnectFlag, stopAccountPolling } from '../services/accountPolling';
 import { resetComNodeConnectFlag } from '../services/comNodeEndpoint';
 
 // ============================================================================
@@ -492,6 +492,8 @@ function handleLogoutClick(e: MouseEvent): void {
 
   const logoutBtn = document.getElementById(DOM_IDS.logoutBtn) as HTMLButtonElement | null;
   if (logoutBtn?.disabled) return;
+
+  stopAccountPolling();
 
   // 清除账户存储
   clearAccountStorage();

@@ -91,6 +91,15 @@ interface CrossOrgTXCerResponse {
 }
 
 /**
+ * TXCer变动轮询响应
+ */
+interface TXCerChangeResponse {
+  success: boolean;
+  count: number;
+  changes: TXCerChangeToUser[];
+}
+
+/**
  * 已使用 TXCer 变动数据
  * 对应 Go: UsedTXCerChangeData
  */
@@ -148,6 +157,12 @@ let pollingTimer: ReturnType<typeof setInterval> | null = null;
 /** 轮询间隔（毫秒）- 建议 3-5 秒 */
 const POLLING_INTERVAL = 3000;
 
+/** TXCer变动轮询定时器 */
+let txCerPollingTimer: ReturnType<typeof setInterval> | null = null;
+
+/** TXCer变动轮询间隔（毫秒） */
+const TXCER_POLLING_INTERVAL = 4000;
+
 /** 最后一次成功轮询的时间戳 */
 let lastPollTimestamp = 0;
 
@@ -159,6 +174,12 @@ const MAX_CONSECUTIVE_FAILURES = 5;
 
 /** 是否正在轮询中（防止重叠） */
 let isPolling = false;
+
+/** 是否正在轮询TXCer变动 */
+let isPollingTXCer = false;
+
+/** TXCer变动轮询连续失败次数 */
+let txcerFailures = 0;
 
 /** 轮询是否已启动 */
 let isPollingStarted = false;
@@ -216,10 +237,14 @@ function normalizeUtxoId(id: string): string {
 /**
  * 执行一次账户更新轮询
  */
-async function pollAccountUpdates(): Promise<void> {
+async function pollAccountUpdates(force = false): Promise<void> {
   // 防止重叠轮询
   if (isPolling) {
     console.debug('[AccountPolling] Skipping poll - already in progress');
+    return;
+  }
+
+  if (!force && isSSEActive()) {
     return;
   }
 
@@ -772,6 +797,10 @@ let eventSource: EventSource | null = null;
 let eventSourceUserId: string | null = null;
 let eventSourceGroupId: string | null = null;
 
+function isSSEActive(): boolean {
+  return eventSource !== null && eventSource.readyState === EventSource.OPEN;
+}
+
 /**
 * 启动 SSE 实时同步
 */
@@ -947,9 +976,13 @@ export function startAccountPolling(): void {
   consecutiveFailures = 0;
 
   // 1. 立即执行一次传统轮询，以获取离线期间的消息并消耗队列
-  pollAccountUpdates();
-  // 同时执行一次跨组织轮询 (cleanup cached messages)
-  pollCrossOrgTXCers();
+  pollAccountUpdates(!isSSEActive());
+  if (!pollingTimer) {
+    pollingTimer = setInterval(pollAccountUpdates, POLLING_INTERVAL);
+  }
+
+  startTXCerChangePolling();
+  startCrossOrgTXCerPolling();
 
   // 2. 启动 SSE 长连接
   startSSESync(user.accountId, group);
@@ -970,6 +1003,7 @@ export function stopAccountPolling(): void {
   isPolling = false;
 
   // 同时停止跨组织TXCer轮询 (legacy timer)
+  stopTXCerChangePolling();
   stopCrossOrgTXCerPolling();
 
   console.info('[AccountPolling] SSE Sync stopped');
@@ -1022,7 +1056,138 @@ export function getPollingStatus(): {
  * 手动触发一次轮询
  */
 export async function triggerManualPoll(): Promise<void> {
-  await pollAccountUpdates();
+  await pollAccountUpdates(true);
+}
+
+// ============================================================================
+// TXCer变动轮询 (TXCerChange)
+// ============================================================================
+
+/**
+ * 执行一次TXCer变动轮询
+ */
+async function pollTXCerChanges(force = false): Promise<void> {
+  if (isPollingTXCer) {
+    console.debug('[TXCerChange] Skipping poll - already in progress');
+    return;
+  }
+
+  if (!force && isSSEActive()) {
+    return;
+  }
+
+  const user = getCurrentUser();
+  if (!user?.accountId) {
+    console.debug('[TXCerChange] No user logged in, skipping poll');
+    return;
+  }
+
+  const group = getJoinedGroup();
+  if (!group?.groupID) {
+    console.debug('[TXCerChange] User not in organization, skipping poll');
+    return;
+  }
+
+  isPollingTXCer = true;
+
+  try {
+    const endpoint = `${API_ENDPOINTS.ASSIGN_TXCER_CHANGE(group.groupID)}?userID=${user.accountId}&limit=10&consume=true`;
+
+    const response = await apiClient.get<TXCerChangeResponse>(endpoint, {
+      timeout: 5000,
+      retries: 0,
+      silent: true,
+      useBigIntParsing: true
+    });
+
+    txcerFailures = 0;
+
+    if (response.success && response.count > 0) {
+      console.info(`[TXCerChange] Received ${response.count} changes`);
+
+      let hasChanges = false;
+
+      for (const change of response.changes) {
+        processTXCerChange(user, change);
+        hasChanges = true;
+      }
+
+      if (hasChanges) {
+        recalculateTotalBalance(user);
+        saveUser(user);
+        renderWallet();
+        refreshSrcAddrList();
+        updateWalletBrief();
+      }
+    }
+  } catch (error) {
+    txcerFailures++;
+
+    if (isNetworkError(error)) {
+      console.debug('[TXCerChange] Network error');
+    } else if (isTimeoutError(error)) {
+      console.debug('[TXCerChange] Request timeout');
+    } else {
+      console.warn('[TXCerChange] Poll failed:', error);
+    }
+
+    if (txcerFailures >= MAX_CONSECUTIVE_FAILURES) {
+      console.warn(`[TXCerChange] Too many failures (${txcerFailures}), pausing`);
+      stopTXCerChangePolling();
+    }
+  } finally {
+    isPollingTXCer = false;
+  }
+}
+
+/**
+ * 启动TXCer变动轮询
+ */
+export function startTXCerChangePolling(): void {
+  if (txCerPollingTimer) {
+    console.debug('[TXCerChange] Already started');
+    return;
+  }
+
+  const group = getJoinedGroup();
+  if (!group?.groupID) {
+    console.info('[TXCerChange] User not in organization, polling not started');
+    return;
+  }
+
+  const user = getCurrentUser();
+  if (!user?.accountId) {
+    console.info('[TXCerChange] No user logged in, polling not started');
+    return;
+  }
+
+  console.info('[TXCerChange] Starting polling');
+  txcerFailures = 0;
+
+  pollTXCerChanges(!isSSEActive());
+  txCerPollingTimer = setInterval(pollTXCerChanges, TXCER_POLLING_INTERVAL);
+}
+
+/**
+ * 停止TXCer变动轮询
+ */
+export function stopTXCerChangePolling(): void {
+  if (txCerPollingTimer) {
+    clearInterval(txCerPollingTimer);
+    txCerPollingTimer = null;
+  }
+
+  isPollingTXCer = false;
+  console.info('[TXCerChange] Polling stopped');
+}
+
+/**
+ * 重启TXCer变动轮询
+ */
+export function restartTXCerChangePolling(): void {
+  stopTXCerChangePolling();
+  txcerFailures = 0;
+  startTXCerChangePolling();
 }
 
 // ============================================================================
@@ -1046,9 +1211,13 @@ let crossOrgTxCerFailures = 0;
  * 
  * 轮询接收来自其他担保组织的TXCer
  */
-async function pollCrossOrgTXCers(): Promise<void> {
+async function pollCrossOrgTXCers(force = false): Promise<void> {
   if (isPollingCrossOrgTxCer) {
     console.debug('[CrossOrgTXCer] Skipping poll - already in progress');
+    return;
+  }
+
+  if (!force && isSSEActive()) {
     return;
   }
 
@@ -1218,7 +1387,7 @@ export function startCrossOrgTXCerPolling(): void {
   crossOrgTxCerFailures = 0;
 
   // 立即执行一次
-  pollCrossOrgTXCers();
+  pollCrossOrgTXCers(!isSSEActive());
 
   // 设置定时轮询
   crossOrgTxCerTimer = setInterval(pollCrossOrgTXCers, CROSS_ORG_TXCER_POLLING_INTERVAL);

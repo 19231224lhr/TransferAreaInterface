@@ -16,6 +16,7 @@ import { loadUser } from './storage';
 import { t } from '../i18n/index.js';
 import { DOM_IDS, idSelector } from '../config/domIds';
 import { html as viewHtml, renderInto } from './view';
+import { stopAccountPolling } from '../services/accountPolling';
 
 // ========================================
 // Types
@@ -238,6 +239,7 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
   
   // Logout button - switch account
   logoutBtn?.addEventListener('click', () => {
+    stopAccountPolling();
     // Import clearAccountStorage from storage module
     import('./storage').then(({ clearAccountStorage }) => {
       // Clear all user data properly
