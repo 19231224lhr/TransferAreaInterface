@@ -68,6 +68,9 @@ let comNodeStatus: ComNodeStatus = {
   errorMessage: null
 };
 
+/** Flag to track if connection toast has been shown this session */
+let hasShownConnectedToast = false;
+
 /** Status change listeners */
 const statusListeners: Set<(status: ComNodeStatus) => void> = new Set();
 
@@ -201,7 +204,8 @@ export async function queryComNodeEndpoint(showToast: boolean = true): Promise<s
 
     console.info('[ComNodeEndpoint] ✓ ComNode endpoint:', comNodeURL);
 
-    if (showToast) {
+    if (showToast && !hasShownConnectedToast) {
+      hasShownConnectedToast = true;
       showStatusToast(t('comNode.connected', '已连接到担保委员会节点'), 'success');
     }
 
@@ -280,6 +284,7 @@ export async function getComNodeURL(
 export function clearComNodeCache(): void {
   cachedComNodeURL = null;
   localStorage.removeItem(CACHE_KEY);
+  hasShownConnectedToast = false; // Reset toast flag for new session
   updateStatus({
     isAvailable: false,
     endpoint: null,
@@ -287,6 +292,15 @@ export function clearComNodeCache(): void {
     lastCheck: Date.now()
   });
   console.info('[ComNodeEndpoint] Cache cleared');
+}
+
+/**
+ * Reset connection toast flag
+ * Call this on logout or full app reset
+ */
+export function resetComNodeConnectFlag(): void {
+  hasShownConnectedToast = false;
+  console.debug('[ComNodeEndpoint] Connection toast flag reset');
 }
 
 /**

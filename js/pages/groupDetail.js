@@ -15,6 +15,7 @@ import { showMiniToast, showStatusToast } from '../utils/toast.js';
 import { routeTo } from '../router';
 import { DOM_IDS, idSelector } from '../config/domIds';
 import { leaveGuarGroup, queryGroupInfoSafe } from '../services/group';
+import { resetAssignNodeConnectFlag } from '../services/accountPolling';
 
 // Current active tab
 let currentTab = 'myorg';
@@ -256,6 +257,9 @@ export async function handleLeaveOrg() {
       saveUser({ accountId: u.accountId, orgNumber: '', guarGroup: null });
     }
     clearGuarChoice();
+
+    // Reset AssignNode connection toast flag
+    resetAssignNodeConnectFlag();
 
     // Update UI
     if (typeof window.PanguPay?.wallet?.updateWalletBrief === 'function') {

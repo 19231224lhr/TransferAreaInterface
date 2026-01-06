@@ -163,6 +163,9 @@ let isPolling = false;
 /** 轮询是否已启动 */
 let isPollingStarted = false;
 
+/** Flag to track if AssignNode connected toast has been shown this session */
+let hasShownAssignNodeConnectedToast = false;
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -812,8 +815,11 @@ function startSSESync(userId: string, group: any): void {
     eventSource.onopen = () => {
       console.info('[AccountSSE] Connection opened');
       consecutiveFailures = 0;
-      // Show connection status toast
-      showStatusToast(t('assignNode.connected') || '已连接到担保组织节点', 'success');
+      // Show connection status toast only on first connection per session
+      if (!hasShownAssignNodeConnectedToast) {
+        hasShownAssignNodeConnectedToast = true;
+        showStatusToast(t('assignNode.connected') || '已连接到担保组织节点', 'success');
+      }
     };
 
     eventSource.onerror = (err) => {
@@ -967,6 +973,16 @@ export function stopAccountPolling(): void {
   stopCrossOrgTXCerPolling();
 
   console.info('[AccountPolling] SSE Sync stopped');
+}
+
+/**
+ * 重置连接通知标记
+ * 
+ * 用于退出登录或切换组织时
+ */
+export function resetAssignNodeConnectFlag(): void {
+  hasShownAssignNodeConnectedToast = false;
+  console.debug('[AccountPolling] Connection toast flag reset');
 }
 
 /**

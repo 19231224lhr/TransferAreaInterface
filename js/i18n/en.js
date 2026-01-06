@@ -45,6 +45,7 @@ export default {
   'comNode.notAvailable': 'ComNode endpoint unavailable, please try again later',
   'comNode.refreshing': 'Refreshing node connection...',
   'assignNode.connected': 'Connected to guarantor organization',
+  'bootNode.connected': 'Connected to blockchain system',
 
   // Password and Encryption
   'encryption.setPassword': 'Set Password',
