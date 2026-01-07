@@ -655,7 +655,8 @@ async function handleShowPrivateKeyClick(e: MouseEvent): Promise<void> {
           ${t('wallet.privateKeyWarning')}
         </div>
       `,
-      false
+      false,
+      true
     );
 
     // Bind copy button event

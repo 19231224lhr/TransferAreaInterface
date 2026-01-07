@@ -308,6 +308,11 @@
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
+            <svg class="warning-icon hidden" id="unifiedWarningIcon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
           </div>
           <h3 class="success-title" id="unifiedTitle">操作成功</h3>
           <div class="success-content-wrapper" id="successContentWrapper">
@@ -334,7 +339,7 @@
       </div>
     </div>
     <!-- 未加入担保组织提示弹窗 -->
-    <div id="noOrgModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div id="noOrgModal" class="modal modal--danger hidden" role="dialog" aria-modal="true">
       <div class="dialog no-org-dialog">
         <div class="no-org-dialog-header">
           <div class="no-org-dialog-icon-wrap">
@@ -375,13 +380,13 @@
         </div>
       </div>
     </div>
-    <div id="confirmSkipModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div id="confirmSkipModal" class="modal modal--danger hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>确认不加入担保组织</h3>
-        <p class="tip">这是一个警告操作，确认后将不加入担保组织并进入下一步。</p>
+        <h3 data-i18n="join.confirmSkip">确认不加入担保组织</h3>
+        <p class="tip" data-i18n="join.confirmSkipDesc">这是一个警告操作，确认后将不加入担保组织并进入下一步。</p>
         <div class="actions">
-          <button id="confirmSkipCancel" class="btn secondary">取消</button>
-          <button id="confirmSkipOk" class="btn primary">确认</button>
+          <button id="confirmSkipCancel" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="confirmSkipOk" class="btn danger" data-i18n="common.confirm">确认</button>
         </div>
       </div>
     </div>

@@ -287,6 +287,7 @@ export const DOM_IDS = {
   unifiedOkBtn: 'unifiedOkBtn',
   unifiedSuccess: 'unifiedSuccess',
   unifiedSuccessIcon: 'unifiedSuccessIcon',
+  unifiedWarningIcon: 'unifiedWarningIcon',
   unifiedText: 'unifiedText',
   unifiedTitle: 'unifiedTitle',
   successContentWrapper: 'successContentWrapper',

@@ -901,6 +901,7 @@ export function handleExportPrivateKey(address: string): void {
   const keyRow = document.getElementById(DOM_IDS.successKeyRow);
   const keyCode = document.getElementById(DOM_IDS.successKeyCode);
   const copyBtn = document.getElementById(DOM_IDS.successCopyBtn);
+  const successEl = document.getElementById(DOM_IDS.unifiedSuccess);
 
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
@@ -949,6 +950,21 @@ export function handleExportPrivateKey(address: string): void {
     if (keyRow) keyRow.classList.add('hidden');
   }
 
+  // Apply danger mode styling for private key display
+  if (successEl) successEl.classList.add('danger-mode');
+
+  const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
+  const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
+  const warningIcon = document.getElementById(DOM_IDS.unifiedWarningIcon);
+
+  if (successIcon) successIcon.classList.add('hidden');
+  if (errorIcon) errorIcon.classList.add('hidden');
+  if (warningIcon) warningIcon.classList.remove('hidden');
+
+  if (ok) {
+    ok.classList.remove('unified-btn--primary');
+    ok.classList.add('unified-btn--danger');
+  }
   if (modal) modal.classList.remove('hidden');
 
   const handler = () => {
@@ -960,6 +976,15 @@ export function handleExportPrivateKey(address: string): void {
     if (copyBtn) {
       copyBtn.classList.remove('copied');
       copyBtn.onclick = null;
+    }
+    // Clean up danger mode
+    if (successEl) successEl.classList.remove('danger-mode');
+    if (successIcon) successIcon.classList.remove('hidden');
+    if (warningIcon) warningIcon.classList.add('hidden');
+
+    if (ok) {
+      ok.classList.remove('unified-btn--danger');
+      ok.classList.add('unified-btn--primary');
     }
   };
   ok?.addEventListener('click', handler);

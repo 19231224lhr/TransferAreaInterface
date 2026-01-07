@@ -128,6 +128,7 @@
 }
 
 @keyframes warnShake {
+
   0%,
   100% {
     transform: rotate(0deg);
@@ -220,4 +221,64 @@
 .no-org-dialog-list li span {
   flex: 1;
   line-height: 1.4;
+}
+
+/* ========================================
+   Danger Mode Styles (Red Warning)
+   ======================================== */
+
+.modal--danger .no-org-dialog-header h3 {
+  color: #ef4444;
+}
+
+.modal--danger .no-org-dialog-header h3::before {
+  display: none;
+}
+
+.modal--danger .no-org-dialog-icon-wrap {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(249, 115, 22, 0.1));
+}
+
+.modal--danger .no-org-dialog-icon {
+  color: #ef4444;
+}
+
+.modal--danger .no-org-dialog-list li {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(249, 115, 22, 0.04));
+  border-left-color: #ef4444;
+}
+
+.modal--danger .no-org-dialog-list li:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.08));
+}
+
+.modal--danger .no-org-dialog-list li svg {
+  color: #ef4444;
+}
+
+/* Dark mode for danger no-org dialog */
+[data-theme="dark"] .modal--danger .no-org-dialog-header h3 {
+  color: #f87171;
+}
+
+[data-theme="dark"] .modal--danger .no-org-dialog-icon-wrap {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.15));
+}
+
+[data-theme="dark"] .modal--danger .no-org-dialog-icon {
+  color: #f87171;
+}
+
+[data-theme="dark"] .modal--danger .no-org-dialog-list li {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(249, 115, 22, 0.08));
+  border-left-color: #f87171;
+  color: rgba(248, 113, 113, 0.9);
+}
+
+[data-theme="dark"] .modal--danger .no-org-dialog-list li:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(249, 115, 22, 0.12));
+}
+
+[data-theme="dark"] .modal--danger .no-org-dialog-list li svg {
+  color: #f87171;
 }

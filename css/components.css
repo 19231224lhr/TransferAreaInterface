@@ -1841,6 +1841,13 @@ pre code {
   }
 }
 
+/* 警告状态图标 */
+.success-icon-wrap svg.warning-icon {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: successCheckDraw 0.6s ease-out 0.3s forwards;
+}
+
 /* 错误状态的文本样式 */
 .unified-success.error-mode .success-text {
   color: #dc2626;
@@ -1896,8 +1903,12 @@ pre code {
 .success-key-row {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
+  background: #f1f5f9;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
 }
 
 .success-key-row.hidden {
@@ -1906,48 +1917,51 @@ pre code {
 
 .success-key-code {
   flex: 1;
-  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-family: 'JetBrains Mono', 'SF Mono', 'Monaco', monospace;
   font-size: 13px;
-  line-height: 1.6;
-  color: inherit;
+  line-height: 1.4;
+  color: #334155;
   word-break: break-all;
-  text-align: center;
-  background: transparent;
-  padding: 0;
-  margin: 0;
+  text-align: left;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-shadow: none !important;
 }
 
 .success-copy-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 8px;
-  color: #475569;
+  background: white;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  color: #64748b;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s;
 }
 
 .success-copy-btn:hover {
-  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  background: #f8fafc;
+  color: #0ea5e9;
+  border-color: #0ea5e9;
+  transform: translateY(-1px);
 }
 
 .success-copy-btn:active {
-  transform: scale(0.98);
+  transform: translateY(0);
 }
 
 .success-copy-btn svg {
-  width: 18px;
-  height: 18px;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
-  transition: all 0.3s ease;
 }
 
 .success-copy-btn .copy-success-icon {
@@ -1956,7 +1970,7 @@ pre code {
 }
 
 .success-copy-btn.copied {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1));
+  background: rgba(16, 185, 129, 0.1);
   border-color: rgba(16, 185, 129, 0.3);
   color: #10b981;
 }
@@ -1967,6 +1981,26 @@ pre code {
 
 .success-copy-btn.copied .copy-success-icon {
   display: block;
+}
+
+/* Dark mode overrides for success-key-row */
+[data-theme="dark"] .success-key-row {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+[data-theme="dark"] .success-key-code {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .success-copy-btn {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: rgba(71, 85, 105, 0.5);
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .success-copy-btn:hover {
+  background: rgba(51, 65, 85, 0.9);
 }
 
 /* 成功状态按钮 */
@@ -2011,6 +2045,37 @@ pre code {
 
 .unified-btn.hidden {
   display: none;
+}
+
+/* Danger mode for unified success modal (private key display) */
+.unified-success.danger-mode .success-icon-wrap {
+  background: linear-gradient(135deg, #ef4444, #f87171);
+  box-shadow: 0 12px 32px rgba(239, 68, 68, 0.3);
+}
+
+.unified-success.danger-mode .success-title {
+  color: #ef4444;
+}
+
+.unified-btn--danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  color: white !important;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.unified-btn--danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+}
+
+/* Dark mode danger styles for unified-success */
+[data-theme="dark"] .unified-success.danger-mode .success-icon-wrap {
+  background: linear-gradient(135deg, #f87171, #fb923c);
+  box-shadow: 0 12px 32px rgba(248, 113, 113, 0.3);
+}
+
+[data-theme="dark"] .unified-success.danger-mode .success-title {
+  color: #f87171;
 }
 
 /* ========================================
@@ -3350,4 +3415,33 @@ pre code {
 .modal.modal--danger .dialog .btn.danger:hover {
   box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
   transform: translateY(-2px);
+}
+
+/* Dark mode styles for Danger Modal */
+[data-theme="dark"] .modal.modal--danger {
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.12) 0%,
+      rgba(249, 115, 22, 0.08) 50%,
+      rgba(15, 23, 42, 0.8) 100%);
+}
+
+[data-theme="dark"] .modal.modal--danger .dialog {
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.98), rgba(15, 23, 42, 0.98));
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow:
+    0 25px 60px rgba(0, 0, 0, 0.5),
+    0 10px 30px rgba(239, 68, 68, 0.2),
+    inset 0 1px 0 rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="dark"] .modal.modal--danger .dialog h3 {
+  color: #f87171;
+}
+
+[data-theme="dark"] .modal.modal--danger .dialog h3::before {
+  background: linear-gradient(180deg, #f87171, #fb923c);
+}
+
+[data-theme="dark"] .modal.modal--danger .dialog .tip {
+  color: rgba(248, 113, 113, 0.9);
 }

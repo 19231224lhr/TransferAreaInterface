@@ -331,13 +331,15 @@ export function getActionModalElements(): {
  * @param title - 模态框标题
  * @param html - 模态框内容（HTML）
  * @param isError - 是否为错误
+ * @param isDanger - 是否为危险/警告模式（红色警告风格）
  */
-export function showModalTip(title: string, content?: string | TemplateResult, isError?: boolean): void {
+export function showModalTip(title: string, content?: string | TemplateResult, isError?: boolean, isDanger?: boolean): void {
   const loading = document.getElementById(DOM_IDS.unifiedLoading);
   const success = document.getElementById(DOM_IDS.unifiedSuccess);
   const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
   const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
   const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
+  const warningIcon = document.getElementById(DOM_IDS.unifiedWarningIcon);
 
   if (loading) loading.classList.add('hidden');
   if (success) {
@@ -346,20 +348,38 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
     success.offsetHeight;
     success.style.animation = '';
 
-    if (isError) {
+    // Reset common states
+    if (iconWrap) iconWrap.classList.remove('error-state');
+    success.classList.remove('error-mode');
+    success.classList.remove('danger-mode');
+
+    // Hide all icons first
+    if (successIcon) successIcon.classList.add('hidden');
+    if (errorIcon) errorIcon.classList.add('hidden');
+    if (warningIcon) warningIcon.classList.add('hidden');
+
+    if (isDanger) {
+      success.classList.add('danger-mode');
+      if (warningIcon) warningIcon.classList.remove('hidden');
+    } else if (isError) {
       success.classList.add('error-mode');
       if (iconWrap) iconWrap.classList.add('error-state');
-      if (successIcon) successIcon.classList.add('hidden');
       if (errorIcon) errorIcon.classList.remove('hidden');
     } else {
-      success.classList.remove('error-mode');
-      if (iconWrap) iconWrap.classList.remove('error-state');
       if (successIcon) successIcon.classList.remove('hidden');
-      if (errorIcon) errorIcon.classList.add('hidden');
     }
   }
 
   const { modal, titleEl, textEl, okEl } = getActionModalElements();
+
+  // Apply danger mode to modal
+  if (modal) {
+    if (isDanger) {
+      modal.classList.add('modal--danger');
+    } else {
+      modal.classList.remove('modal--danger');
+    }
+  }
 
   if (titleEl) {
     titleEl.textContent = title || '';
@@ -376,10 +396,31 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
   }
   if (modal) modal.classList.remove('hidden');
 
+  // Apply danger styling to OK button
+  if (okEl) {
+    if (isDanger) {
+      okEl.classList.remove('unified-btn--primary');
+      okEl.classList.add('unified-btn--danger');
+    } else {
+      okEl.classList.remove('unified-btn--danger');
+      okEl.classList.add('unified-btn--primary');
+    }
+  }
+
   const handler = () => {
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('modal--danger');
+    }
     resetModalState();
     if (okEl) okEl.removeEventListener('click', handler);
+    // Clean up danger classes
+    if (success) success.classList.remove('danger-mode');
+    if (warningIcon) warningIcon.classList.add('hidden'); // Ensure warning icon is hidden on close
+    if (okEl) {
+      okEl.classList.remove('unified-btn--danger');
+      okEl.classList.add('unified-btn--primary');
+    }
   };
 
   if (okEl) okEl.addEventListener('click', handler);

@@ -408,7 +408,7 @@ export default {
   'join.notJoinedDesc': '加入担保组织可享受更安全的交易保障和专属福利服务',
   'join.notJoinedLongDesc': '加入担保组织可享受更安全的交易保障和专属福利服务，让您的数字资产交易更加安心无忧。',
   'join.confirmSkip': '确认不加入担保组织',
-  'join.confirmSkipDesc': '这是一个警告操作，确认后将不加入担保组织并进入下一步。',
+  'join.confirmSkipDesc': '不加入担保组织将无法使用快速转账，交易确认更慢，Gas 费用更高。确认继续？',
   'join.joined': '已加入',
   'join.leavingOrg': '正在退出担保组织...',
   'join.queryingOrg': '正在查询组织信息...',
