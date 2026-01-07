@@ -1,414 +1,176 @@
-# PanguPay
+﻿<div align="center">
+  <img src="assets/logo.png" alt="PanguPay Logo" width="120" height="120" />
+  <h1>PanguPay Transfer Interface</h1>
+  <h3>盘古系统 UTXO 转账前端界面</h3>
+  
+  <p>
+    <a href="https://github.com/19231224lhr/TransferAreaInterface/issues"><img src="https://img.shields.io/github/issues/19231224lhr/TransferAreaInterface?color=success&style=flat-square" alt="Issues"></a>
+    <a href="https://github.com/19231224lhr/TransferAreaInterface/network/members"><img src="https://img.shields.io/github/forks/19231224lhr/TransferAreaInterface?color=important&style=flat-square" alt="Forks"></a>
+    <a href="https://github.com/19231224lhr/TransferAreaInterface/stargazers"><img src="https://img.shields.io/github/stars/19231224lhr/TransferAreaInterface?color=blueviolet&style=flat-square" alt="Stars"></a>
+    <a href="https://github.com/19231224lhr/TransferAreaInterface/blob/main/LICENSE"><img src="https://img.shields.io/github/license/19231224lhr/TransferAreaInterface?color=blue&style=flat-square" alt="License"></a>
+  </p>
+  
+  <p>
+    <strong>面向盘古系统的纯前端 UTXO 钱包。</strong><br>
+    安全、模块化、高性能，提供从账户管理到复杂交易构造的一站式体验。
+  </p>
+</div>
 
-盘古系统转账区 - 基于 UTXO 模型的区块链支付钱包
+---
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Go-1.18+-00ADD8?style=flat-square&logo=go" alt="Go Version" />
-  <img src="https://img.shields.io/badge/TypeScript-5.9-3178C6?style=flat-square&logo=typescript" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/Vite-5.4-646CFF?style=flat-square&logo=vite" alt="Vite" />
-  <img src="https://img.shields.io/badge/License-MIT-green?style=flat-square" alt="License" />
-</p>
+## 📑 目录
+
+*   [📖 项目简介](#-项目简介)
+*   [✨ 核心特性](#-核心特性)
+*   [🏗 技术架构](#-技术架构)
+*   [💻 技术栈](#-技术栈)
+*   [🚀 快速开始](#-快速开始)
+*   [📚 开发文档](#-开发文档)
+*   [👨‍💻 核心开发者](#-核心开发者)
+*   [📄 开源协议](#-开源协议)
 
 ---
 
 ## 📖 项目简介
 
-PanguPay 是一个完整的区块链钱包解决方案，采用 UTXO 模型实现资产管理和转账功能。
+**PanguPay** 是专为盘古系统（Pangu System）设计的 Web 端钱包应用。不同于传统的账户模型钱包，PanguPay 在浏览器端完全实现了 **UTXO 状态管理**、**交易构造（Inputs/Outputs）** 以及 **P-256 离线签名**，通过安全的 API 与后端网关进行交互。
 
-**核心特性：**
-- 🔐 **安全可靠**：AES-256-GCM 私钥加密，Web Crypto API 密钥生成
-- 🌐 **国际化**：完整的中英文双语支持（260+ 翻译键）
-- 📱 **现代化 UI**：Glassmorphism 设计风格，支持深色模式
-- ♿ **无障碍**：WCAG 2.1 AA 标准，完整的 ARIA 支持
-- 🚀 **高性能**：HTML 模块化按需加载，Service Worker 离线支持
-- 🎨 **组件化**：TypeScript + 模块化 CSS，易于维护和扩展
+### 核心能力
+*   **多模式转账**: 支持普通转账（AggregateGTX）、快速转账（UserNewTX）以及跨链桥接（Cross-Chain）。
+*   **担保组织集成**: 无缝展示与加入担保组织，享受更低费率与更快确认速度。
+*   **实时状态同步**: 基于 SSE (Server-Sent Events) 和轮询机制，实现秒级余额与交易状态更新。
+*   **客户端安全**: 采用 PBKDF2 + AES-256-GCM 本地加密私钥，确保敏感数据永不触网。
 
-**项目文档：** [飞书文档](https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc)
+---
+
+## ✨ 核心特性
+
+- **🔐 账户安全管理**
+    - 支持私钥 (WIF) 导入与本地生成新账户。
+    - 严格的本地会话加密与自动锁屏保护。
+
+- **💸 强大的交易引擎**
+    - **普通转账**: 面向散户，聚合签名，去中心化程度高。
+    - **快速转账**: 面向组织成员，由分配节点加速确认。
+    - **跨链桥接**: 安全且标准化的 ETH/BTC 资产映射协议。
+
+- **📊 资产可视化看板**
+    - 多资产投资组合视图 (PGC, BTC, ETH, USDT)。
+    - 交互式图表展示资产变化趋势。
+    - UTXO 级别的精细化地址管理。
+
+---
+
+## 🏗 技术架构
+
+项目遵循 **分层架构 (Layered Architecture)** 设计，职责边界清晰。
+
+```mermaid
+graph TD
+    User((用户)) -->|交互| UI[UI 组件层]
+    UI -->|触发| Pages[页面控制器]
+    Pages -->|调用| Services[业务服务层]
+    
+    subgraph Browser Frontend
+        Services -->|构造| TxBuilder[交易构建器]
+        Services -->|管理| State[状态存储 Store]
+        TxBuilder -->|签名| Crypto[加密套件]
+        Services -->|通信| API[API 服务]
+    end
+    
+    API <-->|HTTP/SSE| Gateway[后端网关]
+```
+
+### 技术亮点
+*   **渲染层**: 使用 `lit-html`，无 Virtual DOM 开销，提供原生级的渲染性能与安全性。
+*   **状态管理**: 集中式响应式 Store，支持按需持久化。
+*   **加密算法**: `elliptic` (P-256) 实现 ECDSA 签名，严格对齐链上序列化标准。
+
+---
+
+## 💻 技术栈
+
+| 类别 | 技术 | 用途 |
+|----------|------------|---------|
+| **Core** | TypeScript | 类型安全与工程化基础 |
+| **Build** | Vite 5 | 极速 HMR 与生产环境优化构建 |
+| **UI** | Lit-HTML | 轻量级 HTML 模板渲染 |
+| **Crypto** | Elliptic |符合标准的 P-256 签名算法 |
+| **Utils** | BigInt-JSON | 大整数精度无损处理 |
+| **Style** | CSS Variables | 原生支持明暗主题 (Dark Mode) |
 
 ---
 
 ## 🚀 快速开始
 
 ### 环境要求
+- Node.js (v18+)
+- npm 或 yarn
 
-- **Node.js 18+** (前端开发环境)
-- **Go 1.18+** (后端参考实现，可选)
-- 现代浏览器 (Chrome/Firefox/Edge/Safari)
+### 启动项目
 
-### 启动开发服务器
+1.  **克隆仓库**
+    ```bash
+    git clone https://github.com/19231224lhr/TransferAreaInterface.git
+    cd TransferAreaInterface
+    ```
 
-```bash
-# 1. 克隆项目
-git clone https://github.com/19231224lhr/TransferAreaInterface.git
-cd TransferAreaInterface
+2.  **安装依赖**
+    ```bash
+    npm install
+    ```
 
-# 2. 安装依赖
-npm install
+3.  **启动开发服**
+    ```bash
+    npm run dev
+    ```
+    访问 `http://localhost:3000` 即可预览。
 
-# 3. 启动开发服务器
-npm run dev
-
-# 4. 访问应用
-# 浏览器打开: http://localhost:3000/
-```
-
-### 常用命令
-
-```bash
-npm run dev       # 启动 Vite 开发服务器（热更新）
-npm run build     # 构建生产版本到 dist/
-npm run preview   # 预览生产构建
-npm run typecheck # TypeScript 类型检查
-```
-
-### 生产部署
+### 生产构建
 
 ```bash
-# 构建生产版本
 npm run build
-
-# 部署 dist/ 目录到静态服务器
-# 支持: Nginx, Apache, Vercel, Netlify 等
 ```
+构建产物将输出至 `dist/` 目录，可直接部署至 Nginx 或 CDN。
 
 ---
 
-## 🏗️ 项目架构
+## 📚 开发文档
 
-### 技术栈
+更多详细技术细节，请参阅 `docs/` 目录：
 
-| 层级 | 技术 | 版本 | 说明 |
-|------|------|------|------|
-| 前端框架 | Vanilla JS + TypeScript | - | 无框架，原生开发，渐进式 TS 迁移 |
-| 构建工具 | Vite | 5.4.21 | 快速热更新，ES Module 支持 |
-| 类型系统 | TypeScript | 5.9.3 | 严格类型检查，JS/TS 混合 |
-| 样式 | CSS3 | - | 模块化 CSS（JS 导入），Glassmorphism 设计 |
-| 后端 | Go | 1.18+ | UTXO 交易逻辑（参考实现） |
-| 国际化 | 自研 i18n | - | 支持中英文，260+ 翻译键 |
-| 离线支持 | Service Worker | - | PWA 支持，离线缓存 |
-
-### 📁 目录结构
-
-```
-TransferAreaInterface/
-├── 📄 index.html                    # SPA 应用入口（精简骨架）
-├── 📄 sw.js                         # Service Worker（离线支持）
-├── 📄 vite.config.js                # Vite 构建配置
-├── 📄 tsconfig.json                 # TypeScript 配置
-├── 📄 package.json                  # npm 项目配置
-│
-├── 🎨 css/                          # 模块化样式文件（通过 JS 导入）
-│   ├── index.css                    # CSS 入口文件（统一管理所有导入）
-│   ├── base.css                     # 基础样式、CSS 变量
-│   ├── components.css               # 通用组件样式
-│   ├── animations.css               # 动画效果
-│   ├── welcome.css                  # 欢迎页样式
-│   ├── login.css / new-user.css     # 登录/注册页样式
-│   ├── wallet.css                   # 钱包主页样式
-│   ├── transaction.css              # 转账表单样式
-│   ├── history.css                  # 交易历史样式
-│   ├── ...                          # 其他页面样式
-│   └── main-v2/                     # 主页面 V2 模块化（21 个文件）
-│       ├── index.css                # main-v2 入口文件
-│       ├── variables.css            # 设计变量（颜色、阴影等）
-│       ├── wallet-panel.css         # 钱包面板
-│       ├── transfer-panel.css       # 转账面板
-│       ├── recipients.css           # 收款方模块
-│       ├── dark-mode.css            # 深色模式
-│       └── ...                      # 其他模块
-│
-├── 📦 assets/                       # 静态资源
-│   ├── logo.png                     # 项目 Logo
-│   ├── avatar.png                   # 默认头像
-│   └── templates/                   # HTML 模板文件（模块化）
-│       └── pages/                   # 页面模板（12 个独立文件）
-│           ├── welcome.html         # 欢迎页模板
-│           ├── login.html           # 登录页模板
-│           ├── new-user.html        # 注册页模板
-│           ├── wallet.html          # 钱包主页模板
-│           ├── history.html         # 历史记录模板
-│           └── ...                  # 其他页面模板
-│
-├── 📜 js/                           # JavaScript/TypeScript 代码
-│   ├── app.js                       # 兼容层入口（全局导出）
-│   ├── bootstrap.ts                 # 🆕 应用启动和生命周期管理
-│   ├── router.ts                    # 🆕 路由系统（TypeScript）
-│   │
-│   ├── 📁 core/                     # 🆕 核心模块
-│   │   ├── namespace.ts             # PanguPay 命名空间
-│   │   ├── eventDelegate.ts         # 全局事件委托
-│   │   ├── types.ts                 # 类型定义
-│   │   └── index.ts                 # 模块导出
-│   │
-│   ├── 📁 config/                   # 配置模块
-│   │   ├── constants.ts             # 常量配置（TS）
-│   │   └── pageTemplates.ts         # 页面模板配置（TS）
-│   │
-│   ├── 📁 i18n/                     # 国际化
-│   │   ├── index.js                 # i18n 核心
-│   │   ├── zh-CN.js                 # 中文翻译
-│   │   └── en.js                    # 英文翻译
-│   │
-│   ├── 📁 pages/                    # 页面逻辑（TS + JS）
-│   │   ├── welcome.js               # 欢迎页
-│   │   ├── login.ts                 # 登录页（TS）
-│   │   ├── newUser.js               # 注册页
-│   │   ├── main.js                  # 钱包主页
-│   │   ├── history.js               # 历史记录
-│   │   └── ...                      # 其他页面
-│   │
-│   ├── 📁 services/                 # 业务逻辑（TS + JS）
-│   │   ├── account.ts               # 账户服务（TS）
-│   │   ├── transaction.ts           # 交易服务（TS）
-│   │   ├── transfer.ts              # 转账服务（TS）
-│   │   ├── wallet.ts                # 钱包服务（TS）
-│   │   └── ...                      # 其他服务
-│   │
-│   ├── 📁 ui/                       # UI 组件（TS + JS）
-│   │   ├── header.ts                # 头部导航（TS）
-│   │   ├── footer.js                # 底部导航
-│   │   ├── modal.ts                 # 模态框（TS）
-│   │   ├── toast.js                 # Toast 提示
-│   │   └── ...                      # 其他组件
-│   │
-│   └── 📁 utils/                    # 工具模块（TS）
-│       ├── templateLoader.ts        # 模板加载器（动态加载）
-│       ├── pageManager.ts           # 页面管理器（生命周期）
-│       ├── statePersistence.ts      # 🆕 状态持久化
-│       ├── view.ts                  # 🆕 安全 DOM 渲染
-│       ├── reactive.ts              # 响应式 UI 绑定
-│       ├── crypto.ts                # 加密工具
-│       ├── keyEncryption.ts         # 密钥加密
-│       ├── security.ts              # 安全验证
-│       ├── storage.ts               # 本地存储
-│       └── ...                      # 其他工具
-│
-├── 🔧 backend/                      # Go 后端（参考实现）
-│   ├── Account.go                   # 账户结构
-│   ├── Transaction.go               # 交易结构
-│   ├── SendTX.go                    # 交易构建
-│   ├── core.go                      # 核心功能
-│   └── ...                          # 其他模块
-│
-├── 🚀 dist/                         # 构建输出（npm run build）
-│   ├── index.html                   # 打包后的 HTML
-│   ├── assets/                      # 打包后的资源
-│   └── ...                          # 其他构建产物
-│
-└── 📚 docs/                         # 项目文档
-    ├── IMPROVEMENT_REPORT.md        # 优化报告
-    └── INDEX_HTML_MODULARIZATION_PLAN.md  # 模块化方案
+*   **[总览 (Overview)](docs/overview.md)**: 项目规模与核心指标。
+*   **[架构详解 (Architecture)](docs/architecture.md)**: 深入了解数据流与模块交互。
+*   **[开发者指南 (Developer Guide)](docs/developer-guide.md)**: 新手入门与代码规范。
+*   **[交易机制 (Transactions)](docs/transactions.md)**: 三种交易模式的底层实现逻辑。
+*   **[后端接口 (Backend Connection)](docs/frontend-backend-connection.md)**: API 协议与网关对接规范。
 
 ---
 
-## 💻 核心模块
+## 👨‍💻 核心开发者
 
-### 前端架构
+<table>
+  <tr>
+    <td align="center" width="120">
+      <a href="https://github.com/19231224lhr">
+        <img src="assets/avatar.png" width="80" style="border-radius: 50%;" alt="小孤独"/>
+      </a>
+      <br />
+      <a href="https://github.com/19231224lhr"><strong>小孤独</strong></a>
+    </td>
+  </tr>
+</table>
 
-#### �️ 核M心架构模式 (2025)
+### 🦾 协作智能 (AI Collaborators)
 
-**1. PanguPay 命名空间**
-- 所有公共 API 通过 `window.PanguPay` 统一暴露
-- 按功能分组：`router`, `i18n`, `theme`, `account`, `storage`, `wallet`, `ui`, `crypto`
-- 减少全局变量污染，提高可维护性
+本项目由人类开发者与 AI 协同构建。特别致谢以下工具与模型提供的卓越贡献：
 
-```typescript
-// 新代码使用命名空间
-window.PanguPay.router.routeTo('#/main');
-window.PanguPay.ui.showToast('操作成功');
-```
-
-**2. 事件委托系统**
-- 使用 `data-action` 属性替代内联 `onclick`
-- CSP 合规，自动处理动态内容
-
-```html
-<button data-action="showDetail" data-id="123">详情</button>
-```
-
-**3. 状态持久化**
-- Store 是唯一的事实来源 (Single Source of Truth)
-- localStorage 仅用于启动水合 + 自动持久化
-- 解决状态管理"脑裂"问题
-
-**4. 安全 DOM 渲染**
-- 使用 `lit-html` 封装的 `view.ts` 模块
-- 自动 XSS 防护，高效差异更新
-
-#### 🎨 HTML 模块化系统
-
-项目采用**动态模板加载**架构，实现按需加载和高性能：
-
-- **模板加载器** (`templateLoader.ts`)：动态加载 HTML 模板，智能缓存
-- **页面管理器** (`pageManager.ts`)：管理页面生命周期（idle → loading → loaded → error）
-- **页面配置** (`pageTemplates.ts`)：集中管理 12 个页面的路由和模板映射
-
-**性能提升：**
-- index.html 从 3440 行减少到 ~500 行（**减少 83%**）
-- 首屏加载时间减少 **80%**
-- 支持预加载关键页面（welcome、login、entry）
-
-#### 🌐 核心页面
-
-| 路由 | 页面 | 功能 |
-|------|------|------|
-| `#/` | 欢迎页 | 应用首页，功能入口 |
-| `#/login` | 登录页 | 私钥登录 |
-| `#/new-user` | 注册页 | 创建新账户 |
-| `#/entry` | 钱包管理 | 地址管理与导入 |
-| `#/main` | 钱包主页 | 资产概览与转账 |
-| `#/history` | 交易历史 | 历史记录查询 |
-| `#/profile` | 个人信息 | 设置与偏好 |
-| `#/join-group` | 担保组织 | 加入担保组织 |
-
-#### 🔐 安全特性
-
-- **私钥加密**：AES-256-GCM + PBKDF2（100,000 次迭代）
-- **密钥生成**：Web Crypto API，ECDSA P-256 曲线
-- **XSS/CSRF 防护**：输入转义、安全请求封装
-- **账户 ID**：CRC32 校验和映射为 8 位数字
-- **地址生成**：SHA-256 哈希，取前 20 字节
-
-#### 🌍 国际化 (i18n)
-
-- 支持简体中文（zh-CN）和英语（en）
-- 260+ 翻译键，覆盖所有页面和组件
-- 自动更新机制，路由切换时同步翻译
-- 语言偏好持久化到 localStorage
-
-#### ♿ 可访问性 (A11y)
-
-- WCAG 2.1 AA 标准
-- 完整的 ARIA 标签和角色
-- 键盘导航支持
-- 屏幕阅读器实时播报
-
-### 后端架构（Go）
-
-> **注意**：后端 Go 代码仅作为 UTXO 交易构建逻辑的参考实现，前端已实现完整功能。
-
-#### 核心数据结构
-
-- **Account**：账户信息（账户 ID、钱包、担保组织、密钥对）
-- **Wallet**：钱包数据（子地址映射、交易凭证、余额统计）
-- **Transaction**：交易结构（UTXO 输入、交易输出、签名、手续费）
-- **BuildTXInfo**：交易构建参数（转账金额、账单、找零地址）
-
-#### 核心模块
-
-| 模块 | 功能 |
-|------|------|
-| `NewAccount.go` | 创建账户，生成密钥对 |
-| `GetAddressMsg.go` | 查询地址信息（RPC） |
-| `JoinGroup.go` | 加入担保组织（RPC） |
-| `SendTX.go` | 构建和发送交易 |
-| `Transaction.go` | 交易结构定义 |
-| `core.go` | 签名、序列化工具 |
-
-#### 交易类型
-
-| TXType | 说明 |
-|--------|------|
-| 0 | 普通交易（担保组织内部） |
-| 6 | 跨链交易（跨组织/跨链） |
-| 8 | 散户转账（未加入担保组织） |
-| -1 | 质押交易 |
+| **AI IDE / Tools** | **LLM Models** | **Image Gen** |
+| :--- | :--- | :--- |
+| ![](https://img.shields.io/badge/GitHub_Copilot-000000?logo=githubcopilot&logoColor=white) <br> ![](https://img.shields.io/badge/Cursor-0066FF?logo=cursor&logoColor=white) <br> ![](https://img.shields.io/badge/Google_Antigravity-8E75B2?logo=google&logoColor=white) <br> ![](https://img.shields.io/badge/OpenAI_Codex-74aa9c?logo=github&logoColor=white) <br> ![](https://img.shields.io/badge/Windsurf-2D3748?logo=codeigniter&logoColor=white) <br> ![](https://img.shields.io/badge/Kiro-FF5722?logo=keras&logoColor=white) | ![](https://img.shields.io/badge/GPT--5.2--Codex-74aa9c?logo=github&logoColor=white) <br> ![](https://img.shields.io/badge/Gemini_3_Pro-4285F4?logo=googlegemini&logoColor=white) <br> ![](https://img.shields.io/badge/Claude_Sonnet_4.5-D9614C?logo=anthropic&logoColor=white) <br> ![](https://img.shields.io/badge/Claude_Opus_4.5-D9614C?logo=anthropic&logoColor=white) <br> ![](https://img.shields.io/badge/GPT--5.1--Codex-412991?logo=github&logoColor=white) | ![](https://img.shields.io/badge/Gemini_Nano_Banana_Pro-FFCC00?logo=googlegemini&logoColor=black) |
 
 ---
 
-## 📱 业务流程
+## 📄 开源协议
 
-```
-欢迎页 → 创建/登录账户 → 加入担保组织 → 钱包主页（资产管理/转账）
-```
-
-1. **创建账户**：生成 ECDSA P-256 密钥对，计算账户 ID 和地址
-2. **加入担保组织**：搜索并申请加入担保组织（可选）
-3. **查询余额**：通过 RPC 查询地址 UTXO 和余额
-4. **发起转账**：构建交易，选择 UTXO 输入，设置找零地址
-5. **签名发送**：使用私钥签名交易，广播到网络
-
----
-
-## 🧪 测试数据
-
-用于开发测试的地址和密钥信息：
-
-**测试地址 1**
-```
-地址: 299954ff8bbd78eda3a686abcf86732cd18533af
-担保组织: 10000000
-公钥: 2b9edf25237d23a753ea8774ffbfb1b6d6bbbc2c96209d41ee59089528eb1566
-     &c295d31bfd805e18b212fbbb726fc29a1bfc0762523789be70a2a1b737e63a80
-```
-
-**测试地址 2**
-```
-地址: d76ec4020140d58c35e999a730bea07bf74a7763
-担保组织: None
-公钥: 11970dd5a7c3f6a131e24e8f066416941d79a177579c63d889ef9ce90ffd9ca8
-     &037d81e8fb19883cc9e5ed8ebcc2b75e1696880c75a864099bec10a5821f69e0
-```
-
-**测试私钥**
-```
-私钥: 963f75db05b159d60bb1b554bed2c204dd66e0033dc95fe19d77c4745980ff03
-对应地址: b0b43b638f4bcc0fb941fca7e7b26d15612eb64d
-```
-
----
-
-## 📝 更新日志
-
-### 2025年12月 - 核心架构重构 🆕
-
-- ✅ **命名空间系统**：`window.PanguPay` 统一暴露公共 API，减少全局污染
-- ✅ **事件委托系统**：`data-action` 替代内联 onclick，CSP 合规
-- ✅ **状态持久化**：Store 单一事实来源，解决状态"脑裂"问题
-- ✅ **安全 DOM 渲染**：`view.ts` 封装 lit-html，自动 XSS 防护
-- ✅ **TypeScript 迁移**：`router.js` → `router.ts`，新增 `bootstrap.ts`
-- ✅ **响应式 UI 绑定**：10 个核心文件迁移，共 6,553 行 TypeScript
-
-### 2025年1月 - CSS 架构现代化
-
-- ✅ **CSS 导入迁移**：从 HTML `<link>` 标签迁移到 JS 导入，由 Vite 统一打包
-- ✅ **main-v2.css 模块化**：4500 行拆分为 21 个独立模块文件
-- ✅ **统一入口**：`css/index.css` 作为 CSS 入口，`js/app.js` 导入
-- ✅ **自动优化**：Vite 自动合并、压缩、tree-shaking、HMR 热更新
-
-### 2025年1月 - HTML 模块化重构
-
-- ✅ **模板系统**：12 个页面拆分为独立 HTML 文件，动态按需加载
-- ✅ **性能提升**：index.html 减少 83%，首屏加载时间减少 80%
-- ✅ **模板加载器**：智能缓存、预加载、生命周期管理
-- ✅ **页面管理器**：状态管理（idle/loading/loaded/error）
-
-### 2025年1月 - TypeScript 迁移与工程化
-
-- ✅ **TypeScript 支持**：引入 TypeScript 5.9，JS/TS 混合开发
-- ✅ **Vite 构建工具**：快速热更新，esbuild 压缩
-- ✅ **类型安全**：核心模块转换为 TypeScript，完整类型定义
-- ✅ **开发体验**：类型检查、代码补全、错误提示
-
-### 2025年1月 - 安全与性能优化
-
-- ✅ **国际化系统**：中英文双语，260+ 翻译键
-- ✅ **私钥加密**：AES-256-GCM + PBKDF2（100,000 次迭代）
-- ✅ **安全防护**：XSS/CSRF 防护、输入验证
-- ✅ **可访问性**：WCAG 2.1 AA 标准，ARIA 支持
-- ✅ **性能优化**：RAF 批量更新、Service Worker 离线缓存
-- ✅ **UI 重构**：Glassmorphism 设计，深色模式
-
----
-
-## � 相关文档n
-
-- [优化报告](IMPROVEMENT_REPORT.md) - 详细的代码优化记录
-- [模块化方案](docs/INDEX_HTML_MODULARIZATION_PLAN.md) - HTML 模块化重构方案
-- [飞书文档](https://w1yz69fcks.feishu.cn/docx/PPrtdA6mHoN5dlxkCDDcg9OJnZc) - 项目设计文档
-
----
-
-## 📜 License
-
-MIT License © 2024
+本项目采用 **MIT License** 开源授权。

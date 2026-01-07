@@ -451,8 +451,9 @@
   background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(139, 92, 246, 0.05));
   border-bottom: 1px solid rgba(226, 232, 240, 0.6);
   border-radius: 20px 20px 0 0;
+  border-radius: 20px 20px 0 0;
   cursor: pointer;
-  transition: all 0.25s ease;
+  transition: background 0.25s ease;
 }
 
 .menu-header:hover {
@@ -464,10 +465,12 @@
 }
 
 .menu-header-avatar {
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 44px !important;
+  height: 44px !important;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  max-width: 44px !important;
+  max-height: 44px !important;
   border-radius: 50%;
   background: linear-gradient(135deg, #0ea5e9, #6366f1);
   display: flex;
@@ -475,6 +478,8 @@
   justify-content: center;
   box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
   overflow: hidden;
+  flex: 0 0 44px !important;
+  contain: strict;
 }
 
 .menu-header-avatar .avatar-icon {
