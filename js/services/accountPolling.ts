@@ -484,34 +484,33 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
         // 🔔 跨链转入通知：如果是来自轻计算区的交易 (TXType 7 或 FromAddress="Lightweight Computing Zone")
         const tx = inUtxo.UTXOData.UTXO;
         const inboundTxId = tx?.TXID || inUtxo.UTXOData.TXID || '';
-        if (!inUtxo.UTXOData.IsTXCerUTXO && (!inboundTxId || !hasOutgoingTx(inboundTxId))) {
-          const fromAddr = tx?.TXInputsNormal?.[0]?.FromAddress || '-';
-          const fromNormalized = fromAddr ? String(fromAddr).toLowerCase() : '';
-          const isFromSelf = fromNormalized && !!user.wallet?.addressMsg?.[fromNormalized];
-          if (!isFromSelf) {
-            const blockNumber = Number(inUtxo.UTXOData.Position?.Blocknum || update.BlockHeight || 0);
-            const confirmations = blockNumber && update.BlockHeight
-              ? Math.max(1, Number(update.BlockHeight) - blockNumber + 1)
-              : undefined;
-            addTxHistoryRecords({
-              id: `in_${utxoId}`,
-              type: 'receive',
-              status: 'success',
-              transferMode: 'incoming',
-              amount: Number(inUtxo.UTXOData.Value || 0) || 0,
-              currency: getCoinName(inUtxo.UTXOData.Type),
-              from: fromAddr,
-              to: normalizedAddr,
-              timestamp: normalizeHistoryTimestamp(inUtxo.UTXOData.Time),
-              txHash: inboundTxId || utxoId,
-              gas: 0,
-              blockNumber: blockNumber || undefined,
-              confirmations
-            });
-          }
-        }
         const isCrossChainInbound = tx?.TXType === 7 ||
           (tx?.TXInputsNormal && tx.TXInputsNormal.length > 0 && tx.TXInputsNormal[0].FromAddress === "Lightweight Computing Zone");
+        const inferredMode = isCrossChainInbound
+          ? 'cross'
+          : (tx?.TXType === 8 ? 'normal' : 'quick');
+        if (!inboundTxId || !hasOutgoingTx(inboundTxId)) {
+          const fromAddr = tx?.TXInputsNormal?.[0]?.FromAddress || '-';
+          const blockNumber = Number(inUtxo.UTXOData.Position?.Blocknum || update.BlockHeight || 0);
+          const confirmations = blockNumber && update.BlockHeight
+            ? Math.max(1, Number(update.BlockHeight) - blockNumber + 1)
+            : undefined;
+          addTxHistoryRecords({
+            id: `in_${utxoId}`,
+            type: 'receive',
+            status: 'success',
+            transferMode: inferredMode,
+            amount: Number(inUtxo.UTXOData.Value || 0) || 0,
+            currency: getCoinName(inUtxo.UTXOData.Type),
+            from: fromAddr,
+            to: normalizedAddr,
+            timestamp: normalizeHistoryTimestamp(inUtxo.UTXOData.Time),
+            txHash: inboundTxId || utxoId,
+            gas: 0,
+            blockNumber: blockNumber || undefined,
+            confirmations
+          });
+        }
 
         if (isCrossChainInbound) {
           showSuccessToast(

@@ -469,7 +469,7 @@ export default {
   'modal.enteringWalletPage': '正在进入生成或导入钱包页面...',
   'modal.newAddress': '新建',
   'modal.leaveOrgTitle': '退出担保组织',
-  'modal.leaveOrgDesc': '将使用账户私钥进行签名验证。退出后将清空本地组织信息，账户设为未加入状态。确认继续？ Leaving will clear local organization info and set account as not joined. Continue?',
+  'modal.leaveOrgDesc': '将使用账户私钥进行签名验证。退出后将清空本地组织信息，账户设为未加入状态。确认继续？',
   'modal.noOrgTitle': '未加入担保组织',
   'modal.noOrgDesc': '当前账户尚未加入担保组织，这可能导致：',
   'modal.noOrgReason1': '交易确认时间更长',

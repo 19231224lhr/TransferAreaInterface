@@ -870,6 +870,8 @@ export default {
   'polling.interestReceived': 'Interest received: {amount}',
   'polling.newUtxoReceived': 'New UTXO received',
   'polling.utxoConfirmed': 'UTXO confirmed',
+  'notification.receivedCrossChain': 'Received cross-chain transfer',
+  'notification.accountUpdate': 'Account Update',
 
   // Encryption related
   'encryption.usingCachedPassword': 'Using cached authorization, no need to re-enter',

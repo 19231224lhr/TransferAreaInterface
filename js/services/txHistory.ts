@@ -8,19 +8,57 @@ import { loadUser, saveUser, TxHistoryRecord } from '../utils/storage';
 
 const HISTORY_LIMIT = 200;
 const HISTORY_EVENT = 'pangu_tx_history_change';
+const CUSTOM_START_TIME = new Date('2020-01-01T00:00:00Z').getTime();
+const CUSTOM_START_SECONDS = Math.floor(CUSTOM_START_TIME / 1000);
 
 function normalizeTimestamp(ts?: number | string): number {
-  const raw = typeof ts === 'string' ? Number(ts) : (ts ?? 0);
+  let raw = typeof ts === 'string' ? Number(ts) : (ts ?? 0);
   if (!Number.isFinite(raw) || raw <= 0) {
     return Date.now();
   }
-  return raw < 1e12 ? raw * 1000 : raw;
+
+  // Fix accidental millisecond * 1000 values (far future).
+  while (raw > 1e13) {
+    raw = Math.floor(raw / 1000);
+  }
+
+  if (raw < 1e12) {
+    if (raw < CUSTOM_START_SECONDS) {
+      return CUSTOM_START_TIME + raw * 1000;
+    }
+    if (raw < 1e10) {
+      return raw * 1000;
+    }
+    return CUSTOM_START_TIME + raw;
+  }
+
+  if (raw < CUSTOM_START_TIME) {
+    return CUSTOM_START_TIME + raw;
+  }
+
+  return raw;
 }
 
 function getRawHistory(): TxHistoryRecord[] {
   const user = loadUser();
   const history = user?.txHistory;
-  return Array.isArray(history) ? [...history] : [];
+  const list = Array.isArray(history) ? [...history] : [];
+  if (!list.length || !user?.accountId) return list;
+
+  let changed = false;
+  for (const item of list) {
+    const normalized = normalizeTimestamp(item.timestamp);
+    if (normalized !== item.timestamp) {
+      item.timestamp = normalized;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveUser({ accountId: user.accountId, txHistory: list });
+  }
+
+  return list;
 }
 
 function sortHistory(list: TxHistoryRecord[]): TxHistoryRecord[] {

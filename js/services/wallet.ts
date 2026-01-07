@@ -36,7 +36,7 @@ import {
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization } from './address';
 import { updateTransferButtonState } from './transfer';
-import { getTxHistory, updateTxHistoryByTxId } from './txHistory';
+import { addTxHistoryRecords, getTxHistory, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
 import {
   getLockedUTXOsByAddress,
   getLockedBalanceByAddress,
@@ -2621,6 +2621,56 @@ export async function refreshWalletBalances(): Promise<boolean> {
       }
     }
 
+    const hasJoinedGroup = !!getJoinedGroup()?.groupID;
+    const incomingRecords: Array<{
+      id: string;
+      type: 'receive';
+      status: 'success';
+      transferMode: 'normal' | 'cross';
+      amount: number;
+      currency: string;
+      from: string;
+      to: string;
+      timestamp: number;
+      txHash: string;
+      gas: number;
+      blockNumber?: number;
+    }> = [];
+
+    if (!hasJoinedGroup) {
+      for (const balanceInfo of balances) {
+        const addr = String(balanceInfo.address || '').toLowerCase();
+        const beforeSet = prevUtxoByAddr[addr] || new Set<string>();
+        const utxos = balanceInfo.utxos || {};
+        for (const [key, utxo] of Object.entries(utxos)) {
+          if (beforeSet.has(key)) continue;
+          const txId = extractTxIdFromUtxoKey(key);
+          if (txId && hasOutgoingTx(txId)) continue;
+          const raw = utxo as any;
+          const tx = raw?.UTXO;
+          const fromAddr = tx?.TXInputsNormal?.[0]?.FromAddress || '-';
+          const isCrossChain = tx?.TXType === 6 || tx?.TXType === 7 ||
+            tx?.TXInputsNormal?.[0]?.IsCrossChain ||
+            fromAddr === 'Lightweight Computing Zone';
+          const blockNumber = Number(raw?.Position?.Blocknum || balanceInfo.lastHeight || 0) || undefined;
+          incomingRecords.push({
+            id: `in_${key}`,
+            type: 'receive',
+            status: 'success',
+            transferMode: isCrossChain ? 'cross' : 'normal',
+            amount: Number(raw?.Value || 0) || 0,
+            currency: getCoinName(raw?.Type ?? balanceInfo.type ?? 0),
+            from: fromAddr,
+            to: addr,
+            timestamp: normalizeHistoryTimestamp(raw?.Time),
+            txHash: txId || key,
+            gas: 0,
+            blockNumber
+          });
+        }
+      }
+    }
+
     let updatedCount = 0;
 
     for (const balanceInfo of balances) {
@@ -2693,6 +2743,10 @@ export async function refreshWalletBalances(): Promise<boolean> {
     // Update Store (SSOT) - this will trigger UI updates via subscriptions
     setUser(u);
     saveUser(u);
+
+    if (incomingRecords.length > 0) {
+      addTxHistoryRecords(incomingRecords);
+    }
 
     if (txIdsToConfirm.length > 0) {
       const uniqueTxIds = Array.from(new Set(txIdsToConfirm));
