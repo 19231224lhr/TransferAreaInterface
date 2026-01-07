@@ -149,17 +149,13 @@ npm run build
 
 ## 👨‍💻 核心开发者
 
-<table>
-  <tr>
-    <td align="center" width="120">
-      <a href="https://github.com/19231224lhr">
-        <img src="assets/avatar.png" width="80" style="border-radius: 50%;" alt="小孤独"/>
-      </a>
-      <br />
-      <a href="https://github.com/19231224lhr"><strong>小孤独</strong></a>
-    </td>
-  </tr>
-</table>
+<div style="width: 100px; text-align: center;">
+  <a href="https://github.com/19231224lhr">
+    <img src="assets/avatar.png" width="80" style="border-radius: 50%;" alt="小孤独"/>
+  </a>
+  <br />
+  <a href="https://github.com/19231224lhr"><strong>小孤独</strong></a>
+</div>
 
 ### 🦾 协作智能 (AI Collaborators)
 
