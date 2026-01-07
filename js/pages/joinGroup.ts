@@ -15,12 +15,12 @@ import { t } from '../i18n/index.js';
 import { DEFAULT_GROUP } from '../config/constants';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
 import { DOM_IDS, idSelector } from '../config/domIds';
-import { 
-  queryGroupInfoSafe, 
+import {
+  queryGroupInfoSafe,
   joinGuarGroup,
   buildAssignNodeUrl,
   buildAggrNodeUrl,
-  type GroupInfo 
+  type GroupInfo
 } from '../services/group';
 import {
   createReactiveState,
@@ -52,17 +52,17 @@ type SearchState = 'idle' | 'loading' | 'found' | 'not-found' | 'error';
 interface JoinGroupPageState {
   // 当前选中的组织
   selectedGroup: GroupInfo | null;
-  
+
   // 搜索状态
   searchState: SearchState;
-  
+
   // 搜索按钮状态
   searchBtnDisabled: boolean;
-  
+
   // 询问动画状态
   inquiryStage: InquiryStage;
   inquirySuccess: boolean;
-  
+
   // 推荐组织信息
   recGroupID: string;
   recAggre: string;
@@ -70,7 +70,7 @@ interface JoinGroupPageState {
   recPledge: string;
   recAssignPort: string;   // AssignNode 端口号
   recAggrPort: string;     // AggrNode 端口号
-  
+
   // 搜索结果组织信息
   srGroupID: string;
   srAggre: string;
@@ -181,13 +181,13 @@ export function resetInquiryState(): void {
   const tip = document.getElementById(DOM_IDS.inquiryTip);
   const tipText = document.getElementById(DOM_IDS.inquiryTipText);
   const page = document.getElementById(DOM_IDS.inquiryPage);
-  
+
   // 重置进度条
   if (progressFill) {
     progressFill.style.width = '0%';
     progressFill.classList.remove('complete');
   }
-  
+
   // 重置步骤
   steps.forEach((step, i) => {
     step.classList.remove('active', 'completed', 'waiting');
@@ -197,12 +197,12 @@ export function resetInquiryState(): void {
       step.classList.add('waiting');
     }
   });
-  
+
   // 重置连接线
   lines.forEach(line => {
     line.classList.remove('flowing', 'complete');
   });
-  
+
   // 重置图标
   if (icon) {
     icon.classList.remove('success');
@@ -211,23 +211,23 @@ export function resetInquiryState(): void {
     if (iconPulse) (iconPulse as HTMLElement).style.display = 'block';
     if (iconCheck) (iconCheck as HTMLElement).style.display = 'none';
   }
-  
+
   // 重置文本
   if (title) {
     title.textContent = t('login.connectingNetwork');
     title.classList.remove('success');
   }
   if (desc) desc.textContent = t('login.establishingConnection');
-  
+
   // 重置提示
   if (tip) tip.classList.remove('success');
   if (tipText) tipText.textContent = t('login.inquiringNetwork');
-  
+
   // 重置页面
   if (page) {
     page.classList.remove('success', 'fade-out');
   }
-  
+
   // 重置轨道系统
   const orbitSystem = document.getElementById(DOM_IDS.inquiryOrbitSystem);
   if (orbitSystem) {
@@ -257,13 +257,13 @@ function updateInquiryStage(stageIndex: InquiryStage): void {
   const title = document.getElementById(DOM_IDS.inquiryTitle);
   const desc = document.getElementById(DOM_IDS.inquiryDesc);
   const stageTexts = getStageTexts();
-  
+
   // 更新进度条
   const progress = ((stageIndex + 1) / 3) * 100;
   if (progressFill) {
     progressFill.style.width = Math.min(progress, 95) + '%';
   }
-  
+
   // 更新文本
   if (title && stageTexts[stageIndex]) {
     title.textContent = stageTexts[stageIndex].title;
@@ -271,7 +271,7 @@ function updateInquiryStage(stageIndex: InquiryStage): void {
   if (desc && stageTexts[stageIndex]) {
     desc.textContent = stageTexts[stageIndex].desc;
   }
-  
+
   // 更新步骤状态
   steps.forEach((step, i) => {
     step.classList.remove('active', 'completed', 'waiting');
@@ -283,7 +283,7 @@ function updateInquiryStage(stageIndex: InquiryStage): void {
       step.classList.add('waiting');
     }
   });
-  
+
   // 更新连接线
   lines.forEach((line, i) => {
     line.classList.remove('flowing', 'complete');
@@ -310,30 +310,30 @@ function showInquirySuccess(): void {
   const page = document.getElementById(DOM_IDS.inquiryPage);
   const orbitSystem = document.getElementById(DOM_IDS.inquiryOrbitSystem);
   const stageTexts = getStageTexts();
-  
+
   // 轨道系统成功状态
   if (orbitSystem) {
     orbitSystem.classList.add('success');
   }
-  
+
   // 进度条完成
   if (progressFill) {
     progressFill.style.width = '100%';
     progressFill.classList.add('complete');
   }
-  
+
   // 所有步骤完成
   steps.forEach(step => {
     step.classList.remove('active', 'waiting');
     step.classList.add('completed');
   });
-  
+
   // 所有连接线完成
   lines.forEach(line => {
     line.classList.remove('flowing');
     line.classList.add('complete');
   });
-  
+
   // 图标变为勾选
   if (icon) {
     icon.classList.add('success');
@@ -342,7 +342,7 @@ function showInquirySuccess(): void {
     if (iconPulse) (iconPulse as HTMLElement).style.display = 'none';
     if (iconCheck) (iconCheck as HTMLElement).style.display = 'block';
   }
-  
+
   // 标题变绿
   if (title) {
     title.textContent = stageTexts[3].title;
@@ -351,11 +351,11 @@ function showInquirySuccess(): void {
   if (desc) {
     desc.textContent = stageTexts[3].desc;
   }
-  
+
   // 提示变绿
   if (tip) tip.classList.add('success');
   if (tipText) tipText.textContent = t('login.verifyingAndRedirecting');
-  
+
   // 页面脉冲效果
   if (page) page.classList.add('success');
 }
@@ -366,27 +366,27 @@ function showInquirySuccess(): void {
 export function startInquiryAnimation(onComplete?: () => void): void {
   // 重置状态
   resetInquiryState();
-  
+
   const page = document.getElementById(DOM_IDS.inquiryPage);
-  
+
   // 阶段 1: 初始化 (0-600ms)
   updateInquiryStage(0);
-  
+
   setTimeout(() => {
     // 阶段 2: 连接网络 (600-1600ms)
     updateInquiryStage(1);
   }, 600);
-  
+
   setTimeout(() => {
     // 阶段 3: 验证账户 (1600-2600ms)
     updateInquiryStage(2);
   }, 1600);
-  
+
   setTimeout(() => {
     // 成功状态 (2600ms)
     showInquirySuccess();
   }, 2600);
-  
+
   setTimeout(() => {
     // 淡出并导航 (3200ms)
     if (page) {
@@ -426,13 +426,13 @@ function updateSearchUI(state: SearchState): void {
   const searchNotFound = document.getElementById(DOM_IDS.searchNotFound);
   const searchResult = document.getElementById(DOM_IDS.searchResult);
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
-  
+
   // 隐藏所有状态
   searchEmpty?.classList.add('hidden');
   searchLoading?.classList.add('hidden');
   searchNotFound?.classList.add('hidden');
   searchResult?.classList.add('hidden');
-  
+
   // 显示对应状态
   switch (state) {
     case 'idle':
@@ -457,7 +457,7 @@ function updateSearchUI(state: SearchState): void {
       if (joinSearchBtn) joinSearchBtn.disabled = false;
       break;
   }
-  
+
   if (pageState) {
     pageState.set({ searchState: state });
   }
@@ -468,7 +468,7 @@ function updateSearchUI(state: SearchState): void {
  */
 function showGroupInfo(group: GroupInfo): void {
   currentSelectedGroup = group;
-  
+
   if (pageState) {
     pageState.set({
       selectedGroup: group,
@@ -481,15 +481,15 @@ function showGroupInfo(group: GroupInfo): void {
       srAggrPort: group.aggrAPIEndpoint || '-'
     });
   }
-  
+
   updateSearchUI('found');
-  
+
   // 启用加入按钮（搜索成功后允许用户点击加入）
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
   if (joinSearchBtn) {
     joinSearchBtn.disabled = false;
   }
-  
+
   // 添加 reveal 动画
   const sr = document.getElementById(DOM_IDS.searchResult);
   if (sr) {
@@ -505,38 +505,38 @@ async function doRealSearch(): Promise<void> {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   const q = groupSearch?.value.trim();
-  
+
   if (!q) return;
-  
+
   // 验证格式
   const err = quickValidate(q, ['required', 'orgId']);
   if (err) return;
-  
+
   console.info(`[JoinGroup] 🔍 开始搜索组织: ${q}`);
-  
+
   // 取消之前的请求
   if (searchAbortController) {
     searchAbortController.abort();
   }
   searchAbortController = new AbortController();
-  
+
   // 显示加载状态
   updateSearchUI('loading');
   if (groupSearchBtn) groupSearchBtn.disabled = true;
-  
+
   // 记录搜索开始时间，确保最小加载时长
   const searchStartTime = Date.now();
   const MIN_LOADING_TIME = 600; // 最小加载时间 600ms，避免闪烁
-  
+
   try {
     const result = await queryGroupInfoSafe(q);
-    
+
     // 确保加载动画至少显示 MIN_LOADING_TIME 毫秒
     const elapsed = Date.now() - searchStartTime;
     if (elapsed < MIN_LOADING_TIME) {
       await new Promise(resolve => setTimeout(resolve, MIN_LOADING_TIME - elapsed));
     }
-    
+
     if (result.success) {
       console.info(`[JoinGroup] ✓ 找到组织: ${result.data.groupID} (Aggre: ${result.data.aggreNode}, Assign: ${result.data.assignNode})`);
       showGroupInfo(result.data);
@@ -581,9 +581,9 @@ function handleGroupSearchInput(): void {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
   const q = groupSearch?.value.trim() || '';
-  
+
   const err = quickValidate(q, ['required', 'orgId']);
-  
+
   // 更新搜索按钮状态
   const isValid = !err && q.length > 0;
   if (groupSearchBtn) {
@@ -592,7 +592,7 @@ function handleGroupSearchInput(): void {
   if (pageState) {
     pageState.set({ searchBtnDisabled: !isValid });
   }
-  
+
   // 如果输入为空，显示空状态
   if (!q) {
     updateSearchUI('idle');
@@ -626,20 +626,20 @@ function handleSearchBtnClick(): void {
  */
 async function handleJoinRecClick(): Promise<void> {
   const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
-  
+
   try {
     // 显示加载状态
     if (joinRecBtn) joinRecBtn.disabled = true;
-    
+
     const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
     showUnifiedLoading(t('join.queryingOrg') || '正在查询组织信息...');
-    
+
     // 从后端动态查询推荐组织的信息（获取最新的端口号）
     console.info(`[JoinGroup] 🔍 Querying recommended organization: ${DEFAULT_GROUP.groupID}`);
     const result = await queryGroupInfoSafe(DEFAULT_GROUP.groupID);
-    
+
     hideUnifiedOverlay();
-    
+
     if (!result.success) {
       console.error(`[JoinGroup] ✗ Failed to query recommended organization:`, result.error);
       showUnifiedError(
@@ -648,16 +648,16 @@ async function handleJoinRecClick(): Promise<void> {
       );
       return;
     }
-    
+
     console.info(`[JoinGroup] ✓ Got dynamic group info:`, {
       groupID: result.data.groupID,
       assignAPIEndpoint: result.data.assignAPIEndpoint,
       aggrAPIEndpoint: result.data.aggrAPIEndpoint
     });
-    
+
     // 使用从后端获取的动态组织信息
     await handleJoinGroupWithAPI(result.data);
-    
+
   } catch (error) {
     console.error(`[JoinGroup] ✗ Error querying recommended organization:`, error);
     const { hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
@@ -676,10 +676,10 @@ async function handleJoinRecClick(): Promise<void> {
  */
 async function handleJoinSearchClick(): Promise<void> {
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
-  
+
   if (joinSearchBtn?.disabled) return;
   if (!currentSelectedGroup) return;
-  
+
   await handleJoinGroupWithAPI(currentSelectedGroup);
 }
 
@@ -696,21 +696,21 @@ async function checkUserAddressesOrganization(): Promise<{
   if (!user || !user.wallet?.addressMsg) {
     return null;
   }
-  
+
   const addresses = Object.keys(user.wallet.addressMsg);
   if (addresses.length === 0) {
     return null;
   }
-  
+
   try {
     console.info(`[JoinGroup] 🔍 Checking if user addresses belong to any organization...`);
     const result = await queryAddressGroupInfo(addresses);
-    
+
     if (!result.success) {
       console.warn(`[JoinGroup] ⚠️ Failed to query address organizations:`, result.error);
       return null;
     }
-    
+
     // Check if any address is already in a group
     for (const addrInfo of result.data) {
       if (isInGuarGroup(addrInfo.groupID)) {
@@ -722,7 +722,7 @@ async function checkUserAddressesOrganization(): Promise<{
         };
       }
     }
-    
+
     console.info(`[JoinGroup] ✓ No addresses belong to any organization`);
     return { hasAddressInOrg: false };
   } catch (error) {
@@ -739,14 +739,14 @@ function saveOrganizationAndNavigate(group: GroupInfo): void {
   // 构建完整的节点 URL
   let assignNodeUrl: string | undefined;
   let aggrNodeUrl: string | undefined;
-  
+
   if (group.assignAPIEndpoint) {
     assignNodeUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
   }
   if (group.aggrAPIEndpoint) {
     aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
   }
-  
+
   // 保存到 localStorage
   try {
     localStorage.setItem('guarChoice', JSON.stringify({
@@ -761,7 +761,7 @@ function saveOrganizationAndNavigate(group: GroupInfo): void {
       aggrNodeUrl: aggrNodeUrl
     }));
   } catch { /* ignore */ }
-  
+
   // 保存到用户账户
   const u = loadUser();
   if (u?.accountId) {
@@ -778,7 +778,7 @@ function saveOrganizationAndNavigate(group: GroupInfo): void {
       }
     });
   }
-  
+
   // 导航到询问页面（显示成功动画后跳转到 main）
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/inquiry-main');
@@ -790,28 +790,28 @@ function saveOrganizationAndNavigate(group: GroupInfo): void {
  */
 async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
   if (!group || !group.groupID) return;
-  
+
   const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn) as HTMLButtonElement | null;
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn) as HTMLButtonElement | null;
-  
+
   try {
     // 显示加载动画
     const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
-    const { showMiniToast } = await import('../utils/toast.js');
-    
+    const { showInfoToast } = await import('../utils/toast.js');
+
     showUnifiedLoading(t('join.checkingAddresses') || '正在检查地址状态...');
     if (joinRecBtn) joinRecBtn.disabled = true;
     if (joinSearchBtn) joinSearchBtn.disabled = true;
-    
+
     // 先检查用户的地址是否已经属于某个组织
     const orgCheck = await checkUserAddressesOrganization();
-    
+
     if (orgCheck && orgCheck.hasAddressInOrg) {
       // 如果地址属于其他组织（不是目标组织），提前告知用户
       if (orgCheck.groupID !== group.groupID) {
         hideUnifiedOverlay();
         console.warn(`[JoinGroup] ⚠️ User has address ${orgCheck.address} in different organization ${orgCheck.groupID}`);
-        
+
         // 显示错误并更新推荐横幅
         showOrgRecommendationBanner(orgCheck.address || '', orgCheck.groupID || '');
         showUnifiedError(
@@ -824,47 +824,47 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
       // 如果地址已属于目标组织，继续调用 API（后端现在允许这种情况）
       console.info(`[JoinGroup] ✓ Address ${orgCheck.address} already belongs to target organization ${group.groupID}, proceeding with join`);
     }
-    
+
     showUnifiedLoading(t('join.joiningOrg'));
-    
+
     console.info(`[JoinGroup] 🚀 Attempting to join organization ${group.groupID}...`);
-    
+
     // 调用真实 API 加入组织
     const result = await joinGuarGroup(group.groupID, group);
-    
+
     console.log(`[JoinGroup] joinGuarGroup result:`, JSON.stringify(result));
-    
+
     // 隐藏加载动画
     hideUnifiedOverlay();
-    
+
     if (!result.success) {
       // Check if user cancelled password input
       if (result.error === 'USER_CANCELLED') {
         console.info(`[JoinGroup] User cancelled password input`);
-        showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        showInfoToast(t('common.operationCancelled') || '操作已取消');
         return;
       }
-      
+
       // Check if address already belongs to a DIFFERENT organization
       // 后端现在返回更详细的错误: "address xxx already has GuarGroup yyy, cannot join zzz"
       if (result.error && result.error.includes('already has GuarGroup')) {
         console.warn(`[JoinGroup] Address already belongs to a different organization`);
-        
+
         // 尝试从错误信息中提取组织 ID
         const groupMatch = result.error.match(/already has GuarGroup\s+(\d+)/i);
         const existingGroupID = groupMatch ? groupMatch[1] : null;
-        
+
         showUnifiedError(
           t('join.addressAlreadyInOrg') || '地址已属于组织',
-          existingGroupID 
+          existingGroupID
             ? t('join.addressInOtherOrgDesc', { address: '您的地址', groupID: existingGroupID }) ||
-              `您的地址已属于组织 ${existingGroupID}。一个地址只能属于一个担保组织。请加入组织 ${existingGroupID}，或在钱包管理页面删除该地址后重试。`
-            : t('join.addressAlreadyInOrgDesc') || 
-              '您的钱包地址已经属于一个担保组织。请加入该组织，或在钱包管理页面删除该地址后重试。'
+            `您的地址已属于组织 ${existingGroupID}。一个地址只能属于一个担保组织。请加入组织 ${existingGroupID}，或在钱包管理页面删除该地址后重试。`
+            : t('join.addressAlreadyInOrgDesc') ||
+            '您的钱包地址已经属于一个担保组织。请加入该组织，或在钱包管理页面删除该地址后重试。'
         );
         return;
       }
-      
+
       console.error(`[JoinGroup] ✗ Failed to join organization:`, result.error);
       showUnifiedError(
         t('join.joinFailed') || '加入失败',
@@ -872,20 +872,20 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
       );
       return;
     }
-    
+
     console.info(`[JoinGroup] ✓ Successfully joined organization ${group.groupID}`);
-    
+
     // 构建完整的节点 URL
     let assignNodeUrl: string | undefined;
     let aggrNodeUrl: string | undefined;
-    
+
     if (group.assignAPIEndpoint) {
       assignNodeUrl = buildAssignNodeUrl(group.assignAPIEndpoint);
     }
     if (group.aggrAPIEndpoint) {
       aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
     }
-    
+
     // 保存到 localStorage
     try {
       localStorage.setItem('guarChoice', JSON.stringify({
@@ -900,7 +900,7 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
         aggrNodeUrl: aggrNodeUrl
       }));
     } catch { /* ignore */ }
-    
+
     // 保存到用户账户
     const u = loadUser();
     if (u?.accountId) {
@@ -917,12 +917,12 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
         }
       });
     }
-    
+
     // 导航到询问页面（显示成功动画后跳转到 main）
     if (typeof window.PanguPay?.router?.routeTo === 'function') {
       window.PanguPay.router.routeTo('#/inquiry-main');
     }
-    
+
   } catch (error) {
     console.error(`[JoinGroup] ✗ Unexpected error:`, error);
     const { hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
@@ -955,16 +955,16 @@ function handleTabClick(e: MouseEvent): void {
   const tabsContainer = document.querySelector('.join-tabs');
   const recPane = document.getElementById(DOM_IDS.recPane);
   const searchPane = document.getElementById(DOM_IDS.searchPane);
-  
+
   // 更新标签状态
   joinTabs.forEach(t => t.classList.remove('join-tab--active'));
   tab.classList.add('join-tab--active');
-  
+
   // 更新滑块位置
   if (tabsContainer) {
     tabsContainer.setAttribute('data-active', target || 'recommend');
   }
-  
+
   // 切换面板
   if (target === 'recommend') {
     if (recPane) recPane.classList.remove('hidden');
@@ -989,7 +989,7 @@ function resetTabsAndPanes(): void {
   const searchPane = document.getElementById(DOM_IDS.searchPane);
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
-  
+
   // 重置标签状态 - 选中推荐标签
   joinTabs.forEach((tab, index) => {
     if (index === 0) {
@@ -998,22 +998,22 @@ function resetTabsAndPanes(): void {
       tab.classList.remove('join-tab--active');
     }
   });
-  
+
   // 重置滑块位置
   if (tabsContainer) {
     tabsContainer.setAttribute('data-active', 'recommend');
   }
-  
+
   // 重置面板显示 - 显示推荐面板，隐藏搜索面板
   if (recPane) recPane.classList.remove('hidden');
   if (searchPane) searchPane.classList.add('hidden');
-  
+
   // 重置搜索输入
   if (groupSearch) groupSearch.value = '';
-  
+
   // 重置搜索按钮
   if (groupSearchBtn) groupSearchBtn.disabled = true;
-  
+
   // 重置搜索 UI 状态
   updateSearchUI('idle');
 }
@@ -1024,16 +1024,16 @@ function resetTabsAndPanes(): void {
  */
 export function handleJoinGroup(group: GroupInfo): void {
   if (!group || !group.groupID) return;
-  
+
   // 保存选择
   saveGuarChoice({ groupID: group.groupID });
-  
+
   // 更新用户
   const u = loadUser();
   if (u?.accountId) {
-    saveUser({ 
-      accountId: u.accountId, 
-      orgNumber: group.groupID, 
+    saveUser({
+      accountId: u.accountId,
+      orgNumber: group.groupID,
       guarGroup: {
         groupID: group.groupID,
         aggreNode: group.aggreNode,
@@ -1044,7 +1044,7 @@ export function handleJoinGroup(group: GroupInfo): void {
       }
     });
   }
-  
+
   // 导航到询问页面
   if (typeof window.PanguPay?.router?.routeTo === 'function') {
     window.PanguPay.router.routeTo('#/inquiry');
@@ -1068,9 +1068,9 @@ function addEvent<K extends keyof HTMLElementEventMap>(
   handler: (e: HTMLElementEventMap[K]) => void | Promise<void>
 ): void {
   if (!element) return;
-  
+
   element.addEventListener(event, handler as EventListener);
-  
+
   eventCleanups.push(() => {
     element.removeEventListener(event, handler as EventListener);
   });
@@ -1082,12 +1082,12 @@ function addEvent<K extends keyof HTMLElementEventMap>(
 function initJoinTabs(): void {
   const joinTabs = document.querySelectorAll('.join-tab');
   const tabsContainer = document.querySelector('.join-tabs');
-  
+
   // 设置初始滑块位置
   if (tabsContainer) {
     tabsContainer.setAttribute('data-active', 'recommend');
   }
-  
+
   joinTabs.forEach(tab => {
     addEvent(tab as HTMLElement, 'click', handleTabClick);
   });
@@ -1099,18 +1099,18 @@ function initJoinTabs(): void {
 function initGroupSearch(): void {
   const groupSearch = document.getElementById(DOM_IDS.groupSearch) as HTMLInputElement | null;
   const groupSearchBtn = document.getElementById(DOM_IDS.groupSearchBtn) as HTMLButtonElement | null;
-  
+
   // 添加表单验证
   addInlineValidation(idSelector(DOM_IDS.groupSearch), [
     { validator: 'required', message: t('validation.orgIdRequired') || '请输入组织ID' },
     { validator: 'orgId', message: t('validation.orgIdFormat') || '需8位数字' }
   ], { showOnInput: true, debounceMs: 150 });
-  
+
   if (groupSearch) {
     addEvent(groupSearch, 'input', handleGroupSearchInput);
     addEvent(groupSearch, 'keydown', handleGroupSearchKeydown);
   }
-  
+
   // 搜索按钮点击
   if (groupSearchBtn) {
     addEvent(groupSearchBtn, 'click', handleSearchBtnClick);
@@ -1123,21 +1123,21 @@ function initGroupSearch(): void {
 function bindEvents(): void {
   // 先清理旧的事件绑定
   cleanupEvents();
-  
+
   // 初始化标签切换
   initJoinTabs();
-  
+
   // 初始化组织搜索
   initGroupSearch();
-  
+
   // 加入推荐组织按钮
   const joinRecBtn = document.getElementById(DOM_IDS.joinRecBtn);
   addEvent(joinRecBtn, 'click', handleJoinRecClick);
-  
+
   // 加入搜索结果组织按钮
   const joinSearchBtn = document.getElementById(DOM_IDS.joinSearchBtn);
   addEvent(joinSearchBtn, 'click', handleJoinSearchClick);
-  
+
   // 跳过按钮
   const skipJoinBtn = document.getElementById(DOM_IDS.skipJoinBtn);
   addEvent(skipJoinBtn, 'click', handleSkipClick);
@@ -1149,7 +1149,7 @@ function bindEvents(): void {
 export function initJoinGroupPage(): void {
   const g0 = getJoinedGroup();
   const joined = !!(g0 && g0.groupID);
-  
+
   if (joined) {
     // 已加入，重定向到 inquiry-main
     if (typeof window.PanguPay?.router?.routeTo === 'function') {
@@ -1157,19 +1157,19 @@ export function initJoinGroupPage(): void {
     }
     return;
   }
-  
+
   // 清理旧的事件绑定
   cleanupEvents();
-  
+
   // 销毁旧实例
   pageState?.destroy();
-  
+
   // 创建新的响应式状态
   pageState = createReactiveState(initialState, stateBindings);
-  
+
   // 清除当前选中组织
   currentSelectedGroup = null;
-  
+
   // 先设置默认值（静态），然后异步从后端获取动态信息
   pageState.set({
     selectedGroup: null,
@@ -1182,16 +1182,16 @@ export function initJoinGroupPage(): void {
     recAggrPort: '加载中...',
     searchBtnDisabled: true
   });
-  
+
   // 异步从后端获取推荐组织的动态信息
   loadRecommendedGroupInfo();
-  
+
   // 重置标签和面板状态
   resetTabsAndPanes();
-  
+
   // 绑定事件
   bindEvents();
-  
+
   // 检查用户地址是否已属于某个组织，显示推荐提示
   checkAndShowAddressOrgRecommendation();
 }
@@ -1203,17 +1203,17 @@ export function initJoinGroupPage(): void {
 async function checkAndShowAddressOrgRecommendation(): Promise<void> {
   try {
     const orgCheck = await checkUserAddressesOrganization();
-    
+
     if (!orgCheck || !orgCheck.hasAddressInOrg) {
       // 没有地址属于组织，隐藏推荐横幅
       hideOrgRecommendationBanner();
       return;
     }
-    
+
     // 有地址属于组织，显示推荐横幅
     console.info(`[JoinGroup] 📢 User has address ${orgCheck.address} in organization ${orgCheck.groupID}, showing recommendation`);
     showOrgRecommendationBanner(orgCheck.address || '', orgCheck.groupID || '');
-    
+
   } catch (error) {
     console.error(`[JoinGroup] Error checking address organization:`, error);
     hideOrgRecommendationBanner();
@@ -1226,28 +1226,28 @@ async function checkAndShowAddressOrgRecommendation(): Promise<void> {
 function showOrgRecommendationBanner(address: string, groupID: string): void {
   // 查找或创建推荐横幅容器
   let banner = document.getElementById('orgRecommendationBanner');
-  
+
   if (!banner) {
     // 创建横幅元素
     banner = document.createElement('div');
     banner.id = 'orgRecommendationBanner';
     banner.className = 'org-recommendation-banner';
-    
+
     // 插入到页面顶部（在 join-group-card 之前）
     const joinCard = document.querySelector('.join-group-card');
     if (joinCard && joinCard.parentNode) {
       joinCard.parentNode.insertBefore(banner, joinCard);
     }
   }
-  
+
   // 截断地址显示
   const shortAddress = address.length > 10 ? `${address.slice(0, 10)}...` : address;
-  
+
   // 设置横幅内容
   const title = t('join.addressInOrgRecommendationTitle') || '推荐组织';
-  const message = t('join.addressInOrgRecommendation', { address: shortAddress, groupID }) || 
+  const message = t('join.addressInOrgRecommendation', { address: shortAddress, groupID }) ||
     `您的地址 ${shortAddress} 已属于担保组织 ${groupID}，您必须加入该组织。`;
-  
+
   banner.innerHTML = `
     <div class="org-recommendation-banner__icon">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1261,7 +1261,7 @@ function showOrgRecommendationBanner(address: string, groupID: string): void {
       <div class="org-recommendation-banner__message">${message}</div>
     </div>
   `;
-  
+
   banner.classList.remove('hidden');
 }
 
@@ -1283,14 +1283,14 @@ async function loadRecommendedGroupInfo(): Promise<void> {
   try {
     console.debug('[JoinGroup] Loading recommended group info from backend...');
     const result = await queryGroupInfoSafe(DEFAULT_GROUP.groupID);
-    
+
     if (result.success && pageState) {
       console.debug('[JoinGroup] Got dynamic recommended group info:', {
         groupID: result.data.groupID,
         assignAPIEndpoint: result.data.assignAPIEndpoint,
         aggrAPIEndpoint: result.data.aggrAPIEndpoint
       });
-      
+
       pageState.set({
         recGroupID: result.data.groupID,
         recAggre: result.data.aggreNode,

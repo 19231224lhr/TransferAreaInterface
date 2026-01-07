@@ -9,7 +9,7 @@ import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { setUser } from '../utils/store.js';
 import { t } from '../i18n/index.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
-import { showSuccessToast, showMiniToast, showErrorToast } from '../utils/toast.js';
+import { showSuccessToast, showMiniToast, showErrorToast, showInfoToast } from '../utils/toast.js';
 import { wait } from '../utils/helpers.js';
 import { secureFetchWithRetry } from '../utils/security';
 import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
@@ -352,8 +352,7 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
         if (result.error === 'USER_CANCELLED') {
           console.info('[Account] User cancelled password input for new address');
           hideUnifiedOverlay();
-          const { showMiniToast } = await import('../utils/toast.js');
-          showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+          showInfoToast(t('common.operationCancelled') || '操作已取消');
           return; // Exit without saving locally
         }
 

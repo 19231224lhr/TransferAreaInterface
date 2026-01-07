@@ -3314,3 +3314,40 @@ pre code {
   border-color: rgba(100, 116, 139, 0.3);
   color: var(--text-primary, #f1f5f9);
 }
+
+/* Danger State for Confirm Modal */
+.modal.modal--danger {
+  background: linear-gradient(135deg,
+      rgba(239, 68, 68, 0.08) 0%,
+      rgba(249, 115, 22, 0.06) 50%,
+      rgba(15, 23, 42, 0.4) 100%);
+}
+
+.modal.modal--danger .dialog {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow:
+    0 25px 60px rgba(239, 68, 68, 0.15),
+    0 10px 30px rgba(239, 68, 68, 0.1),
+    inset 0 1px 0 rgba(239, 68, 68, 0.2);
+}
+
+.modal.modal--danger .dialog h3 {
+  color: #ef4444;
+}
+
+.modal.modal--danger .dialog h3::before {
+  background: linear-gradient(180deg, #ef4444, #f97316);
+}
+
+.modal.modal--danger .dialog .btn.danger {
+  /* Ensure dangerous button has prominence */
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+  color: white !important;
+  border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.modal.modal--danger .dialog .btn.danger:hover {
+  box-shadow: 0 12px 28px rgba(239, 68, 68, 0.4);
+  transform: translateY(-2px);
+}

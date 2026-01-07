@@ -11,7 +11,7 @@ import { loadUser, saveUser, getJoinedGroup, clearGuarChoice } from '../utils/st
 import { t } from '../i18n/index.js';
 import { showModalTip, showConfirmModal, showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } from '../ui/modal';
 import { copyToClipboard, wait } from '../utils/helpers.js';
-import { showMiniToast, showStatusToast } from '../utils/toast.js';
+import { showMiniToast, showStatusToast, showInfoToast, showSuccessToast } from '../utils/toast.js';
 import { routeTo } from '../router';
 import { DOM_IDS, idSelector } from '../config/domIds';
 import { leaveGuarGroup, queryGroupInfoSafe } from '../services/group';
@@ -235,10 +235,9 @@ export async function handleLeaveOrg() {
     hideUnifiedOverlay();
 
     if (!result.success) {
-      // Check if user cancelled password input
       if (result.error === 'USER_CANCELLED') {
         console.info(`[GroupDetail] User cancelled password input for leave`);
-        showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        showInfoToast(t('common.operationCancelled') || '操作已取消');
         return;
       }
 
@@ -373,7 +372,7 @@ export function initGroupDetailPage() {
         if (text && text !== '-') {
           const ok = await copyToClipboard(text);
           if (ok) {
-            showMiniToast(t('wallet.copied'), 'success');
+            showSuccessToast(t('wallet.copied'));
           }
         }
       });
@@ -426,7 +425,8 @@ function initGroupDetailButtons() {
         t('modal.leaveOrgTitle'),
         t('modal.leaveOrgDesc'),
         t('common.confirm'),
-        t('common.cancel')
+        t('common.cancel'),
+        true
       );
       if (!confirmed) return;
 

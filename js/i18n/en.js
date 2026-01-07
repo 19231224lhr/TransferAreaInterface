@@ -45,6 +45,7 @@ export default {
   'comNode.notAvailable': 'ComNode endpoint unavailable, please try again later',
   'comNode.refreshing': 'Refreshing node connection...',
   'assignNode.connected': 'Connected to guarantor organization',
+  'assignNode.disconnected': 'Unable to connect to Guarantor Organization',
   'bootNode.connected': 'Connected to blockchain system',
 
   // Password and Encryption
@@ -544,6 +545,7 @@ export default {
   'toast.sendTxSuccess': 'Transaction Sent Successfully',
   'toast.sendTxSuccessCrossChain': 'Cross-chain transfer sent successfully',
   'toast.sendTxSuccessQuick': 'Quick transfer sent successfully',
+  'toast.sendTxSuccessNormal': 'Normal transfer sent successfully',
   'toast.sendTxFailed': 'Transaction Send Failed',
   'toast.importFailed': 'Import Failed',
   'toast.importSuccess': 'Import Successful',
@@ -575,6 +577,7 @@ export default {
   'transfer.txSubmittedWaitingConfirm': 'Transaction submitted, confirming in background...',
   'transfer.txSubmittedCrossChain': 'Cross-chain transfer submitted, awaiting confirmation in background...',
   'transfer.txSubmittedQuick': 'Quick transfer submitted, awaiting confirmation in background...',
+  'transfer.txSubmittedNormal': 'Normal transfer submitted, awaiting confirmation in background...',
   'transfer.waitingForConfirmation': 'Waiting for transaction confirmation...',
   'transfer.txPendingVerification': 'Transaction is being verified by guarantor node...',
   'transfer.txConfirmedSuccess': 'Transaction Confirmed',

@@ -91,7 +91,7 @@ function updateModalUI(mode: ModalMode, isError: boolean = false): void {
   const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
   const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
   const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
-  
+
   if (mode === 'loading') {
     if (loading) loading.classList.remove('hidden');
     if (success) success.classList.add('hidden');
@@ -103,14 +103,14 @@ function updateModalUI(mode: ModalMode, isError: boolean = false): void {
       success.style.animation = 'none';
       success.offsetHeight; // 触发 reflow
       success.style.animation = '';
-      
+
       if (isError) {
         success.classList.add('error-mode');
       } else {
         success.classList.remove('error-mode');
       }
     }
-    
+
     // 更新图标
     if (iconWrap) {
       if (isError) {
@@ -135,7 +135,7 @@ function resetModalState(): void {
   const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
   const textEl = document.getElementById(DOM_IDS.unifiedText);
   const titleEl = document.getElementById(DOM_IDS.unifiedTitle);
-  
+
   if (loading) loading.classList.remove('hidden');
   if (success) {
     success.classList.add('hidden');
@@ -152,7 +152,7 @@ function resetModalState(): void {
   if (titleEl) {
     titleEl.textContent = '';
   }
-  
+
   onOkCallback = null;
   onCancelCallback = null;
 }
@@ -167,7 +167,7 @@ function resetModalState(): void {
  */
 export function showUnifiedLoading(text?: string): void {
   const state = ensureState();
-  
+
   state.set({
     mode: 'loading',
     title: '',
@@ -175,13 +175,13 @@ export function showUnifiedLoading(text?: string): void {
     isVisible: true,
     showCancelBtn: false
   });
-  
+
   // 更新加载文本元素
   const textEl = document.getElementById(DOM_IDS.actionOverlayText);
   if (textEl) {
     textEl.textContent = text || t('common.processing') || '处理中...';
   }
-  
+
   updateModalUI('loading');
 }
 
@@ -194,17 +194,17 @@ export function showUnifiedLoading(text?: string): void {
  * @param isError - 是否为错误状态
  */
 export function showUnifiedSuccess(
-  title?: string, 
-  text?: string, 
-  onOk?: () => void, 
-  onCancel?: () => void, 
+  title?: string,
+  text?: string,
+  onOk?: () => void,
+  onCancel?: () => void,
   isError: boolean = false
 ): void {
   const state = ensureState();
-  
+
   const finalTitle = title || (isError ? (t('modal.operationFailed') || '操作失败') : (t('common.success') || '成功'));
   const finalText = text || '';
-  
+
   state.set({
     mode: isError ? 'error' : 'success',
     title: finalTitle,
@@ -212,18 +212,18 @@ export function showUnifiedSuccess(
     isVisible: true,
     showCancelBtn: !!onCancel
   });
-  
+
   // 存储回调
   onOkCallback = onOk || null;
   onCancelCallback = onCancel || null;
-  
+
   // 更新 UI
   updateModalUI(isError ? 'error' : 'success', isError);
-  
+
   // 手动更新标题和文本（因为绑定配置中移除了这些绑定）
   const titleEl = document.getElementById(DOM_IDS.unifiedTitle);
   const textEl = document.getElementById(DOM_IDS.unifiedText);
-  
+
   if (titleEl) {
     titleEl.textContent = finalTitle;
   }
@@ -236,7 +236,7 @@ export function showUnifiedSuccess(
     // 使用 renderInto 与 showModalTip 保持一致，避免 lit-html 状态冲突
     renderInto(textEl, html`${finalText}`);
   }
-  
+
   // 处理取消按钮
   const cancelBtn = document.getElementById(DOM_IDS.unifiedCancelBtn);
   if (cancelBtn) {
@@ -251,7 +251,7 @@ export function showUnifiedSuccess(
       cancelBtn.onclick = null;
     }
   }
-  
+
   // 处理确定按钮
   const okBtn = document.getElementById(DOM_IDS.unifiedOkBtn);
   if (okBtn) {
@@ -283,15 +283,15 @@ export function showUnifiedError(
  */
 export function hideUnifiedOverlay(): void {
   const state = ensureState();
-  
+
   state.set({
     mode: 'hidden',
     isVisible: false
   });
-  
+
   const overlay = document.getElementById(DOM_IDS.actionOverlay);
   if (overlay) overlay.classList.add('hidden');
-  
+
   resetModalState();
 }
 
@@ -311,18 +311,18 @@ export function getActionModalElements(): {
   const textEl = document.getElementById(DOM_IDS.unifiedText);
   const okEl = document.getElementById(DOM_IDS.unifiedOkBtn);
   const cancelEl = document.getElementById(DOM_IDS.unifiedCancelBtn);
-  
+
   // 准备显示成功状态
   const loading = document.getElementById(DOM_IDS.unifiedLoading);
   const success = document.getElementById(DOM_IDS.unifiedSuccess);
   if (loading) loading.classList.add('hidden');
   if (success) success.classList.remove('hidden');
-  
+
   if (cancelEl) {
     cancelEl.classList.add('hidden');
     cancelEl.onclick = null;
   }
-  
+
   return { modal, titleEl, textEl, okEl, cancelEl };
 }
 
@@ -338,14 +338,14 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
   const iconWrap = document.getElementById(DOM_IDS.unifiedIconWrap);
   const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
   const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
-  
+
   if (loading) loading.classList.add('hidden');
   if (success) {
     success.classList.remove('hidden');
     success.style.animation = 'none';
     success.offsetHeight;
     success.style.animation = '';
-    
+
     if (isError) {
       success.classList.add('error-mode');
       if (iconWrap) iconWrap.classList.add('error-state');
@@ -358,9 +358,9 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
       if (errorIcon) errorIcon.classList.add('hidden');
     }
   }
-  
+
   const { modal, titleEl, textEl, okEl } = getActionModalElements();
-  
+
   if (titleEl) {
     titleEl.textContent = title || '';
   }
@@ -375,13 +375,13 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
     }
   }
   if (modal) modal.classList.remove('hidden');
-  
+
   const handler = () => {
     if (modal) modal.classList.add('hidden');
     resetModalState();
     if (okEl) okEl.removeEventListener('click', handler);
   };
-  
+
   if (okEl) okEl.addEventListener('click', handler);
 }
 
@@ -402,7 +402,8 @@ export function showConfirmModal(
   title?: string,
   content?: string | TemplateResult,
   okText?: string,
-  cancelText?: string
+  cancelText?: string,
+  isDanger: boolean = false
 ): Promise<boolean> {
   return new Promise((resolve) => {
     const modal = document.getElementById(DOM_IDS.confirmGasModal);
@@ -424,6 +425,15 @@ export function showConfirmModal(
     if (currentConfirmCancelHandler) {
       cancelEl.removeEventListener('click', currentConfirmCancelHandler);
       currentConfirmCancelHandler = null;
+    }
+
+    // Apply danger styles if requested
+    if (isDanger) {
+      modal.classList.add('modal--danger');
+      okEl.className = 'btn danger'; // Force danger class
+    } else {
+      modal.classList.remove('modal--danger');
+      okEl.className = 'btn primary'; // Reset to primary
     }
 
     if (titleEl) {
@@ -458,6 +468,8 @@ export function showConfirmModal(
         cancelEl.removeEventListener('click', currentConfirmCancelHandler);
         currentConfirmCancelHandler = null;
       }
+      // Reset danger class after closing
+      modal.classList.remove('modal--danger');
       resolve(result);
     };
 

@@ -17,7 +17,7 @@ import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
 import { store, selectUser, setUser } from '../utils/store.js';
 import { readAddressInterest } from '../utils/helpers.js';
 import { getActionModalElements } from '../ui/modal';
-import { showMiniToast, showErrorToast, showSuccessToast } from '../utils/toast.js';
+import { showMiniToast, showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast.js';
 import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
@@ -759,7 +759,7 @@ export function handleDeleteAddress(address: string): void {
           // Check if user cancelled password input
           if (errorMsg === 'USER_CANCELLED') {
             console.info('[Wallet] User cancelled password input for unbind');
-            showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+            showInfoToast(t('common.operationCancelled') || '操作已取消');
             return;
           }
 
@@ -1408,15 +1408,63 @@ export function updateAllAddressCardBalances(u: User | null): void {
 
 /**
  * Update USDT and breakdown display
+ * Shows AVAILABLE balance (excluding locked UTXOs and TXCers)
  */
 function updateUSDTDisplay(u: User): void {
   const usdtEl = document.getElementById(DOM_IDS.walletUSDT);
   if (usdtEl && u?.wallet) {
-    const vdAll = u.wallet.valueDivision || { 0: 0, 1: 0, 2: 0 };
-    const pgcA = Number(vdAll[0] || 0);
-    const btcA = Number(vdAll[1] || 0);
-    const ethA = Number(vdAll[2] || 0);
-    const usdt = Math.round(pgcA * 1 + btcA * 100 + ethA * 10);
+    const addressMsg = u.wallet.addressMsg || {};
+
+    // Calculate available balance per coin type by summing up all addresses
+    let availablePGC = 0;
+    let availableBTC = 0;
+    let availableETH = 0;
+
+    for (const [address, meta] of Object.entries(addressMsg)) {
+      if (!meta) continue;
+
+      const coinType = (meta as any).type ?? 0;
+      const utxos = (meta as any).utxos || {};
+      const txCers = (meta as any).txCers || {};
+
+      // Calculate UTXO balance (similar to renderAddressCard logic)
+      const utxoBalance = Object.values(utxos).reduce<number>((sum, val) => {
+        if (typeof val === 'object' && val !== null) {
+          return sum + (Number((val as any).Value) || 0);
+        }
+        return sum + (Number(val) || 0);
+      }, 0);
+
+      // Get locked UTXO balance
+      const lockedBalance = getLockedBalanceByAddress(address);
+      const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
+
+      // Calculate TXCer balance
+      const txCerIds = Object.keys(txCers);
+      const txCerBalance = Object.values(txCers).reduce<number>((sum, val) => sum + (Number(val) || 0), 0);
+
+      // Calculate locked TXCer balance
+      const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+        if (!isTXCerLocked(id)) return sum;
+        return sum + (Number((txCers as any)[id]) || 0);
+      }, 0);
+      const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+
+      // Available balance for this address
+      const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
+
+      // Add to appropriate coin type total
+      if (coinType === 0) {
+        availablePGC += availableBalance;
+      } else if (coinType === 1) {
+        availableBTC += availableBalance;
+      } else if (coinType === 2) {
+        availableETH += availableBalance;
+      }
+    }
+
+    // Calculate total USDT value (PGC 1:1, BTC 100:1, ETH 10:1)
+    const usdt = Math.round(availablePGC * 1 + availableBTC * 100 + availableETH * 10);
 
     scheduleBatchUpdate('usdt-display', () => {
       usdtEl.textContent = usdt.toLocaleString();
@@ -1428,9 +1476,9 @@ function updateUSDTDisplay(u: User): void {
         const pgcV = bd.querySelector('.tag--pgc');
         const btcV = bd.querySelector('.tag--btc');
         const ethV = bd.querySelector('.tag--eth');
-        if (pgcV) pgcV.textContent = String(pgcA);
-        if (btcV) btcV.textContent = String(btcA);
-        if (ethV) ethV.textContent = String(ethA);
+        if (pgcV) pgcV.textContent = String(availablePGC);
+        if (btcV) btcV.textContent = String(availableBTC);
+        if (ethV) ethV.textContent = String(availableETH);
       });
     }
   }
@@ -1535,9 +1583,9 @@ async function handleImportPreviewConfirm(): Promise<void> {
         const errorMsg = 'error' in result ? result.error : t('error.unknownError');
 
         // Check if user cancelled password input
-        if (errorMsg === 'USER_CANCELLED') {
-          console.info('[Wallet] User cancelled password input for import');
-          showMiniToast(t('common.operationCancelled') || '操作已取消', 'info');
+        if (result.error === 'USER_CANCELLED') {
+          console.info('[Wallet] User cancelled password input');
+          showInfoToast(t('common.operationCancelled') || '操作已取消');
           return;
         }
 

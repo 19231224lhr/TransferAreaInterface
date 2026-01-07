@@ -28,7 +28,7 @@
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
   /* 进场动画 - 简洁优雅 */
@@ -40,6 +40,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -67,7 +68,7 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -78,7 +79,7 @@
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
   pointer-events: none;
 }
 
@@ -259,7 +260,7 @@
 
 /* 当第二个标签激活时，滑块移动到右侧 */
 .join-tabs[data-active="search"]::before {
-  transform: translateX(calc(100% + 6px));
+  transform: translateX(100%);
 }
 
 .join-tab {
@@ -431,8 +432,15 @@
 }
 
 @keyframes statusPulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 /* 组织详情 */
@@ -531,7 +539,7 @@
   gap: 20px;
 }
 
-.join-org-row + .join-org-row {
+.join-org-row+.join-org-row {
   margin-top: 20px;
   padding-top: 20px;
   border-top: 1px solid #f1f5f9;
@@ -920,7 +928,7 @@
 
   /* When second tab is active, move slider down instead of right */
   .join-tabs[data-active="search"]::before {
-    transform: translateY(calc(100% + 6px));
+    transform: translateY(100%);
   }
 
   .join-org-id {
@@ -964,11 +972,11 @@
 }
 
 [data-theme="dark"] .join-sidebar::before {
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.05) 0%, transparent 60%);
 }
 
 [data-theme="dark"] .join-sidebar::after {
-  background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.03) 0%, transparent 50%);
 }
 
 /* 右侧主区域 */
@@ -999,7 +1007,7 @@
 /* 滑块背景 - 深色模式 */
 [data-theme="dark"] .join-tabs::before {
   background: linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(59, 130, 246, 0.2));
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(59, 130, 246, 0.3);
   backdrop-filter: blur(8px);
@@ -1266,6 +1274,7 @@
     opacity: 0;
     transform: translateX(8px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -1345,6 +1354,7 @@
       opacity: 0;
       transform: translateY(-4px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
@@ -1459,8 +1469,13 @@
 }
 
 @keyframes logoRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .join-loading-state p {
@@ -1487,6 +1502,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1584,11 +1600,11 @@
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .join-search-field {
     width: 100%;
   }
-  
+
   .join-search-action-btn {
     width: 100%;
     justify-content: center;
@@ -1618,6 +1634,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

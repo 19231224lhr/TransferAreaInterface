@@ -1151,12 +1151,18 @@ export function initTransferSubmit(): void {
           }
 
           // 显示成功提示，根据交易类型显示不同消息
-          const successMsg = isCross
-            ? (t('transfer.txSubmittedCrossChain') || '跨链转账交易已提交，正在后台等待确认...')
-            : (t('transfer.txSubmittedQuick') || '快速转账交易已提交，正在后台等待确认...');
-          const successTitle = isCross
-            ? (t('toast.sendTxSuccessCrossChain') || '跨链交易发送成功')
-            : (t('toast.sendTxSuccessQuick') || '快速转账发送成功');
+          let successMsg: string;
+          let successTitle: string;
+          if (isCross) {
+            successMsg = t('transfer.txSubmittedCrossChain') || '跨链转账交易已提交，正在后台等待确认...';
+            successTitle = t('toast.sendTxSuccessCrossChain') || '跨链交易发送成功';
+          } else if (isNormalTransferMode) {
+            successMsg = t('transfer.txSubmittedNormal') || '普通转账交易已提交，正在后台等待确认...';
+            successTitle = t('toast.sendTxSuccessNormal') || '普通转账发送成功';
+          } else {
+            successMsg = t('transfer.txSubmittedQuick') || '快速转账交易已提交，正在后台等待确认...';
+            successTitle = t('toast.sendTxSuccessQuick') || '快速转账发送成功';
+          }
           showToast(successMsg, 'success', successTitle);
 
           // 清除草稿（交易已提交）
@@ -1202,11 +1208,9 @@ export function initTransferSubmit(): void {
             const pollingAssignUrl = guarGroup.assignAPIEndpoint
               ? buildAssignNodeUrl(guarGroup.assignAPIEndpoint)
               : undefined;
-            const submitBlockHeight = Number(user?.wallet?.updateBlock || 0);
-
             // 使用 setTimeout 0 确保 UI 先更新
             setTimeout(() => {
-              pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, pollingAssignUrl, submitBlockHeight);
+              pollTXStatusInBackground(txIdToQuery, guarGroup.groupID, pollingAssignUrl);
             }, 0);
           } else {
             console.log('[发送交易] 普通转账模式，跳过状态轮询');
@@ -1368,35 +1372,10 @@ async function pollTXStatusInBackground(
     );
 
     if (confirmResult.success) {
-      // 交易确认成功 - 显示成功 toast
-      console.log('[后台轮询] 交易确认成功:', txID);
-      const confirmedBlock = confirmResult.response?.block_height;
-      updateTxHistoryByTxId(txID, {
-        status: 'success',
-        blockNumber: confirmedBlock || undefined,
-        confirmations: confirmedBlock ? 1 : undefined,
-        failureReason: ''
-      });
-      showToast(
-        t('transfer.txConfirmedSuccessShort', { txid: txID.slice(0, 8) + '...' }) ||
-        `交易 ${txID.slice(0, 8)}... 已确认成功！`,
-        'success',
-        t('transfer.txConfirmedSuccess') || '交易确认成功',
-        5000  // 显示 5 秒
-      );
-
-      // ✅ 确认成功：允许 TXCer 状态更新（并处理缓存），让已使用的 TXCer 正常消失/变更
-      try {
-        const lockedTxCers = getLockedTXCerIdsByTxId(txID);
-        if (lockedTxCers.length > 0) {
-          unlockTXCers(lockedTxCers, true);
-          console.log('[后台轮询] 已解锁并处理 TXCer 更新, txID=', txID, 'count=', lockedTxCers.length);
-        }
-      } catch (e) {
-        console.warn('[后台轮询] 处理 TXCer 解锁失败:', e);
-      }
-
+      // AssignNode 验证通过并不代表已上链，保持 pending，等待 account_update 确认
+      console.log('[后台轮询] 交易已通过验证，等待上链确认:', txID);
     } else if (confirmResult.timeout) {
+
       // 超时 - 显示提示 toast
       console.log('[后台轮询] 交易确认超时:', txID);
       showToast(

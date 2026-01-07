@@ -30,7 +30,7 @@ import { applyComNodeInterests } from '../utils/interestSync.js';
 import { shouldBlockTXCerUpdate, cacheTXCerUpdate, unlockTXCers } from './txCerLockManager';
 import { buildAssignNodeUrl } from './group';
 import { getCoinName } from '../config/constants';
-import { addTxHistoryRecords, hasOutgoingTx, normalizeHistoryTimestamp } from './txHistory';
+import { addTxHistoryRecords, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
 
 // ============================================================================
 // Types (匹配后端 Go 结构体)
@@ -121,6 +121,7 @@ interface AccountUpdateInfo {
   UsedTXCerChangeData: UsedTXCerChangeData[];
   Timestamp: number;
   BlockHeight: number;
+  ConfirmedTxIDs?: string[];
   /** 是否没有账户变动，若为true，则只更新区块高度就行 */
   IsNoWalletChange: boolean;
   Sig: {
@@ -217,6 +218,21 @@ function generateBackendUTXOId(utxo: UTXOData): string {
   const txid = utxo.UTXO?.TXID || utxo.TXID || '';
   const indexZ = utxo.Position?.IndexZ ?? 0;
   return `${txid} + ${indexZ}`;
+}
+
+function applyConfirmedTxIDs(update: AccountUpdateInfo): void {
+  const confirmed = update.ConfirmedTxIDs;
+  if (!Array.isArray(confirmed) || confirmed.length === 0) return;
+
+  for (const txId of confirmed) {
+    if (!txId || !hasOutgoingTx(txId)) continue;
+    updateTxHistoryByTxId(txId, {
+      status: 'success',
+      blockNumber: update.BlockHeight || undefined,
+      confirmations: 1,
+      failureReason: ''
+    });
+  }
 }
 
 /**
@@ -344,6 +360,8 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     console.warn('[AccountPolling] User has no wallet, skipping update');
     return;
   }
+
+  applyConfirmedTxIDs(update);
 
   const prevHeight = Number(user.wallet.updateBlock || 0);
   const nextHeight = Number(update.BlockHeight || 0);
