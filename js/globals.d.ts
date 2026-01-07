@@ -55,8 +55,6 @@ declare global {
     renderWallet: (wallet: any) => void;
     updateWalletBrief: () => void;
     refreshOrgPanel: () => void;
-    handleAddToAddress: (address: string) => void;
-    handleZeroAddress: (address: string) => void;
     initAddressModal: () => void;
     showAddrModal: (mode: string) => void;
     hideAddrModal: () => void;
@@ -234,7 +232,7 @@ declare global {
     // P2: Online status functions
     isOnline: () => boolean;
     onOnlineStatusChange: (callback: (online: boolean) => void) => () => void;
-    
+
     // Internal cleanup functions
     _removeAuthGuard?: () => void;
 
@@ -248,27 +246,27 @@ declare global {
     _routerHashChangeBind?: boolean;
     _hashLinkNavBind?: boolean;
     _userMenuClickBind?: boolean;
-    
+
     // Chart-related flags
     _chartIntervalSet?: boolean;
     _chartResizeListenerSet?: boolean;
     _cleanupChartInterval?: (() => void) | null;
     _chartObserver?: IntersectionObserver | null;
     _chartResizeHandler?: EventListener | null;
-    
+
     // Network chart flags
     _networkChartObserver?: IntersectionObserver | null;
     _networkChartResizeHandler?: EventListener | null;
-    
+
     // Performance monitor
     performanceMonitor?: any;
-    
+
     // Elliptic library (external)
     elliptic?: {
       ec: any;
     };
   }
-  
+
   // Extend Navigator for Network Information API
   interface Navigator {
     connection?: {
@@ -277,7 +275,7 @@ declare global {
       effectiveType?: string;
     };
   }
-  
+
   // Extend Performance for memory API (Chrome-specific)
   interface Performance {
     memory?: {
@@ -286,7 +284,7 @@ declare global {
       jsHeapSizeLimit: number;
     };
   }
-  
+
   // Extend HTMLElement dataset for custom data attributes
   interface HTMLElement {
     dataset: DOMStringMap & {
@@ -304,26 +302,26 @@ declare global {
       action?: string;
     };
   }
-  
+
   // requestIdleCallback API (not in all browsers)
   interface Window {
     requestIdleCallback?: (callback: IdleRequestCallback, options?: IdleRequestOptions) => number;
     cancelIdleCallback?: (handle: number) => void;
   }
-  
+
   interface IdleRequestCallback {
     (deadline: IdleDeadline): void;
   }
-  
+
   interface IdleDeadline {
     readonly didTimeout: boolean;
     timeRemaining(): number;
   }
-  
+
   interface IdleRequestOptions {
     timeout?: number;
   }
 }
 
 // Make this a module (required for declare global to work)
-export {};
+export { };

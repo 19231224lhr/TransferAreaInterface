@@ -157,12 +157,10 @@
                   <path d="M500 150 L520 300" stroke="currentColor" stroke-opacity="0.03" stroke-width="1" />
 
                   <!-- 装饰性数据流线条 -->
-                  <path d="M-50 220 Q 100 180 250 210 T 500 190 T 650 220" stroke="url(#fadeGrad)"
-                    stroke-width="1.5" fill="none" />
-                  <path d="M0 250 Q 150 210 300 240 T 600 230" stroke="url(#fadeGrad)" stroke-width="1.2"
+                  <path d="M-50 220 Q 100 180 250 210 T 500 190 T 650 220" stroke="url(#fadeGrad)" stroke-width="1.5"
                     fill="none" />
-                  <path d="M50 280 Q 200 250 350 275 T 600 265" stroke="url(#fadeGrad)" stroke-width="1"
-                    fill="none" />
+                  <path d="M0 250 Q 150 210 300 240 T 600 230" stroke="url(#fadeGrad)" stroke-width="1.2" fill="none" />
+                  <path d="M50 280 Q 200 250 350 275 T 600 265" stroke="url(#fadeGrad)" stroke-width="1" fill="none" />
 
                   <!-- 装饰性圆圈 -->
                   <circle cx="120" cy="240" r="25" stroke="currentColor" stroke-opacity="0.04" fill="none" />
@@ -252,8 +250,8 @@
                   <span class="no-org-tab-text" data-i18n="wallet.normalTransfer">普通转账</span>
                 </button>
                 <button class="no-org-warn-btn" id="noOrgWarnBtn" type="button" aria-label="未加入担保组织提示">
-                  <svg class="no-org-warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <svg class="no-org-warn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
                     <path d="M12 8v6" />
                     <circle cx="12" cy="17" r="0.5" fill="currentColor" />
@@ -304,159 +302,145 @@
             </div>
 
 
-          <!-- 转账选项 - 折叠区 -->
-          <div class="transfer-options">
-            <div class="options-toggle" id="optionsToggle">
-              <span class="options-toggle-left">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path
-                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
-                  </path>
-                </svg>
-                <span data-i18n="wallet.advancedOptions">高级选项</span>
-              </span>
-              <span class="options-toggle-arrow">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-              </span>
-            </div>
-
-            <div class="options-content" id="optionsContent">
-              <div class="options-grid">
-                <div class="options-card">
-                <!-- 第一行：两列并排 -->
-                <div class="options-split-row">
-                  <div class="options-split-group">
-                    <label class="option-field-label" for="extraGasPGC" data-i18n="wallet.extraGas">额外Gas兑换</label>
-                    <div class="option-input-wrapper">
-                      <input id="extraGasPGC" name="extraGasPGC" class="option-input" type="number" min="0" step="any" placeholder="0" value="0" />
-                      <span class="option-suffix option-suffix--pgc">PGC</span>
-                    </div>
-                  </div>
-                  <div class="options-split-group">
-                    <label class="option-field-label" for="txGasInput" data-i18n="wallet.txGas">交易Gas</label>
-                    <div class="option-input-wrapper">
-                      <input id="txGasInput" name="txGasInput" class="option-input" type="number" min="0" step="any" placeholder="1" value="1" />
-                      <span class="option-suffix option-suffix--gas">GAS</span>
-                    </div>
-                  </div>
-                </div>
-                <!-- PGC 找零地址 -->
-                <div class="option-field">
-                  <label class="option-field-label" data-i18n="transfer.pgcReceiveAddress">PGC 接受地址</label>
-                  <select id="chAddrPGC" name="chAddrPGC" class="input" style="display:none"></select>
-                  <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
-                    data-coin="PGC">
-                    <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span
-                        class="addr-val" style="margin-left:8px"></span></span>
-                    <span class="custom-select__arrow">
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                    </span>
-                    <div class="custom-select__menu"></div>
-                  </div>
-                </div>
-                <!-- BTC 找零地址 -->
-                <div class="option-field">
-                  <label class="option-field-label" data-i18n="transfer.btcReceiveAddress">BTC 接受地址</label>
-                  <select id="chAddrBTC" name="chAddrBTC" class="input" style="display:none"></select>
-                  <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
-                    data-coin="BTC">
-                    <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span
-                        class="addr-val" style="margin-left:8px"></span></span>
-                    <span class="custom-select__arrow">
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                    </span>
-                    <div class="custom-select__menu"></div>
-                  </div>
-                </div>
-                <!-- ETH 找零地址 -->
-                <div class="option-field">
-                  <label class="option-field-label" data-i18n="transfer.ethReceiveAddress">ETH 接受地址</label>
-                  <select id="chAddrETH" name="chAddrETH" class="input" style="display:none"></select>
-                  <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
-                    data-coin="ETH">
-                    <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span
-                        class="addr-val" style="margin-left:8px"></span></span>
-                    <span class="custom-select__arrow">
-                      <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
-                        <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                          stroke-linejoin="round" />
-                      </svg>
-                    </span>
-                    <div class="custom-select__menu"></div>
-                  </div>
-                </div>
-                <!-- PreTXCer 开关 (隐藏，默认开启) -->
-                <div class="option-field" style="display:none">
-                  <label class="option-field-label">PreTXCer</label>
-                  <div class="option-toggle-wrapper">
-                    <label class="toggle-switch">
-                      <input id="useTXCerChk" name="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" checked />
-                      <span class="toggle-slider"></span>
-                    </label>
-                  </div>
-                </div>
-                </div>
+            <!-- 转账选项 - 折叠区 -->
+            <div class="transfer-options">
+              <div class="options-toggle" id="optionsToggle">
+                <span class="options-toggle-left">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                      d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                  </svg>
+                  <span data-i18n="wallet.advancedOptions">高级选项</span>
+                </span>
+                <span class="options-toggle-arrow">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </span>
               </div>
 
-              <!-- 隐藏的原始表单字段 -->
-              <select id="tfMode" name="tfMode" class="input" style="display:none">
-                <option value="quick" selected>快速转账</option>
-                <option value="cross">跨链转账</option>
-                <option value="pledge">质押交易</option>
-              </select>
-              <select id="useTXCer" name="useTXCer" class="input" style="display:none">
-                <option value="true" selected>是</option>
-                <option value="false">否</option>
-              </select>
-              <select id="isPledge" name="isPledge" class="input" style="display:none">
-                <option value="false" selected>否</option>
-                <option value="true">是</option>
-              </select>
+              <div class="options-content" id="optionsContent">
+                <div class="options-grid">
+                  <div class="options-card">
+                    <!-- 第一行：两列并排 -->
+                    <div class="options-split-row">
+                      <div class="options-split-group">
+                        <label class="option-field-label" for="extraGasPGC" data-i18n="wallet.extraGas">额外Gas兑换</label>
+                        <div class="option-input-wrapper">
+                          <input id="extraGasPGC" name="extraGasPGC" class="option-input" type="number" min="0"
+                            step="any" placeholder="0" value="0" />
+                          <span class="option-suffix option-suffix--pgc">PGC</span>
+                        </div>
+                      </div>
+                      <div class="options-split-group">
+                        <label class="option-field-label" for="txGasInput" data-i18n="wallet.txGas">交易Gas</label>
+                        <div class="option-input-wrapper">
+                          <input id="txGasInput" name="txGasInput" class="option-input" type="number" min="0" step="any"
+                            placeholder="1" value="1" />
+                          <span class="option-suffix option-suffix--gas">GAS</span>
+                        </div>
+                      </div>
+                    </div>
+                    <!-- PGC 找零地址 -->
+                    <div class="option-field">
+                      <label class="option-field-label" data-i18n="transfer.pgcReceiveAddress">PGC 接受地址</label>
+                      <select id="chAddrPGC" name="chAddrPGC" class="input" style="display:none"></select>
+                      <div id="csChPGC" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="PGC">
+                        <span class="custom-select__value"><span class="coin-icon coin--pgc"></span><span
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round" />
+                          </svg>
+                        </span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <!-- BTC 找零地址 -->
+                    <div class="option-field">
+                      <label class="option-field-label" data-i18n="transfer.btcReceiveAddress">BTC 接受地址</label>
+                      <select id="chAddrBTC" name="chAddrBTC" class="input" style="display:none"></select>
+                      <div id="csChBTC" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="BTC">
+                        <span class="custom-select__value"><span class="coin-icon coin--btc"></span><span
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round" />
+                          </svg>
+                        </span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <!-- ETH 找零地址 -->
+                    <div class="option-field">
+                      <label class="option-field-label" data-i18n="transfer.ethReceiveAddress">ETH 接受地址</label>
+                      <select id="chAddrETH" name="chAddrETH" class="input" style="display:none"></select>
+                      <div id="csChETH" class="option-input-wrapper custom-select cs-addr" role="button"
+                        data-coin="ETH">
+                        <span class="custom-select__value"><span class="coin-icon coin--eth"></span><span
+                            class="addr-val" style="margin-left:8px"></span></span>
+                        <span class="custom-select__arrow">
+                          <svg width="10" height="6" viewBox="0 0 10 6" fill="none">
+                            <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                              stroke-linejoin="round" />
+                          </svg>
+                        </span>
+                        <div class="custom-select__menu"></div>
+                      </div>
+                    </div>
+                    <!-- PreTXCer 开关 (隐藏，默认开启) -->
+                    <div class="option-field" style="display:none">
+                      <label class="option-field-label">PreTXCer</label>
+                      <div class="option-toggle-wrapper">
+                        <label class="toggle-switch">
+                          <input id="useTXCerChk" name="useTXCerChk" type="checkbox" aria-label="优先使用TXCer" checked />
+                          <span class="toggle-slider"></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 隐藏的原始表单字段 -->
+                <select id="tfMode" name="tfMode" class="input" style="display:none">
+                  <option value="quick" selected>快速转账</option>
+                  <option value="cross">跨链转账</option>
+                  <option value="pledge">质押交易</option>
+                </select>
+                <select id="useTXCer" name="useTXCer" class="input" style="display:none">
+                  <option value="true" selected>是</option>
+                  <option value="false">否</option>
+                </select>
+                <select id="isPledge" name="isPledge" class="input" style="display:none">
+                  <option value="false" selected>否</option>
+                  <option value="true">是</option>
+                </select>
+              </div>
             </div>
-          </div>
 
-          <!-- 提交按钮 -->
-          <div class="transfer-submit">
-            <button id="tfSendBtn" type="button" class="submit-btn submit-btn--primary ripple" aria-label="构造交易" data-i18n-aria="transfer.buildTx">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="22" y1="2" x2="11" y2="13"></line>
-                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-              </svg>
-              <span data-i18n="transfer.buildTx">构造交易</span>
-            </button>
-          </div>
+            <!-- 提交按钮 -->
+            <div class="transfer-submit">
+              <button id="tfSendBtn" type="button" class="submit-btn submit-btn--primary ripple" aria-label="构造交易"
+                data-i18n-aria="transfer.buildTx">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="22" y1="2" x2="11" y2="13"></line>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                <span data-i18n="transfer.buildTx">构造交易</span>
+              </button>
+            </div>
 
-          <!-- 错误提示 -->
-          <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
+            <!-- 错误提示 -->
+            <p id="txError" class="tip tip--error hidden" aria-live="polite"></p>
 
-          <!-- 交易信息查看按钮 -->
-          <div id="txResultActions" class="tx-result-actions hidden">
-            <button id="viewBuildInfoBtn" class="tx-view-btn tx-view-btn--struct" type="button">
-              <svg class="tx-view-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
-              <span data-i18n="transfer.viewTxStruct">查看交易结构体</span>
-            </button>
-            <button id="viewTxInfoBtn" class="tx-view-btn tx-view-btn--tx hidden" type="button">
-              <svg class="tx-view-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-              <span data-i18n="transfer.viewTxInfo">查看交易信息</span>
-            </button>
-          </div>
+            <!-- 交易信息查看按钮 -->
+
 
           </form>
         </div>
@@ -503,7 +487,8 @@
           </div>
           <div class="org-panel-actions" id="woActions">
             <button id="woDetailBtn" class="org-action-btn org-action-btn--detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10" />
                 <path d="M12 12v4" />
                 <path d="M12 8h.01" />

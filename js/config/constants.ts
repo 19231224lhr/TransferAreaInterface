@@ -6,6 +6,17 @@
  */
 
 // ========================================
+// Environment Configuration
+// ========================================
+
+/**
+ * Development Mode Flag
+ * true: Show developer features (Add funds, Clear data, View structs)
+ * false: Production mode, hide dev features
+ */
+export const IS_DEV = true;
+
+// ========================================
 // Type Definitions
 // ========================================
 

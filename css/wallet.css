@@ -1742,28 +1742,58 @@
   transform: translateY(0) scale(0.98);
 }
 
-.btn-add {
-  background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
-  color: #ffffff;
-  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
+/* 导出私钥按钮 */
+.btn-export {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  color: #166534;
+  border: 1px solid #bbf7d0;
 }
 
-.btn-add:hover {
-  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.35);
+.btn-export:hover {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #15803d;
+  border-color: #86efac;
 }
 
-.btn-zero {
+/* 删除地址按钮 */
+.btn-delete {
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   color: #64748b;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
 }
 
-.btn-zero:hover {
+.btn-delete:hover {
   background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
   color: #dc2626;
   border-color: #fecaca;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+}
+
+/* 地址操作按钮通用样式 */
+.addr-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  white-space: nowrap;
+  flex: 1;
+}
+
+.addr-action-btn svg {
+  flex-shrink: 0;
+}
+
+.addr-action-btn:hover {
+  transform: translateY(-2px);
+}
+
+.addr-action-btn:active {
+  transform: translateY(0) scale(0.98);
 }
 
 /* 操作菜单切换按钮 */

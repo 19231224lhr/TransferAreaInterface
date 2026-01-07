@@ -70,6 +70,7 @@ export default {
   'encryption.wrongPasswordRetry': 'Wrong password, please try again',
   'encryption.maxRetriesExceeded': 'Too many failed password attempts, please try again later',
   'encryption.decryptForTx': 'Building a transaction requires signing with your account private key. Please enter password to unlock it.',
+  'encryption.exportRequiresPassword': 'Password verification required to export private key for security',
   'encryption.passwordPlaceholder': 'Enter your password',
 
   // Page Title

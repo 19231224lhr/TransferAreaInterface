@@ -6,6 +6,7 @@
 
 import { t } from '../i18n/index.js';
 import { DOM_IDS } from '../config/domIds';
+import { IS_DEV } from '../config/constants';
 import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
 
 /**
@@ -16,9 +17,17 @@ export function initWalletStructToggle() {
   const wsBox = document.getElementById(DOM_IDS.walletStructBox);
   const wsSection = document.getElementById(DOM_IDS.walletStructPane);
   const wsContent = wsToggle?.closest('.struct-section')?.querySelector('.struct-content');
-  
+
+  // Dev mode check
+  if (!IS_DEV && wsToggle) {
+    wsToggle.classList.add('hidden');
+    // Hide the entire section if possible to be cleaner
+    const section = wsToggle.closest('.struct-section');
+    if (section) section.classList.add('hidden');
+  }
+
   if (!wsToggle || !wsBox || wsToggle.dataset._bind) return;
-  
+
   wsToggle.addEventListener('click', () => {
     const isExpanded = wsSection?.classList.contains('expanded') || wsToggle.classList.contains('expanded');
 
@@ -36,9 +45,9 @@ export function initWalletStructToggle() {
           // ignore
         }
       }
-      
+
       wsBox.classList.remove('hidden');
-      
+
       // Add expanded class to parent container
       if (wsSection) {
         wsSection.classList.add('expanded');
@@ -49,7 +58,7 @@ export function initWalletStructToggle() {
       }
       wsBox.classList.add('expanded');
       wsToggle.classList.add('expanded');
-      
+
       // Update button text
       const textSpan = wsToggle.querySelector('span');
       if (textSpan) textSpan.textContent = t('transfer.collapseStruct');
@@ -76,7 +85,7 @@ export function initWalletStructToggle() {
       else wsToggle.textContent = t('transfer.expandStruct');
     }
   });
-  
+
   wsToggle.dataset._bind = '1';
 }
 
@@ -92,9 +101,9 @@ export function initTxDetailModal() {
   const okBtn = document.getElementById(DOM_IDS.txDetailOk);
   const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
   const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
-  
+
   if (!modal) return;
-  
+
   const showTxDetail = (title, data) => {
     if (titleEl) {
       titleEl.textContent = title;
@@ -108,7 +117,7 @@ export function initTxDetailModal() {
       } catch {
         // 如果解析失败，保持原样
       }
-      
+
       // Syntax highlight JSON using lit-html with unsafeHTML for trusted content
       const highlighted = formattedJson
         .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
@@ -121,11 +130,11 @@ export function initTxDetailModal() {
     }
     modal.classList.remove('hidden');
   };
-  
+
   const hideTxDetail = () => {
     modal.classList.add('hidden');
   };
-  
+
   // View transaction structure button
   if (viewBuildInfoBtn) {
     viewBuildInfoBtn.addEventListener('click', () => {
@@ -133,7 +142,7 @@ export function initTxDetailModal() {
       showTxDetail('BuildTXInfo 交易结构体', data);
     });
   }
-  
+
   // View transaction info button
   if (viewTxInfoBtn) {
     viewTxInfoBtn.addEventListener('click', () => {
@@ -141,17 +150,17 @@ export function initTxDetailModal() {
       showTxDetail('Transaction 交易信息', data);
     });
   }
-  
+
   // Close button
   if (closeBtn) {
     closeBtn.addEventListener('click', hideTxDetail);
   }
-  
+
   // OK button
   if (okBtn) {
     okBtn.addEventListener('click', hideTxDetail);
   }
-  
+
   // Copy button
   if (copyBtn) {
     copyBtn.addEventListener('click', async () => {
@@ -171,7 +180,7 @@ export function initTxDetailModal() {
       }
     });
   }
-  
+
   // Click mask to close
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {

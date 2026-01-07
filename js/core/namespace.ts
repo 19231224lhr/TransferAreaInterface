@@ -25,113 +25,111 @@ export function initNamespace(): PanguPayNamespace {
     window.PanguPay = {
       // Router
       router: {
-        routeTo: () => {},
-        showCard: () => {},
-        router: () => {},
+        routeTo: () => { },
+        showCard: () => { },
+        router: () => { },
         navigateTo: async () => false,
-        addRouteGuard: () => () => {},
-        configureTransition: () => {},
+        addRouteGuard: () => () => { },
+        configureTransition: () => { },
       },
-      
+
       // i18n
       i18n: {
         t: (key: string) => key,
-        setLanguage: () => {},
+        setLanguage: () => { },
         getCurrentLanguage: () => 'zh-CN',
-        updatePageTranslations: () => {},
+        updatePageTranslations: () => { },
       },
-      
+
       // Theme
       theme: {
-        setTheme: () => {},
-        toggleTheme: () => {},
-        refreshSrcAddrList: () => {},
+        setTheme: () => { },
+        toggleTheme: () => { },
+        refreshSrcAddrList: () => { },
         getCurrentTheme: () => 'light',
       },
-      
+
       // Account
       account: {
         newUser: async () => undefined,
         importFromPrivHex: async () => undefined,
-        addNewSubWallet: async () => {},
-        handleCreate: async () => {},
+        addNewSubWallet: async () => { },
+        handleCreate: async () => { },
       },
-      
+
       // Storage
       storage: {
         loadUser: () => null,
-        saveUser: () => {},
+        saveUser: () => { },
         toAccount: () => null,
-        clearAccountStorage: () => {},
+        clearAccountStorage: () => { },
         loadUserProfile: () => null,
-        saveUserProfile: () => {},
+        saveUserProfile: () => { },
         getJoinedGroup: () => null,
-        resetOrgSelectionForNewUser: () => {},
+        resetOrgSelectionForNewUser: () => { },
       },
-      
+
       // Wallet
       wallet: {
-        renderWallet: () => {},
-        updateWalletBrief: () => {},
-        refreshOrgPanel: () => {},
-        refreshSrcAddrList: () => {},
-        handleAddToAddress: async () => {},
-        handleZeroAddress: () => {},
-        initAddressModal: () => {},
-        showAddrModal: () => {},
-        hideAddrModal: () => {},
-        initTransferModeTabs: () => {},
-        rebuildAddrList: () => {},
-        initRefreshSrcAddrList: () => {},
-        initChangeAddressSelects: () => {},
-        initRecipientCards: () => {},
-        initAdvancedOptions: () => {},
-        showUtxoDetail: () => {},
-        showTxCerDetail: () => {},
+        renderWallet: () => { },
+        updateWalletBrief: () => { },
+        refreshOrgPanel: () => { },
+        refreshSrcAddrList: () => { },
+        initAddressModal: () => { },
+        showAddrModal: () => { },
+        hideAddrModal: () => { },
+        initTransferModeTabs: () => { },
+        rebuildAddrList: () => { },
+        initRefreshSrcAddrList: () => { },
+        initChangeAddressSelects: () => { },
+        initRecipientCards: () => { },
+        initAdvancedOptions: () => { },
+        showUtxoDetail: () => { },
+        showTxCerDetail: () => { },
       },
-      
+
       // UI
       ui: {
-        showToast: () => {},
-        showSuccessToast: () => {},
-        showErrorToast: () => {},
-        showWarningToast: () => {},
-        showInfoToast: () => {},
-        showMiniToast: () => {},
-        showUnifiedLoading: () => {},
-        showUnifiedSuccess: () => {},
-        hideUnifiedOverlay: () => {},
-        showModalTip: () => {},
+        showToast: () => { },
+        showSuccessToast: () => { },
+        showErrorToast: () => { },
+        showWarningToast: () => { },
+        showInfoToast: () => { },
+        showMiniToast: () => { },
+        showUnifiedLoading: () => { },
+        showUnifiedSuccess: () => { },
+        hideUnifiedOverlay: () => { },
+        showModalTip: () => { },
         copyToClipboard: async () => false,
-        updateHeaderUser: () => {},
-        announce: () => {},
-        setAriaLabel: () => {},
-        makeAccessibleButton: () => {},
+        updateHeaderUser: () => { },
+        announce: () => { },
+        setAriaLabel: () => { },
+        makeAccessibleButton: () => { },
         showLoading: () => '',
-        hideLoading: () => {},
+        hideLoading: () => { },
         withLoading: async (fn) => fn(),
-        showElementLoading: () => {},
-        hideElementLoading: () => {},
+        showElementLoading: () => { },
+        hideElementLoading: () => { },
       },
-      
+
       // Charts
       charts: {
-        updateWalletChart: () => {},
-        initWalletChart: () => {},
-        initWalletStructToggle: () => {},
-        initTxDetailModal: () => {},
-        updateWalletStruct: () => {},
-        cleanupWalletChart: () => {},
-        cleanupNetworkChart: () => {},
+        updateWalletChart: () => { },
+        initWalletChart: () => { },
+        initWalletStructToggle: () => { },
+        initTxDetailModal: () => { },
+        updateWalletStruct: () => { },
+        cleanupWalletChart: () => { },
+        cleanupNetworkChart: () => { },
       },
-      
+
       // Transaction
       transaction: {
         buildNewTX: async () => null,
         exchangeRate: 1,
-        initTransferSubmit: () => {},
+        initTransferSubmit: () => { },
       },
-      
+
       // Crypto
       crypto: {
         bytesToHex: () => '',
@@ -141,7 +139,7 @@ export function initNamespace(): PanguPayNamespace {
         encryptPrivateKey: async () => '',
         decryptPrivateKey: async () => '',
         migrateToEncrypted: async () => false,
-        clearLegacyKey: () => {},
+        clearLegacyKey: () => { },
         getPrivateKey: () => null,
         verifyPassword: async () => false,
         changePassword: async () => false,
@@ -154,45 +152,45 @@ export function initNamespace(): PanguPayNamespace {
         checkAndPromptMigration: async () => false,
         saveUserWithEncryption: async () => false,
       },
-      
+
       // Utils
       utils: {
-        wait: async () => {},
+        wait: async () => { },
         escapeHtml: (s) => s,
         createElement: () => document.createElement('div'),
         validateTransferAmount: () => ({ valid: false, error: '' }),
         validateAddress: () => ({ valid: false, error: '' }),
         validatePrivateKey: () => ({ valid: false, error: '' }),
         validateOrgId: () => ({ valid: false, error: '' }),
-        createSubmissionGuard: () => ({ check: () => true, release: () => {} }),
+        createSubmissionGuard: () => ({ check: () => true, release: () => { } }),
         withSubmissionGuard: async (fn) => fn(),
         fetchWithTimeout: async () => new Response(),
         fetchWithRetry: async () => new Response(),
         secureFetch: async () => new Response(),
         secureFetchWithRetry: async () => new Response(),
         withErrorBoundary: (fn) => fn,
-        reportError: () => {},
+        reportError: () => { },
         debounce: (fn) => fn,
         throttle: (fn) => fn,
-        delegate: () => () => {},
+        delegate: () => () => { },
       },
-      
+
       // Performance
       performance: {
-        scheduleBatchUpdate: () => {},
-        flushBatchUpdates: () => {},
-        clearBatchUpdates: () => {},
+        scheduleBatchUpdate: () => { },
+        flushBatchUpdates: () => { },
+        clearBatchUpdates: () => { },
         rafDebounce: (fn) => fn,
         rafThrottle: (fn) => fn,
       },
-      
+
       // Events
       events: {
         globalEventManager: null as any,
         createEventManager: () => ({} as any),
-        cleanupPageListeners: () => {},
+        cleanupPageListeners: () => { },
       },
-      
+
       // State
       state: {
         store: null as any,
@@ -200,33 +198,33 @@ export function initNamespace(): PanguPayNamespace {
         selectRoute: () => '',
         selectTheme: () => 'light',
         selectLanguage: () => 'zh-CN',
-        setUser: () => {},
-        setRoute: () => {},
-        setThemeState: () => {},
-        setLanguageState: () => {},
-        setLoading: () => {},
-        setModalOpen: () => {},
+        setUser: () => { },
+        setRoute: () => { },
+        setThemeState: () => { },
+        setLanguageState: () => { },
+        setLoading: () => { },
+        setModalOpen: () => { },
       },
-      
+
       // Form
       form: {
-        FormValidator: class {} as any,
+        FormValidator: class { } as any,
         validators: {} as any,
-        addInlineValidation: () => () => {},
+        addInlineValidation: () => () => { },
         withTransaction: async (fn) => fn(),
         createCheckpoint: () => '',
         restoreCheckpoint: () => false,
-        enableFormAutoSave: () => () => {},
+        enableFormAutoSave: () => () => { },
       },
-      
+
       // ScreenLock
       screenLock: {
-        initScreenLock: () => {},
-        lockScreen: () => {},
+        initScreenLock: () => { },
+        lockScreen: () => { },
         unlockScreen: () => false,
         isScreenLocked: () => false,
       },
-      
+
       // Template
       template: {
         templateLoader: null as any,
@@ -235,42 +233,42 @@ export function initNamespace(): PanguPayNamespace {
         getAllContainerIds: () => [],
         lazyLoader: null as any,
       },
-      
+
       // Network
       network: {
         isOnline: () => true,
-        onOnlineStatusChange: () => () => {},
-        checkForUpdates: async () => {},
+        onOnlineStatusChange: () => () => { },
+        checkForUpdates: async () => { },
       },
-      
+
       // Page initializers (lazy loaded)
       pages: {
-        initWelcomePage: async () => {},
-        initEntryPage: async () => {},
-        initLoginPage: async () => {},
-        initNewUserPage: async () => {},
-        initSetPasswordPage: async () => {},
-        initImportPage: async () => {},
-        initMainPage: async () => {},
-        initJoinGroupPage: async () => {},
-        initProfilePage: async () => {},
-        initGroupDetailPage: async () => {},
-        initHistoryPage: async () => {},
-        updateWelcomeButtons: async () => {},
-        resetLoginPageState: async () => {},
-        startInquiryAnimation: async () => {},
-        resetInquiryState: async () => {},
-        resetCreatingFlag: async () => {},
-        resetImportState: async () => {},
-        handleMainRoute: async () => {},
-        updateGroupDetailDisplay: async () => {},
+        initWelcomePage: async () => { },
+        initEntryPage: async () => { },
+        initLoginPage: async () => { },
+        initNewUserPage: async () => { },
+        initSetPasswordPage: async () => { },
+        initImportPage: async () => { },
+        initMainPage: async () => { },
+        initJoinGroupPage: async () => { },
+        initProfilePage: async () => { },
+        initGroupDetailPage: async () => { },
+        initHistoryPage: async () => { },
+        updateWelcomeButtons: async () => { },
+        resetLoginPageState: async () => { },
+        startInquiryAnimation: async () => { },
+        resetInquiryState: async () => { },
+        resetCreatingFlag: async () => { },
+        resetImportState: async () => { },
+        handleMainRoute: async () => { },
+        updateGroupDetailDisplay: async () => { },
       },
-      
+
       // Version info
       version: '1.0.0',
     };
   }
-  
+
   return window.PanguPay;
 }
 

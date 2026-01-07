@@ -72,6 +72,7 @@ export default {
   'encryption.wrongPasswordRetry': '密码错误，请重新输入',
   'encryption.maxRetriesExceeded': '密码错误次数过多，请稍后再试',
   'encryption.decryptForTx': '构造交易需要使用您的账户私钥进行签名。请输入密码解锁私钥。',
+  'encryption.exportRequiresPassword': '导出私钥需要验证密码以确保安全',
   'encryption.passwordPlaceholder': '请输入您的密码',
 
   // 页面标题

@@ -13,10 +13,11 @@
  */
 
 import { t } from '../i18n/index.js';
+import { IS_DEV } from '../config/constants';
 import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
 import { store, selectUser, setUser } from '../utils/store.js';
 import { readAddressInterest } from '../utils/helpers.js';
-import { getActionModalElements } from '../ui/modal';
+import { getActionModalElements, showConfirmModal } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast.js';
 import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
@@ -26,7 +27,7 @@ import { DOM_IDS } from '../config/domIds';
 import { scheduleBatchUpdate } from '../utils/performanceMode.js';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { globalEventManager } from '../utils/eventUtils.js';
-import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptionUI';
+import { encryptAndSavePrivateKey, hasEncryptedKey, showPasswordPrompt, getDecryptedPrivateKey } from '../utils/keyEncryptionUI';
 import {
   showAddressListSkeleton,
   showSrcAddrSkeleton,
@@ -587,27 +588,20 @@ export function renderWallet(): void {
             </div>
           ` : ''}
           <div class="addr-card-actions">
-            <button class="addr-action-btn addr-action-btn--primary btn-add" data-action="addToAddress" data-addr="${a}" title="${t('address.add')}">
-              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-              ${t('address.add')}
+            <button class="addr-action-btn addr-action-btn--secondary btn-export" data-action="exportPrivateKey" data-addr="${a}" title="${t('wallet.exportPrivateKey')}">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              ${t('wallet.exportPrivateKey')}
             </button>
-            <button class="addr-action-btn addr-action-btn--secondary btn-zero" data-action="zeroAddress" data-addr="${a}" title="${t('address.clear')}">
-              <svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none"><path d="M3 6h18"></path><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-              ${t('address.clear')}
+            <button class="addr-action-btn addr-action-btn--danger btn-delete" data-action="deleteAddress" data-addr="${a}" title="${t('wallet.deleteAddress')}">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              ${t('wallet.deleteAddress')}
             </button>
-            <div class="addr-ops-container"></div>
           </div>
         </div>
       </div>
     `;
 
     renderInto(item, template);
-
-    // Add operations menu (also uses event delegation)
-    const metaEl = item.querySelector('.addr-ops-container');
-    if (metaEl) {
-      addAddressOperationsMenu(metaEl as HTMLElement, a);
-    }
 
     // Append to fragment instead of directly to DOM
     fragment.appendChild(item);
@@ -675,12 +669,7 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
  * 
  * If user is NOT in an organization, it will just delete locally.
  */
-export function handleDeleteAddress(address: string): void {
-  const modal = document.getElementById(DOM_IDS.confirmDelModal);
-  const okBtn = document.getElementById(DOM_IDS.confirmDelOk);
-  const cancelBtn = document.getElementById(DOM_IDS.confirmDelCancel);
-  const textEl = document.getElementById(DOM_IDS.confirmDelText);
-
+export async function handleDeleteAddress(address: string): Promise<void> {
   // Close any open ops menus
   closeAllOpsMenus();
 
@@ -700,11 +689,19 @@ export function handleDeleteAddress(address: string): void {
   if (balance > 0) {
     confirmText = `⚠️ 该地址仍有 ${balance} ${coinType} 余额，删除后将无法直接访问这些资产！\n\n${confirmText}`;
   }
-  if (textEl) textEl.textContent = confirmText;
-  if (modal) modal.classList.remove('hidden');
+
+  // Use unified confirm modal with DANGER style
+  const confirmed = await showConfirmModal(
+    t('wallet.deleteAddress', '删除地址'), // Title
+    confirmText,
+    t('transfer.delete', '删除'), // Delete button
+    t('common.cancel', '取消'), // Cancel button
+    true // isDanger = true (Red button)
+  );
+
+  if (!confirmed) return;
 
   const doDel = async () => {
-    if (modal) modal.classList.add('hidden');
     const current = getCurrentUser();
     if (!current) return;
 
@@ -811,14 +808,7 @@ export function handleDeleteAddress(address: string): void {
     );
   };
 
-  const cancel = () => {
-    if (modal) modal.classList.add('hidden');
-    okBtn?.removeEventListener('click', doDel);
-    cancelBtn?.removeEventListener('click', cancel);
-  };
-
-  okBtn?.addEventListener('click', doDel, { once: true });
-  cancelBtn?.addEventListener('click', cancel, { once: true });
+  await doDel();
 }
 
 
@@ -862,40 +852,58 @@ export function toggleAddrCard(address: string, element: HTMLElement): void {
     card.classList.toggle('expanded');
   }
 }
-
 /**
  * Handle private key export
  * Exported for use by event delegation system
+ * 
+ * Requires password verification before displaying private key.
+ * Uses 5-minute password cache to avoid repeated prompts.
  */
-export function handleExportPrivateKey(address: string): void {
+export async function handleExportPrivateKey(address: string): Promise<void> {
   const u = getCurrentUser();
   const key = String(address).toLowerCase();
-  let priv = '';
 
   // Close any open ops menus
   closeAllOpsMenus();
 
-  if (u) {
-    const map = u.wallet?.addressMsg || {};
-    let found = map[address] || map[key] || null;
+  if (!u) {
+    showErrorToast(t('wallet.noUser') || '未找到用户');
+    return;
+  }
 
-    if (!found) {
-      for (const k in map) {
-        if (String(k).toLowerCase() === key) {
-          found = map[k];
-          break;
-        }
+  // Step 1: Password verification (uses 5-minute cache)
+  const password = await showPasswordPrompt({
+    title: t('encryption.enterPassword') || '输入密码',
+    description: t('encryption.exportRequiresPassword') || '导出私钥需要验证密码'
+  });
+
+  if (!password) {
+    // User cancelled
+    return;
+  }
+
+  // Step 2: Get the private key
+  let priv = '';
+  const map = u.wallet?.addressMsg || {};
+  let found = map[address] || map[key] || null;
+
+  if (!found) {
+    for (const k in map) {
+      if (String(k).toLowerCase() === key) {
+        found = map[k];
+        break;
       }
-    }
-
-    // AddressMetadata interface includes privHex field
-    if (found && found.privHex) {
-      priv = found.privHex;
-    } else if (u.address && String(u.address).toLowerCase() === key) {
-      priv = (u.keys?.privHex) || u.privHex || '';
     }
   }
 
+  // AddressMetadata interface includes privHex field
+  if (found && found.privHex) {
+    priv = found.privHex;
+  } else if (u.address && String(u.address).toLowerCase() === key) {
+    priv = (u.keys?.privHex) || u.privHex || '';
+  }
+
+  // Step 3: Display the private key modal
   const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
 
   const keyRow = document.getElementById(DOM_IDS.successKeyRow);
@@ -921,6 +929,7 @@ export function handleExportPrivateKey(address: string): void {
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(priv).then(() => {
           copyBtn.classList.add('copied');
+          showSuccessToast(t('wallet.copied') || '已复制');
           setTimeout(() => {
             copyBtn.classList.remove('copied');
           }, 2000);
@@ -934,6 +943,7 @@ export function handleExportPrivateKey(address: string): void {
           document.execCommand('copy');
           document.body.removeChild(textarea);
           copyBtn.classList.add('copied');
+          showSuccessToast(t('wallet.copied') || '已复制');
           setTimeout(() => {
             copyBtn.classList.remove('copied');
           }, 2000);
@@ -1067,201 +1077,6 @@ function restoreExpandedAddresses(addresses: string[]): void {
   });
 }
 
-/**
- * Handle add balance to address
- * 创建逼真的测试 UTXO 数据，包含完整的交易结构
- * 
- * 【测试模式】新增的 UTXO 会被自动锁定，用于测试锁定 UI
- */
-export function handleAddToAddress(address: string): void {
-  const current = getCurrentUser();
-  if (!current?.wallet?.addressMsg) return;
-  const u = deepClone(current);
-
-  const key = String(address).toLowerCase();
-  const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
-  if (!found) return;
-
-  const typeId = Number(found.type ?? 0);
-  const inc = typeId === 1 ? 1 : (typeId === 2 ? 5 : 10);
-
-  // Ensure structures exist
-  found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
-  found.utxos = found.utxos || {};
-
-  // 获取地址公钥用于构造 TXOutput
-  const pubXHex = found.pubXHex || '';
-  const pubYHex = found.pubYHex || '';
-  const guarGroupID = u.orgNumber || u.guarGroup?.groupID || '';
-
-  // 生成逼真的交易数据
-  const txid = generateRandomHex(8); // 16字符的TXID
-  const prevTxid = generateRandomHex(8); // 模拟前置交易ID
-
-  // 模拟逼真的区块位置 (随机生成合理范围内的值)
-  const blockNum = Math.floor(Math.random() * 10000) + 1000; // 区块号 1000-11000
-  const indexX = Math.floor(Math.random() * 50); // 担保交易序号 0-49
-  const indexY = Math.floor(Math.random() * 10); // 内部序号 0-9
-
-  // 模拟时间戳 (最近7天内的随机时间)
-  const now = Date.now();
-  const sevenDaysAgo = now - 7 * 24 * 60 * 60 * 1000;
-  const randomTime = Math.floor(Math.random() * (now - sevenDaysAgo)) + sevenDaysAgo;
-
-  // 构造逼真的 TXOutput
-  const txOutput = {
-    ToAddress: key,
-    ToValue: inc,
-    ToGuarGroupID: guarGroupID,
-    ToPublicKey: {
-      Curve: 'P256',
-      X: pubXHex ? BigInt('0x' + pubXHex).toString() : '0',
-      Y: pubYHex ? BigInt('0x' + pubYHex).toString() : '0',
-      XHex: pubXHex,
-      YHex: pubYHex
-    },
-    ToInterest: Math.random() * 0.5, // 随机小额利息
-    Type: typeId,
-    ToCoinType: typeId,
-    ToPeerID: '',
-    IsPayForGas: false,
-    IsGuarMake: false,
-    IsCrossChain: false
-  };
-
-  // 构造逼真的 TXInputNormal (模拟这笔 UTXO 的来源)
-  const mockInput = {
-    FromTXID: prevTxid,
-    FromTxPosition: {
-      Blocknum: blockNum - Math.floor(Math.random() * 100) - 1,
-      IndexX: Math.floor(Math.random() * 30),
-      IndexY: Math.floor(Math.random() * 5),
-      IndexZ: 0
-    },
-    FromAddress: generateRandomHex(20), // 模拟来源地址
-    IsGuarMake: false,
-    IsCommitteeMake: false,
-    IsCrossChain: false,
-    InputSignature: generateMockSignature(),
-    TXOutputHash: generateRandomHex(32) // 32字节哈希
-  };
-
-  // 构造完整的 UTXOData
-  const utxoKey = `${txid}_0`;
-  const utxoData: UTXOData = {
-    UTXO: {
-      TXID: txid,
-      TXType: 0,
-      TXInputsNormal: [mockInput],
-      TXInputsCertificate: [],
-      TXOutputs: [txOutput],
-      InterestAssign: {
-        Gas: 0.1, // 模拟Gas费
-        Output: 0,
-        BackAssign: { [key]: 1.0 } // 利息回退给当前地址
-      },
-      ExTXCerID: [],
-      Data: []
-    },
-    TXID: txid, // 兼容旧字段
-    Value: inc,
-    Type: typeId,
-    Time: randomTime,
-    Position: {
-      Blocknum: blockNum,
-      IndexX: indexX,
-      IndexY: indexY,
-      IndexZ: 0
-    },
-    IsTXCerUTXO: false,
-    TXOutputHash: generateRandomHex(32) // 输出哈希
-  };
-
-  // Add to UTXOs (no type assertion needed)
-  found.utxos![utxoKey] = utxoData;
-
-  // 【测试模式】锁定新增的 UTXO，用于测试锁定 UI
-  lockUTXOs([{
-    utxoId: utxoKey,
-    address: key,
-    value: inc,
-    type: typeId
-  }], `test_tx_${txid}`);
-  console.info('[测试] 已锁定新增的 UTXO:', utxoKey);
-
-  // Update Balance with type-safe reduction
-  const newUtxoVal = Object.values(found.utxos!).reduce((sum, utxo) => sum + utxo.Value, 0);
-  found.value.utxoValue = newUtxoVal;
-  found.value.totalValue = newUtxoVal + Number(found.value.txCerValue || 0);
-  found.estInterest = Number(found.estInterest || 0) + 10;
-  found.gas = Number(found.estInterest || 0);
-
-  // Recalculate Wallet ValueDivision
-  recalculateWalletValue(u);
-
-  // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
-  setUser(u);
-
-  // Legacy persistence for backward compatibility (Store persistence will also run)
-  saveUser(u);
-
-  // 保存展开状态，重新渲染后恢复
-  const expandedAddrs = getExpandedAddresses();
-  renderWallet();
-  restoreExpandedAddresses(expandedAddrs);
-
-  // Show toast notification (not a state-driven UI element)
-  const coinType = getCoinName(typeId);
-  showMiniToast(`+${inc} ${coinType} (已锁定)`, 'success');
-
-  // All other UI updates (currency display, address cards, charts, etc.) 
-  // are handled by store.subscribe() in bootstrap.ts
-}
-
-
-/**
- * Handle clear address balance
- */
-export function handleZeroAddress(address: string): void {
-  const current = getCurrentUser();
-  if (!current?.wallet?.addressMsg) return;
-  const u = deepClone(current);
-
-  const key = String(address).toLowerCase();
-  const found = u.wallet.addressMsg[address] || u.wallet.addressMsg[key];
-  if (!found) return;
-
-  // Clear UTXOs
-  found.utxos = {};
-  found.value = found.value || { totalValue: 0, utxoValue: 0, txCerValue: 0 };
-  found.value.utxoValue = 0;
-  found.value.totalValue = Number(found.value.txCerValue || 0);
-  found.estInterest = 0;
-  found.gas = 0;
-
-  // 清除该地址的锁定 UTXO
-  clearLockedUTXOsByAddress(key);
-
-  // Recalculate ValueDivision
-  recalculateWalletValue(u);
-
-  // Single Source of Truth: Only update Store, let subscriptions handle all UI updates
-  setUser(u);
-
-  // Legacy persistence for backward compatibility
-  saveUser(u);
-
-  // 保存展开状态，重新渲染后恢复
-  const expandedAddrs = getExpandedAddresses();
-  renderWallet();
-  restoreExpandedAddresses(expandedAddrs);
-
-  // Show toast notification (not a state-driven UI element)
-  showMiniToast(t('address.clear'), 'info');
-
-  // All other UI updates (currency display, address cards, charts, etc.) 
-  // are handled by store.subscribe() in bootstrap.ts
-}
 
 /**
  * Recalculate wallet value division
@@ -1629,6 +1444,9 @@ async function handleImportPreviewConfirm(): Promise<void> {
 
     hideUnifiedOverlay();
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
+
+    // Auto-refresh wallet balances
+    refreshWalletBalances().catch(console.error);
 
   } catch (error) {
     hideUnifiedOverlay();

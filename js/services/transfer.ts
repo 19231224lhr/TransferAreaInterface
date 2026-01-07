@@ -331,12 +331,8 @@ export function initTransferSubmit(): void {
 
     // Snapshot key UI elements so we can restore to a stable state if something throws unexpectedly.
     const snapTxErr = txErr ? createDOMSnapshot(txErr) : null;
-    const txResultActions = document.getElementById(DOM_IDS.txResultActions);
-    const viewTxInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
-    const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
-    const snapActions = txResultActions ? createDOMSnapshot(txResultActions) : null;
-    const snapViewTx = viewTxInfoBtn ? createDOMSnapshot(viewTxInfoBtn) : null;
-    const snapViewBuild = viewBuildInfoBtn ? createDOMSnapshot(viewBuildInfoBtn) : null;
+
+
 
     try {
       const { walletMap, walletGasTotal } = getWalletSnapshot();
@@ -347,8 +343,7 @@ export function initTransferSubmit(): void {
       }
 
       // Hide previous transaction result buttons
-      if (txResultActions) txResultActions.classList.add('hidden');
-      if (viewTxInfoBtn) viewTxInfoBtn.classList.add('hidden');
+
 
       const sel = Array.from(addrList!.querySelectorAll('input[type="checkbox"]'))
         .filter((x: any) => x.checked)
@@ -708,14 +703,7 @@ export function initTransferSubmit(): void {
         return;
       }
 
-      // Save transaction structure and show view button
-      if (txResultActions) {
-        txResultActions.classList.remove('hidden');
-        const viewBuildInfoBtn = document.getElementById(DOM_IDS.viewBuildInfoBtn);
-        if (viewBuildInfoBtn) {
-          viewBuildInfoBtn.dataset.txData = JSON.stringify(build, null, 2);
-        }
-      }
+
 
       // ========== 直接构造交易（合并原 buildTxBtn 的功能）==========
       console.log('[构造交易] ========== 开始构造 ==========');
@@ -883,15 +871,7 @@ export function initTransferSubmit(): void {
       }
 
       // Save transaction data and show view button
-      const txInfoBtn = document.getElementById(DOM_IDS.viewTxInfoBtn);
-      if (txInfoBtn) {
-        if (userNewTX) {
-          txInfoBtn.dataset.txData = serializeUserNewTX(userNewTX);
-        } else if (aggregateGTX) {
-          txInfoBtn.dataset.txData = JSON.stringify(aggregateGTX, null, 2);
-        }
-        txInfoBtn.classList.remove('hidden');
-      }
+
 
       // ========== Step 2: 确认并发送交易 ==========
       // 获取交易ID用于显示
@@ -1304,9 +1284,10 @@ export function initTransferSubmit(): void {
     } catch (err: any) {
       // Restore stable UI state and storage snapshot
       try { if (snapTxErr) restoreFromSnapshot(snapTxErr); } catch (_) { }
-      try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
-      try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
-      try { if (snapViewBuild) restoreFromSnapshot(snapViewBuild); } catch (_) { }
+      try { if (snapTxErr) restoreFromSnapshot(snapTxErr); } catch (_) { }
+      // try { if (snapActions) restoreFromSnapshot(snapActions); } catch (_) { }
+      // try { if (snapViewTx) restoreFromSnapshot(snapViewTx); } catch (_) { }
+      // try { if (snapViewBuild) restoreFromSnapshot(snapViewBuild); } catch (_) { }
       try { restoreCheckpoint(checkpointId); } catch (_) { }
 
       const msg = err?.message || String(err);

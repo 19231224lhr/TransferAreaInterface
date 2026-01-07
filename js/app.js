@@ -144,27 +144,25 @@ import { initFooter, cleanupFooter } from './ui/footer.js';
 
 // Services
 import { newUser, importFromPrivHex, addNewSubWallet } from './services/account';
-import { 
-  renderWallet, 
-  refreshOrgPanel, 
-  handleAddToAddress, 
-  handleZeroAddress, 
+import {
+  renderWallet,
+  refreshOrgPanel,
   handleDeleteAddress,
   handleExportPrivateKey,
   toggleOpsMenu,
   toggleAddrCard,
   closeAllOpsMenus,
   initGlobalClickHandler,
-  initAddressModal, 
-  showAddrModal, 
-  hideAddrModal, 
-  initTransferModeTabs, 
-  rebuildAddrList, 
-  refreshSrcAddrList, 
-  initRefreshSrcAddrList, 
-  initChangeAddressSelects, 
-  initRecipientCards, 
-  initAdvancedOptions 
+  initAddressModal,
+  showAddrModal,
+  hideAddrModal,
+  initTransferModeTabs,
+  rebuildAddrList,
+  refreshSrcAddrList,
+  initRefreshSrcAddrList,
+  initChangeAddressSelects,
+  initRecipientCards,
+  initAdvancedOptions
 } from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit } from './services/transfer';
@@ -341,8 +339,6 @@ Object.assign(PP.wallet, {
   renderWallet,
   updateWalletBrief: createLazyPageFn('entry', 'updateWalletBrief'),
   refreshOrgPanel,
-  handleAddToAddress,
-  handleZeroAddress,
   initAddressModal,
   showAddrModal,
   hideAddrModal,
@@ -556,16 +552,6 @@ registerAction('reload', () => {
 // Toggle address card expand/collapse
 registerAction('toggleAddrCard', (el, data) => {
   toggleAddrCard(data.addr, el);
-});
-
-// Add balance to address
-registerAction('addToAddress', (el, data) => {
-  handleAddToAddress(data.addr);
-});
-
-// Clear address balance
-registerAction('zeroAddress', (el, data) => {
-  handleZeroAddress(data.addr);
 });
 
 // Toggle operations menu

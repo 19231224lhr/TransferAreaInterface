@@ -65,8 +65,6 @@ export interface WalletNamespace {
   updateWalletBrief: () => void;
   refreshOrgPanel: () => void;
   refreshSrcAddrList: () => void;
-  handleAddToAddress: (addr: string) => Promise<void>;
-  handleZeroAddress: () => void;
   initAddressModal: () => void;
   showAddrModal: (mode: 'create' | 'import') => void;
   hideAddrModal: () => void;
@@ -285,7 +283,7 @@ export interface PanguPayNamespace {
   template: TemplateNamespace;
   network: NetworkNamespace;
   pages: PagesNamespace;
-  
+
   // Version info
   version: string;
 }

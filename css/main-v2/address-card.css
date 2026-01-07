@@ -243,14 +243,27 @@
   transform: translateY(0) !important;
 }
 
-.main-v2 .addr-action-btn--secondary {
-  background: var(--neutral-100) !important;
-  color: var(--text-secondary) !important;
-  box-shadow: none !important;
+.main-v2 .addr-action-btn--secondary.btn-export {
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
 }
 
-.main-v2 .addr-action-btn--secondary:hover {
-  background: var(--neutral-200) !important;
+.main-v2 .addr-action-btn--secondary.btn-export:hover {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  color: #15803d !important;
+  border-color: #86efac !important;
+}
+
+.main-v2 .addr-action-btn--danger.btn-delete {
+  background: var(--neutral-100) !important;
+  color: var(--text-secondary) !important;
+}
+
+.main-v2 .addr-action-btn--danger.btn-delete:hover {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
 }
 
 /* 操作菜单 */
