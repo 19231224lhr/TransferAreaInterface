@@ -7,7 +7,7 @@
     <a href="https://github.com/19231224lhr/TransferAreaInterface/issues"><img src="https://img.shields.io/github/issues/19231224lhr/TransferAreaInterface?color=success&style=flat-square" alt="Issues"></a>
     <a href="https://github.com/19231224lhr/TransferAreaInterface/network/members"><img src="https://img.shields.io/github/forks/19231224lhr/TransferAreaInterface?color=important&style=flat-square" alt="Forks"></a>
     <a href="https://github.com/19231224lhr/TransferAreaInterface/stargazers"><img src="https://img.shields.io/github/stars/19231224lhr/TransferAreaInterface?color=blueviolet&style=flat-square" alt="Stars"></a>
-    <a href="https://github.com/19231224lhr/TransferAreaInterface/blob/main/LICENSE"><img src="https://img.shields.io/github/license/19231224lhr/TransferAreaInterface?color=blue&style=flat-square" alt="License"></a>
+    <a href="#"><img src="https://img.shields.io/badge/license-Proprietary-red.svg" alt="License"></a>
   </p>
   
   <p>
@@ -27,7 +27,7 @@
 *   [🚀 快速开始](#-快速开始)
 *   [📚 开发文档](#-开发文档)
 *   [👨‍💻 核心开发者](#-核心开发者)
-*   [📄 开源协议](#-开源协议)
+*   [⚖️ 版权协议](#-版权协议)
 
 ---
 
@@ -171,6 +171,11 @@ npm run build
 
 ---
 
-## 📄 开源协议
+## ⚖️ 版权协议
 
-本项目采用 **MIT License** 开源授权。
+本项目为 **闭源软件 (Proprietary Software)**，受版权法保护。
+
+**版权所有 © 2024-2026 Pangu System Team. 保留所有权利。**
+
+严禁未经授权的复制、分发、修改或用于商业用途。
+本项目代码仅供内部开发、测试与审计使用。任何超出授权范围的使用行为均视为侵权。
