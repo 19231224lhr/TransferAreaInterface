@@ -292,6 +292,11 @@ export async function createNewAddressOnBackendWithPriv(
   return await sendNewAddressRequestWithPriv(newAddress, pubXHex, pubYHex, addressType, accountPrivHex);
 }
 
+function isAddressRegistrationReady(): boolean {
+  const hash = window.location.hash || '';
+  return hash.includes('/main') || hash.includes('/inquiry-main');
+}
+
 /**
  * Register a retail address on ComNode for address-group lookups
  */
@@ -303,6 +308,11 @@ export async function registerAddressOnComNode(
   groupID: string = ''
 ): Promise<AddressResult<RegisterAddressResponse>> {
   try {
+    if (!isAddressRegistrationReady()) {
+      console.info('[Address] Deferring ComNode registration until main/inquiry-main');
+      return { success: true, data: { success: true, message: 'Deferred' } };
+    }
+
     if (!address) {
       return { success: false, error: t('error.invalidAddress', 'Invalid address') };
     }
