@@ -32,32 +32,32 @@ export function setTheme(theme, showNotification = true) {
     console.warn('Invalid theme:', theme);
     return;
   }
-  
+
   // Update current theme
   currentTheme = theme;
-  
+
   // Sync to centralized store for state management
   setThemeState(theme);
-  
+
   // Update DOM
   document.documentElement.setAttribute('data-theme', theme);
-  
+
   // Save to localStorage
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme);
   } catch (e) {
     console.warn('Failed to save theme setting:', e);
   }
-  
+
   // Update theme selector UI
   updateThemeSelectorUI();
-  
+
   // Show toast notification
   if (showNotification) {
-    const message = theme === 'dark' 
-      ? t('toast.theme.darkEnabled') 
+    const message = theme === 'dark'
+      ? t('toast.theme.darkEnabled')
       : t('toast.theme.lightEnabled');
-    showSuccessToast(message, t('common.success'));
+    showSuccessToast(message, t('common.success'), 1500);
   }
 }
 
@@ -86,7 +86,7 @@ export function loadThemeSetting() {
       }
     }
     document.documentElement.setAttribute('data-theme', currentTheme);
-    
+
     // Sync to centralized store for state management
     setThemeState(currentTheme);
   } catch (e) {
@@ -101,7 +101,7 @@ export function loadThemeSetting() {
 export function updateThemeSelectorUI() {
   const selector = document.getElementById(DOM_IDS.themeSelector);
   if (!selector) return;
-  
+
   const options = selector.querySelectorAll('.theme-option');
   options.forEach(opt => {
     const theme = opt.getAttribute('data-theme');
@@ -119,17 +119,17 @@ export function updateThemeSelectorUI() {
 export function initThemeSelector() {
   const selector = document.getElementById(DOM_IDS.themeSelector);
   if (!selector || selector.dataset._bind) return;
-  
+
   selector.addEventListener('click', (e) => {
     const option = e.target.closest('.theme-option');
     if (!option) return;
-    
+
     const theme = option.getAttribute('data-theme');
     if (theme && theme !== getCurrentTheme()) {
       setTheme(theme);
     }
   });
-  
+
   selector.dataset._bind = '1';
 }
 

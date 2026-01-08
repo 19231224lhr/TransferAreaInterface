@@ -116,6 +116,8 @@ export interface User {
   isInGroup?: boolean;
   /** Complete guarantor group boot message from backend */
   guarGroupBootMsg?: any;
+  /** Whether main-page address registration has been attempted */
+  mainAddressRegistered?: boolean;
 }
 
 /** User profile structure */
@@ -171,6 +173,9 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   }
   if (basic.guarGroupBootMsg !== undefined) {
     acc.guarGroupBootMsg = basic.guarGroupBootMsg;
+  }
+  if (basic.mainAddressRegistered !== undefined) {
+    acc.mainAddressRegistered = basic.mainAddressRegistered;
   }
   if (basic.txHistory !== undefined) {
     acc.txHistory = Array.isArray(basic.txHistory) ? [...basic.txHistory] : basic.txHistory;

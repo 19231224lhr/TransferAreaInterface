@@ -343,3 +343,20 @@
 .main-v2 .ops-item.danger:hover {
   background: rgba(239, 68, 68, 0.06);
 }
+
+/* ========================================
+   深色模式适配
+   ======================================== */
+[data-theme="dark"] .main-v2 .addr-action-btn--secondary.btn-export {
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.15) 0%, rgba(4, 120, 87, 0.15) 100%) !important;
+  color: #34d399 !important;
+  /* Emerald 400 */
+  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+}
+
+[data-theme="dark"] .main-v2 .addr-action-btn--secondary.btn-export:hover {
+  background: linear-gradient(135deg, rgba(6, 95, 70, 0.25) 0%, rgba(4, 120, 87, 0.25) 100%) !important;
+  color: #6ee7b7 !important;
+  /* Emerald 300 */
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}

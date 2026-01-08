@@ -86,6 +86,7 @@ export const API_ENDPOINTS = {
   COM_HEALTH: '/api/v1/com/health',
   COM_QUERY_ADDRESS: '/api/v1/com/query-address',
   COM_QUERY_ADDRESS_GROUP: '/api/v1/com/query-address-group',
+  COM_REGISTER_ADDRESS: '/api/v1/com/register-address',
   COM_SUBMIT_NOGUARGROUP_TX: '/api/v1/com/submit-noguargroup-tx',
   COM_UTXO_CHANGE: (committeeId: string) => `/api/v1/${committeeId}/com/utxo-change`
 } as const;

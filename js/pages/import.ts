@@ -12,10 +12,10 @@
 
 import { loadUser, saveUser, toAccount } from '../utils/storage';
 import { importFromPrivHex } from '../services/account';
-import { showErrorToast, showToast } from '../utils/toast.js';
+import { showErrorToast, showToast, showSuccessToast } from '../utils/toast.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { t } from '../i18n/index.js';
-import { wait } from '../utils/helpers.js';
+import { wait, copyToClipboard } from '../utils/helpers.js';
 import { updateWalletBrief } from './entry.js';
 import { updateHeaderUser } from '../ui/header.js';
 import { addInlineValidation, quickValidate } from '../utils/formValidator';
@@ -108,7 +108,7 @@ const stateBindings = {
     { selector: '#importCancelBtn', type: 'visible' as const }
   ],
   privKeyCollapsed: [
-    { selector: '#importPrivateKeyItem', type: 'class' as const, name: 'import-result-item--collapsed' }
+    { selector: '#importPrivateKeyItem', type: 'class' as const, name: 'collapsed' }
   ],
   accountId: [
     { selector: '#importAccountId', type: 'text' as const }
@@ -712,6 +712,27 @@ function bindEvents(): void {
   // 私钥折叠切换
   const importPrivateKeyToggle = document.getElementById(DOM_IDS.importPrivateKeyToggle);
   addEvent(importPrivateKeyToggle, 'click', handlePrivKeyToggle);
+
+  // 绑定复制按钮
+  const copyBtns = document.querySelectorAll('.import-copy-btn');
+  copyBtns.forEach(btn => {
+    addEvent(btn as HTMLElement, 'click', async (e) => {
+      e.stopPropagation();
+      const targetId = (btn as HTMLElement).dataset.copy;
+      const targetEl = targetId ? document.getElementById(targetId) : null;
+
+      if (targetEl && targetEl.textContent) {
+        const text = targetEl.textContent.trim();
+        const start = Date.now();
+        await copyToClipboard(text);
+
+        // Ensure at least 200ms feedback delay
+        if (Date.now() - start < 100) await wait(100);
+
+        showSuccessToast(t('wallet.copied') || '已复制');
+      }
+    });
+  });
 }
 
 /**

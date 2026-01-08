@@ -428,7 +428,7 @@ export function initTransferSubmit(): void {
         }
 
         // Amount validation using security.ts (require amount > 0)
-        const amountValidation = validateTransferAmount(val, { min: 0.00000001 });
+        const amountValidation = validateTransferAmount(val, { min: 0 });
         if (!amountValidation.valid) {
           showTxValidationError(amountValidation.error!, valEl, t('tx.amountError'));
           return;

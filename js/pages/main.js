@@ -13,9 +13,10 @@ import { initNetworkChart, cleanupNetworkChart } from '../ui/networkChart.js';
 import { DEFAULT_GROUP, GROUP_LIST } from '../config/constants.ts';
 import { DOM_IDS } from '../config/domIds';
 import { initComNodeEndpoint } from '../services/comNodeEndpoint.ts';
+import { registerAddressesOnMainEntry } from '../services/address';
 import { startAccountPolling, stopAccountPolling, isAccountPollingActive } from '../services/accountPolling';
 
-// 标记是否是首次进入 main 页面（用于自动刷新钱包余额）
+// 标记是否是首次进�?main 页面（用于自动刷新钱包余额）
 let isFirstMainPageVisit = true;
 
 // Re-export for convenience
@@ -34,7 +35,7 @@ export function resetFirstMainPageVisit() {
  * Processes any pending organization choice and renders wallet
  */
 export function handleMainRoute() {
-  // 首先显示骨架屏，提供更好的加载体验
+  // 首先显示骨架屏，提供更好的加载体�?
   showWalletSkeletons();
   
   // Initialize ComNode endpoint (query BootNode for ComNode port)
@@ -42,12 +43,16 @@ export function handleMainRoute() {
   // and subsequent API calls will use the cached endpoint
   initComNodeEndpoint().then(available => {
     if (available) {
-      console.info('[Main] ✓ ComNode endpoint initialized');
+      console.info('[Main] �?ComNode endpoint initialized');
     } else {
-      console.warn('[Main] ✗ ComNode endpoint not available');
+      console.warn('[Main] �?ComNode endpoint not available');
     }
   }).catch(err => {
-    console.error('[Main] ✗ Failed to initialize ComNode endpoint:', err);
+    console.error('[Main] �?Failed to initialize ComNode endpoint:', err);
+  });
+
+  registerAddressesOnMainEntry().catch(err => {
+    console.error('[Main] Address registration on entry failed:', err);
   });
   
   try {
@@ -125,21 +130,21 @@ export function handleMainRoute() {
   startAccountPolling();
   
   // 首次进入 main 页面时，自动刷新钱包余额（从后端查询最新数据）
-  // 这通常发生在用户从 inquiry-main 页面（加入组织后的加载动画）进入时
+  // 这通常发生在用户从 inquiry-main 页面（加入组织后的加载动画）进入�?
   if (isFirstMainPageVisit) {
     isFirstMainPageVisit = false;
     
-    // 延迟执行，确保 UI 渲染完成后再查询
+    // 延迟执行，确�?UI 渲染完成后再查询
     setTimeout(() => {
       console.info('[Main] First visit to main page, auto-refreshing wallet balances...');
       refreshWalletBalances().then(success => {
         if (success) {
-          console.info('[Main] ✓ Auto-refresh wallet balances completed');
+          console.info('[Main] �?Auto-refresh wallet balances completed');
         } else {
-          console.warn('[Main] ✗ Auto-refresh wallet balances failed');
+          console.warn('[Main] �?Auto-refresh wallet balances failed');
         }
       }).catch(err => {
-        console.error('[Main] ✗ Auto-refresh wallet balances error:', err);
+        console.error('[Main] �?Auto-refresh wallet balances error:', err);
       });
     }, 500);
   }
@@ -150,7 +155,7 @@ export function handleMainRoute() {
  */
 export function initMainPage() {
   handleMainRoute();
-  // 按钮事件已在 wallet.ts 的 renderWallet 中直接绑定
+  // 按钮事件已在 wallet.ts �?renderWallet 中直接绑�?
 }
 
 /**
@@ -214,3 +219,5 @@ function initNoOrgWarnBtn() {
     noOrgWarnBtn.dataset._bind = '1';
   }
 }
+
+

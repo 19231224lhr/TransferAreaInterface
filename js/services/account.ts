@@ -333,10 +333,11 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     console.info(`[Account] Generated new address: ${addr}`);
 
     // Import address service dynamically to avoid circular dependency
-    const { createNewAddressOnBackend, isUserInOrganization } = await import('./address');
+    const { createNewAddressOnBackend, isUserInOrganization, registerAddressOnComNode } = await import('./address');
 
     // If user is in organization, must sync with backend first
-    if (isUserInOrganization()) {
+    const inOrg = isUserInOrganization();
+    if (inOrg) {
       console.info('[Account] User is in organization, syncing address with backend...');
 
       // Hide loading temporarily to show password prompt if needed
@@ -391,6 +392,16 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     // Single Source of Truth: Update Store first, let subscriptions handle UI
     setUser(acc);
     saveUser(acc);
+
+    if (!inOrg) {
+      const registerResult = await registerAddressOnComNode(addr, pubXHex, pubYHex, privHex);
+      if (!registerResult.success) {
+        showErrorToast(
+          registerResult.error || t('error.unknownError'),
+          t('toast.addressRegisterFailed', 'Address registration failed')
+        );
+      }
+    }
 
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;

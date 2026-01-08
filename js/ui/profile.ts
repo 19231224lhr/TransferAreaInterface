@@ -31,20 +31,20 @@ import { DOM_IDS, idSelector } from '../config/domIds';
 interface ProfilePageState {
   // 登录状态
   isLoggedIn: boolean;
-  
+
   // 用户信息
   nickname: string;
   signature: string;
   accountId: string;
-  
+
   // 头像
   avatarUrl: string;
   hasAvatar: boolean;
-  
+
   // 字符计数
   nicknameCharCount: string;
   signatureCharCount: string;
-  
+
   // 保存状态
   isSaving: boolean;
 }
@@ -103,10 +103,10 @@ let eventCleanups: (() => void)[] = [];
  * 压缩图片
  */
 function compressImage(
-  dataUrl: string, 
-  maxWidth: number, 
-  maxHeight: number, 
-  quality: number, 
+  dataUrl: string,
+  maxWidth: number,
+  maxHeight: number,
+  quality: number,
   callback: (compressedUrl: string) => void
 ): void {
   const img = new Image();
@@ -114,7 +114,7 @@ function compressImage(
     const canvas = document.createElement('canvas');
     let width = img.width;
     let height = img.height;
-    
+
     // 计算缩放比例
     if (width > height) {
       if (width > maxWidth) {
@@ -127,10 +127,10 @@ function compressImage(
         height = maxHeight;
       }
     }
-    
+
     canvas.width = width;
     canvas.height = height;
-    
+
     const ctx = canvas.getContext('2d');
     if (ctx) {
       ctx.drawImage(img, 0, 0, width, height);
@@ -147,11 +147,11 @@ function updateAvatarPreview(avatarUrl: string | null, isLoggedIn: boolean): voi
   // 右侧小预览
   const avatarPreviewImg = document.getElementById(DOM_IDS.avatarPreviewImg) as HTMLImageElement | null;
   const avatarUploadPreview = document.getElementById(DOM_IDS.avatarUploadPreview);
-  
+
   // 左侧大预览
   const profileAvatarPreview = document.getElementById(DOM_IDS.profileAvatarPreview) as HTMLImageElement | null;
   const profileAvatarLarge = document.getElementById(DOM_IDS.profileAvatarLarge);
-  
+
   if (isLoggedIn && avatarUrl) {
     // 显示头像
     if (avatarPreviewImg && avatarUploadPreview) {
@@ -192,10 +192,10 @@ function updateAvatarPreview(avatarUrl: string | null, isLoggedIn: boolean): voi
  */
 function handleNicknameInput(): void {
   if (!pageState) return;
-  
+
   const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
   const nickname = nicknameInput?.value || '';
-  
+
   pageState.set({
     nickname: nickname || 'Amiya',
     nicknameCharCount: `${nickname.length}/20`
@@ -207,10 +207,10 @@ function handleNicknameInput(): void {
  */
 function handleSignatureInput(): void {
   if (!pageState) return;
-  
+
   const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
   const signature = signatureInput?.value || '';
-  
+
   pageState.set({
     signatureCharCount: `${signature.length}/50`
   });
@@ -223,38 +223,38 @@ function handleAvatarFileSelect(e: Event): void {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
-  
+
   // 验证文件类型
   const validTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
   if (!validTypes.includes(file.type)) {
     showErrorToast(t('toast.avatar.formatError') || '不支持的图片格式');
     return;
   }
-  
+
   // 验证文件大小 (最大 5MB)
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
     showErrorToast(t('toast.avatar.sizeError', { size: (file.size / 1024 / 1024).toFixed(2) }) || '图片太大');
     return;
   }
-  
+
   // 读取并预览
   const reader = new FileReader();
   reader.onload = (event) => {
     const dataUrl = event.target?.result as string;
-    
+
     // 压缩图片
     compressImage(dataUrl, 200, 200, 0.8, (compressedUrl) => {
       // 更新预览
       updateAvatarPreview(compressedUrl, true);
-      
+
       // 临时存储到页面数据
       const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
       if (avatarFileInput) {
         avatarFileInput.dataset.pendingAvatar = compressedUrl;
         avatarFileInput.dataset.removeAvatar = '';
       }
-      
+
       if (pageState) {
         pageState.set({ avatarUrl: compressedUrl, hasAvatar: true });
       }
@@ -272,7 +272,7 @@ function handleAvatarUploadClick(): void {
     showWarningToast(t('profile.loginRequired') || '请先登录', t('common.warning') || '警告');
     return;
   }
-  
+
   const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
   avatarFileInput?.click();
 }
@@ -286,10 +286,10 @@ function handleAvatarRemove(): void {
     showWarningToast(t('profile.loginRequired') || '请先登录', t('common.warning') || '警告');
     return;
   }
-  
+
   // 清除预览
   updateAvatarPreview(null, true);
-  
+
   // 标记移除
   const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
   if (avatarFileInput) {
@@ -297,7 +297,7 @@ function handleAvatarRemove(): void {
     avatarFileInput.dataset.pendingAvatar = '';
     avatarFileInput.dataset.removeAvatar = '1';
   }
-  
+
   if (pageState) {
     pageState.set({ avatarUrl: '', hasAvatar: false });
   }
@@ -315,17 +315,17 @@ function handleBackClick(): void {
  */
 function handleProfileSave(): void {
   if (!pageState) return;
-  
+
   const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
   const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
   const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput) as HTMLInputElement | null;
   const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn);
-  
+
   const nickname = nicknameInput?.value?.trim() || 'Amiya';
   const signature = signatureInput?.value?.trim() || t('profile.signature.placeholder') || '';
   const pendingAvatar = avatarFileInput?.dataset.pendingAvatar || null;
   const removeAvatar = avatarFileInput?.dataset.removeAvatar === '1';
-  
+
   // 验证昵称
   if (nickname.length === 0) {
     showErrorToast(t('validation.nickname.empty') || '昵称不能为空');
@@ -335,41 +335,41 @@ function handleProfileSave(): void {
     showErrorToast(t('validation.nickname.tooLong') || '昵称不能超过20个字符');
     return;
   }
-  
+
   // 验证签名
   if (signature.length > 50) {
     showErrorToast(t('validation.signature.tooLong') || '签名不能超过50个字符');
     return;
   }
-  
+
   // 获取当前资料
   const profile = loadUserProfile();
-  
+
   // 更新昵称
   profile.nickname = nickname;
-  
+
   // 更新签名
   profile.signature = signature;
-  
+
   // 更新头像
   if (removeAvatar) {
     profile.avatar = null;
   } else if (pendingAvatar) {
     profile.avatar = pendingAvatar;
   }
-  
+
   // 保存
   saveUserProfile(profile);
-  
+
   // 清除临时数据
   if (avatarFileInput) {
     avatarFileInput.dataset.pendingAvatar = '';
     avatarFileInput.dataset.removeAvatar = '';
   }
-  
+
   // 更新所有显示
   updateProfileDisplay();
-  
+
   // 显示保存成功动画
   if (profileSaveBtn) {
     const originalNodes = Array.from(profileSaveBtn.childNodes).map(n => n.cloneNode(true));
@@ -386,14 +386,14 @@ function handleProfileSave(): void {
 
     const text = document.createTextNode(` ${t('profile.action.saved') || '已保存'}`);
     profileSaveBtn.replaceChildren(svg, text);
-    
+
     setTimeout(() => {
       profileSaveBtn.classList.remove('profile-action-btn--success');
       profileSaveBtn.replaceChildren(...originalNodes);
     }, 1500);
   }
-  
-  showSuccessToast(t('toast.profile.saved') || '保存成功', t('toast.profile.saveTitle') || '个人资料');
+
+  showSuccessToast(t('toast.profile.saved') || '保存成功', t('toast.profile.saveTitle') || '个人资料', 1500);
 }
 
 /**
@@ -402,7 +402,7 @@ function handleProfileSave(): void {
 function handleLanguageSelect(lang: string): void {
   if (lang && lang !== getCurrentLanguage()) {
     setLanguage(lang);
-    showSuccessToast(t('toast.language.changed') || '语言已切换', t('common.success') || '成功');
+    showSuccessToast(t('toast.language.changed') || '语言已切换', t('common.success') || '成功', 1500);
   }
 }
 
@@ -425,10 +425,10 @@ function handlePerformanceSelect(mode: string): void {
     if (mode !== currentMode) {
       performanceModeManager.setMode(mode);
       updatePerformanceSelectorUI();
-      const modeText = mode === 'premium' 
-        ? (t('profile.performance.premium') || '高性能') 
+      const modeText = mode === 'premium'
+        ? (t('profile.performance.premium') || '高性能')
         : (t('profile.performance.energySaving') || '省电');
-      showSuccessToast(t('toast.performance.changed', { mode: modeText }) || `已切换到${modeText}模式`, t('common.success') || '成功');
+      showSuccessToast(t('toast.performance.changed', { mode: modeText }) || `已切换到${modeText}模式`, t('common.success') || '成功', 1500);
     }
   }
 }
@@ -443,10 +443,10 @@ function handlePerformanceSelect(mode: string): void {
 export function updatePerformanceSelectorUI(): void {
   const performanceModeManager = (window as unknown as { performanceModeManager?: { getMode: () => string } }).performanceModeManager;
   if (!performanceModeManager) return;
-  
+
   const currentMode = performanceModeManager.getMode();
   const options = document.querySelectorAll('.performance-option');
-  
+
   options.forEach(opt => {
     const mode = opt.getAttribute('data-mode');
     if (mode === currentMode) {
@@ -463,19 +463,19 @@ export function updatePerformanceSelectorUI(): void {
 export function updateProfilePageAccess(): void {
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
-  
+
   const avatarUploadBtn = document.getElementById(DOM_IDS.avatarUploadBtn) as HTMLButtonElement | null;
   const avatarRemoveBtn = document.getElementById(DOM_IDS.avatarRemoveBtn) as HTMLButtonElement | null;
   const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
   const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
   const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn) as HTMLButtonElement | null;
   const profileAccountId = document.getElementById(DOM_IDS.profileAccountId);
-  
+
   const settingGroups = document.querySelectorAll('.profile-setting-group');
   const avatarSettingGroup = settingGroups[0] as HTMLElement | undefined;
   const nicknameSettingGroup = settingGroups[1] as HTMLElement | undefined;
   const signatureSettingGroup = settingGroups[2] as HTMLElement | undefined;
-  
+
   if (!isLoggedIn) {
     if (avatarUploadBtn) avatarUploadBtn.disabled = true;
     if (avatarRemoveBtn) avatarRemoveBtn.disabled = true;
@@ -489,7 +489,7 @@ export function updateProfilePageAccess(): void {
     }
     if (profileSaveBtn) profileSaveBtn.disabled = true;
     if (profileAccountId) profileAccountId.textContent = t('common.notLoggedIn') || '未登录';
-    
+
     if (avatarSettingGroup) avatarSettingGroup.style.opacity = '0.5';
     if (nicknameSettingGroup) nicknameSettingGroup.style.opacity = '0.5';
     if (signatureSettingGroup) signatureSettingGroup.style.opacity = '0.5';
@@ -499,7 +499,7 @@ export function updateProfilePageAccess(): void {
     if (nicknameInput) nicknameInput.disabled = false;
     if (signatureInput) signatureInput.disabled = false;
     if (profileSaveBtn) profileSaveBtn.disabled = false;
-    
+
     if (avatarSettingGroup) avatarSettingGroup.style.opacity = '1';
     if (nicknameSettingGroup) nicknameSettingGroup.style.opacity = '1';
     if (signatureSettingGroup) signatureSettingGroup.style.opacity = '1';
@@ -514,7 +514,7 @@ export function updateProfileDisplay(): void {
   const nickname = profile.nickname || 'Amiya';
   const avatar = profile.avatar;
   const signature = profile.signature || t('profile.signature.placeholder') || '';
-  
+
   // 更新顶部导航栏
   const userLabel = document.getElementById(DOM_IDS.userLabel);
   if (userLabel) {
@@ -523,19 +523,19 @@ export function updateProfileDisplay(): void {
       userLabel.textContent = nickname;
     }
   }
-  
+
   // 更新菜单头部标题
   const menuHeaderTitle = document.getElementById(DOM_IDS.menuHeaderTitle);
   if (menuHeaderTitle) {
     menuHeaderTitle.textContent = nickname;
   }
-  
+
   // 更新菜单头部签名
   const menuHeaderSub = document.getElementById(DOM_IDS.menuHeaderSub);
   if (menuHeaderSub) {
     menuHeaderSub.textContent = signature;
   }
-  
+
   // 更新所有头像
   const userAvatar = document.getElementById(DOM_IDS.userAvatar);
   const menuHeaderAvatar = document.getElementById(DOM_IDS.menuHeaderAvatar);
@@ -543,13 +543,13 @@ export function updateProfileDisplay(): void {
     { container: userAvatar, img: (userAvatar?.querySelector('.avatar-img') as HTMLImageElement | null) },
     { container: menuHeaderAvatar, img: (menuHeaderAvatar?.querySelector('.avatar-img') as HTMLImageElement | null) }
   ];
-  
+
   const u = loadUser();
   const isLoggedIn = !!(u && u.accountId);
-  
+
   avatarTargets.forEach(({ container, img }) => {
     if (!container || !img) return;
-    
+
     if (isLoggedIn) {
       container.classList.add('avatar--active');
       img.src = avatar || '/assets/avatar.png';
@@ -582,9 +582,9 @@ function addEvent<K extends keyof HTMLElementEventMap>(
   handler: (e: HTMLElementEventMap[K]) => void
 ): void {
   if (!element) return;
-  
+
   element.addEventListener(event, handler as EventListener);
-  
+
   eventCleanups.push(() => {
     element.removeEventListener(event, handler as EventListener);
   });
@@ -595,42 +595,42 @@ function addEvent<K extends keyof HTMLElementEventMap>(
  */
 function bindEvents(): void {
   cleanupEvents();
-  
+
   // 返回按钮
   const profileBackBtn = document.getElementById(DOM_IDS.profileBackBtn);
   addEvent(profileBackBtn, 'click', handleBackClick);
-  
+
   // 取消按钮
   const profileCancelBtn = document.getElementById(DOM_IDS.profileCancelBtn);
   addEvent(profileCancelBtn, 'click', handleBackClick);
-  
+
   // 昵称输入
   const nicknameInput = document.getElementById(DOM_IDS.nicknameInput);
   addEvent(nicknameInput, 'input', handleNicknameInput);
-  
+
   // 签名输入
   const signatureInput = document.getElementById(DOM_IDS.signatureInput);
   addEvent(signatureInput, 'input', handleSignatureInput);
-  
+
   // 头像上传按钮
   const avatarUploadBtn = document.getElementById(DOM_IDS.avatarUploadBtn);
   addEvent(avatarUploadBtn, 'click', handleAvatarUploadClick);
-  
+
   // 头像文件选择
   const avatarFileInput = document.getElementById(DOM_IDS.avatarFileInput);
   addEvent(avatarFileInput, 'change', handleAvatarFileSelect);
-  
+
   // 移除头像按钮
   const avatarRemoveBtn = document.getElementById(DOM_IDS.avatarRemoveBtn);
   addEvent(avatarRemoveBtn, 'click', handleAvatarRemove);
-  
+
   // 保存按钮
   const profileSaveBtn = document.getElementById(DOM_IDS.profileSaveBtn);
   if (profileSaveBtn) {
     (profileSaveBtn as HTMLButtonElement).disabled = false;
   }
   addEvent(profileSaveBtn, 'click', handleProfileSave);
-  
+
   // 语言选择器
   const languageSelector = document.getElementById(DOM_IDS.languageSelector);
   if (languageSelector) {
@@ -642,7 +642,7 @@ function bindEvents(): void {
       });
     });
   }
-  
+
   // 主题选择器
   const themeSelector = document.getElementById(DOM_IDS.themeSelector);
   if (themeSelector) {
@@ -654,7 +654,7 @@ function bindEvents(): void {
       });
     });
   }
-  
+
   // 性能模式选择器
   const performanceSelector = document.getElementById(DOM_IDS.performanceSelector);
   if (performanceSelector) {
@@ -678,15 +678,15 @@ function bindEvents(): void {
 export function initProfilePage(): void {
   // 清理旧的事件绑定
   cleanupEvents();
-  
+
   // 销毁旧实例
   pageState?.destroy();
-  
+
   // 加载数据
   const profile = loadUserProfile();
   const user = loadUser();
   const isLoggedIn = !!(user && user.accountId);
-  
+
   // 创建新的响应式状态
   pageState = createReactiveState({
     ...initialState,
@@ -699,21 +699,21 @@ export function initProfilePage(): void {
     nicknameCharCount: `${(isLoggedIn ? (profile.nickname || 'Amiya') : '').length}/20`,
     signatureCharCount: `${(isLoggedIn ? (profile.signature || '') : '').length}/50`
   }, stateBindings);
-  
+
   // 填充表单
   const nicknameInput = document.getElementById(DOM_IDS.nicknameInput) as HTMLInputElement | null;
   const signatureInput = document.getElementById(DOM_IDS.signatureInput) as HTMLInputElement | null;
-  
+
   if (nicknameInput) {
     nicknameInput.value = isLoggedIn ? (profile.nickname || 'Amiya') : (t('common.notLoggedIn') || '未登录');
   }
   if (signatureInput) {
     signatureInput.value = isLoggedIn ? (profile.signature || t('profile.signature.placeholder') || '') : (t('header.loginHint') || '请先登录');
   }
-  
+
   // 更新头像预览
   updateAvatarPreview(isLoggedIn ? (profile.avatar || '/avatar.png') : null, isLoggedIn);
-  
+
   // 更新 header 显示
   setTimeout(() => {
     import('./header').then(({ updateHeaderUser }) => {
@@ -721,10 +721,10 @@ export function initProfilePage(): void {
       updateHeaderUser(currentUser);
     });
   }, 50);
-  
+
   // 绑定事件
   bindEvents();
-  
+
   // 初始化选择器 UI
   requestAnimationFrame(() => {
     updateLanguageSelectorUI();
@@ -732,7 +732,7 @@ export function initProfilePage(): void {
     updatePerformanceSelectorUI();
     updatePageTranslations();
   });
-  
+
   // 更新访问权限
   updateProfilePageAccess();
 }

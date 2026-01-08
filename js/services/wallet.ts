@@ -1,10 +1,10 @@
 /**
  * Wallet Service Module (Reactive Version)
  * 
- * 使用响应式绑定系统重构的钱包服务模块。
- * 提供钱包管理功能，包括渲染、余额更新和组织面板。
+ * 使用响应式绑定系统重构的钱包服务模块�?
+ * 提供钱包管理功能，包括渲染、余额更新和组织面板�?
  * 
- * 性能优化：
+ * 性能优化�?
  * - 使用 scheduleBatchUpdate 进行批量 DOM 更新
  * - 使用 rafDebounce 进行输入验证防抖
  * - 使用 DocumentFragment 优化列表渲染
@@ -35,7 +35,7 @@ import {
   isShowingSkeleton
 } from '../utils/walletSkeleton';
 import { UTXOData, TxCertificate } from '../types/blockchain';
-import { createNewAddressOnBackend, isUserInOrganization } from './address';
+import { createNewAddressOnBackend, isUserInOrganization, registerAddressOnComNode } from './address';
 import { updateTransferButtonState } from './transfer';
 import { addTxHistoryRecords, getTxHistory, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
 import {
@@ -435,23 +435,23 @@ export function renderWallet(): void {
     const hasLockedUtxos = lockedUtxos.length > 0;
     const unlockedUtxoBalance = Math.max(0, amtCash0 - lockedBalance);
 
-    // 获取 TXCer 信息（仅主货币地址有 TXCer）
+    // 获取 TXCer 信息（仅主货币地址�?TXCer�?
     const txCers = meta?.txCers || {};
     const txCerIds = Object.keys(txCers);
     const hasTXCers = txCerIds.length > 0;
     const txCerBalance = Object.values(txCers).reduce((sum, val) => sum + (val as number), 0);
     const txCerCount = txCerIds.length;
 
-    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用）
+    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用�?
     const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
       if (!isTXCerLocked(id)) return sum;
       return sum + (Number((txCers as any)[id]) || 0);
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
 
-    // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
+    // 总余�?= 所�?UTXO（包括锁定） + TXCer（包括锁定）
     const totalBalance = amtCash0 + txCerBalance;
-    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
+    // 可用余额 = 未锁�?UTXO + 未锁�?TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
     // 如果有锁定的 UTXO，添加标记类
@@ -459,7 +459,7 @@ export function renderWallet(): void {
       item.classList.add('has-locked-utxos');
     }
 
-    // 如果有 TXCer，添加标记类
+    // 如果�?TXCer，添加标记类
     if (hasTXCers) {
       item.classList.add('has-txcers');
     }
@@ -485,12 +485,12 @@ export function renderWallet(): void {
               </span>
             ` : ''}
             ${hasTXCers ? viewHtml`
-              <span class="txcer-indicator" title="${t('wallet.txCerTooltip') || 'TXCer 待转换'}">
+              <span class="txcer-indicator" title="${t('wallet.txCerTooltip', 'TXCer pending')}">
                 <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <span class="txcer-tooltip">TXCer: ${txCerCount}个 可用${unlockedTxCerBalance.toFixed(2)} / 总${txCerBalance.toFixed(2)}</span>
+                <span class="txcer-tooltip">TXCer: ${txCerCount} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)}</span>
               </span>
             ` : ''}
           </span>
@@ -569,9 +569,9 @@ export function renderWallet(): void {
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
-                  TXCer（待转换）
+                  TXCer（待转换�?
                 </span>
-                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType}</span>
+                <span class="txcer-header-value">${txCerCount}�?/ ${txCerBalance.toFixed(4)} ${coinType}</span>
               </div>
               <div class="txcer-list">
                 ${txCerIds.map(id => {
@@ -607,7 +607,7 @@ export function renderWallet(): void {
     fragment.appendChild(item);
   });
 
-  // 清除骨架屏状态
+  // 清除骨架屏状�?
   clearSkeletonState(list);
 
   // Single DOM update
@@ -730,7 +730,7 @@ export async function handleDeleteAddress(address: string): Promise<void> {
         if (at) at.textContent = t('wallet.deleteFailed', '删除失败');
         if (ax) {
           ax.classList.add('tip--error');
-          ax.textContent = t('error.addressPublicKeyMissing', '地址公钥信息缺失，无法解绑');
+          ax.textContent = t('error.addressPublicKeyMissing', 'Address public key missing. Unable to unbind.');
         }
         if (am) am.classList.remove('hidden');
         const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
@@ -756,7 +756,7 @@ export async function handleDeleteAddress(address: string): Promise<void> {
           // Check if user cancelled password input
           if (errorMsg === 'USER_CANCELLED') {
             console.info('[Wallet] User cancelled password input for unbind');
-            showInfoToast(t('common.operationCancelled') || '操作已取消');
+            showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
             return;
           }
 
@@ -766,11 +766,11 @@ export async function handleDeleteAddress(address: string): Promise<void> {
         }
 
         // Backend succeeded - proceed with local deletion
-        console.info('[Wallet] ✓ Address unbound on backend, proceeding with local deletion');
+        console.info('[Wallet] �?Address unbound on backend, proceeding with local deletion');
 
       } catch (error) {
         hideUnifiedOverlay();
-        console.error('[Wallet] ✗ Unbind address error:', error);
+        console.error('[Wallet] �?Unbind address error:', error);
         const errMsg = error instanceof Error ? error.message : t('error.unknownError', 'Unknown error');
         showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errMsg}`);
         return;
@@ -867,14 +867,14 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
   closeAllOpsMenus();
 
   if (!u) {
-    showErrorToast(t('wallet.noUser') || '未找到用户');
+    showErrorToast(t('wallet.noUser', 'User not found'));
     return;
   }
 
   // Step 1: Password verification (uses 5-minute cache)
   const password = await showPasswordPrompt({
     title: t('encryption.enterPassword') || '输入密码',
-    description: t('encryption.exportRequiresPassword') || '导出私钥需要验证密码'
+    description: t('encryption.exportRequiresPassword', 'Exporting the private key requires password verification.'),
   });
 
   if (!password) {
@@ -913,13 +913,13 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
 
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
-    // 隐藏普通文本，显示私钥行
+    // 隐藏普通文本，显示私钥�?
     if (text) {
       text.classList.add('hidden');
       text.classList.remove('tip--error');
     }
 
-    // 显示私钥行
+    // 显示私钥�?
     if (keyRow) keyRow.classList.remove('hidden');
     if (keyCode) keyCode.textContent = priv;
 
@@ -929,7 +929,7 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
       copyBtn.onclick = () => {
         navigator.clipboard.writeText(priv).then(() => {
           copyBtn.classList.add('copied');
-          showSuccessToast(t('wallet.copied') || '已复制');
+          showSuccessToast(t('wallet.copied', 'Copied'));
           setTimeout(() => {
             copyBtn.classList.remove('copied');
           }, 2000);
@@ -943,7 +943,7 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
           document.execCommand('copy');
           document.body.removeChild(textarea);
           copyBtn.classList.add('copied');
-          showSuccessToast(t('wallet.copied') || '已复制');
+          showSuccessToast(t('wallet.copied', 'Copied'));
           setTimeout(() => {
             copyBtn.classList.remove('copied');
           }, 2000);
@@ -980,7 +980,7 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
   const handler = () => {
     modal?.classList.add('hidden');
     ok?.removeEventListener('click', handler);
-    // 重置状态
+    // 重置状�?
     if (keyRow) keyRow.classList.add('hidden');
     if (text) text.classList.remove('hidden');
     if (copyBtn) {
@@ -1033,7 +1033,7 @@ if (typeof window !== 'undefined') {
 // ============================================================================
 
 /**
- * 生成随机十六进制字符串
+ * 生成随机十六进制字符�?
  */
 function generateRandomHex(length: number): string {
   const bytes = new Uint8Array(length);
@@ -1042,10 +1042,10 @@ function generateRandomHex(length: number): string {
 }
 
 /**
- * 生成模拟的 ECDSA 签名 (用于测试数据)
+ * 生成模拟�?ECDSA 签名 (用于测试数据)
  */
 function generateMockSignature(): { R: string; S: string } {
-  // 生成64位十六进制的 R 和 S 值 (模拟256位大整数)
+  // 生成64位十六进制的 R �?S �?(模拟256位大整数)
   return {
     R: generateRandomHex(32),
     S: generateRandomHex(32)
@@ -1061,7 +1061,7 @@ function getExpandedAddresses(): string[] {
 }
 
 /**
- * 恢复地址卡片的展开状态
+ * 恢复地址卡片的展开状�?
  */
 function restoreExpandedAddresses(addresses: string[]): void {
   if (!addresses.length) return;
@@ -1126,7 +1126,7 @@ export function updateCurrencyDisplay(u: User): void {
 
 /**
  * Update a specific address card display without re-rendering entire wallet
- * 直接更新 DOM，不使用 scheduleBatchUpdate 以避免延迟导致的状态问题
+ * 直接更新 DOM，不使用 scheduleBatchUpdate 以避免延迟导致的状态问�?
  */
 function updateAddressCardDisplay(address: string, found: AddressMetadata): void {
   const key = String(address).toLowerCase();
@@ -1205,14 +1205,14 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       // Keep TXCer tooltip/header in sync (locks affect available)
       const txcerTooltip = card.querySelector('.txcer-tooltip');
       if (txcerTooltip) {
-        txcerTooltip.textContent = `TXCer: ${txCerIds.length}个 可用${unlockedTxCerBalance.toFixed(2)} / 总${txCerBalance.toFixed(2)}`;
+        txcerTooltip.textContent = `TXCer: ${txCerIds.length} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)}`;
       }
       const txcerHeaderValue = card.querySelector('.txcer-header-value');
       if (txcerHeaderValue) {
-        txcerHeaderValue.textContent = `${txCerIds.length}个 / ${txCerBalance.toFixed(4)} ${coinType}`;
+        txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance.toFixed(4)} ${coinType}`;
       }
 
-      // 直接更新详情行
+      // 直接更新详情�?
       const detailRows = card.querySelectorAll('.addr-detail-row');
       detailRows.forEach(row => {
         const label = row.querySelector('.addr-detail-label');
@@ -1411,46 +1411,65 @@ async function handleImportPreviewConfirm(): Promise<void> {
   showUnifiedLoading(t('walletModal.importing', '正在导入...'));
 
   try {
-    // Check if user is in organization - if so, sync with backend first
-    if (isUserInOrganization()) {
+        // Check if user is in organization - if so, sync with backend first
+    const inOrg = isUserInOrganization();
+    let registerError: string | null = null;
+
+    if (inOrg) {
       console.debug('[Wallet] User is in organization, syncing with backend...');
 
+      hideUnifiedOverlay();
       const result = await createNewAddressOnBackend(address, pubXHex, pubYHex, coinType);
+      showUnifiedLoading(t('walletModal.importing', '���ڵ���...'));
 
       if (!result.success) {
         hideUnifiedOverlay();
-        // Type narrowing: result is now { success: false; error: string }
         const errorMsg = 'error' in result ? result.error : t('error.unknownError');
 
-        // Check if user cancelled password input
         if (result.error === 'USER_CANCELLED') {
           console.info('[Wallet] User cancelled password input');
-          showInfoToast(t('common.operationCancelled') || '操作已取消');
+            showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
           return;
         }
 
-        showUnifiedError(
-          t('toast.importFailed', '导入失败'),
-          errorMsg
-        );
-        return;
+        const allowDuplicate = /already|exists/i.test(errorMsg || '');
+        if (!allowDuplicate) {
+          showUnifiedError(
+            t('toast.importFailed', '����ʧ��'),
+            errorMsg
+          );
+          return;
+        }
+
+        console.warn('[Wallet] Address already registered on backend, continuing import');
       }
 
-      console.info('[Wallet] ✓ Address synced with backend');
+      console.info('[Wallet] Address synced with backend');
     }
 
     // Proceed with local import
     await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
 
+    if (!inOrg) {
+      const registerResult = await registerAddressOnComNode(address, pubXHex, pubYHex, privHex);
+      if (!registerResult.success) {
+        registerError = registerResult.error || t('error.unknownError');
+      }
+    }
+
     hideUnifiedOverlay();
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
+
+    if (registerError) {
+      showErrorToast(registerError, t('toast.addressRegisterFailed', 'Address registration failed'));
+    }
 
     // Auto-refresh wallet balances
     refreshWalletBalances().catch(console.error);
 
   } catch (error) {
     hideUnifiedOverlay();
-    console.error('[Wallet] ✗ Import address error:', error);
+    console.error('[Wallet] �?Import address error:', error);
     showUnifiedError(
       t('toast.importFailed', '导入失败'),
       error instanceof Error ? error.message : t('error.unknownError')
@@ -1476,7 +1495,7 @@ async function importAddressInPlaceWithData(
   const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
   const addr = address.toLowerCase();
 
-  acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
+    const existing = acc.wallet.addressMsg[addr] || {
     type: coinType,
     utxos: {},
     txCers: {},
@@ -1485,8 +1504,21 @@ async function importAddressInPlaceWithData(
     origin: 'imported'
   };
 
+  acc.wallet.addressMsg[addr] = existing;
+
   const normPriv = priv.replace(/^0x/i, '');
   const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
+  if (!addrMeta.value) {
+    addrMeta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+  }
+  if (!addrMeta.utxos) {
+    addrMeta.utxos = {};
+  }
+  if (!addrMeta.txCers) {
+    addrMeta.txCers = {};
+  }
+  addrMeta.type = coinType;
+  addrMeta.origin = 'imported';
   addrMeta.privHex = normPriv;
   addrMeta.pubXHex = pubXHex;
   addrMeta.pubYHex = pubYHex;
@@ -1566,28 +1598,37 @@ async function importAddressInPlace(priv: string): Promise<void> {
       return;
     }
 
-    const map = acc.wallet?.addressMsg || {};
-    let dup = false;
     const lowerMain = (u2.address || '').toLowerCase();
-
-    if (lowerMain && lowerMain === addr) dup = true;
-    if (!dup) {
-      for (const k in map) {
-        if (Object.prototype.hasOwnProperty.call(map, k)) {
-          if (String(k).toLowerCase() === addr) {
-            dup = true;
-            break;
-          }
-        }
-      }
-    }
-
-    if (dup) {
+    if (lowerMain && lowerMain === addr) {
       showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
       return;
     }
 
-    acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
+    const inOrg = isUserInOrganization();
+    if (inOrg) {
+      if (ov) ov.classList.add('hidden');
+      const result = await createNewAddressOnBackend(addr, data.pubXHex || '', data.pubYHex || '', 0);
+      if (ov) ov.classList.remove('hidden');
+
+      if (!result.success) {
+        const errorMsg = 'error' in result ? result.error : t('error.unknownError');
+        if (result.error === 'USER_CANCELLED') {
+            showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
+          return;
+        }
+
+        const allowDuplicate = /already|exists/i.test(errorMsg || '');
+        if (!allowDuplicate) {
+          showErrorToast(errorMsg, t('toast.importFailed'));
+          return;
+        }
+
+        console.warn('[Wallet] Address already registered on backend, continuing import');
+      }
+    }
+
+    const normPriv = (data.privHex || priv).replace(/^0x/i, '');
+    const existing = acc.wallet.addressMsg[addr] || {
       type: 0,
       utxos: {},
       txCers: {},
@@ -1596,14 +1637,37 @@ async function importAddressInPlace(priv: string): Promise<void> {
       origin: 'imported'
     };
 
-    const normPriv = (data.privHex || priv).replace(/^0x/i, '');
-    // AddressMetadata interface includes these fields
+    acc.wallet.addressMsg[addr] = existing;
+
     const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
+    if (!addrMeta.value) {
+      addrMeta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+    }
+    if (!addrMeta.utxos) {
+      addrMeta.utxos = {};
+    }
+    if (!addrMeta.txCers) {
+      addrMeta.txCers = {};
+    }
+    addrMeta.type = 0;
+    addrMeta.origin = 'imported';
     addrMeta.privHex = normPriv;
     addrMeta.pubXHex = data.pubXHex || '';
     addrMeta.pubYHex = data.pubYHex || '';
 
     saveUser(acc);
+
+    if (!inOrg) {
+      const registerResult = await registerAddressOnComNode(
+        addr,
+        addrMeta.pubXHex || '',
+        addrMeta.pubYHex || '',
+        normPriv
+      );
+      if (!registerResult.success) {
+        showErrorToast(registerResult.error || t('error.unknownError'), t('toast.addressRegisterFailed', 'Address registration failed'));
+      }
+    }
 
     // Encrypt the imported address private key
     try {
@@ -1626,7 +1690,6 @@ async function importAddressInPlace(priv: string): Promise<void> {
     if (ov) ov.classList.add('hidden');
   }
 }
-
 
 /**
  * Handle address modal OK button
@@ -1666,24 +1729,14 @@ export async function handleAddrModalOk(): Promise<void> {
         return;
       }
 
-      // Check for duplicate address
+            // Check for duplicate address
       const u2 = getCurrentUser();
       if (u2) {
-        const map = u2.wallet?.addressMsg || {};
         const lowerMain = (u2.address || '').toLowerCase();
 
         if (lowerMain && lowerMain === addr) {
           showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
           return;
-        }
-
-        for (const k in map) {
-          if (Object.prototype.hasOwnProperty.call(map, k)) {
-            if (String(k).toLowerCase() === addr) {
-              showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
-              return;
-            }
-          }
         }
       }
 
@@ -1907,7 +1960,7 @@ export function rebuildAddrList(): void {
   const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
 
-  // 清除骨架屏状态
+  // 清除骨架屏状�?
   clearSkeletonState(addrList);
 
   const fragment = document.createDocumentFragment();
@@ -1933,7 +1986,7 @@ export function rebuildAddrList(): void {
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
 
-    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
+    // 可用余额 = 未锁�?UTXO + 未锁�?TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
     const coinInfo = getCoinInfo(tId);
@@ -2314,17 +2367,17 @@ export { initRecipientCards, initAdvancedOptions };
 // ============================================================================
 
 /**
- * 显示钱包页面骨架屏
+ * 显示钱包页面骨架�?
  * 在页面首次加载时调用，提供更好的加载体验
  */
 export function showWalletSkeletons(): void {
-  // 地址列表骨架屏
+  // 地址列表骨架�?
   const addrList = document.getElementById(DOM_IDS.walletAddrList);
   if (addrList && !isShowingSkeleton(addrList)) {
     showAddressListSkeleton(addrList, { count: 3 });
   }
 
-  // 转账来源地址骨架屏
+  // 转账来源地址骨架�?
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList && !isShowingSkeleton(srcAddrList)) {
     showSrcAddrSkeleton(srcAddrList, { count: 2 });
@@ -2332,7 +2385,7 @@ export function showWalletSkeletons(): void {
 }
 
 /**
- * 隐藏钱包页面骨架屏
+ * 隐藏钱包页面骨架�?
  * 在数据加载完成后调用
  */
 export function hideWalletSkeletons(): void {
@@ -2610,7 +2663,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
 
     // Calculate and log totals
     const totals = calculateTotalBalance(balances);
-    console.info('[Wallet] ✓ Refresh complete:', {
+    console.info('[Wallet] �?Refresh complete:', {
       addressesUpdated: updatedCount,
       totalBalance: totals.totalBalance,
       totalInterest: totals.totalInterest,
@@ -2625,7 +2678,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
     return true;
 
   } catch (error) {
-    console.error('[Wallet] ✗ Refresh failed:', error);
+    console.error('[Wallet] �?Refresh failed:', error);
     showErrorToast(
       error instanceof Error ? error.message : t('error.unknownError', '未知错误'),
       t('wallet.refreshFailed', '刷新失败')
@@ -2674,3 +2727,9 @@ export function initGlobalClickHandler(): void {
 
   globalClickHandlerInitialized = true;
 }
+
+
+
+
+
+

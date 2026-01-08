@@ -9,19 +9,24 @@
  */
 
 // Lazy import for i18n to avoid circular dependency
-let _t: ((key: string, fallback?: string) => string) | null = null;
+let _t: ((key: string, paramsOrFallback?: any) => string) | null = null;
 
 /**
  * Get translation function lazily to avoid circular dependency
  */
-function getT(): (key: string, fallback?: string) => string {
+function getT(): (key: string, paramsOrFallback?: any) => string {
   if (!_t) {
     try {
-      // Prefer namespace, fallback to window.t
-      // Note: window.t signature is (key, paramsOrDefault) which is compatible
-      const i18n = window.t;
-      if (typeof i18n === 'function') {
-        _t = i18n;
+      // Prefer namespace from window.PanguPay
+      const pp = (window as any).PanguPay;
+      if (pp && pp.i18n && typeof pp.i18n.t === 'function') {
+        _t = pp.i18n.t;
+      } else {
+        // Fallback to window.t
+        const i18n = (window as any).t;
+        if (typeof i18n === 'function') {
+          _t = i18n;
+        }
       }
     } catch {
       // Ignore
@@ -31,7 +36,7 @@ function getT(): (key: string, fallback?: string) => string {
 }
 
 // Helper to get translation
-const t = (key: string, fallback?: string): string => getT()(key, fallback);
+const t = (key: string, paramsOrFallback?: any): string => getT()(key, paramsOrFallback);
 
 // ========================================
 // Constants
@@ -196,43 +201,43 @@ export function validateTransferAmount(
   options: AmountValidationOptions = {}
 ): ValidationResult<number> {
   const { min = 0, max = Number.MAX_SAFE_INTEGER, decimals = MAX_AMOUNT_DECIMALS } = options;
-  
+
   // Handle empty input
   if (amount === '' || amount === null || amount === undefined) {
     return { valid: false, error: t('validation.amountRequired') || '请输入金额' };
   }
-  
+
   // Convert to number
   const num = typeof amount === 'number' ? amount : parseFloat(String(amount).trim());
-  
+
   // Check if valid number
   if (!Number.isFinite(num)) {
     return { valid: false, error: t('validation.amountInvalid') || '无效的金额' };
   }
-  
+
   // Check minimum (use <= to ensure amount must be > min)
   if (num <= min) {
-    if (min === 0 || min < 0.00000001) {
+    if (min === 0 || min <= 0.00000001) {
       return { valid: false, error: t('validation.amountPositive') || '金额必须大于0' };
     }
-    return { valid: false, error: (t('validation.amountMin') || '金额必须大于 {min}').replace('{min}', String(min)) };
+    return { valid: false, error: t('validation.amountMin', { min: String(min) }) };
   }
-  
+
   // Check maximum (safety check)
   if (num > max) {
     return { valid: false, error: t('validation.amountTooLarge') || '金额超出安全范围' };
   }
-  
+
   // Check decimal places
   const strAmount = String(amount);
   const decimalPart = strAmount.split('.')[1];
   if (decimalPart && decimalPart.length > decimals) {
-    return { 
-      valid: false, 
-      error: (t('validation.amountDecimals') || '最多支持 {decimals} 位小数').replace('{decimals}', String(decimals)) 
+    return {
+      valid: false,
+      error: t('validation.amountDecimals', { decimals: String(decimals) })
     };
   }
-  
+
   return { valid: true, value: num };
 }
 
@@ -244,7 +249,7 @@ export function validateAddress(
   options: AddressValidationOptions = {}
 ): ValidationResult<string> {
   const { required = true } = options;
-  
+
   // Handle empty input
   if (!address || typeof address !== 'string' || !address.trim()) {
     if (required) {
@@ -252,20 +257,20 @@ export function validateAddress(
     }
     return { valid: true, value: '' };
   }
-  
+
   // Normalize: remove 0x prefix, lowercase
   const normalized = address.trim().replace(/^0x/i, '').toLowerCase();
-  
+
   // Check length
   if (normalized.length !== ADDRESS_HEX_LENGTH) {
     return { valid: false, error: t('validation.addressLength') || '地址长度必须为40位十六进制字符' };
   }
-  
+
   // Check hex format
   if (!/^[0-9a-f]+$/i.test(normalized)) {
     return { valid: false, error: t('validation.addressFormat') || '地址格式错误，必须为十六进制字符' };
   }
-  
+
   return { valid: true, value: normalized };
 }
 
@@ -277,20 +282,20 @@ export function validatePrivateKey(privateKey: string | null | undefined): Valid
   if (!privateKey || typeof privateKey !== 'string' || !privateKey.trim()) {
     return { valid: false, error: t('validation.privateKeyRequired') || '请输入私钥' };
   }
-  
+
   // Normalize: remove 0x prefix
   const normalized = privateKey.trim().replace(/^0x/i, '');
-  
+
   // Check length
   if (normalized.length !== PRIVATE_KEY_HEX_LENGTH) {
     return { valid: false, error: t('validation.privateKeyLength') || '私钥长度必须为64位十六进制字符' };
   }
-  
+
   // Check hex format
   if (!/^[0-9a-f]+$/i.test(normalized)) {
     return { valid: false, error: t('validation.privateKeyFormat') || '私钥格式错误，必须为十六进制字符' };
   }
-  
+
   return { valid: true, value: normalized };
 }
 
@@ -302,21 +307,21 @@ export function validateOrgId(
   options: OrgIdValidationOptions = {}
 ): ValidationResult<string> {
   const { required = false } = options;
-  
+
   if (!orgId || !orgId.trim()) {
     if (required) {
       return { valid: false, error: t('validation.orgIdRequired') || '请输入担保组织ID' };
     }
     return { valid: true, value: '' };
   }
-  
+
   const trimmed = orgId.trim();
-  
+
   // Check 8-digit format
   if (!/^\d{8}$/.test(trimmed)) {
     return { valid: false, error: t('validation.orgIdFormat') || '担保组织ID必须为8位数字' };
   }
-  
+
   return { valid: true, value: trimmed };
 }
 
@@ -334,11 +339,11 @@ export function createSubmissionGuard(key: string): SubmissionGuard {
   if (!submissionGuards.has(key)) {
     submissionGuards.set(key, false);
   }
-  
+
   return {
     /** Check if currently submitting */
     isSubmitting: (): boolean => submissionGuards.get(key) ?? false,
-    
+
     /** Start submission (returns false if already submitting) */
     start: (): boolean => {
       if (submissionGuards.get(key)) {
@@ -347,7 +352,7 @@ export function createSubmissionGuard(key: string): SubmissionGuard {
       submissionGuards.set(key, true);
       return true;
     },
-    
+
     /** End submission */
     end: (): void => {
       submissionGuards.set(key, false);
@@ -363,13 +368,13 @@ export function withSubmissionGuard<T extends (...args: any[]) => Promise<any>>(
   fn: T
 ): (...args: Parameters<T>) => Promise<ReturnType<T> | undefined> {
   const guard = createSubmissionGuard(key);
-  
+
   return async (...args: Parameters<T>): Promise<ReturnType<T> | undefined> => {
     if (!guard.start()) {
       console.warn(`Submission guard triggered: ${key} is already in progress`);
       return undefined;
     }
-    
+
     try {
       return await fn(...args);
     } finally {
@@ -392,7 +397,7 @@ export async function fetchWithTimeout(
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
-  
+
   try {
     const response = await fetch(url, {
       ...options,
@@ -419,13 +424,13 @@ export async function fetchWithRetry(
   timeout: number = DEFAULT_FETCH_TIMEOUT
 ): Promise<Response> {
   let lastError: Error | undefined;
-  
+
   for (let i = 0; i < retries; i++) {
     try {
       return await fetchWithTimeout(url, options, timeout);
     } catch (error: any) {
       lastError = error;
-      
+
       // Don't retry on certain errors
       if (error.message?.includes('请求超时') || error.name === 'AbortError') {
         // Allow retry on timeout
@@ -435,14 +440,14 @@ export async function fetchWithRetry(
         // Don't retry on other errors (e.g., 4xx responses)
         throw error;
       }
-      
+
       // Wait before retry (exponential backoff)
       if (i < retries - 1) {
         await new Promise(r => setTimeout(r, 1000 * (i + 1)));
       }
     }
   }
-  
+
   throw lastError;
 }
 
@@ -453,13 +458,13 @@ export async function secureFetch(url: string, options: RequestInit = {}): Promi
   // Get CSRF token from meta tag if available
   const csrfMeta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
   const csrfToken = csrfMeta?.content || '';
-  
+
   const secureHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
     ...(options.headers as Record<string, string>)
   };
-  
+
   return fetchWithTimeout(url, {
     ...options,
     headers: secureHeaders,
@@ -476,17 +481,17 @@ export async function secureFetchWithRetry(
   config: SecureFetchConfig = {}
 ): Promise<Response> {
   const { timeout = DEFAULT_FETCH_TIMEOUT, retries = DEFAULT_RETRY_COUNT } = config;
-  
+
   // Get CSRF token from meta tag if available
   const csrfMeta = document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement | null;
   const csrfToken = csrfMeta?.content || '';
-  
+
   const secureHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
     ...(options.headers as Record<string, string>)
   };
-  
+
   return fetchWithRetry(url, {
     ...options,
     headers: secureHeaders,
@@ -548,12 +553,12 @@ const IGNORED_ERROR_PATTERNS: RegExp[] = [
   /runtime\.lastError/i,
   /Something went wrong/i,  // Generic extension error
   /Unchecked runtime/i,
-  
+
   // WebSocket connection errors (Vite HMR in dev)
   /WebSocket connection.*failed/i,
   /ws:\/\/localhost/i,
   /token=\w+.*failed/i,  // Vite HMR token errors
-  
+
   // Service Worker fetch errors (expected when offline or during dev)
   /FetchEvent.*network error/i,
   /FetchEvent.*promise was rejected/i,
@@ -563,12 +568,12 @@ const IGNORED_ERROR_PATTERNS: RegExp[] = [
   /NetworkError/i,
   /Load failed/i,
   /sw\.js/i,  // Service worker errors
-  
+
   // API errors (backend not connected during development)
   /\/api\//i,
   /localhost:8081/i,
   /localhost:3000.*\.js\?t=/i,  // Vite cache-busted requests
-  
+
   // Generic network errors
   /请求超时/i,
   /ECONNREFUSED/i,
@@ -584,12 +589,12 @@ function shouldIgnoreError(errorStr: string | null | undefined, filenameStr?: st
   // Handle null/undefined inputs
   const safeErrorStr = String(errorStr || '');
   const safeFilenameStr = String(filenameStr || '');
-  
+
   // Skip empty errors
   if (!safeErrorStr && !safeFilenameStr) {
     return true;
   }
-  
+
   const combined = `${safeErrorStr} ${safeFilenameStr}`;
   return IGNORED_ERROR_PATTERNS.some(pattern => pattern.test(combined));
 }
@@ -601,31 +606,31 @@ function shouldIgnoreError(errorStr: string | null | undefined, filenameStr?: st
 export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
   const { showError: _showError, logToConsole = false } = options; // Default to false to reduce console noise
   // Note: _showError is reserved for future use (e.g., showing error UI to users)
-  
+
   // Global error handler
   window.addEventListener('error', (event: ErrorEvent) => {
     const { message, filename, lineno, colno, error } = event;
-    
+
     // Skip empty/undefined errors
     if (!message && !filename && !error) {
       event.preventDefault();
       return true;
     }
-    
+
     const msgStr = String(message || '');
     const fileStr = String(filename || '');
-    
+
     // Check against ignore patterns
     if (shouldIgnoreError(msgStr, fileStr)) {
       event.preventDefault();
       return true;
     }
-    
+
     // Only log meaningful application errors
     if (logToConsole && msgStr && !msgStr.includes('[object')) {
       console.error('Application error:', { message: msgStr, filename: fileStr, lineno, colno });
     }
-    
+
     // Report to error handlers
     if (message || error) {
       reportError({
@@ -638,26 +643,26 @@ export function initErrorBoundary(options: ErrorBoundaryOptions = {}): void {
         timestamp: Date.now()
       });
     }
-    
+
     return false;
   }, true);
-  
+
   // Unhandled promise rejection handler
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     const reason = event.reason;
     const reasonStr = String(reason || '');
-    
+
     // Check against ignore patterns
     if (shouldIgnoreError(reasonStr)) {
       event.preventDefault();
       return;
     }
-    
+
     // Only log meaningful errors
     if (logToConsole && reasonStr && reasonStr !== '[object Object]') {
       console.error('Unhandled promise rejection:', reason);
     }
-    
+
     // Report to error handlers
     if (reasonStr && reasonStr !== '[object Object]') {
       reportError({
@@ -678,24 +683,24 @@ export function withErrorBoundary<T, Args extends any[]>(
   options: ErrorBoundaryWrapperOptions<T> = {}
 ): (...args: Args) => Promise<T | undefined> {
   const { onError, fallback } = options;
-  
+
   return async (...args: Args): Promise<T | undefined> => {
     try {
       return await fn(...args);
     } catch (error: any) {
       console.error('Error in wrapped function:', error);
-      
+
       reportError({
         type: 'caught',
         message: error.message,
         stack: error.stack,
         timestamp: Date.now()
       });
-      
+
       if (onError && typeof onError === 'function') {
         onError(error);
       }
-      
+
       return fallback;
     }
   };

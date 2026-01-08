@@ -106,37 +106,41 @@ export function removeToast(toast) {
  * Show error toast
  * @param {string} message - Error message
  * @param {string} title - Optional title
+ * @param {number} duration - Duration in ms
  * @returns {HTMLElement} Toast element
  */
-export const showErrorToast = (message, title = '') =>
-  showToast(message, 'error', title);
+export const showErrorToast = (message, title = '', duration = 3000) =>
+  showToast(message, 'error', title, duration);
 
 /**
  * Show success toast
  * @param {string} message - Success message
  * @param {string} title - Optional title
+ * @param {number} duration - Duration in ms
  * @returns {HTMLElement} Toast element
  */
-export const showSuccessToast = (message, title = '') =>
-  showToast(message, 'success', title);
+export const showSuccessToast = (message, title = '', duration = 3000) =>
+  showToast(message, 'success', title, duration);
 
 /**
  * Show warning toast
  * @param {string} message - Warning message
  * @param {string} title - Optional title
+ * @param {number} duration - Duration in ms
  * @returns {HTMLElement} Toast element
  */
-export const showWarningToast = (message, title = '') =>
-  showToast(message, 'warning', title);
+export const showWarningToast = (message, title = '', duration = 3000) =>
+  showToast(message, 'warning', title, duration);
 
 /**
  * Show info toast
  * @param {string} message - Info message
  * @param {string} title - Optional title
+ * @param {number} duration - Duration in ms
  * @returns {HTMLElement} Toast element
  */
-export const showInfoToast = (message, title = '') =>
-  showToast(message, 'info', title);
+export const showInfoToast = (message, title = '', duration = 3000) =>
+  showToast(message, 'info', title, duration);
 
 // ========================================
 // Mini Toast

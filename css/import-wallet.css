@@ -600,13 +600,24 @@
    ���չʾ
    ======================================== */
 .import-result {
-  background: white;
-  border-radius: 20px;
-  padding: 32px;
-  box-shadow:
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 10px 40px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  box-shadow: none;
+  border: none;
+  animation: resultFadeIn 0.5s ease-out both;
+}
+
+@keyframes resultFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .import-result.hidden {
@@ -616,34 +627,38 @@
 /* �ɹ�ͷ�� */
 .import-success-header {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 16px;
-  margin-bottom: 28px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 32px;
+  padding-bottom: 0;
+  border-bottom: none;
+  text-align: center;
 }
 
 .import-success-icon {
-  width: 52px;
-  height: 52px;
-  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, var(--color-success) 0%, var(--color-success-light) 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.25);
+  margin-bottom: 8px;
 }
 
 .import-success-icon svg {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   stroke: white;
 }
 
 .import-success-header h3 {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
-  color: #10b981;
+  color: var(--color-text-primary);
   margin: 0;
 }
 
@@ -655,47 +670,55 @@
 }
 
 /* 结果项 */
+/* 结果项 - 扁平化灰色设计 */
 .import-result-item {
-  background: white;
-  border-radius: 14px;
+  background: var(--color-bg-secondary);
+  border-radius: 16px;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--color-border-light);
   transition: all 0.2s ease;
+  box-shadow: none;
 }
 
 .import-result-item:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-primary-light);
+  box-shadow: none;
 }
 
 .import-result-label {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 18px;
+  justify-content: flex-start;
+  gap: 10px;
+  padding: 16px 20px 8px 20px;
   margin-bottom: 0;
   cursor: default;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .import-result-label svg {
-  width: 18px;
-  height: 18px;
-  color: #64748b;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-tertiary);
 }
 
 .import-result-value {
   display: block;
   font-family: 'SF Mono', Monaco, monospace;
-  font-size: 13px;
-  color: #1e293b;
+  font-size: 15px;
+  color: var(--color-text-primary);
   word-break: break-all;
   line-height: 1.6;
-  background: #f8fafc;
-  padding: 12px;
-  margin: 0 18px 18px 18px;
-  /* 内缩布局 */
-  border-radius: 8px;
-  border: 1px solid #f1f5f9;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 20px 20px 20px;
+  margin: 0;
+  border-radius: 0;
+  border: none !important;
+  font-weight: 500;
 }
 
 .import-result-value+.import-result-value {
@@ -714,50 +737,118 @@
 
 /* 私钥项 - 红色警示系 */
 .import-result-item--private {
-  border: 1px solid #fecaca;
-  background: #ffffff;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  background: rgba(254, 242, 242, 0.6);
+  /* Very light red/gray */
+}
+
+/* Dark mode override */
+[data-theme="dark"] .import-result-item--private {
+  background: rgba(127, 29, 29, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
 }
 
 .import-result-item--private:hover {
-  background: #fef2f2;
-  /* Hover effect similar to header hover in new-user */
+  background: rgba(254, 242, 242, 1);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+[data-theme="dark"] .import-result-item--private:hover {
+  background: rgba(127, 29, 29, 0.25);
 }
 
 /* 私钥 Label */
 .import-result-item--private .import-result-label {
-  color: #991b1b;
+  color: var(--color-danger);
 }
 
 .import-result-item--private .import-result-label svg {
-  color: #dc2626;
+  color: var(--color-danger);
 }
 
 /* 私钥 Value */
 .import-result-value--secret {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
-  font-weight: 500;
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-danger);
+  font-weight: 600;
+  flex: 1;
+  /* Take up available space */
+  padding: 0;
+  /* Remove padding as it's handled by wrapper */
+  margin: 0;
 }
 
-/* 私钥折叠逻辑 */
-.import-result-item--private.collapsed .import-result-value--secret {
+/* Wrapper for value and copy button */
+.import-value-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px 20px 20px;
+  gap: 12px;
+}
+
+/* 私钥折叠逻辑 - Hide wrapper instead */
+.import-result-item--private.collapsed .import-value-wrapper {
   display: none;
+}
+
+/* Copy Button */
+.import-copy-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--color-text-tertiary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.import-copy-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-primary);
+}
+
+.import-copy-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+[data-theme="dark"] .import-copy-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.import-result-item--private .import-copy-btn {
+  color: rgba(239, 68, 68, 0.5);
+}
+
+.import-result-item--private .import-copy-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
 }
 
 /* 可点击的 Label (用于折叠) */
 .import-result-label--clickable {
   cursor: pointer;
-  transition: all 0.2s ease;
+  padding-bottom: 16px;
+}
+
+.import-result-item:not(.collapsed) .import-result-label--clickable {
+  padding-bottom: 8px;
+  /* Restore padding when expanded */
 }
 
 .import-result-label--clickable:hover {
-  background: rgba(148, 163, 184, 0.05);
-  /* 轻微背景变化 */
+  background: transparent;
+  opacity: 0.8;
 }
 
 .import-result-item--private .import-result-label--clickable:hover {
-  /* background: #fef2f2;  Removed to avoid double hover effect since item has hover */
   background: transparent;
 }
 
@@ -765,12 +856,12 @@
 .import-warning-badge {
   margin-left: auto;
   padding: 4px 10px;
-  background: #fee2e2;
-  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
   font-size: 11px;
   font-weight: 700;
   border-radius: 20px;
-  border: 1px solid #fecaca;
+  border: 1px solid rgba(239, 68, 68, 0.2);
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
@@ -780,12 +871,12 @@
   height: 18px;
   margin-left: 8px;
   transition: transform 0.2s ease;
-  color: #94a3b8;
+  color: var(--color-text-tertiary);
 }
 
 .import-result-item--private .import-toggle-chevron {
-  color: #dc2626;
-  /* 红色箭头 */
+  color: var(--color-danger);
+  opacity: 0.7;
 }
 
 .import-result-item--private.collapsed .import-toggle-chevron {
@@ -1077,10 +1168,8 @@
 }
 
 [data-theme="dark"] .import-result-value {
-  background: #1e293b;
-  /* Slate 800 - "Gray" bubble */
+  background: transparent;
   border-color: transparent;
-  /* Remove border */
   color: #f1f5f9;
 }
 
@@ -1203,10 +1292,11 @@
 }
 
 /* 结果展示 */
+/* 结果展示 */
 [data-theme="dark"] .import-result {
-  background: var(--color-card-bg-solid);
-  border-color: var(--color-border);
-  box-shadow: var(--shadow-card);
+  background: transparent;
+  border: none;
+  box-shadow: none;
 }
 
 [data-theme="dark"] .import-success-header {
