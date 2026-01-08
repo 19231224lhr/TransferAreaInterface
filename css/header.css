@@ -820,14 +820,56 @@
   right: 0;
   top: calc(100% + 8px);
   width: 100%;
-  max-height: 200px;
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
   background: #ffffff;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   border-radius: 12px;
-  padding: 12px;
+  padding: 10px;
   border: 1px solid rgba(226, 232, 240, 0.8);
   z-index: 1000;
+  /* Animation */
+  transform-origin: top center;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0.25s;
+  visibility: visible;
+}
+
+/* Only show scrollbar when has-scroll class is present (>2 addresses) */
+.menu-popup.has-scroll {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Custom scrollbar styling - Light mode */
+.menu-popup.has-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.menu-popup.has-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+.menu-popup.has-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 2px;
+}
+
+.menu-popup.has-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.6);
+}
+
+.menu-popup.hidden {
+  display: block !important;
+  opacity: 0;
+  transform: translateY(-8px) scale(0.96);
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .menu-popup .tip {
@@ -840,27 +882,85 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 10px;
-  margin: 4px 0;
-  background: #f8fafc;
-  border-radius: 8px;
-  gap: 8px;
+  padding: 10px 12px;
+  margin: 6px 0;
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(241, 245, 249, 0.7));
+  border-radius: 10px;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  gap: 12px;
+  transition: all 0.2s ease;
+}
+
+.menu-popup .addr-row:hover {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(59, 130, 246, 0.2);
+  transform: translateX(2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .menu-popup .addr-row code {
   font-size: 11px;
+  font-weight: 500;
   color: #334155;
   background: none !important;
   border: none !important;
   padding: 0 !important;
   box-shadow: none !important;
-  max-width: 140px;
+  flex: 1;
+  min-width: 0;
   word-break: break-all;
+  line-height: 1.5;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace;
+}
+
+.menu-popup .addr-row .addr-balance {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05));
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #16a34a;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.menu-popup .addr-row .addr-balance--zero {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(148, 163, 184, 0.05));
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .menu-popup .addr-row {
+  background: linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.6));
+  border-color: rgba(71, 85, 105, 0.5);
+}
+
+[data-theme="dark"] .menu-popup .addr-row:hover {
+  background: rgba(51, 65, 85, 0.95);
+  border-color: rgba(56, 189, 248, 0.3);
+}
+
+[data-theme="dark"] .menu-popup .addr-row code {
+  color: #e2e8f0;
+}
+
+[data-theme="dark"] .menu-popup .addr-row .addr-balance {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+  color: #4ade80;
+}
+
+[data-theme="dark"] .menu-popup .addr-row .addr-balance--zero {
+  background: linear-gradient(135deg, rgba(100, 116, 139, 0.2), rgba(100, 116, 139, 0.1));
+  color: #64748b;
 }
 
 /* 余额弹窗样式 */
 .menu-balance-popup {
   padding: 14px;
+  max-height: none;
+  overflow: visible;
 }
 
 .balance-breakdown {
@@ -1076,6 +1176,25 @@
   background: var(--color-card-bg-solid);
   border-color: var(--color-border);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Dark mode scrollbar styling */
+[data-theme="dark"] .menu-popup.has-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+[data-theme="dark"] .menu-popup.has-scroll::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 8px 0;
+}
+
+[data-theme="dark"] .menu-popup.has-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.4);
+  border-radius: 2px;
+}
+
+[data-theme="dark"] .menu-popup.has-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.6);
 }
 
 [data-theme="dark"] .menu-popup .addr-row {

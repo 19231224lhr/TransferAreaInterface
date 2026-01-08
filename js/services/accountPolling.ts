@@ -58,7 +58,7 @@ interface InfoChangeData {
 
 /**
  * TXCer 变动信息
- * 对应 Go: TXCerChangeToUser
+ * 对应 Go: TXCerChangeToUser 
  */
 interface TXCerChangeToUser {
   TXCerID: string;

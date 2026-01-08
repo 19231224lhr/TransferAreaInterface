@@ -10,7 +10,6 @@ import { showErrorToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { wait, copyToClipboard } from '../utils/helpers.js';
 import { showSuccessToast } from '../utils/toast.js';
-import { secureFetchWithRetry } from '../utils/security';
 import { DOM_IDS } from '../config/domIds';
 
 // Flag to prevent duplicate key generation
@@ -41,21 +40,8 @@ async function generateAndDisplayKeypair() {
 
   try {
     const t0 = Date.now();
-    let data;
-
-    // Try backend API first, fall back to local generation
-    try {
-      const res = await secureFetchWithRetry('/api/account/new', {
-        method: 'POST'
-      }, { timeout: 10000, retries: 2 });
-      if (res.ok) {
-        data = await res.json();
-      } else {
-        data = await newUser();
-      }
-    } catch (_) {
-      data = await newUser();
-    }
+    // Generate keypair locally (Web Crypto API is secure and fast)
+    const data = await newUser();
 
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;

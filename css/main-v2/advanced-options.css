@@ -330,6 +330,11 @@
   transition: color 0.2s ease;
 }
 
+.option-input:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 /* 隐藏 number 输入框的上下箭头 */
 .option-input[type="number"]::-webkit-inner-spin-button,
 .option-input[type="number"]::-webkit-outer-spin-button {

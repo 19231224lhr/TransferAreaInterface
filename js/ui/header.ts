@@ -355,15 +355,20 @@ function handleAddressPopupClick(e: MouseEvent): void {
 
   list.replaceChildren();
 
-  const tip = document.createElement('div');
-  tip.className = 'tip';
-  tip.style.margin = '2px 0 6px';
-  tip.style.color = '#667085';
-  tip.textContent = t('wallet.addressListTip');
-  list.appendChild(tip);
+  // Count addresses to determine if scrollbar is needed
+  const addressKeys = Object.keys(map).filter(k => {
+    if (u?.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return false;
+    return true;
+  });
 
-  Object.keys(map).forEach((k) => {
-    if (u?.address && String(k).toLowerCase() === String(u.address).toLowerCase()) return;
+  // Only show scrollbar if more than 2 addresses
+  if (addressKeys.length > 2) {
+    list.classList.add('has-scroll');
+  } else {
+    list.classList.remove('has-scroll');
+  }
+
+  addressKeys.forEach((k) => {
     const m = map[k];
     const type = Number(m.type || 0);
     const val = Number(m.value?.totalValue || m.value?.TotalValue || 0);
@@ -372,26 +377,12 @@ function handleAddressPopupClick(e: MouseEvent): void {
 
     const row = document.createElement('div');
     row.className = 'addr-row';
-    row.style.display = 'flex';
-    row.style.justifyContent = 'space-between';
-    row.style.gap = '6px';
-    row.style.alignItems = 'center';
-    row.style.margin = '4px 0';
 
     const code = document.createElement('code');
-    code.className = 'break';
-    code.style.maxWidth = '150px';
-    code.style.background = '#f6f8fe';
-    code.style.padding = '4px 6px';
-    code.style.borderRadius = '8px';
     code.textContent = k;
 
     const amt = document.createElement('span');
-    amt.style.color = '#667085';
-    amt.style.fontWeight = '600';
-    amt.style.minWidth = '64px';
-    amt.style.textAlign = 'right';
-    amt.style.whiteSpace = 'nowrap';
+    amt.className = v > 0 ? 'addr-balance' : 'addr-balance addr-balance--zero';
     amt.textContent = `${v} USDT`;
 
     row.appendChild(code);
@@ -399,7 +390,7 @@ function handleAddressPopupClick(e: MouseEvent): void {
     list.appendChild(row);
   });
 
-  if (Object.keys(map).length === 0) {
+  if (addressKeys.length === 0) {
     const empty = document.createElement('div');
     empty.className = 'tip';
     empty.textContent = t('wallet.noAddress');

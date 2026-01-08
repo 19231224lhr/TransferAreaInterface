@@ -266,6 +266,19 @@
   border: 1px solid #fecaca !important;
 }
 
+/* Dark mode - delete button */
+[data-theme="dark"] .main-v2 .addr-action-btn--danger.btn-delete {
+  background: rgba(127, 29, 29, 0.25) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+}
+
+[data-theme="dark"] .main-v2 .addr-action-btn--danger.btn-delete:hover {
+  background: rgba(153, 27, 27, 0.35) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(248, 113, 113, 0.4) !important;
+}
+
 /* 操作菜单 */
 .main-v2 .addr-ops-container {
   position: relative;
@@ -342,6 +355,24 @@
 
 .main-v2 .ops-item.danger:hover {
   background: rgba(239, 68, 68, 0.06);
+}
+
+/* Dark mode - danger button */
+[data-theme="dark"] .main-v2 .ops-item.danger {
+  color: #f87171;
+}
+
+[data-theme="dark"] .main-v2 .ops-item.danger:hover {
+  background: rgba(248, 113, 113, 0.15);
+  color: #fca5a5;
+}
+
+/* Dark mode - danger button selected/active */
+[data-theme="dark"] .main-v2 .ops-item.danger:active,
+[data-theme="dark"] .main-v2 .ops-item.danger:focus,
+[data-theme="dark"] .main-v2 .ops-item.danger.selected {
+  background: rgba(248, 113, 113, 0.2);
+  color: #fca5a5;
 }
 
 /* ========================================

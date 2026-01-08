@@ -469,21 +469,8 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     if (loader) loader.classList.remove('hidden');
 
     const t0 = Date.now();
-    let data: AccountData;
-
-    // Try backend API first, fall back to local
-    try {
-      const res = await secureFetchWithRetry('/api/account/new', {
-        method: 'POST'
-      }, { timeout: 10000, retries: 2 });
-      if (res.ok) {
-        data = await res.json();
-      } else {
-        data = await newUser();
-      }
-    } catch (_) {
-      data = await newUser();
-    }
+    // Generate keypair locally (Web Crypto API is secure and fast)
+    const data: AccountData = await newUser();
 
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;
@@ -532,7 +519,7 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
 
     // Show success notification if requested
     if (showToastNotification) {
-      showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'));
+      showSuccessToast(t('toast.account.created'), t('toast.account.createTitle'), 1500);
     }
 
     // P0-1 Fix: Prompt user to encrypt private key after account creation

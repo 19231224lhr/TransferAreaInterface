@@ -239,12 +239,13 @@ async function applyDraft(draft: TransferDraft): Promise<void> {
   setInputValue(DOM_IDS.tfMode, draft.advanced?.tfMode ?? 'quick');
 
   // Sync UI tabs with restored mode
-  // We need to trigger a click on the tab to ensure all UI states (like field visibility) are updated
+  // Only click the tab if it's not already active to avoid toggling the dropdown in compact mode
   const restoredMode = draft.advanced?.tfMode || 'quick';
   const modeTabsContainer = document.getElementById(DOM_IDS.transferModeTabs);
   if (modeTabsContainer) {
     const tab = modeTabsContainer.querySelector(`.transfer-mode-tab[data-mode="${restoredMode}"]`);
-    if (tab) {
+    // Only click if tab exists and it's NOT already active
+    if (tab && !tab.classList.contains('active')) {
       (tab as HTMLElement).click();
     }
   }

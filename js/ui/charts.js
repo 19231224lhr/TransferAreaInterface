@@ -69,7 +69,7 @@ const saveChartHistory = (history) => {
     // Display still uses the last 10 points.
     const trimmed = history.slice(-120);
     localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
-  } catch (e) {}
+  } catch (e) { }
 };
 
 /**
@@ -99,10 +99,10 @@ export function updateWalletChart(user) {
   const now = Date.now();
   const minuteMs = 60 * 1000;
   const minPointIntervalMs = 3000;
-  
+
   // Load persistent history data
   let history = loadChartHistory();
-  
+
   // Initialize or update history data
   if (history.length === 0) {
     // Create initial history: past 10 minutes
@@ -140,13 +140,13 @@ export function updateWalletChart(user) {
   if (displayHistory.length > 0) {
     displayHistory[displayHistory.length - 1].v = currentVal;
   }
-  
+
   // Calculate value range - key fix: when all values are same (including all 0), show horizontal line
   const values = displayHistory.map(h => h.v);
   const minVal = Math.min(...values);
   const maxVal = Math.max(...values);
   const range = maxVal - minVal;
-  
+
   // SVG dimensions (adaptive to container ratio, full width)
   const innerRect = chartInner?.getBoundingClientRect();
   const containerW = innerRect?.width || chartEl.clientWidth || 320;
@@ -165,7 +165,7 @@ export function updateWalletChart(user) {
   const chartTop = padY + topGapPx;
   const chartBottom = height - padY - bottomGapPx;
   const chartRange = chartBottom - chartTop;
-  
+
   const toY = (v) => {
     if (range === 0) {
       // All values same (including all 0), show horizontal line in middle
@@ -183,18 +183,18 @@ export function updateWalletChart(user) {
   };
 
   // Generate point coordinates
-  const points = displayHistory.map((h, i) => ({ 
-    x: toX(i), 
-    y: toY(h.v), 
-    v: h.v, 
-    t: h.t 
+  const points = displayHistory.map((h, i) => ({
+    x: toX(i),
+    y: toY(h.v),
+    v: h.v,
+    t: h.t
   }));
-  
+
   if (points.length < 2) return;
-  
+
   // Generate smooth curve path (Catmull-Rom spline)
   let pathD = `M ${points[0].x.toFixed(1)},${points[0].y.toFixed(1)}`;
-  
+
   // Use Monotone Cubic Spline algorithm to eliminate "hooks" and ensure monotonicity
   // Calculate slopes
   const slopes = [];
@@ -222,7 +222,7 @@ export function updateWalletChart(user) {
   ms.push(slopes[0]); // Start tangent
   for (let i = 0; i < slopes.length - 1; i++) {
     // If slopes have opposite signs, it's an extremum, set tangent to 0 to prevent overshoot
-    if (slopes[i] * slopes[i+1] <= 0) {
+    if (slopes[i] * slopes[i + 1] <= 0) {
       ms.push(0);
     } else {
       ms.push((slopes[i] + slopes[i + 1]) / 2);
@@ -235,7 +235,7 @@ export function updateWalletChart(user) {
     const p1 = points[i];
     const p2 = points[i + 1];
     const dx = points[i + 1].x - points[i].x;
-    
+
     // Control points X at 1/3 and 2/3 of segment
     // Y calculated from tangent slopes
     const cp1x = p1.x + dx / 3;
@@ -275,9 +275,9 @@ export function updateWalletChart(user) {
     const lastTime = new Date(displayHistory[displayHistory.length - 1].t);
     const midIdx = Math.floor(displayHistory.length / 2);
     const midTime = new Date(displayHistory[midIdx].t);
-    
+
     const formatTime = (d) => `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-    
+
     const mk = (txt) => {
       const s = document.createElement('span');
       s.className = 'chart-time-label';
@@ -295,20 +295,27 @@ export function updateWalletChart(user) {
   svg._chartPoints = points;
   svg._chartWidth = width;
   svg._chartViewBoxWidth = width;
-  
+
   // Bind hover tooltip events (only once)
   // Performance optimization: Use rafThrottle utility (Requirements: 2.3)
   if (!svg.dataset._bindChart) {
+    // Track mouse state to prevent tooltip from showing after mouse leaves
+    let isMouseInside = false;
+    let pendingRAF = null;
+
     const handleMouseMoveCore = (e) => {
+      // If mouse is no longer inside, do nothing
+      if (!isMouseInside) return;
+
       const pts = svg._chartPoints || [];
       const svgWidth = svg._chartWidth || 320;
       if (pts.length === 0) return;
-      
+
       const rect = svg.getBoundingClientRect();
       // Fix: use viewBox width instead of svgWidth to calculate mouse position
       const viewBoxWidth = svg._chartViewBoxWidth || 320;
       const x = (e.clientX - rect.left) * (viewBoxWidth / rect.width);
-      
+
       let closest = pts[0];
       let minDist = Infinity;
       pts.forEach(p => {
@@ -319,12 +326,12 @@ export function updateWalletChart(user) {
         }
       });
 
-      if (tooltip && minDist < 40) {
+      if (tooltip && minDist < 40 && isMouseInside) {
         const date = new Date(closest.t);
         const timeStr = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
         tooltip.textContent = `${closest.v.toLocaleString()} USDT · ${timeStr}`;
         tooltip.classList.add('visible');
-        
+
         // Calculate tooltip position (relative to container)
         const chartInner = chartEl.querySelector('.balance-chart-inner');
         if (chartInner) {
@@ -340,14 +347,35 @@ export function updateWalletChart(user) {
         tooltip.classList.remove('visible');
       }
     };
-    
-    // Use rafThrottle to limit updates to ~60fps (every 16ms)
-    const handleMouseMove = rafThrottle(handleMouseMoveCore);
 
-    const handleMouseLeave = () => {
-      if (tooltip) tooltip.classList.remove('visible');
+    const handleMouseMove = (e) => {
+      // Cancel any pending RAF to avoid stale updates
+      if (pendingRAF) {
+        cancelAnimationFrame(pendingRAF);
+      }
+      pendingRAF = requestAnimationFrame(() => {
+        pendingRAF = null;
+        handleMouseMoveCore(e);
+      });
     };
 
+    const handleMouseEnter = () => {
+      isMouseInside = true;
+    };
+
+    const handleMouseLeave = () => {
+      isMouseInside = false;
+      // Cancel any pending RAF to prevent tooltip from appearing after leave
+      if (pendingRAF) {
+        cancelAnimationFrame(pendingRAF);
+        pendingRAF = null;
+      }
+      if (tooltip) {
+        tooltip.classList.remove('visible');
+      }
+    };
+
+    svg.addEventListener('mouseenter', handleMouseEnter, { passive: true });
     svg.addEventListener('mousemove', handleMouseMove, { passive: true });
     svg.addEventListener('mouseleave', handleMouseLeave);
     chartEl.addEventListener('mouseleave', handleMouseLeave);
@@ -366,12 +394,12 @@ export function initWalletChart() {
     console.warn('Balance chart element not found, skipping initialization');
     return;
   }
-  
+
   const u = loadUser();
   if (u) {
     updateWalletChart(u);
   }
-  
+
   // Auto-update chart every minute (only set interval once)
   // Performance optimization: Pause updates when chart is not visible (Requirements: 4.5)
   // Property 14: 不可见图表暂停更新
@@ -379,7 +407,7 @@ export function initWalletChart() {
     window._chartIntervalSet = true;
     let chartIntervalId = null;
     let isChartVisible = true;
-    
+
     // Start interval
     const startChartInterval = () => {
       if (chartIntervalId) return;
@@ -390,7 +418,7 @@ export function initWalletChart() {
         }
       }, 60 * 1000);
     };
-    
+
     // Stop interval
     const stopChartInterval = () => {
       if (chartIntervalId) {
@@ -398,10 +426,10 @@ export function initWalletChart() {
         chartIntervalId = null;
       }
     };
-    
+
     // Store cleanup function for memory management (Requirements: 6.1)
     window._cleanupChartInterval = stopChartInterval;
-    
+
     // Use IntersectionObserver to detect visibility
     if ('IntersectionObserver' in window) {
       const observer = new IntersectionObserver((entries) => {
@@ -422,9 +450,9 @@ export function initWalletChart() {
       }, {
         threshold: 0.1 // Trigger when at least 10% visible
       });
-      
+
       observer.observe(chartEl);
-      
+
       // Store observer for cleanup (Requirements: 6.1)
       window._chartObserver = observer;
     } else {
@@ -432,23 +460,23 @@ export function initWalletChart() {
       startChartInterval();
     }
   }
-  
+
   // Add resize listener for responsive chart (only set once)
   // This ensures the chart adapts to window/zoom changes by recalculating
   // SVG viewBox dimensions and redrawing the chart
   // Performance optimization: Use debounce utility (Requirements: 2.2)
   if (!window._chartResizeListenerSet) {
     window._chartResizeListenerSet = true;
-    
+
     const debouncedUpdate = debounce(() => {
       const user = loadUser();
       if (user) {
         updateWalletChart(user);
       }
     }, 200); // 200ms debounce as per requirements
-    
+
     window.addEventListener('resize', debouncedUpdate);
-    
+
     // Store resize handler for cleanup (Requirements: 6.2)
     window._chartResizeHandler = debouncedUpdate;
   }
@@ -464,19 +492,19 @@ export function cleanupWalletChart() {
     window._cleanupChartInterval();
     window._cleanupChartInterval = null;
   }
-  
+
   // Cleanup observer
   if (window._chartObserver) {
     window._chartObserver.disconnect();
     window._chartObserver = null;
   }
-  
+
   // Cleanup resize listener
   if (window._chartResizeHandler) {
     window.removeEventListener('resize', window._chartResizeHandler);
     window._chartResizeHandler = null;
   }
-  
+
   // Reset flags
   window._chartIntervalSet = false;
   window._chartResizeListenerSet = false;

@@ -59,7 +59,7 @@ export function showPasswordPrompt(options: {
     // Check cache (only if NOT in confirm mode, which implies setting/changing password)
     if (!confirmMode && cachedPassword && (Date.now() - cachedTimestamp < PASSWORD_CACHE_DURATION)) {
       console.debug('[EncryptionUI] Using cached password (grace period active)');
-      showSuccessToast(t('encryption.usingCachedPassword') || '已使用缓存授权，无需重复输入');
+      showSuccessToast(t('encryption.usingCachedPassword') || '已使用缓存授权，无需重复输入', '', 1000);
       resolve(cachedPassword);
       return;
     }

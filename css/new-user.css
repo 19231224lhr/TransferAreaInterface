@@ -775,13 +775,37 @@
   font-weight: 500;
 }
 
-.new-key-card--collapsed .new-key-value {
-  display: none;
+/* ========================================
+   私钥展开/折叠动画
+   使用 CSS Grid 技术实现平滑高度过渡
+   ======================================== */
+
+/* 包装容器用于动画 */
+.new-key-card--private .new-key-content {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.25s ease;
 }
 
-/* 折叠时隐藏数值区域 */
+.new-key-card--private .new-key-content-inner {
+  overflow: hidden;
+}
+
+/* 折叠状态 */
+.new-key-card--collapsed .new-key-content {
+  grid-template-rows: 0fr;
+  opacity: 0;
+}
+
+/* 折叠时的 result-val 样式 */
 .new-key-card--collapsed .result-val {
-  display: none;
+  margin-top: 0;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  border-color: transparent;
 }
 
 /* 警告提示 */
