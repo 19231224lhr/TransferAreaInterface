@@ -149,6 +149,7 @@ import {
   refreshOrgPanel,
   handleDeleteAddress,
   handleExportPrivateKey,
+  handleShowReceiveAddress,
   toggleOpsMenu,
   toggleAddrCard,
   closeAllOpsMenus,
@@ -567,6 +568,27 @@ registerAction('deleteAddress', (el, data) => {
 // Export private key
 registerAction('exportPrivateKey', (el, data) => {
   handleExportPrivateKey(data.addr);
+});
+
+// Show capsule receive address
+registerAction('showReceiveAddress', (el, data) => {
+  handleShowReceiveAddress(data.addr);
+});
+
+// Copy capsule address
+registerAction('copyCapsule', async (el, data) => {
+  const capsule = data.capsule || '';
+  if (!capsule) return;
+  const ok = await copyToClipboard(capsule);
+  if (ok) {
+    if (el && el.classList) {
+      el.classList.add('copied');
+      setTimeout(() => el.classList.remove('copied'), 1500);
+    }
+    showSuccessToast(t('wallet.copied', 'Copied'));
+  } else {
+    showErrorToast(t('toast.copyFailed', 'Copy failed'));
+  }
 });
 
 // Initialize global click handler for closing menus

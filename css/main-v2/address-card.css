@@ -165,8 +165,10 @@
 
 .main-v2 .addr-detail-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   padding: 8px 0;
   border-top: 1px dashed var(--neutral-200);
 }
@@ -179,20 +181,32 @@
 .main-v2 .addr-detail-label {
   font-size: 11px;
   color: var(--text-muted);
+  flex-shrink: 0;
 }
 
 .main-v2 .addr-detail-value {
+  flex: 1 1 auto;
+  min-width: 0;
   font-size: 11px;
   font-weight: 500;
   color: var(--text-primary);
   font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+  word-break: break-all;
+  text-align: right;
 }
 
 .main-v2 .addr-detail-value.gas {
   color: var(--fresh-orange);
   background: rgba(245, 158, 11, 0.1);
-  padding: 2px 6px;
-  border-radius: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  /* 8px to match balance-breakdown */
+  align-self: flex-start;
+  flex: 0 0 auto !important;
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid rgba(245, 158, 11, 0.2);
 }
 
 /* 地址操作按钮 - 高优先级覆盖 */
@@ -204,16 +218,18 @@
   padding-top: 8px !important;
   border-top: 1px solid var(--neutral-200) !important;
   align-items: center !important;
+  flex-wrap: wrap !important;
 }
 
 .main-v2 .addr-action-btn {
-  flex: 1 !important;
+  flex: 1 1 110px !important;
+  min-width: 0 !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 5px !important;
-  padding: 10px 14px !important;
-  font-size: 13px !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
   font-weight: 500 !important;
   border: none !important;
   border-radius: var(--radius-sm) !important;
@@ -228,21 +244,26 @@
   height: 12px;
 }
 
-.main-v2 .addr-action-btn--primary {
-  background: var(--wallet-gradient) !important;
-  color: white !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2) !important;
+
+.main-v2 .addr-action-btn--primary.btn-receive {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+  box-shadow: none !important;
 }
 
-.main-v2 .addr-action-btn--primary:hover {
+.main-v2 .addr-action-btn--primary.btn-receive:hover {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  color: #1e3a8a !important;
+  border-color: #93c5fd !important;
   transform: translateY(-1px) !important;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
-.main-v2 .addr-action-btn--primary:active {
+.main-v2 .addr-action-btn--primary.btn-receive:active {
   transform: translateY(0) !important;
 }
 
+/* SECONDARY (EXPORT) - GREEN */
 .main-v2 .addr-action-btn--secondary.btn-export {
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
   color: #166534 !important;
@@ -255,15 +276,17 @@
   border-color: #86efac !important;
 }
 
+/* DANGER (DELETE) - RED */
 .main-v2 .addr-action-btn--danger.btn-delete {
-  background: var(--neutral-100) !important;
-  color: var(--text-secondary) !important;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border: 1px solid #fecaca !important;
 }
 
 .main-v2 .addr-action-btn--danger.btn-delete:hover {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%) !important;
-  color: #dc2626 !important;
-  border: 1px solid #fecaca !important;
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  color: #b91c1c !important;
+  border-color: #fca5a5 !important;
 }
 
 /* Dark mode - delete button */
@@ -376,7 +399,7 @@
 }
 
 /* ========================================
-   深色模式适配
+   深色模式适配 - 按钮颜色调整
    ======================================== */
 [data-theme="dark"] .main-v2 .addr-action-btn--secondary.btn-export {
   background: linear-gradient(135deg, rgba(6, 95, 70, 0.15) 0%, rgba(4, 120, 87, 0.15) 100%) !important;
@@ -390,4 +413,16 @@
   color: #6ee7b7 !important;
   /* Emerald 300 */
   border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+[data-theme="dark"] .main-v2 .addr-action-btn--primary.btn-receive {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+}
+
+[data-theme="dark"] .main-v2 .addr-action-btn--primary.btn-receive:hover {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%) !important;
+  color: #93c5fd !important;
+  border-color: rgba(96, 165, 250, 0.4) !important;
 }

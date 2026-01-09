@@ -393,6 +393,8 @@ export function clearAccountStorage(): void {
   try { localStorage.removeItem('walletUser'); } catch { }
   try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { }
   try { localStorage.removeItem('guarChoice'); } catch { }
+  try { localStorage.removeItem('capsuleAddressCache'); } catch { }
+  try { localStorage.removeItem('orgPublicKeyCache'); } catch { }
 
   // Sync to centralized store for state management
   setUser(null);

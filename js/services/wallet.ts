@@ -17,7 +17,7 @@ import { IS_DEV } from '../config/constants';
 import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
 import { store, selectUser, setUser } from '../utils/store.js';
 import { readAddressInterest } from '../utils/helpers.js';
-import { getActionModalElements, showConfirmModal } from '../ui/modal';
+import { getActionModalElements, showConfirmModal, showModalTip, showUnifiedLoading, hideUnifiedOverlay } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast.js';
 import { importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
@@ -36,6 +36,7 @@ import {
 } from '../utils/walletSkeleton';
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { createNewAddressOnBackend, isUserInOrganization, registerAddressOnComNode } from './address';
+import { requestCapsuleAddress } from './capsule';
 import { updateTransferButtonState } from './transfer';
 import { addTxHistoryRecords, getTxHistory, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
 import {
@@ -559,7 +560,7 @@ export function renderWallet(): void {
           </div>
           <div class="addr-detail-row">
             <span class="addr-detail-label">GAS</span>
-            <span class="addr-detail-value gas">${String(gas0)}</span>
+            <span class="addr-detail-value gas">${(Number(gas0) || 0).toFixed(1)}</span>
           </div>
           ${hasTXCers ? viewHtml`
             <div class="txcer-breakdown">
@@ -588,13 +589,20 @@ export function renderWallet(): void {
             </div>
           ` : ''}
           <div class="addr-card-actions">
+            <button class="addr-action-btn addr-action-btn--primary btn-receive" data-action="showReceiveAddress" data-addr="${a}" title="${t('capsule.showReceiveAddress')}">
+              <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M10 13a5 5 0 0 0 7.07 0l2.83-2.83a5 5 0 0 0-7.07-7.07L11 4"/>
+                <path d="M14 11a5 5 0 0 0-7.07 0L4.1 13.83a5 5 0 1 0 7.07 7.07L13 20"/>
+              </svg>
+              ${t('capsule.showReceiveShort')}
+            </button>
             <button class="addr-action-btn addr-action-btn--secondary btn-export" data-action="exportPrivateKey" data-addr="${a}" title="${t('wallet.exportPrivateKey')}">
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-              ${t('wallet.exportPrivateKey')}
+              ${t('wallet.exportKeyShort')}
             </button>
             <button class="addr-action-btn addr-action-btn--danger btn-delete" data-action="deleteAddress" data-addr="${a}" title="${t('wallet.deleteAddress')}">
               <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
-              ${t('wallet.deleteAddress')}
+              ${t('wallet.deleteShort')}
             </button>
           </div>
         </div>
@@ -645,6 +653,7 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
       </svg>
     </button>
     <div class="ops-menu hidden">
+      <button class="ops-item" data-action="showReceiveAddress" data-addr="${escapeHtml(address)}">${escapeHtml(t('capsule.showReceiveAddress'))}</button>
       <button class="ops-item" data-action="exportPrivateKey" data-addr="${escapeHtml(address)}">${escapeHtml(t('wallet.exportPrivateKey'))}</button>
       <button class="ops-item danger" data-action="deleteAddress" data-addr="${escapeHtml(address)}">${escapeHtml(t('wallet.deleteAddress'))}</button>
     </div>
@@ -998,6 +1007,48 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
     }
   };
   ok?.addEventListener('click', handler);
+}
+
+/**
+ * Handle capsule address generation for receiving funds
+ */
+export async function handleShowReceiveAddress(address: string): Promise<void> {
+  closeAllOpsMenus();
+
+  const addr = String(address || '').trim();
+  if (!addr) {
+    showErrorToast(t('error.invalidAddress', 'Invalid address'));
+    return;
+  }
+
+  showUnifiedLoading(t('capsule.generating', 'Generating capsule address...'));
+
+  try {
+    const capsule = await requestCapsuleAddress(addr);
+    const content = viewHtml`
+      <div class="capsule-modal">
+        <div class="capsule-modal__label">${t('capsule.addressLabel', 'Capsule Address')}</div>
+        <div class="success-key-row capsule-key-row">
+          <div class="success-key-code">${capsule}</div>
+          <button class="success-copy-btn" data-action="copyCapsule" data-capsule="${capsule}" aria-label="${t('capsule.copyBtn', 'Copy Capsule Address')}">
+            <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+              <rect x="3" y="3" width="13" height="13" rx="2"></rect>
+            </svg>
+            <svg class="copy-success-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+        </div>
+        <div class="capsule-modal__hint">${t('capsule.tip', 'Send this address to the payer.')}</div>
+      </div>
+    `;
+    showModalTip(t('capsule.modalTitle', 'Receive Capsule Address'), content);
+  } catch (error) {
+    hideUnifiedOverlay();
+    const msg = error instanceof Error ? error.message : t('error.unknownError', 'Unknown error');
+    showErrorToast(msg);
+  }
 }
 
 /**
@@ -1411,7 +1462,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
   showUnifiedLoading(t('walletModal.importing', '正在导入...'));
 
   try {
-        // Check if user is in organization - if so, sync with backend first
+    // Check if user is in organization - if so, sync with backend first
     const inOrg = isUserInOrganization();
     let registerError: string | null = null;
 
@@ -1428,7 +1479,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
 
         if (result.error === 'USER_CANCELLED') {
           console.info('[Wallet] User cancelled password input');
-            showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
+          showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
           return;
         }
 
@@ -1495,7 +1546,7 @@ async function importAddressInPlaceWithData(
   const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
   const addr = address.toLowerCase();
 
-    const existing = acc.wallet.addressMsg[addr] || {
+  const existing = acc.wallet.addressMsg[addr] || {
     type: coinType,
     utxos: {},
     txCers: {},
@@ -1613,7 +1664,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
       if (!result.success) {
         const errorMsg = 'error' in result ? result.error : t('error.unknownError');
         if (result.error === 'USER_CANCELLED') {
-            showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
+          showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
           return;
         }
 
@@ -1729,7 +1780,7 @@ export async function handleAddrModalOk(): Promise<void> {
         return;
       }
 
-            // Check for duplicate address
+      // Check for duplicate address
       const u2 = getCurrentUser();
       if (u2) {
         const lowerMain = (u2.address || '').toLowerCase();

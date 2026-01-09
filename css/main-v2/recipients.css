@@ -211,11 +211,13 @@
 
 /* 地址查询按钮 */
 .recipient-lookup-btn {
-  width: 36px;
+  min-width: 36px;
   height: 36px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
   background: rgba(59, 130, 246, 0.12);
   border: 1px solid rgba(59, 130, 246, 0.25);
   border-radius: 8px;
@@ -238,6 +240,23 @@
   height: 16px;
 }
 
+.recipient-lookup-btn .lookup-text {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.recipient-lookup-btn.icon-only {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+}
+
+.recipient-lookup-btn.icon-only .lookup-text {
+  display: none;
+}
+
 /* 加载状态的spinner */
 .recipient-lookup-btn .lookup-spinner {
   position: absolute;
@@ -256,6 +275,10 @@
 }
 
 .recipient-lookup-btn.is-loading svg {
+  opacity: 0;
+}
+
+.recipient-lookup-btn.is-loading .lookup-text {
   opacity: 0;
 }
 

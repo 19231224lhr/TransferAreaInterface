@@ -9,6 +9,7 @@ import { showMiniToast, showInfoToast, showToast, showErrorToast, showSuccessToa
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto } from '../utils/view';
 import { querySingleAddressGroup, GROUP_ID_NOT_EXIST, GROUP_ID_RETAIL } from './accountQuery';
+import { isCapsuleAddress, verifyCapsuleAddress } from './capsule';
 
 let billSeq = 0;
 
@@ -156,11 +157,12 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           <span class="recipient-field-label">${t('transfer.recipientAddress')}</span>
           <div class="recipient-addr-input-wrap">
             <input id="${idBase}_to" name="recipient_to" class="input" type="text" placeholder="${t('transfer.enterRecipientAddress')}" aria-label="目标地址" data-name="to">
-            <button type="button" class="recipient-lookup-btn" aria-label="查询地址信息" title="自动补全担保组织与公钥" data-role="addr-lookup">
+            <button type="button" class="recipient-lookup-btn icon-only" aria-label="${t('capsule.verifyBtn')}" title="${t('capsule.verifyBtn')}" data-role="addr-lookup">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"/>
-                <path d="M21 21l-4.35-4.35"/>
+                <path d="M12 3l7 4v5c0 5-3.5 9-7 9s-7-4-7-9V7l7-4z"/>
+                <path d="M9 12l2 2 4-4"/>
               </svg>
+              <span class="lookup-text">${t('capsule.verifyBtn')}</span>
               <span class="lookup-spinner"></span>
             </button>
           </div>
@@ -253,25 +255,83 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
     lookupBtn.addEventListener('click', async () => {
       if (lookupBtn.dataset.loading === '1') return;
       const raw = addrInputEl.value || '';
-      const normalized = normalizeAddrInput(raw);
-      if (!normalized) {
+      const trimmed = String(raw).trim();
+      const isCapsule = isCapsuleAddress(trimmed);
+      const tfModeSelect = document.getElementById(DOM_IDS.tfMode);
+      const isCrossChainMode = tfModeSelect && tfModeSelect.value === 'cross';
+
+      if (isCrossChainMode) {
+        if (!trimmed) {
+          showErrorToast(t('transfer.enterRecipientAddress'));
+          return;
+        }
+        const ethAddressRegex = /^0x[a-fA-F0-9]{40}$/i;
+        if (!ethAddressRegex.test(trimmed)) {
+          showErrorToast(
+            t('tx.invalidEthAddress') || 'Cross-chain address must be Ethereum format (0x...)',
+            t('tx.crossChainAddressFormat') || 'Cross-chain address format error'
+          );
+          return;
+        }
+        showSuccessToast(t('tx.ethAddressValid', 'Ethereum address format verified'));
+        return;
+      }
+
+      if (!trimmed) {
         showTxValidationError(t('transfer.enterRecipientAddress'), addrInputEl, t('tx.addressEmpty'));
         return;
       }
-      if (!isValidAddressFormat(normalized)) {
-        showTxValidationError(t('tx.addressFormatErrorDesc'), addrInputEl, t('tx.addressFormatError'));
-        return;
+
+      if (!isCapsule) {
+        const normalized = normalizeAddrInput(trimmed);
+        if (!isValidAddressFormat(normalized)) {
+          showTxValidationError(t('tx.addressFormatErrorDesc'), addrInputEl, t('tx.addressFormatError'));
+          return;
+        }
       }
+
       lookupBtn.dataset.loading = '1';
       lookupBtn.classList.add('is-loading');
       lookupBtn.disabled = true;
       try {
-        const started = Date.now();
-        const info = await fetchAddrInfo(normalized);
-        const elapsed = Date.now() - started;
-        if (elapsed < 2000) {
-          await new Promise((resolve) => setTimeout(resolve, 2000 - elapsed));
+        if (isCapsule) {
+          const verified = await verifyCapsuleAddress(trimmed);
+          const info = await fetchAddrInfo(verified.address);
+
+          if (!info) {
+            showErrorToast(t('tx.addressNotFound'));
+            return;
+          }
+
+          const isRetailCapsule = verified.orgId === '00000000';
+          const orgMatched = isRetailCapsule ? info.isRetail : info.groupId === verified.orgId;
+
+          if (!orgMatched) {
+            showErrorToast(t('capsule.verifyFailed', '胶囊地址校验失败'));
+            return;
+          }
+
+          // Fill in public key if available
+          if (pubInputEl && info.pubKey) {
+            pubInputEl.value = info.pubKey;
+          }
+
+          // Fill in group ID (empty for retail addresses)
+          if (gidInputEl) {
+            gidInputEl.value = info.groupId || '';
+          }
+
+          addrInputEl.dataset.resolved = verified.address;
+
+          // Auto-expand details section
+          card.classList.add('expanded');
+          showSuccessToast(t('capsule.verifySuccess', '胶囊地址已验证'));
+          return;
         }
+
+        showInfoToast(t('capsule.verifyRawAddress', 'You are verifying a raw address.'), '', 1500);
+        const normalized = normalizeAddrInput(trimmed);
+        const info = await fetchAddrInfo(normalized);
         if (!info) {
           // GroupID = "0": Address does not exist
           showErrorToast(t('tx.addressNotFound'));
@@ -308,12 +368,18 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           showSuccessToast(t('tx.infoRetrieved', { info: found }));
         }
       } catch (e) {
-        showErrorToast(t('tx.queryFailed'));
+        showErrorToast(e instanceof Error ? e.message : t('tx.queryFailed'));
       } finally {
         lookupBtn.disabled = false;
         lookupBtn.classList.remove('is-loading');
         delete lookupBtn.dataset.loading;
       }
+    });
+  }
+
+  if (addrInputEl) {
+    addrInputEl.addEventListener('input', () => {
+      delete addrInputEl.dataset.resolved;
     });
   }
 

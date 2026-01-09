@@ -69,6 +69,7 @@ export const API_ENDPOINTS = {
   ASSIGN_HEALTH: (groupId: string) => `/api/v1/${groupId}/assign/health`,
   ASSIGN_NEW_ADDRESS: (groupId: string) => `/api/v1/${groupId}/assign/new-address`,
   ASSIGN_UNBIND_ADDRESS: (groupId: string) => `/api/v1/${groupId}/assign/unbind-address`,
+  ASSIGN_CAPSULE_GENERATE: (groupId: string) => `/api/v1/${groupId}/assign/capsule/generate`,
   ASSIGN_FLOW_APPLY: (groupId: string) => `/api/v1/${groupId}/assign/flow-apply`,
   ASSIGN_SUBMIT_TX: (groupId: string) => `/api/v1/${groupId}/assign/submit-tx`,
   ASSIGN_TX_STATUS: (groupId: string, txId: string) => `/api/v1/${groupId}/assign/tx-status/${txId}`,
@@ -87,8 +88,11 @@ export const API_ENDPOINTS = {
   COM_QUERY_ADDRESS: '/api/v1/com/query-address',
   COM_QUERY_ADDRESS_GROUP: '/api/v1/com/query-address-group',
   COM_REGISTER_ADDRESS: '/api/v1/com/register-address',
+  COM_CAPSULE_GENERATE: '/api/v1/com/capsule/generate',
+  COM_PUBLIC_KEY: '/api/v1/com/public-key',
   COM_SUBMIT_NOGUARGROUP_TX: '/api/v1/com/submit-noguargroup-tx',
-  COM_UTXO_CHANGE: (committeeId: string) => `/api/v1/${committeeId}/com/utxo-change`
+  COM_UTXO_CHANGE: (committeeId: string) => `/api/v1/${committeeId}/com/utxo-change`,
+  ORG_PUBLIC_KEY: '/api/v1/org/publickey'
 } as const;
 
 // ============================================================================

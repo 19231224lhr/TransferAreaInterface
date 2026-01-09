@@ -25,6 +25,7 @@ import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
+import { isCapsuleAddress } from './capsule';
 
 // ========================================
 // Type Definitions
@@ -391,7 +392,9 @@ export function initTransferSubmit(): void {
         const gasEl = r.querySelector('[data-name="gas"]') as HTMLInputElement | null;
 
         const to = String((toEl && toEl.value) || '').trim();
-        const normalizedTo = normalizeAddrInput(to);
+        const isCapsule = isCapsuleAddress(to);
+        const resolvedTo = isCapsule ? String(toEl?.dataset?.resolved || '').trim() : '';
+        const normalizedTo = normalizeAddrInput(isCapsule ? resolvedTo : to);
         const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
         const mt = Number(mtRaw);
         const val = Number((valEl && valEl.value) || 0);
@@ -404,6 +407,14 @@ export function initTransferSubmit(): void {
         // Address validation using security.ts
         if (!to) {
           showTxValidationError(t('validation.addressRequired') || t('modal.inputIncomplete'), toEl, t('tx.addressEmpty'));
+          return;
+        }
+        if (isCapsule && !resolvedTo) {
+          showTxValidationError(t('capsule.notVerified', '请先验证胶囊地址'), toEl, t('capsule.invalidFormat', '胶囊地址格式不正确'));
+          return;
+        }
+        if (isCross && isCapsule) {
+          showTxValidationError(t('capsule.crossNotSupported', '跨链转账不支持胶囊地址'), toEl, t('tx.addressFormatError'));
           return;
         }
         const addrValidation = validateAddress(normalizedTo);
