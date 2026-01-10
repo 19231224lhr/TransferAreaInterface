@@ -1165,11 +1165,11 @@ export function updateCurrencyDisplay(u: User): void {
   const walletPGCEl = document.getElementById(DOM_IDS.walletPGC);
   const walletBTCEl = document.getElementById(DOM_IDS.walletBTC);
   const walletETHEl = document.getElementById(DOM_IDS.walletETH);
-  const vdUpdated = u.wallet?.valueDivision || { 0: 0, 1: 0, 2: 0 };
+  const totals = getAvailableTotals(u.wallet?.addressMsg || {});
 
-  if (walletPGCEl) walletPGCEl.textContent = Number(vdUpdated[0] || 0).toLocaleString();
-  if (walletBTCEl) walletBTCEl.textContent = Number(vdUpdated[1] || 0).toLocaleString();
-  if (walletETHEl) walletETHEl.textContent = Number(vdUpdated[2] || 0).toLocaleString();
+  if (walletPGCEl) walletPGCEl.textContent = totals.pgc.toLocaleString();
+  if (walletBTCEl) walletBTCEl.textContent = totals.btc.toLocaleString();
+  if (walletETHEl) walletETHEl.textContent = totals.eth.toLocaleString();
 
   // Update USDT display
   updateUSDTDisplay(u);
@@ -1304,58 +1304,10 @@ export function updateAllAddressCardBalances(u: User | null): void {
 function updateUSDTDisplay(u: User): void {
   const usdtEl = document.getElementById(DOM_IDS.walletUSDT);
   if (usdtEl && u?.wallet) {
-    const addressMsg = u.wallet.addressMsg || {};
-
-    // Calculate available balance per coin type by summing up all addresses
-    let availablePGC = 0;
-    let availableBTC = 0;
-    let availableETH = 0;
-
-    for (const [address, meta] of Object.entries(addressMsg)) {
-      if (!meta) continue;
-
-      const coinType = (meta as any).type ?? 0;
-      const utxos = (meta as any).utxos || {};
-      const txCers = (meta as any).txCers || {};
-
-      // Calculate UTXO balance (similar to renderAddressCard logic)
-      const utxoBalance = Object.values(utxos).reduce<number>((sum, val) => {
-        if (typeof val === 'object' && val !== null) {
-          return sum + (Number((val as any).Value) || 0);
-        }
-        return sum + (Number(val) || 0);
-      }, 0);
-
-      // Get locked UTXO balance
-      const lockedBalance = getLockedBalanceByAddress(address);
-      const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
-
-      // Calculate TXCer balance
-      const txCerIds = Object.keys(txCers);
-      const txCerBalance = Object.values(txCers).reduce<number>((sum, val) => sum + (Number(val) || 0), 0);
-
-      // Calculate locked TXCer balance
-      const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-        if (!isTXCerLocked(id)) return sum;
-        return sum + (Number((txCers as any)[id]) || 0);
-      }, 0);
-      const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
-
-      // Available balance for this address
-      const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
-
-      // Add to appropriate coin type total
-      if (coinType === 0) {
-        availablePGC += availableBalance;
-      } else if (coinType === 1) {
-        availableBTC += availableBalance;
-      } else if (coinType === 2) {
-        availableETH += availableBalance;
-      }
-    }
+    const totals = getAvailableTotals(u.wallet.addressMsg || {});
 
     // Calculate total USDT value (PGC 1:1, BTC 100:1, ETH 10:1)
-    const usdt = Math.round(availablePGC * 1 + availableBTC * 100 + availableETH * 10);
+    const usdt = Math.round(totals.pgc * 1 + totals.btc * 100 + totals.eth * 10);
 
     scheduleBatchUpdate('usdt-display', () => {
       usdtEl.textContent = usdt.toLocaleString();
@@ -1367,12 +1319,74 @@ function updateUSDTDisplay(u: User): void {
         const pgcV = bd.querySelector('.tag--pgc');
         const btcV = bd.querySelector('.tag--btc');
         const ethV = bd.querySelector('.tag--eth');
-        if (pgcV) pgcV.textContent = String(availablePGC);
-        if (btcV) btcV.textContent = String(availableBTC);
-        if (ethV) ethV.textContent = String(availableETH);
+        if (pgcV) pgcV.textContent = String(totals.pgc);
+        if (btcV) btcV.textContent = String(totals.btc);
+        if (ethV) ethV.textContent = String(totals.eth);
       });
     }
   }
+}
+
+function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc: number; btc: number; eth: number } {
+  let availablePGC = 0;
+  let availableBTC = 0;
+  let availableETH = 0;
+
+  for (const [address, meta] of Object.entries(addressMsg)) {
+    if (!meta) continue;
+
+    const coinType = Number(meta.type ?? 0);
+    const utxos = meta.utxos || {};
+    const txCers = meta.txCers || {};
+    const rawUtxoValue = meta.value?.utxoValue;
+    const rawTxCerValue = meta.value?.txCerValue;
+    const rawTotalValue = meta.value?.totalValue ?? meta.value?.TotalValue;
+
+    let utxoBalance = 0;
+    if (Object.keys(utxos).length > 0) {
+      utxoBalance = Object.values(utxos).reduce<number>((sum, val) => {
+        if (typeof val === 'object' && val !== null) {
+          return sum + (Number((val as any).Value) || 0);
+        }
+        return sum + (Number(val) || 0);
+      }, 0);
+    } else if (Number.isFinite(Number(rawUtxoValue))) {
+      utxoBalance = Number(rawUtxoValue || 0);
+    } else if (Number.isFinite(Number(rawTotalValue))) {
+      const total = Number(rawTotalValue || 0);
+      const txc = Number(rawTxCerValue || 0);
+      utxoBalance = Math.max(0, total - txc);
+    }
+
+    const lockedBalance = getLockedBalanceByAddress(address);
+    const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
+
+    const txCerIds = Object.keys(txCers);
+    let txCerBalance = 0;
+    if (txCerIds.length > 0) {
+      txCerBalance = Object.values(txCers).reduce<number>((sum, val) => sum + (Number(val) || 0), 0);
+    } else if (Number.isFinite(Number(rawTxCerValue))) {
+      txCerBalance = Number(rawTxCerValue || 0);
+    }
+
+    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
+      if (!isTXCerLocked(id)) return sum;
+      return sum + (Number((txCers as any)[id]) || 0);
+    }, 0);
+    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+
+    const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
+
+    if (coinType === 0) {
+      availablePGC += availableBalance;
+    } else if (coinType === 1) {
+      availableBTC += availableBalance;
+    } else if (coinType === 2) {
+      availableETH += availableBalance;
+    }
+  }
+
+  return { pgc: availablePGC, btc: availableBTC, eth: availableETH };
 }
 
 // ============================================================================
