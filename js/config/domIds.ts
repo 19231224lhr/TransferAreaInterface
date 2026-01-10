@@ -39,6 +39,7 @@ export const DOM_IDS = {
   addrModalTitle: 'addrModalTitle',
   addrOkBtn: 'addrOkBtn',
   addrPrivHex: 'addrPrivHex',
+  addrTypeSelect: 'addrTypeSelect',
   app: 'app',
   avatarFileInput: 'avatarFileInput',
   avatarPreviewImg: 'avatarPreviewImg',

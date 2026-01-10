@@ -99,6 +99,18 @@
   gap: 10px;
 }
 
+.main-v2 .addr-card-avatar.coin-icon--btc {
+  background: var(--coin-btc);
+}
+
+.main-v2 .addr-card-avatar.coin-icon--eth {
+  background: var(--coin-eth);
+}
+
+.main-v2 .addr-card-avatar.coin-icon--pgc {
+  background: var(--coin-pgc);
+}
+
 .main-v2 .addr-card-hash {
   font-size: 13px;
   color: var(--text-secondary);

@@ -471,6 +471,38 @@
       <div class="dialog">
         <h3 id="addrModalTitle" data-i18n="walletModal.createAddress">新建地址</h3>
         <div id="addrCreateBox" class="result">
+          <div class="form">
+            <div class="form-row">
+              <label data-i18n="walletModal.coinTypeLabel">币种类型</label>
+              <div class="option-input-wrapper custom-select" id="addrTypeSelectWrapper">
+                <div class="custom-select__value" id="addrTypeSelectDisplay">
+                  <span class="coin-icon coin--pgc">P</span>
+                  <span class="addr-val">PGC</span>
+                </div>
+                <div class="custom-select__arrow">
+                  <svg viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <polyline points="1 1 5 5 9 1"></polyline>
+                  </svg>
+                </div>
+                <div class="custom-select__menu">
+                  <div class="custom-select__item selected" data-value="0">
+                    <span class="coin-icon coin--pgc">P</span>
+                    <span class="addr-val">PGC</span>
+                  </div>
+                  <div class="custom-select__item" data-value="1">
+                    <span class="coin-icon coin--btc">B</span>
+                    <span class="addr-val">BTC</span>
+                  </div>
+                  <div class="custom-select__item" data-value="2">
+                    <span class="coin-icon coin--eth">E</span>
+                    <span class="addr-val">ETH</span>
+                  </div>
+                </div>
+                <input type="hidden" id="addrTypeSelect" value="0">
+              </div>
+            </div>
+          </div>
           <p class="tip" data-i18n="walletModal.createConfirm">确认新建一个子地址并加入当前账户。</p>
         </div>
         <div id="addrImportBox" class="result hidden">

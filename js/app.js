@@ -163,7 +163,8 @@ import {
   initRefreshSrcAddrList,
   initChangeAddressSelects,
   initRecipientCards,
-  initAdvancedOptions
+  initAdvancedOptions,
+  initAddrTypeSelect
 } from './services/wallet';
 import { buildNewTX, exchangeRate } from './services/transaction';
 import { initTransferSubmit } from './services/transfer';
@@ -593,6 +594,9 @@ registerAction('copyCapsule', async (el, data) => {
 
 // Initialize global click handler for closing menus
 initGlobalClickHandler();
+
+// Initialize custom select for coin type (Create Address)
+initAddrTypeSelect();
 
 // ========================================
 // Start Application

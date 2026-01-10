@@ -471,7 +471,7 @@ export function renderWallet(): void {
     // Use lit-html for safe and efficient rendering
     const template = viewHtml`
       <div class="addr-card-summary" data-action="toggleAddrCard" data-addr="${a}">
-        <div class="addr-card-avatar coin--${coinClass}">${coinType}</div>
+        <div class="addr-card-avatar coin-icon coin-icon--${coinClass}">${coinType.charAt(0)}</div>
         <div class="addr-card-main">
           <span class="addr-card-hash" title="${a}">${shortAddr}</span>
           <span class="addr-card-balance">
@@ -1402,6 +1402,7 @@ export function showAddrModal(mode: 'create' | 'import'): void {
   const addrTitle = document.getElementById(DOM_IDS.addrModalTitle);
   const addrCreateBox = document.getElementById(DOM_IDS.addrCreateBox);
   const addrImportBox = document.getElementById(DOM_IDS.addrImportBox);
+  const addrTypeSelect = document.getElementById(DOM_IDS.addrTypeSelect) as HTMLSelectElement | null;
 
   if (addrTitle) addrTitle.textContent = mode === 'import' ? t('walletModal.importAddress') : t('walletModal.createAddress');
   if (addrCreateBox) addrCreateBox.classList.toggle('hidden', mode !== 'create');
@@ -1410,6 +1411,8 @@ export function showAddrModal(mode: 'create' | 'import'): void {
   if (mode === 'import') {
     const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
     if (input) input.value = '';
+  } else {
+    resetAddrTypeSelect();
   }
 
   if (addrModal) addrModal.classList.remove('hidden');
@@ -1783,7 +1786,11 @@ export async function handleAddrModalOk(): Promise<void> {
   if (__addrMode === 'create') {
     hideAddrModal();
     if (typeof window.PanguPay?.account?.addNewSubWallet === 'function') {
-      await window.PanguPay.account.addNewSubWallet();
+      const typeSelect = document.getElementById(DOM_IDS.addrTypeSelect) as HTMLSelectElement | null;
+      const rawType = typeSelect?.value ?? '0';
+      const parsedType = Number.parseInt(rawType, 10);
+      const addressType = [0, 1, 2].includes(parsedType) ? parsedType : 0;
+      await window.PanguPay.account.addNewSubWallet(addressType);
     }
   } else {
     const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;
@@ -2685,7 +2692,10 @@ export async function refreshWalletBalances(): Promise<boolean> {
         meta.gas = balanceInfo.interest;
 
         // Update type
-        meta.type = balanceInfo.type;
+        // Update type (Preserve local type if set to non-PGC, as backend might return default 0)
+        if (!meta.type || meta.type === 0) {
+          meta.type = balanceInfo.type;
+        }
 
         // Update UTXOs if available, but PRESERVE locked UTXOs
         if (balanceInfo.utxoCount > 0) {
@@ -2828,3 +2838,77 @@ export function initGlobalClickHandler(): void {
 
 
 
+
+/**
+ * Initialize custom select for address type
+ */
+export function initAddrTypeSelect(): void {
+  const wrapper = document.getElementById('addrTypeSelectWrapper');
+  const display = document.getElementById('addrTypeSelectDisplay');
+  const input = document.getElementById('addrTypeSelect') as HTMLInputElement;
+
+  if (!wrapper || !display || !input) return;
+
+  // Toggle dropdown
+  wrapper.addEventListener('click', (e) => {
+    e.stopPropagation();
+    wrapper.classList.toggle('open');
+  });
+
+  // Handle item selection
+  const items = wrapper.querySelectorAll('.custom-select__item');
+  items.forEach(item => {
+    item.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const value = item.getAttribute('data-value');
+      if (!value) return;
+
+      // Update input
+      input.value = value;
+
+      // Update display
+      display.innerHTML = item.innerHTML;
+      const addrVal = display.querySelector('.addr-val') as HTMLElement;
+      if (addrVal) addrVal.style.marginLeft = '8px';
+
+      // Update selected class
+      items.forEach(i => i.classList.remove('selected'));
+      item.classList.add('selected');
+
+      // Close dropdown
+      wrapper.classList.remove('open');
+    });
+  });
+
+  // Close when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target as Node)) {
+      wrapper.classList.remove('open');
+    }
+  });
+}
+
+/**
+ * Reset address type select to PGC (Default)
+ */
+export function resetAddrTypeSelect(): void {
+  const wrapper = document.getElementById('addrTypeSelectWrapper');
+  const input = document.getElementById('addrTypeSelect') as HTMLInputElement;
+  const display = document.getElementById('addrTypeSelectDisplay');
+
+  if (input) input.value = '0';
+  if (display) {
+    display.innerHTML = `
+        <span class="coin-icon coin--pgc">P</span>
+        <span class="addr-val" style="margin-left: 8px;">PGC</span>
+      `;
+  }
+  if (wrapper) {
+    const items = wrapper.querySelectorAll('.custom-select__item');
+    items.forEach(i => {
+      if (i.getAttribute('data-value') === '0') i.classList.add('selected');
+      else i.classList.remove('selected');
+    });
+    wrapper.classList.remove('open');
+  }
+}
