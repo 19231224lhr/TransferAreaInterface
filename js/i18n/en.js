@@ -795,6 +795,8 @@ export default {
   'history.status': 'Status',
   'history.blockNumber': 'Block Number',
   'history.confirmations': 'Confirmations',
+  'history.prevPage': 'Previous',
+  'history.nextPage': 'Next',
   'history.failureReason': 'Failure Reason',
   'history.mode.normal': 'Normal Transfer',
   'history.mode.quick': 'Quick Transfer',

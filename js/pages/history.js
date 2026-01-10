@@ -18,8 +18,8 @@ import { getTxHistory, getTxHistoryEventName } from '../services/txHistory.ts';
 let currentFilter = 'all';
 let selectedTransaction = null;
 let historyListenerBound = false;
-
-
+let currentPage = 1;
+const itemsPerPage = 5;
 
 function resolveTransferMode(tx) {
   if (tx && tx.transferMode) return tx.transferMode;
@@ -62,11 +62,118 @@ function filterTransactions(period, transactions) {
 }
 
 /**
+ * Render pagination controls
+ */
+function renderPagination(totalItems) {
+  const listEl = document.getElementById(DOM_IDS.historyList);
+  if (!listEl) return;
+
+  // Remove existing pagination if present
+  const existingPagination = document.querySelector('.history-pagination');
+  if (existingPagination) {
+    existingPagination.remove();
+  }
+
+  if (totalItems <= itemsPerPage) return;
+
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const paginationContainer = document.createElement('div');
+  paginationContainer.className = 'history-pagination';
+
+  // Helper to create page change handler
+  const handlePageChange = (page) => {
+    currentPage = page;
+    const allTransactions = getTxHistory();
+    const filtered = filterTransactions(currentFilter, allTransactions);
+    renderTransactionList(filtered);
+
+    // Scroll to top of list smoothly
+    const listTop = document.querySelector('.history-list-container');
+    if (listTop) listTop.scrollTop = 0;
+  };
+
+  // Generate page numbers
+  const renderPageNumbers = () => {
+    const numbersContainer = document.createElement('div');
+    numbersContainer.className = 'pagination-numbers';
+
+    // Logic to show limited page numbers (e.g. 1, 2, 3 ... 10)
+    // For simplicity with max 5 items/page, we might show all if < 7, else use ellipsis
+
+    const createBtn = (pageNum, isActive = false) => {
+      const btn = document.createElement('button');
+      btn.className = `pagination-number-btn ${isActive ? 'active' : ''}`;
+      btn.textContent = pageNum;
+      btn.addEventListener('click', () => handlePageChange(pageNum));
+      return btn;
+    };
+
+    const createEllipsis = () => {
+      const span = document.createElement('span');
+      span.className = 'pagination-number-ellipsis';
+      span.textContent = '...';
+      return span;
+    };
+
+    // Always show first page
+    numbersContainer.appendChild(createBtn(1, currentPage === 1));
+
+    let startPage = Math.max(2, currentPage - 1);
+    let endPage = Math.min(totalPages - 1, currentPage + 1);
+
+    if (startPage > 2) {
+      numbersContainer.appendChild(createEllipsis());
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      numbersContainer.appendChild(createBtn(i, currentPage === i));
+    }
+
+    if (endPage < totalPages - 1) {
+      numbersContainer.appendChild(createEllipsis());
+    }
+
+    // Always show last page if > 1
+    if (totalPages > 1) {
+      numbersContainer.appendChild(createBtn(totalPages, currentPage === totalPages));
+    }
+
+    return numbersContainer;
+  };
+
+  // Previous Button
+  const prevBtn = document.createElement('button');
+  prevBtn.className = 'pagination-btn';
+  prevBtn.textContent = t('history.prevPage');
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener('click', () => handlePageChange(currentPage - 1));
+
+  // Next Button
+  const nextBtn = document.createElement('button');
+  nextBtn.className = 'pagination-btn';
+  nextBtn.textContent = t('history.nextPage');
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener('click', () => handlePageChange(currentPage + 1));
+
+  // Append buttons and numbers
+  paginationContainer.appendChild(prevBtn);
+  paginationContainer.appendChild(renderPageNumbers());
+  paginationContainer.appendChild(nextBtn);
+
+  // Append after the list
+  listEl.parentNode.appendChild(paginationContainer);
+}
+
+/**
  * Render transaction list
  */
 function renderTransactionList(transactions) {
   const listEl = document.getElementById(DOM_IDS.historyList);
   if (!listEl) return;
+
+  // Clear existing pagination when re-rendering list
+  const existingPagination = document.querySelector('.history-pagination');
+  if (existingPagination) existingPagination.remove();
 
   if (transactions.length === 0) {
     // Use lit-html for safe and efficient rendering
@@ -85,10 +192,20 @@ function renderTransactionList(transactions) {
     return;
   }
 
+  // Calculate pagination slice
+  const totalItems = transactions.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+  if (currentPage > totalPages) currentPage = Math.max(1, totalPages);
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const pagedTransactions = transactions.slice(startIndex, endIndex);
+
   // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
 
-  transactions.forEach(tx => {
+  pagedTransactions.forEach(tx => {
     const item = document.createElement('div');
     item.className = `history-item ${selectedTransaction?.id === tx.id ? 'expanded' : ''}`;
     item.dataset.txId = tx.id;
@@ -155,6 +272,9 @@ function renderTransactionList(transactions) {
   // Single DOM update
   listEl.replaceChildren();
   listEl.appendChild(fragment);
+
+  // Render pagination controls (if needed)
+  renderPagination(totalItems);
 }
 
 /**
@@ -317,6 +437,7 @@ export function initHistoryPage() {
   // Create debounced filter handler to prevent rapid re-renders
   const handleFilterChange = rafDebounce((period) => {
     currentFilter = period;
+    currentPage = 1; // Reset to first page on filter change
 
     // Filter and render
     const allTransactions = getTxHistory();
@@ -367,6 +488,7 @@ export function initHistoryPage() {
 export function resetHistoryPageState() {
   currentFilter = 'all';
   selectedTransaction = null;
+  currentPage = 1;
 
   // Collapse all expanded items
   document.querySelectorAll('.history-item.expanded').forEach(item => {

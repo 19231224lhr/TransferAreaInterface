@@ -801,6 +801,8 @@ export default {
   'history.status': '状态',
   'history.blockNumber': '区块高度',
   'history.confirmations': '确认数',
+  'history.prevPage': '上一页',
+  'history.nextPage': '下一页',
   'history.failureReason': '失败原因',
   'history.mode.normal': '普通转账',
   'history.mode.quick': '快速转账',

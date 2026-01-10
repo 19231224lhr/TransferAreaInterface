@@ -924,3 +924,117 @@
 [data-theme="dark"] .history-detail-value {
   color: var(--color-text-primary);
 }
+/* ========================================
+   分页控件样式
+   ======================================== */
+
+.history-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.pagination-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 0 16px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.pagination-btn:hover:not(:disabled) {
+    border-color: #6366f1;
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.pagination-btn:active:not(:disabled) {
+    background: rgba(99, 102, 241, 0.1);
+    transform: translateY(1px);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    font-weight: 500;
+    font-family: 'SF Mono', 'Monaco', monospace;
+}
+
+.pagination-total {
+    color: #94a3b8;
+}
+
+/* Page number buttons specific style */
+.pagination-numbers {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.pagination-number-btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.pagination-number-btn:hover:not(.active) {
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.05);
+}
+
+.pagination-number-btn.active {
+    background: #6366f1;
+    color: white;
+    border-color: #6366f1;
+    box-shadow: 0 2px 4px rgba(99, 102, 241, 0.2);
+}
+
+.pagination-number-ellipsis {
+    color: #94a3b8;
+    padding: 0 4px;
+}
+
+@media (max-width: 600px) {
+    .history-pagination {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .pagination-numbers {
+        order: -1;
+    }
+}
