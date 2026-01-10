@@ -81,7 +81,8 @@ async function fetchAddrInfo(addr) {
       groupId,
       pubKey,
       isRetail: info.isRetail,
-      isInGroup: info.isInGroup
+      isInGroup: info.isInGroup,
+      type: info.type ?? 0  // 币种类型：0=PGC, 1=BTC, 2=ETH
     };
 
   } catch (error) {
@@ -323,6 +324,22 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
 
           addrInputEl.dataset.resolved = verified.address;
 
+          // Auto-set coin type based on query result
+          if (info.type !== undefined) {
+            const coinSelect = card.querySelector('.recipient-coin-select');
+            const hiddenMt = card.querySelector('[data-name="mt-hidden"]');
+            if (coinSelect && hiddenMt) {
+              coinSelect.dataset.val = String(info.type);
+              hiddenMt.value = String(info.type);
+              const valEl = coinSelect.querySelector('.recipient-coin-value');
+              if (valEl) {
+                const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+                const lbl = labels[info.type] || 'PGC';
+                valEl.querySelector('.coin-label').textContent = lbl;
+              }
+            }
+          }
+
           // Auto-expand details section
           card.classList.add('expanded');
           showSuccessToast(t('capsule.verifySuccess', '胶囊地址已验证'));
@@ -346,6 +363,22 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         // Fill in group ID (empty for retail addresses)
         if (gidInputEl) {
           gidInputEl.value = info.groupId || '';
+        }
+
+        // Auto-set coin type based on query result
+        if (info.type !== undefined) {
+          const coinSelect = card.querySelector('.recipient-coin-select');
+          const hiddenMt = card.querySelector('[data-name="mt-hidden"]');
+          if (coinSelect && hiddenMt) {
+            coinSelect.dataset.val = String(info.type);
+            hiddenMt.value = String(info.type);
+            const valEl = coinSelect.querySelector('.recipient-coin-value');
+            if (valEl) {
+              const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
+              const lbl = labels[info.type] || 'PGC';
+              valEl.querySelector('.coin-label').textContent = lbl;
+            }
+          }
         }
 
         // Auto-expand details section

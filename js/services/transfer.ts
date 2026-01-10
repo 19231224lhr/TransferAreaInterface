@@ -351,7 +351,7 @@ export function initTransferSubmit(): void {
         .map((x: any) => x.value);
 
       if (sel.length === 0) {
-        showTxValidationError(t('modal.pleaseLoginFirst'), null, t('tx.addressNotSelected'));
+        showTxValidationError(t('toast.pleaseSelectSourceAddress'), null, t('tx.addressNotSelected'));
         return;
       }
 

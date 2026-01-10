@@ -668,6 +668,7 @@ export default {
   'tx.addressEmpty': 'Address is empty',
   'tx.insufficientBalance': 'Insufficient balance',
   'tx.addressNotSelected': 'Address not selected',
+  'toast.pleaseSelectSourceAddress': 'Please select a source address first',
   'tx.addressError': 'Address error',
   'tx.missingTransferInfo': 'Transfer information missing',
   'tx.crossChainLimit': 'Cross-chain transaction limit',

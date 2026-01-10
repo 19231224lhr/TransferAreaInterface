@@ -545,6 +545,7 @@ export interface PublicKeyNew {
 export interface AddressGroupInfo {
   GroupID: string;        // "0" = not exist, "1" = retail, other = group ID
   PublicKey: PublicKeyNew;
+  Type: number;           // 币种类型：0=PGC, 1=BTC, 2=ETH
 }
 
 /**
@@ -569,6 +570,7 @@ export interface NormalizedAddressGroupInfo {
     x: string;
     y: string;
   } | null;
+  type: number;  // 币种类型：0=PGC, 1=BTC, 2=ETH
 }
 
 /**
@@ -678,7 +680,8 @@ function normalizeAddressGroupData(address: string, data: AddressGroupInfo): Nor
     exists,
     isRetail,
     isInGroup,
-    publicKey
+    publicKey,
+    type: data.Type ?? 0  // 默认为 PGC (0)
   };
 }
 

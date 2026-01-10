@@ -400,15 +400,44 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     }
   }
 
-  // 只更新区块高度
+  // 只更新区块高度（无钱包 UTXO 变化）
   if (update.IsNoWalletChange) {
+    let hasChangesInNoWallet = false;
+    
     if (nextHeight > prevHeight) {
       user.wallet.updateBlock = nextHeight;
-      
+      hasChangesInNoWallet = true;
+    }
+
+    // 🔧 关键修复：即使没有钱包 UTXO 变化，也要处理 AddressInterest 更新
+    // 后端在每个区块后都会返回最新的利息数据，必须同步到前端
+    if (update.AddressInterest && Object.keys(update.AddressInterest).length > 0) {
+      console.info('[AccountPolling] IsNoWalletChange=true, but applying AddressInterest:', update.AddressInterest);
+
+      for (const [address, interest] of Object.entries(update.AddressInterest)) {
+        const normalizedAddr = address.toLowerCase();
+        const addrData = user.wallet.addressMsg[normalizedAddr];
+
+        if (addrData) {
+          const prevInterest = Number((addrData as any).EstInterest ?? (addrData as any).estInterest ?? (addrData as any).gas ?? 0);
+          const newInterest = Number(interest);
+
+          // 更新所有利息字段（保持一致性）
+          (addrData as any).EstInterest = newInterest;
+          (addrData as any).estInterest = newInterest;
+          (addrData as any).gas = newInterest;
+
+          console.info(`[AccountPolling] Updated interest for ${normalizedAddr.slice(0, 10)}...: ${prevInterest.toFixed(4)} -> ${newInterest.toFixed(4)}`);
+          hasChangesInNoWallet = true;
+        }
+      }
+    }
+
+    if (hasChangesInNoWallet) {
       // IMPORTANT: 重新获取最新用户数据以包含 txHistory
       let latestUser = getCurrentUser();
       if (latestUser) {
-        latestUser.wallet.updateBlock = nextHeight;
+        latestUser.wallet = user.wallet;
         saveUser(latestUser);
       } else {
         saveUser(user);

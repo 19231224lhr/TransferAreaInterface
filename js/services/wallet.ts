@@ -1501,7 +1501,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
 
     // CHECK FIRST: Register on ComNode if needed (for unorganized users)
     if (!inOrg) {
-      const registerResult = await registerAddressOnComNode(address, pubXHex, pubYHex, privHex);
+      const registerResult = await registerAddressOnComNode(address, pubXHex, pubYHex, privHex, '', coinType);
       if (!registerResult.success) {
         // Critical error: Address belongs to another group or registration failed
         hideUnifiedOverlay();
@@ -1731,7 +1731,9 @@ async function importAddressInPlace(priv: string): Promise<void> {
         addr,
         addrMeta.pubXHex || '',
         addrMeta.pubYHex || '',
-        normPriv
+        normPriv,
+        '',
+        Number(addrMeta.type || 0)
       );
       if (!registerResult.success) {
         showErrorToast(registerResult.error || t('error.unknownError'), t('toast.addressRegisterFailed', 'Address registration failed'));

@@ -674,6 +674,7 @@ export default {
   'tx.addressEmpty': '地址为空',
   'tx.insufficientBalance': '余额不足',
   'tx.addressNotSelected': '地址未选择',
+  'toast.pleaseSelectSourceAddress': '请先选择一个来源地址',
   'tx.addressError': '地址错误',
   'tx.missingTransferInfo': '转账信息缺失',
   'tx.crossChainLimit': '跨链交易限制',

@@ -64,6 +64,7 @@ export interface RegisterAddressRequest {
   PublicKeyNew: PublicKeyNew;
   GroupID: string;
   TimeStamp: number;
+  Type: number;  // 币种类型：0=PGC, 1=BTC, 2=ETH
   Sig?: EcdsaSignature;
 }
 
@@ -299,13 +300,15 @@ function isAddressRegistrationReady(): boolean {
 
 /**
  * Register a retail address on ComNode for address-group lookups
+ * @param addressType - 币种类型：0=PGC, 1=BTC, 2=ETH，默认0
  */
 export async function registerAddressOnComNode(
   address: string,
   pubXHex: string,
   pubYHex: string,
   privHex: string,
-  groupID: string = ''
+  groupID: string = '',
+  addressType: number = 0
 ): Promise<AddressResult<RegisterAddressResponse>> {
   try {
     if (!isAddressRegistrationReady()) {
@@ -337,7 +340,8 @@ export async function registerAddressOnComNode(
       Address: address.toLowerCase(),
       PublicKeyNew: convertHexToPublicKey(pubXHex, pubYHex),
       GroupID: groupID,
-      TimeStamp: getTimestamp()
+      TimeStamp: getTimestamp(),
+      Type: addressType
     };
 
     const signature = signStruct(
@@ -456,7 +460,9 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
           addr,
           pubXHex,
           pubYHex,
-          privHex
+          privHex,
+          '',
+          Number(meta?.type || 0)
         );
 
         if (!result.success) {

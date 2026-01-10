@@ -394,7 +394,7 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     saveUser(acc);
 
     if (!inOrg) {
-      const registerResult = await registerAddressOnComNode(addr, pubXHex, pubYHex, privHex);
+      const registerResult = await registerAddressOnComNode(addr, pubXHex, pubYHex, privHex, '', addressType);
       if (!registerResult.success) {
         showErrorToast(
           registerResult.error || t('error.unknownError'),
