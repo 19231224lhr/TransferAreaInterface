@@ -299,6 +299,11 @@ export const selectSelectedAddresses = (state) => state.transfer.selectedAddress
  * @param {import('../types.js').User|null} user
  */
 export function setUser(user) {
+  if (user) {
+    console.debug('[Store/setUser] Setting user:', user.accountId, 'with', user.txHistory?.length || 0, 'history records');
+  } else {
+    console.debug('[Store/setUser] Clearing user');
+  }
   store.setState({ user });
 }
 

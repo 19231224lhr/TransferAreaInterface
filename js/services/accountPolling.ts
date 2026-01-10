@@ -390,14 +390,29 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   // This prevents the mismatch between UI display (reading mutated object) and 
   // transfer validation (reading from Store which might have stale data)
   if (interestAccrued) {
-    saveUser(user);
+    // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+    const latestUser = getCurrentUser();
+    if (latestUser) {
+      latestUser.wallet = user.wallet;
+      saveUser(latestUser);
+    } else {
+      saveUser(user);
+    }
   }
 
   // 只更新区块高度
   if (update.IsNoWalletChange) {
     if (nextHeight > prevHeight) {
       user.wallet.updateBlock = nextHeight;
-      saveUser(user);
+      
+      // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+      let latestUser = getCurrentUser();
+      if (latestUser) {
+        latestUser.wallet.updateBlock = nextHeight;
+        saveUser(latestUser);
+      } else {
+        saveUser(user);
+      }
 
       // If we don't have a solid baseline yet, refresh canonical interest once.
       // (ComNode returns current interest; AssignNode update doesn't.)
@@ -408,7 +423,15 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
             const qr = await queryAddressBalances(addrs);
             if (qr.success) {
               applyComNodeInterests(user.wallet as any, qr.data as any);
-              saveUser(user);
+              
+              // 再次重新获取最新用户
+              latestUser = getCurrentUser();
+              if (latestUser) {
+                latestUser.wallet = user.wallet;
+                saveUser(latestUser);
+              } else {
+                saveUser(user);
+              }
             }
           }
         } catch (e) {
@@ -492,12 +515,19 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
         const inferredMode = isCrossChainInbound
           ? 'cross'
           : (tx?.TXType === 8 ? 'normal' : 'quick');
-        if (!inboundTxId || !hasOutgoingTx(inboundTxId)) {
+        
+        // 添加接收记录的条件：
+        // 1. 必须有交易 ID
+        // 2. 这个交易不是本地发起的发送交易（避免重复记录）
+        if (inboundTxId && !hasOutgoingTx(inboundTxId)) {
           const fromAddr = tx?.TXInputsNormal?.[0]?.FromAddress || '-';
           const blockNumber = Number(inUtxo.UTXOData.Position?.Blocknum || update.BlockHeight || 0);
           const confirmations = blockNumber && update.BlockHeight
             ? Math.max(1, Number(update.BlockHeight) - blockNumber + 1)
             : undefined;
+          
+          console.info(`[AccountPolling] Adding receive history: id=in_${utxoId}, mode=${inferredMode}, from=${fromAddr.slice(0, 16)}...`);
+          
           addTxHistoryRecords({
             id: `in_${utxoId}`,
             type: 'receive',
@@ -513,6 +543,10 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
             blockNumber: blockNumber || undefined,
             confirmations
           });
+        } else if (!inboundTxId) {
+          console.warn('[AccountPolling] No transaction ID for incoming UTXO:', utxoId);
+        } else {
+          console.debug('[AccountPolling] Skipping duplicate receive record (outgoing tx exists):', inboundTxId);
         }
 
         if (isCrossChainInbound) {
@@ -590,20 +624,20 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
   // 这是确保 UI 显示正确 GAS 的关键步骤
   if (update.AddressInterest && Object.keys(update.AddressInterest).length > 0) {
     console.info('[AccountPolling] Applying AddressInterest from backend:', update.AddressInterest);
-    
+
     for (const [address, interest] of Object.entries(update.AddressInterest)) {
       const normalizedAddr = address.toLowerCase();
       const addrData = user.wallet.addressMsg[normalizedAddr];
-      
+
       if (addrData) {
         const prevInterest = Number((addrData as any).EstInterest ?? (addrData as any).estInterest ?? (addrData as any).gas ?? 0);
         const newInterest = Number(interest);
-        
+
         // 更新所有利息字段（保持一致性）
         (addrData as any).EstInterest = newInterest;
         (addrData as any).estInterest = newInterest;
         (addrData as any).gas = newInterest;
-        
+
         console.info(`[AccountPolling] Updated interest for ${normalizedAddr.slice(0, 10)}...: ${prevInterest.toFixed(4)} -> ${newInterest.toFixed(4)}`);
         hasChanges = true;
       }
@@ -624,7 +658,16 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     // ✅ 利息同步已通过 AddressInterest 字段完成
     // 后端在 account_update 中直接返回每个地址的最新利息，无需额外查询 ComNode
 
-    saveUser(user);
+    // IMPORTANT: 重新获取最新用户数据以包含可能通过 addTxHistoryRecords 更新的 txHistory
+    // 避免覆盖刚刚添加的交易历史记录
+    const latestUser = getCurrentUser();
+    if (latestUser) {
+      // 将计算后的 wallet 数据合并到最新用户对象中
+      latestUser.wallet = user.wallet;
+      saveUser(latestUser);
+    } else {
+      saveUser(user);
+    }
 
     // 刷新钱包 UI
     renderWallet();
@@ -697,7 +740,15 @@ export function processTXCerChangeDirectly(change: TXCerChangeToUser): void {
 
   // 重新计算并保存
   recalculateTotalBalance(user);
-  saveUser(user);
+  
+  // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+  const latestUser = getCurrentUser();
+  if (latestUser) {
+    latestUser.wallet = user.wallet;
+    saveUser(latestUser);
+  } else {
+    saveUser(user);
+  }
 
   // 刷新 UI
   renderWallet();
@@ -908,7 +959,16 @@ function startSSESync(userId: string, group: any): void {
 
           // Trigger UI refresh if needed (processTXCerChange handles logic but we might need to recalculate totals)
           recalculateTotalBalance(user);
-          saveUser(user);
+          
+          // IMPORTANT: 重新获取最新用户数据以包含可能通过 addTxHistoryRecords 更新的 txHistory
+          const latestUser = getCurrentUser();
+          if (latestUser) {
+            latestUser.wallet = user.wallet;
+            saveUser(latestUser);
+          } else {
+            saveUser(user);
+          }
+          
           renderWallet();
           refreshSrcAddrList();
           updateWalletBrief();
@@ -929,7 +989,16 @@ function startSSESync(userId: string, group: any): void {
           const result = processTXCerToUser(user, data as any);
           if (result) {
             recalculateTotalBalance(user);
-            saveUser(user);
+            
+            // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+            const latestUser = getCurrentUser();
+            if (latestUser) {
+              latestUser.wallet = user.wallet;
+              saveUser(latestUser);
+            } else {
+              saveUser(user);
+            }
+            
             renderWallet();
             refreshSrcAddrList();
             updateWalletBrief();
@@ -1141,7 +1210,16 @@ async function pollTXCerChanges(force = false): Promise<void> {
 
       if (hasChanges) {
         recalculateTotalBalance(user);
-        saveUser(user);
+        
+        // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+        const latestUser = getCurrentUser();
+        if (latestUser) {
+          latestUser.wallet = user.wallet;
+          saveUser(latestUser);
+        } else {
+          saveUser(user);
+        }
+        
         renderWallet();
         refreshSrcAddrList();
         updateWalletBrief();
@@ -1289,7 +1367,15 @@ async function pollCrossOrgTXCers(force = false): Promise<void> {
       if (hasChanges) {
         // 重新计算总余额
         recalculateTotalBalance(user);
-        saveUser(user);
+        
+        // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+        const latestUser = getCurrentUser();
+        if (latestUser) {
+          latestUser.wallet = user.wallet;
+          saveUser(latestUser);
+        } else {
+          saveUser(user);
+        }
 
         // 刷新UI
         renderWallet();

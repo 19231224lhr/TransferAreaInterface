@@ -19,13 +19,7 @@ let currentFilter = 'all';
 let selectedTransaction = null;
 let historyListenerBound = false;
 
-/**
- * Format address (show first 6 and last 4 characters)
- */
-function formatAddress(address) {
-  if (!address || address.length < 10) return address;
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
-}
+
 
 function resolveTransferMode(tx) {
   if (tx && tx.transferMode) return tx.transferMode;
@@ -124,11 +118,11 @@ function renderTransactionList(transactions) {
       <div class="history-item-body">
         <div class="history-item-info">
           <span class="history-item-info-label">${tx.type === 'send' ? t('history.to') : t('history.from')}</span>
-          <span class="history-item-info-value">${formatAddress(tx.type === 'send' ? tx.to : tx.from)}</span>
+          <span class="history-item-info-value">${tx.type === 'send' ? tx.to : tx.from}</span>
         </div>
         <div class="history-item-info">
           <span class="history-item-info-label">${t('history.txHash')}</span>
-          <span class="history-item-info-value">${formatAddress(tx.txHash)}</span>
+          <span class="history-item-info-value">${tx.txHash}</span>
         </div>
       </div>
       <div class="history-item-footer">

@@ -78,6 +78,7 @@ function saveHistory(list: TxHistoryRecord[]): TxHistoryRecord[] {
   const trimmed = sorted.slice(0, HISTORY_LIMIT);
   const user = loadUser();
   if (user?.accountId) {
+    console.debug('[TxHistory/saveHistory] Saving', trimmed.length, 'records for', user.accountId);
     saveUser({ accountId: user.accountId, txHistory: trimmed });
   }
   dispatchHistoryUpdate(trimmed);
@@ -85,7 +86,9 @@ function saveHistory(list: TxHistoryRecord[]): TxHistoryRecord[] {
 }
 
 export function getTxHistory(): TxHistoryRecord[] {
-  return sortHistory(getRawHistory());
+  const history = sortHistory(getRawHistory());
+  console.debug('[TxHistory/getTxHistory] Returning', history.length, 'records');
+  return history;
 }
 
 export function addTxHistoryRecords(
@@ -99,18 +102,27 @@ export function addTxHistoryRecords(
   const incoming = Array.isArray(records) ? records : [records];
   let changed = false;
 
+  console.debug('[TxHistory/addTxHistoryRecords] Adding', incoming.length, 'records. Current history has', list.length, 'records');
+
   for (const record of incoming) {
     if (!record || !record.id) continue;
-    if (map.has(record.id)) continue;
+    if (map.has(record.id)) {
+      console.debug('[TxHistory/addTxHistoryRecords] Skipping duplicate:', record.id);
+      continue;
+    }
     const normalized: TxHistoryRecord = {
       ...record,
       timestamp: normalizeTimestamp(record.timestamp)
     };
+    console.debug('[TxHistory/addTxHistoryRecords] Adding new record:', record.id, record.type, record.transferMode);
     list.push(normalized);
     map.set(record.id, normalized);
     changed = true;
   }
 
+  if (changed) {
+    console.debug('[TxHistory/addTxHistoryRecords] Changes detected, saving history');
+  }
   return changed ? saveHistory(list) : list;
 }
 

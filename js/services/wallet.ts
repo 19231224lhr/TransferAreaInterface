@@ -2705,10 +2705,8 @@ export async function refreshWalletBalances(): Promise<boolean> {
     // Recalculate totals
     recalculateWalletValue(u);
 
-    // Update Store (SSOT) - this will trigger UI updates via subscriptions
-    setUser(u);
-    saveUser(u);
-
+    // IMPORTANT: Add transaction history records BEFORE saving user
+    // This ensures txHistory is included in the saved user data
     if (incomingRecords.length > 0) {
       addTxHistoryRecords(incomingRecords);
     }
@@ -2718,6 +2716,18 @@ export async function refreshWalletBalances(): Promise<boolean> {
       for (const txId of uniqueTxIds) {
         updateTxHistoryByTxId(txId, { status: 'success', failureReason: '' });
       }
+    }
+
+    // Update Store (SSOT) after history records are added
+    // Get latest user to include txHistory updates
+    const latestUser = getCurrentUser();
+    if (latestUser) {
+      latestUser.wallet = u.wallet;
+      setUser(latestUser);
+      saveUser(latestUser);
+    } else {
+      setUser(u);
+      saveUser(u);
     }
 
     // Force re-render wallet to show updated balances

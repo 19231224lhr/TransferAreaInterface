@@ -179,6 +179,9 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   }
   if (basic.txHistory !== undefined) {
     acc.txHistory = Array.isArray(basic.txHistory) ? [...basic.txHistory] : basic.txHistory;
+    console.debug('[Storage/toAccount] Setting txHistory from basic:', basic.txHistory?.length, 'records');
+  } else if (acc.txHistory !== undefined) {
+    console.debug('[Storage/toAccount] Preserving txHistory from prev:', acc.txHistory?.length, 'records');
   }
 
   acc.keys = acc.keys || { privHex: '', pubXHex: '', pubYHex: '' };
@@ -333,7 +336,11 @@ export function persistUserToStorage(user: User | null): void {
  * @returns User account data or null if not found
  */
 export function loadUser(): User | null {
-  return (selectUser(store.getState()) as User | null) || null;
+  const user = (selectUser(store.getState()) as User | null) || null;
+  if (user) {
+    console.debug('[Storage/loadUser] Loaded user:', user.accountId, 'with', user.txHistory?.length || 0, 'history records');
+  }
+  return user;
 }
 
 /**
