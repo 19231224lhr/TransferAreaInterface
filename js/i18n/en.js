@@ -582,6 +582,7 @@ export default {
   'import.addressAlreadyInOrgDesc': 'Address imported successfully! This address already belongs to guarantor organization {groupID}, auto-linked.',
   'import.checkingOrg': 'Checking address organization...',
   'import.addressBelongsToOrgHint': 'Note: This address belongs to organization {groupID}. Please select this organization when joining.',
+  'import.addressBoundToOtherGroup': 'Address already bound to guarantor group {groupID}',
 
   // Transaction Sending
   'transfer.confirmSendTx': 'Confirm Send Transaction',

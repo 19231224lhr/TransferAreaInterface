@@ -1498,20 +1498,38 @@ async function handleImportPreviewConfirm(): Promise<void> {
       console.info('[Wallet] Address synced with backend');
     }
 
-    // Proceed with local import
-    await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
 
+    // CHECK FIRST: Register on ComNode if needed (for unorganized users)
     if (!inOrg) {
       const registerResult = await registerAddressOnComNode(address, pubXHex, pubYHex, privHex);
       if (!registerResult.success) {
-        registerError = registerResult.error || t('error.unknownError');
+        // Critical error: Address belongs to another group or registration failed
+        hideUnifiedOverlay();
+
+        let errorMsg = registerResult.error || t('error.unknownError');
+
+        // Check for specific backend error: "address already bound to guarantor group <ID>"
+        const boundMatch = errorMsg.match(/address already bound to guarantor group (\d+)/);
+        if (boundMatch && boundMatch[1]) {
+          errorMsg = t('import.addressBoundToOtherGroup', { groupID: boundMatch[1] });
+        }
+
+        showErrorToast(
+          errorMsg,
+          t('toast.importFailed', 'Import Failed')
+        );
+        return;
       }
     }
+
+    // Proceed with local import only if registration (or check) passed
+    await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
 
     hideUnifiedOverlay();
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
 
     if (registerError) {
+      // This path might be unreachable or reserved for non-critical warnings now
       showErrorToast(registerError, t('toast.addressRegisterFailed', 'Address registration failed'));
     }
 

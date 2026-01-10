@@ -582,6 +582,7 @@ export default {
   'import.addressAlreadyInOrgDesc': '地址导入成功！该地址已属于担保组织 {groupID}，已自动关联。',
   'import.checkingOrg': '正在检查地址所属组织...',
   'import.addressBelongsToOrgHint': '已属组织 {groupID}，请加入该组',
+  'import.addressBoundToOtherGroup': '该地址已绑定到担保组织 {groupID}，导入失败',
 
   // 交易发送相关
   'transfer.confirmSendTx': '确认发送交易',

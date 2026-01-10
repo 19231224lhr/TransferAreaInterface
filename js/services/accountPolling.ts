@@ -117,6 +117,8 @@ interface UsedTXCerChangeData {
 interface AccountUpdateInfo {
   UserID: string;
   WalletChangeData: InfoChangeData;
+  /** 每个地址的最新利息（Interest/GAS），address -> interest */
+  AddressInterest?: Record<string, number>;
   TXCerChangeData: TXCerChangeToUser[];
   UsedTXCerChangeData: UsedTXCerChangeData[];
   Timestamp: number;
@@ -352,7 +354,8 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     isNoWalletChange: update.IsNoWalletChange,
     inCount: Object.keys(update.WalletChangeData?.In || {}).length,
     outCount: update.WalletChangeData?.Out?.length || 0,
-    txCerChangeCount: update.TXCerChangeData?.length || 0
+    txCerChangeCount: update.TXCerChangeData?.length || 0,
+    addressInterestCount: Object.keys(update.AddressInterest || {}).length
   });
 
   // Ensure wallet exists
@@ -583,6 +586,30 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     }
   }
 
+  // 🔧 处理 AddressInterest - 从后端同步最新的利息（GAS）数据
+  // 这是确保 UI 显示正确 GAS 的关键步骤
+  if (update.AddressInterest && Object.keys(update.AddressInterest).length > 0) {
+    console.info('[AccountPolling] Applying AddressInterest from backend:', update.AddressInterest);
+    
+    for (const [address, interest] of Object.entries(update.AddressInterest)) {
+      const normalizedAddr = address.toLowerCase();
+      const addrData = user.wallet.addressMsg[normalizedAddr];
+      
+      if (addrData) {
+        const prevInterest = Number((addrData as any).EstInterest ?? (addrData as any).estInterest ?? (addrData as any).gas ?? 0);
+        const newInterest = Number(interest);
+        
+        // 更新所有利息字段（保持一致性）
+        (addrData as any).EstInterest = newInterest;
+        (addrData as any).estInterest = newInterest;
+        (addrData as any).gas = newInterest;
+        
+        console.info(`[AccountPolling] Updated interest for ${normalizedAddr.slice(0, 10)}...: ${prevInterest.toFixed(4)} -> ${newInterest.toFixed(4)}`);
+        hasChanges = true;
+      }
+    }
+  }
+
   // 更新区块高度 (interest already accrued above)
   if (nextHeight > prevHeight) {
     user.wallet.updateBlock = nextHeight;
@@ -594,25 +621,8 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
     // 重新计算总余额
     recalculateTotalBalance(user);
 
-    // IMPORTANT: AssignNode account-update doesn't include per-address interest snapshots.
-    // After a tx is verified by GuarNode, interest is re-assigned (gas deducted) even if
-    // there is no explicit interest delta in WalletChangeData. Refresh canonical interest
-    // from ComNode so UI shows the correct GAS (e.g. 13.00 instead of stale 10.00).
-    /* 
-     * [DISABLED] Automatic ComNode refresh disabled per user request.
-     * Users will need to manually refresh to sync exact GAS interest if needed.
-     */
-    // try {
-    //   const addrs = Object.keys(user.wallet.addressMsg || {});
-    //   if (addrs.length) {
-    //     const qr = await queryAddressBalances(addrs);
-    //     if (qr.success) {
-    //       applyComNodeInterests(user.wallet as any, qr.data as any);
-    //     }
-    //   }
-    // } catch (e) {
-    //   console.debug('[AccountPolling] ComNode interest refresh failed, using local accrual only:', e);
-    // }
+    // ✅ 利息同步已通过 AddressInterest 字段完成
+    // 后端在 account_update 中直接返回每个地址的最新利息，无需额外查询 ComNode
 
     saveUser(user);
 
