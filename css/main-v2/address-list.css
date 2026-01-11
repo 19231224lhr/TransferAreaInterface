@@ -1,6 +1,6 @@
 /* =====================================================
    Main V2 - Address List (地址列表)
-   从 main-v2.css 拆分
+   �?main-v2.css 拆分
    ===================================================== */
 
 /* === 地址管理区域 === */
@@ -194,10 +194,48 @@
 
 .address-list {
   padding: 8px 12px 40px;
-  /* 底部内边距 */
+  /* 底部内边�?*/
   display: flex;
   flex-direction: column;
   gap: 6px;
   position: relative;
   z-index: 1;
 }
+
+
+
+
+
+/* չ��/����ť */
+.addr-expand-btn {
+  width: 100%;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 12px;
+  transition: all var(--duration-fast) ease;
+  margin-top: 4px;
+  border-radius: var(--radius-md);
+}
+
+.addr-expand-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.addr-expand-btn svg {
+  width: 14px;
+  height: 14px;
+  transition: transform var(--duration-fast) ease;
+}
+
+.addr-expand-btn.expanded svg {
+  transform: rotate(180deg);
+}
+

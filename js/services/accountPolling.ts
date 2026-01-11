@@ -473,7 +473,10 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
       refreshSrcAddrList();
       updateWalletBrief();
 
-      // 区块高度更新，无需 Toast 通知（避免干扰）
+      showSuccessToast(
+        t('polling.accountUpdated') || '账户信息已更新',
+        t('notification.accountUpdate') || '账户更新'
+      );
     }
     return;
   }
@@ -581,6 +584,11 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
         if (isCrossChainInbound) {
           showSuccessToast(
             t('notification.receivedCrossChain') || '收到跨链转账交易',
+            t('notification.accountUpdate') || '账户更新'
+          );
+        } else {
+          showSuccessToast(
+            t('notification.receivedTransfer') || '收到转账交易',
             t('notification.accountUpdate') || '账户更新'
           );
         }

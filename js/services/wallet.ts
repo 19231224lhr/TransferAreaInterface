@@ -109,6 +109,9 @@ interface WalletSnapshot {
 let walletMap: Record<string, AddressMetadata> = {};
 let srcAddrs: string[] = [];
 let __addrMode: 'create' | 'import' = 'create';
+// Address list expansion states
+let __walletExpanded = false;
+let __srcAddrExpanded = false;
 
 /**
  * Pending import data for preview modal
@@ -408,7 +411,11 @@ export function renderWallet(): void {
   // Use DocumentFragment for better performance
   const fragment = document.createDocumentFragment();
 
-  addresses.forEach((a) => {
+  // Determine truncation based on expansion state
+  const shouldCollapse = addresses.length > 3 && !__walletExpanded;
+  const displayAddresses = shouldCollapse ? addresses.slice(0, 3) : addresses;
+
+  displayAddresses.forEach((a) => {
     const item = document.createElement('div');
     item.className = 'addr-card';
     item.dataset.addr = a; // Store address on card for event delegation
@@ -615,6 +622,23 @@ export function renderWallet(): void {
     fragment.appendChild(item);
   });
 
+  // Append Expand/Collapse button if needed
+  if (addresses.length > 3) {
+    const btn = document.createElement('button');
+    btn.className = `addr-expand-btn ${__walletExpanded ? 'expanded' : ''}`;
+    btn.innerHTML = `
+      <span>${__walletExpanded ? t('common.showLess', '收起') : t('common.showMore', '展开更多')}</span>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    `;
+    btn.onclick = () => {
+      __walletExpanded = !__walletExpanded;
+      renderWallet(); // Re-render with new state
+    };
+    fragment.appendChild(btn);
+  }
+
   // 清除骨架屏状�?
   clearSkeletonState(list);
 
@@ -694,9 +718,11 @@ export async function handleDeleteAddress(address: string): Promise<void> {
   const coinType = addrData?.type === 1 ? 'BTC' : addrData?.type === 2 ? 'ETH' : 'PGC';
 
   // Build confirmation text with balance warning if needed
-  let confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
+  let confirmText = '';
   if (balance > 0) {
-    confirmText = `⚠️ 该地址仍有 ${balance} ${coinType} 余额，删除后将无法直接访问这些资产！\n\n${confirmText}`;
+    confirmText = t('wallet.deleteHasBalanceWarning', { balance, coinType });
+  } else {
+    confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
   }
 
   // Use unified confirm modal with DANGER style
@@ -1441,12 +1467,12 @@ function showImportPreviewModal(data: PendingImportData): void {
   const addressEl = document.getElementById(DOM_IDS.importPreviewAddress);
   const pubXEl = document.getElementById(DOM_IDS.importPreviewPubX);
   const pubYEl = document.getElementById(DOM_IDS.importPreviewPubY);
-  const coinTypeEl = document.getElementById(DOM_IDS.importPreviewCoinType);
+
 
   if (addressEl) addressEl.textContent = data.address;
   if (pubXEl) pubXEl.textContent = data.pubXHex || '-';
   if (pubYEl) pubYEl.textContent = data.pubYHex || '-';
-  if (coinTypeEl) coinTypeEl.textContent = getCoinName(data.coinType);
+
 
   if (modal) modal.classList.remove('hidden');
 }
@@ -1479,6 +1505,34 @@ async function handleImportPreviewConfirm(): Promise<void> {
   showUnifiedLoading(t('walletModal.importing', '正在导入...'));
 
   try {
+    const u2 = getCurrentUser();
+    if (!u2?.accountId) {
+      hideUnifiedOverlay();
+      showErrorToast(t('modal.pleaseLoginFirst'), t('common.notLoggedIn'));
+      return;
+    }
+
+    const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
+    const addrLower = (address || '').toLowerCase();
+    if (!addrLower) {
+      hideUnifiedOverlay();
+      showErrorToast(t('toast.cannotParseAddress'), t('toast.importFailed'));
+      return;
+    }
+
+    const lowerMain = (u2.address || '').toLowerCase();
+    if (lowerMain && lowerMain === addrLower) {
+      hideUnifiedOverlay();
+      showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+      return;
+    }
+
+    if (acc.wallet?.addressMsg && acc.wallet.addressMsg[addrLower]) {
+      hideUnifiedOverlay();
+      showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+      return;
+    }
+
     // Check if user is in organization - if so, sync with backend first
     const inOrg = isUserInOrganization();
     let registerError: string | null = null;
@@ -1686,6 +1740,11 @@ async function importAddressInPlace(priv: string): Promise<void> {
 
     const lowerMain = (u2.address || '').toLowerCase();
     if (lowerMain && lowerMain === addr) {
+      showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
+      return;
+    }
+
+    if (acc.wallet?.addressMsg && acc.wallet.addressMsg[addr]) {
       showErrorToast(t('toast.addressExists'), t('toast.importFailed'));
       return;
     }
@@ -2064,7 +2123,11 @@ export function rebuildAddrList(): void {
 
   const fragment = document.createDocumentFragment();
 
-  srcAddrs.forEach(a => {
+  // Determine truncation based on expansion state
+  const shouldCollapse = srcAddrs.length > 3 && !__srcAddrExpanded;
+  const displayAddresses = shouldCollapse ? srcAddrs.slice(0, 3) : srcAddrs;
+
+  displayAddresses.forEach(a => {
     const meta = walletMap[a] || {};
     const tId = Number(meta.type ?? 0);
     const utxoAmt = Number(meta.value?.utxoValue || 0);
@@ -2133,6 +2196,24 @@ export function rebuildAddrList(): void {
 
     fragment.appendChild(label);
   });
+
+  // Append Expand/Collapse button if needed
+  if (srcAddrs.length > 3) {
+    const btn = document.createElement('button');
+    btn.className = `addr-expand-btn ${__srcAddrExpanded ? 'expanded' : ''}`;
+    btn.innerHTML = `
+      <span>${__srcAddrExpanded ? t('common.showLess', '收起') : t('common.showMore', '展开更多')}</span>
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"></polyline>
+      </svg>
+    `;
+    btn.onclick = (e) => {
+      e.preventDefault(); // Prevent label click propagation if nested
+      __srcAddrExpanded = !__srcAddrExpanded;
+      rebuildAddrList(); // Re-render with new state
+    };
+    fragment.appendChild(btn);
+  }
 
   addrList.replaceChildren();
   addrList.appendChild(fragment);

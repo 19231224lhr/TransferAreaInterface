@@ -9,6 +9,8 @@ export default {
   'common.save': '保存',
   'common.back': '返回',
   'common.confirm': '确认',
+  'common.showMore': '展开更多',
+  'common.showLess': '收起',
   'common.search': '搜索',
   'common.loading': '加载中...',
   'common.processing': '正在处理...',
@@ -340,6 +342,8 @@ export default {
   'wallet.addressListTip': '提示：登录账号的地址不计入列表',
   'wallet.noAddress': '暂无地址',
   'wallet.deleteAddress': '删除地址',
+  'wallet.deleteHasBalanceWarning': '该地址仍有 {balance} {coinType} 余额，删除后将无法直接访问这些资产！',
+  'wallet.confirmDelete': '确认删除',
   'wallet.exportPrivateKey': '导出私钥',
   'wallet.exportKeyShort': '导出',
   'wallet.deleteShort': '删除',
@@ -907,6 +911,7 @@ export default {
   'polling.newUtxoReceived': '收到新的 UTXO',
   'polling.utxoConfirmed': 'UTXO 已确认使用',
   'notification.receivedCrossChain': '收到跨链转账交易',
+  'notification.receivedTransfer': '收到转账交易',
   'notification.accountUpdate': '账户更新',
 
   // 加密相关
