@@ -181,13 +181,23 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
           <input type="hidden" name="recipient_mt" value="0" data-name="mt-hidden">
           <div id="${idBase}_mt" class="recipient-coin-select" role="button" aria-label="币种" data-name="mt" data-val="0">
             <div class="recipient-coin-value">
+              <div class="coin-icon coin-icon--pgc">P</div>
               <span class="coin-label">PGC</span>
               <span class="recipient-coin-arrow">▾</span>
             </div>
             <div class="recipient-coin-menu">
-              <div class="recipient-coin-item" data-val="0"><span class="coin-label">PGC</span></div>
-              <div class="recipient-coin-item" data-val="1"><span class="coin-label">BTC</span></div>
-              <div class="recipient-coin-item" data-val="2"><span class="coin-label">ETH</span></div>
+              <div class="recipient-coin-item" data-val="0">
+                <div class="coin-icon coin-icon--pgc">P</div>
+                <span class="coin-label">PGC</span>
+              </div>
+              <div class="recipient-coin-item" data-val="1">
+                <div class="coin-icon coin-icon--btc">B</div>
+                <span class="coin-label">BTC</span>
+              </div>
+              <div class="recipient-coin-item" data-val="2">
+                <div class="coin-icon coin-icon--eth">E</div>
+                <span class="coin-label">ETH</span>
+              </div>
             </div>
           </div>
         </div>
@@ -336,8 +346,14 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
                 const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
                 const lbl = labels[info.type] || 'PGC';
                 valEl.querySelector('.coin-label').textContent = lbl;
+                const ico = valEl.querySelector('.coin-icon');
+                if (ico) {
+                  ico.textContent = lbl.charAt(0);
+                  ico.className = `coin-icon coin-icon--${lbl.toLowerCase()}`;
+                }
               }
             }
+            addrInputEl.dataset.verifiedType = String(info.type);
           }
 
           // Auto-expand details section
@@ -377,8 +393,14 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
               const labels = { 0: 'PGC', 1: 'BTC', 2: 'ETH' };
               const lbl = labels[info.type] || 'PGC';
               valEl.querySelector('.coin-label').textContent = lbl;
+              const ico = valEl.querySelector('.coin-icon');
+              if (ico) {
+                ico.textContent = lbl.charAt(0);
+                ico.className = `coin-icon coin-icon--${lbl.toLowerCase()}`;
+              }
             }
           }
+          addrInputEl.dataset.verifiedType = String(info.type);
         }
 
         // Auto-expand details section
@@ -413,6 +435,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
   if (addrInputEl) {
     addrInputEl.addEventListener('input', () => {
       delete addrInputEl.dataset.resolved;
+      delete addrInputEl.dataset.verifiedType;
     });
   }
 
@@ -467,14 +490,30 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         const item = ev.target.closest('.recipient-coin-item');
         if (!item) return;
         const v = item.getAttribute('data-val');
+        const verifiedType = addrInputEl?.dataset?.verifiedType;
+        if (verifiedType && v && verifiedType !== v) {
+          const labels = { '0': 'PGC', '1': 'BTC', '2': 'ETH' };
+          const expected = labels[verifiedType] || 'PGC';
+          const selected = labels[v] || 'PGC';
+          showErrorToast(t('tx.coinTypeMismatch', { expected, selected }));
+          cs.classList.remove('open');
+          card.classList.remove('has-dropdown-open');
+          return;
+        }
         cs.dataset.val = v;
         const hiddenMt = card.querySelector('[data-name="mt-hidden"]');
         if (hiddenMt) hiddenMt.value = v;
+
         const valEl = cs.querySelector('.recipient-coin-value');
         if (valEl) {
           const labels = { '0': { t: 'PGC' }, '1': { t: 'BTC' }, '2': { t: 'ETH' } };
           const lbl = labels[v] || labels['0'];
           valEl.querySelector('.coin-label').textContent = lbl.t;
+          const ico = valEl.querySelector('.coin-icon');
+          if (ico) {
+            ico.textContent = lbl.t.charAt(0);
+            ico.className = `coin-icon coin-icon--${lbl.t.toLowerCase()}`;
+          }
         }
         cs.classList.remove('open');
         card.classList.remove('has-dropdown-open');
@@ -537,6 +576,11 @@ function applyModeToCard(card, isCrossChain) {
       cs.dataset.val = '0';
       if (hiddenMt) hiddenMt.value = '0';
       if (valEl) valEl.textContent = 'PGC';
+      const ico = cs.querySelector('.recipient-coin-value .coin-icon');
+      if (ico) {
+        ico.textContent = 'P';
+        ico.className = 'coin-icon coin-icon--pgc';
+      }
     }
   }
 }

@@ -26,6 +26,7 @@ import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId 
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 import { isCapsuleAddress } from './capsule';
+import { querySingleAddressGroup } from './accountQuery';
 
 // ========================================
 // Type Definitions
@@ -382,6 +383,7 @@ export function initTransferSubmit(): void {
       const bills: Record<string, TransferBill> = {};
       const vd: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
       let outInterest = 0;
+      const addrTypeCache = new Map<string, { exists: boolean; type: number }>();
 
       for (const r of rows) {
         const toEl = r.querySelector('[data-name="to"]') as HTMLInputElement | null;
@@ -436,6 +438,57 @@ export function initTransferSubmit(): void {
         if (![0, 1, 2].includes(mt)) {
           showTxValidationError(t('transfer.currency'), null, t('tx.currencyError'));
           return;
+        }
+
+        if (!isCross) {
+          const verifiedType = toEl?.dataset?.verifiedType;
+          if (verifiedType && Number(verifiedType) !== mt) {
+            const expected = getCoinName(Number(verifiedType));
+            const selected = getCoinName(mt);
+            showTxValidationError(
+              t('tx.coinTypeMismatch', { expected, selected }),
+              mtEl,
+              t('tx.currencyError')
+            );
+            return;
+          }
+
+          const cached = addrTypeCache.get(normalizedTo);
+          if (cached) {
+            if (cached.exists && cached.type !== mt) {
+              const expected = getCoinName(cached.type);
+              const selected = getCoinName(mt);
+              showTxValidationError(
+                t('tx.coinTypeMismatch', { expected, selected }),
+                mtEl,
+                t('tx.currencyError')
+              );
+              return;
+            }
+          } else {
+            const typeCheck = await querySingleAddressGroup(normalizedTo);
+            if (!typeCheck.success) {
+              showTxValidationError(
+                typeCheck.error || t('tx.queryFailed'),
+                toEl,
+                t('tx.queryFailed')
+              );
+              return;
+            }
+            const exists = !!typeCheck.data.exists;
+            const expectedType = Number(typeCheck.data.type ?? 0);
+            addrTypeCache.set(normalizedTo, { exists, type: expectedType });
+            if (exists && expectedType !== mt) {
+              const expected = getCoinName(expectedType);
+              const selected = getCoinName(mt);
+              showTxValidationError(
+                t('tx.coinTypeMismatch', { expected, selected }),
+                mtEl,
+                t('tx.currencyError')
+              );
+              return;
+            }
+          }
         }
 
         // Amount validation using security.ts (require amount > 0)
@@ -690,13 +743,15 @@ export function initTransferSubmit(): void {
       finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
 
       const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k) as CoinTypeId] || 1), 0);
+      const wantsTXCer = String(useTXCer?.value) === 'true';
+      const needsMainCurrency = (vd[0] || 0) > 0 || extraPGC > 0;
 
       const build: BuildTXInfo = {
         Value: valueTotal,
         ValueDivision: vd,
         Bill: bills,
         UserAddress: finalSel,
-        PriUseTXCer: String(useTXCer?.value) === 'true',
+        PriUseTXCer: wantsTXCer && needsMainCurrency,
         ChangeAddress: changeMap,
         IsPledgeTX: String(isPledge?.value) === 'true',
         HowMuchPayForGas: extraPGC,

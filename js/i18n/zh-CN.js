@@ -689,6 +689,7 @@ export default {
   'tx.addressFormatError': '地址格式错误',
   'tx.addressFormatErrorDesc': '目标地址格式错误，应为40位十六进制字符串',
   'tx.currencyError': '币种错误',
+  'tx.coinTypeMismatch': '收款地址币种为 {expected}，当前选择 {selected}，请勿手动修改',
   'tx.orgIdFormatError': '组织ID格式错误',
   'tx.publicKeyFormatError': '公钥格式错误',
   'tx.amountError': '金额错误',

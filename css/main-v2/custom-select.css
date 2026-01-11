@@ -212,18 +212,29 @@
   justify-content: flex-start !important;
   text-align: left !important;
   flex-direction: row !important;
-  padding-left: 14px !important;
+  padding-left: 12px !important;
+  padding-right: 30px !important;
+  /* Prevent text overlapping arrow */
   gap: 10px !important;
   height: 100% !important;
-  /* Fix potential vertical clipping */
+  width: 100% !important;
+  /* Ensure it takes full width */
+  display: flex !important;
+  align-items: center !important;
+}
+
+#addrTypeSelectWrapper .custom-select__value .addr-val {
+  font-size: 15px !important;
+  /* Larger font */
+  line-height: normal;
 }
 
 #addrTypeSelectWrapper .custom-select__item {
   justify-content: flex-start !important;
   text-align: left !important;
   flex-direction: row !important;
-  /* Menu has 6px padding, so item needs 8px to align with input's 14px (6+8=14) */
   padding-left: 8px !important;
+  /* 6px (menu) + 8px = 14px visual (approx) */
   gap: 10px !important;
 }
 
@@ -231,7 +242,7 @@
   margin-left: 0 !important;
   margin-right: 0 !important;
   order: -1 !important;
-  /* Ensure icon is first */
+  flex-shrink: 0 !important;
 }
 
 /* Fix width and tip alignment */

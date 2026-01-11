@@ -107,6 +107,7 @@ let pageState: ReactiveState<EntryPageState> | null = null;
 
 // 事件清理函数数组
 let eventCleanups: (() => void)[] = [];
+const ADDRESS_CREATED_EVENT = 'pangu_address_created';
 
 // ============================================================================
 // Helper Functions
@@ -497,6 +498,12 @@ function handleToggleClick(): void {
  * 处理创建钱包按钮点击
  */
 async function handleCreateWalletClick(): Promise<void> {
+  const showModal = window.PanguPay?.wallet?.showAddrModal;
+  if (typeof showModal === 'function') {
+    showModal('create');
+    return;
+  }
+
   const fn = window.PanguPay?.account?.addNewSubWallet;
   if (typeof fn === 'function') {
     await fn();
@@ -634,6 +641,12 @@ function bindEvents(): void {
   // 确认模态框取消按钮
   const proceedCancel = document.getElementById(DOM_IDS.confirmProceedCancel);
   addEvent(proceedCancel, 'click', handleProceedCancel);
+
+  const onAddressCreated = () => updateWalletBrief();
+  window.addEventListener(ADDRESS_CREATED_EVENT, onAddressCreated as EventListener);
+  eventCleanups.push(() => {
+    window.removeEventListener(ADDRESS_CREATED_EVENT, onAddressCreated as EventListener);
+  });
 }
 
 // ============================================================================
@@ -864,4 +877,6 @@ export function initEntryPage(): void {
   
   // 绑定事件
   bindEvents();
+
+  try { window.PanguPay?.wallet?.initAddressModal?.(); } catch (_) { }
 }

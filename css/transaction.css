@@ -895,9 +895,12 @@
   flex-shrink: 0;
   color: white;
   /* Fix vertical alignment */
-  margin-top: 0;
-  line-height: 32px;
-  transform: translateY(1px);
+  margin: 0;
+  /* Reset all margins including bottom 10px from global */
+  line-height: 1;
+  /* Use line-height 1 for better centering */
+  transform: none;
+  /* Remove manual shift unless needed */
 }
 
 /* 修复 custom-select 中的图标样式 */

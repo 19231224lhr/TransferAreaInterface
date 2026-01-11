@@ -570,9 +570,9 @@ export function renderWallet(): void {
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 6 12 12 16 14"></polyline>
                   </svg>
-                  TXCer（待转换�?
+                  TXCer（待转换）
                 </span>
-                <span class="txcer-header-value">${txCerCount}�?/ ${txCerBalance.toFixed(4)} ${coinType}</span>
+                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType}</span>
               </div>
               <div class="txcer-list">
                 ${txCerIds.map(id => {
@@ -1786,11 +1786,18 @@ export async function handleAddrModalOk(): Promise<void> {
   if (__addrMode === 'create') {
     hideAddrModal();
     if (typeof window.PanguPay?.account?.addNewSubWallet === 'function') {
-      const typeSelect = document.getElementById(DOM_IDS.addrTypeSelect) as HTMLSelectElement | null;
+      const typeSelect = document.getElementById(DOM_IDS.addrTypeSelect) as HTMLInputElement | null;
       const rawType = typeSelect?.value ?? '0';
       const parsedType = Number.parseInt(rawType, 10);
       const addressType = [0, 1, 2].includes(parsedType) ? parsedType : 0;
+      const beforeCount = Object.keys(getCurrentUser()?.wallet?.addressMsg || {}).length;
       await window.PanguPay.account.addNewSubWallet(addressType);
+      const afterCount = Object.keys(getCurrentUser()?.wallet?.addressMsg || {}).length;
+      if (afterCount > beforeCount) {
+        window.dispatchEvent(new CustomEvent('pangu_address_created', {
+          detail: { type: addressType, count: afterCount }
+        }));
+      }
     }
   } else {
     const input = document.getElementById(DOM_IDS.addrPrivHex) as HTMLInputElement | null;

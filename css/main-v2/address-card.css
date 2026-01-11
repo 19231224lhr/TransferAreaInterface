@@ -89,6 +89,8 @@
   color: white;
   flex-shrink: 0;
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+  margin: 0 !important;
+  /* Override .coin-icon margin */
 }
 
 .main-v2 .addr-card-main {

@@ -683,6 +683,7 @@ export default {
   'tx.addressFormatError': 'Address format error',
   'tx.addressFormatErrorDesc': 'Target address format error: must be 40-character hex string',
   'tx.currencyError': 'Currency error',
+  'tx.coinTypeMismatch': 'Recipient address currency is {expected}, but you selected {selected}.',
   'tx.orgIdFormatError': 'Organization ID format error',
   'tx.publicKeyFormatError': 'Public key format error',
   'tx.amountError': 'Amount error',
