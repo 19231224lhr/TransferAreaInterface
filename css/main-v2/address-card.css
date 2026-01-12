@@ -260,16 +260,16 @@
 
 
 .main-v2 .addr-action-btn--primary.btn-receive {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
   color: #1e40af !important;
-  border: 1px solid #bfdbfe !important;
+  border: 1px solid transparent !important;
   box-shadow: none !important;
 }
 
 .main-v2 .addr-action-btn--primary.btn-receive:hover {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   color: #1e3a8a !important;
-  border-color: #93c5fd !important;
+  border-color: transparent !important;
   transform: translateY(-1px) !important;
 }
 
@@ -279,41 +279,41 @@
 
 /* SECONDARY (EXPORT) - GREEN */
 .main-v2 .addr-action-btn--secondary.btn-export {
-  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%) !important;
+  background: rgba(0, 0, 0, 0.04) !important;
   color: #166534 !important;
-  border: 1px solid #bbf7d0 !important;
+  border: 1px solid transparent !important;
 }
 
 .main-v2 .addr-action-btn--secondary.btn-export:hover {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   color: #15803d !important;
-  border-color: #86efac !important;
+  border-color: transparent !important;
 }
 
 /* DANGER (DELETE) - RED */
 .main-v2 .addr-action-btn--danger.btn-delete {
-  background: #fef2f2 !important;
+  background: rgba(0, 0, 0, 0.04) !important;
   color: #dc2626 !important;
-  border: 1px solid #fecaca !important;
+  border: 1px solid transparent !important;
 }
 
 .main-v2 .addr-action-btn--danger.btn-delete:hover {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  background: rgba(0, 0, 0, 0.08) !important;
   color: #b91c1c !important;
-  border-color: #fca5a5 !important;
+  border-color: transparent !important;
 }
 
 /* Dark mode - delete button */
 [data-theme="dark"] .main-v2 .addr-action-btn--danger.btn-delete {
-  background: rgba(127, 29, 29, 0.25) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: #f87171 !important;
-  border: 1px solid rgba(239, 68, 68, 0.3) !important;
+  border: 1px solid transparent !important;
 }
 
 [data-theme="dark"] .main-v2 .addr-action-btn--danger.btn-delete:hover {
-  background: rgba(153, 27, 27, 0.35) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   color: #fca5a5 !important;
-  border-color: rgba(248, 113, 113, 0.4) !important;
+  border-color: transparent !important;
 }
 
 /* 操作菜单 */
@@ -416,27 +416,25 @@
    深色模式适配 - 按钮颜色调整
    ======================================== */
 [data-theme="dark"] .main-v2 .addr-action-btn--secondary.btn-export {
-  background: linear-gradient(135deg, rgba(6, 95, 70, 0.15) 0%, rgba(4, 120, 87, 0.15) 100%) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: #34d399 !important;
-  /* Emerald 400 */
-  border: 1px solid rgba(5, 150, 105, 0.3) !important;
+  border: 1px solid transparent !important;
 }
 
 [data-theme="dark"] .main-v2 .addr-action-btn--secondary.btn-export:hover {
-  background: linear-gradient(135deg, rgba(6, 95, 70, 0.25) 0%, rgba(4, 120, 87, 0.25) 100%) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   color: #6ee7b7 !important;
-  /* Emerald 300 */
-  border-color: rgba(16, 185, 129, 0.4) !important;
+  border-color: transparent !important;
 }
 
 [data-theme="dark"] .main-v2 .addr-action-btn--primary.btn-receive {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.15) 0%, rgba(37, 99, 235, 0.15) 100%) !important;
+  background: rgba(255, 255, 255, 0.06) !important;
   color: #60a5fa !important;
-  border: 1px solid rgba(59, 130, 246, 0.3) !important;
+  border: 1px solid transparent !important;
 }
 
 [data-theme="dark"] .main-v2 .addr-action-btn--primary.btn-receive:hover {
-  background: linear-gradient(135deg, rgba(30, 58, 138, 0.25) 0%, rgba(37, 99, 235, 0.25) 100%) !important;
+  background: rgba(255, 255, 255, 0.1) !important;
   color: #93c5fd !important;
-  border-color: rgba(96, 165, 250, 0.4) !important;
+  border-color: transparent !important;
 }

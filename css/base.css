@@ -15,27 +15,27 @@
   --color-bg-secondary: #e0f2fe;
   --color-bg-tertiary: #f0f4ff;
   --color-bg-page: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #f0f4ff 100%);
-  
+
   /* 卡片背景 */
   --color-card-bg: rgba(255, 255, 255, 0.95);
   --color-card-bg-solid: #ffffff;
   --color-card-bg-secondary: rgba(248, 250, 252, 0.9);
   --color-card-border: rgba(14, 165, 233, 0.1);
   --color-card-shadow: rgba(14, 165, 233, 0.08);
-  
+
   /* 文本颜色 */
   --color-text-primary: #1f2937;
   --color-text-secondary: #64748b;
   --color-text-tertiary: #94a3b8;
   --color-text-inverse: #ffffff;
-  
+
   /* 主题色 */
   --color-primary: #0ea5e9;
   --color-primary-light: #38bdf8;
   --color-primary-dark: #0284c7;
   --color-secondary: #8b5cf6;
   --color-secondary-light: #a78bfa;
-  
+
   /* 功能色 */
   --color-success: #10b981;
   --color-success-light: #34d399;
@@ -43,39 +43,38 @@
   --color-warning-light: #fbbf24;
   --color-danger: #ef4444;
   --color-danger-light: #f87171;
-  
+
   /* 边框和分隔线 */
   --color-border: #e2e8f0;
   --color-border-light: rgba(14, 165, 233, 0.08);
   --color-divider: rgba(14, 165, 233, 0.1);
-  
+
   /* 输入框 */
   --color-input-bg: rgba(255, 255, 255, 0.95);
   --color-input-border: rgba(14, 165, 233, 0.12);
   --color-input-focus: rgba(14, 165, 233, 0.4);
-  
+
   /* 装饰光球 */
   --orb-opacity: 0.4;
   --orb-opacity-secondary: 0.35;
   --orb-blur: 80px;
-  
+
   /* 阴影 */
   --shadow-sm: 0 4px 16px rgba(14, 165, 233, 0.06);
   --shadow-md: 0 8px 24px rgba(14, 165, 233, 0.12);
   --shadow-lg: 0 16px 48px rgba(14, 165, 233, 0.15);
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.06);
-  
+
   /* 模态框 */
   --color-modal-overlay: rgba(15, 23, 42, 0.6);
   --color-modal-bg: rgba(255, 255, 255, 0.98);
-  
+
   /* 代码块 */
   --color-code-bg: #f3f4f6;
   --color-code-text: #111827;
-  
-  /* 滚动条 */
-  --color-scrollbar-track: rgba(14, 165, 233, 0.05);
-  --color-scrollbar-thumb: rgba(14, 165, 233, 0.3);
+
+  /* 指示原生 UI 组件使用浅色主题 */
+  color-scheme: light;
 }
 
 /* 深色主题 */
@@ -85,27 +84,27 @@
   --color-bg-secondary: #1e293b;
   --color-bg-tertiary: #334155;
   --color-bg-page: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  
+
   /* 卡片背景 */
   --color-card-bg: rgba(30, 41, 59, 0.95);
   --color-card-bg-solid: #1e293b;
   --color-card-bg-secondary: rgba(51, 65, 85, 0.9);
   --color-card-border: rgba(14, 165, 233, 0.2);
   --color-card-shadow: rgba(0, 0, 0, 0.3);
-  
+
   /* 文本颜色 */
   --color-text-primary: #f1f5f9;
   --color-text-secondary: #cbd5e1;
   --color-text-tertiary: #94a3b8;
   --color-text-inverse: #0f172a;
-  
+
   /* 主题色 - 增亮 */
   --color-primary: #38bdf8;
   --color-primary-light: #7dd3fc;
   --color-primary-dark: #0ea5e9;
   --color-secondary: #a78bfa;
   --color-secondary-light: #c4b5fd;
-  
+
   /* 功能色 - 增亮 */
   --color-success: #34d399;
   --color-success-light: #6ee7b7;
@@ -113,39 +112,38 @@
   --color-warning-light: #fcd34d;
   --color-danger: #f87171;
   --color-danger-light: #fca5a5;
-  
+
   /* 边框和分隔线 */
   --color-border: #334155;
   --color-border-light: rgba(14, 165, 233, 0.15);
   --color-divider: rgba(14, 165, 233, 0.15);
-  
+
   /* 输入框 */
   --color-input-bg: rgba(51, 65, 85, 0.8);
   --color-input-border: rgba(14, 165, 233, 0.25);
   --color-input-focus: rgba(56, 189, 248, 0.5);
-  
+
   /* 装饰光球 */
   --orb-opacity: 0.2;
   --orb-opacity-secondary: 0.15;
   --orb-blur: 100px;
-  
+
   /* 阴影 */
   --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.4);
   --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
   --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
-  
+
   /* 模态框 */
   --color-modal-overlay: rgba(0, 0, 0, 0.7);
   --color-modal-bg: rgba(30, 41, 59, 0.98);
-  
+
   /* 代码块 */
   --color-code-bg: #1e293b;
   --color-code-text: #e2e8f0;
-  
-  /* 滚动条 */
-  --color-scrollbar-track: rgba(51, 65, 85, 0.5);
-  --color-scrollbar-thumb: rgba(56, 189, 248, 0.4);
+
+  /* 指示原生 UI 组件使用深色主题 */
+  color-scheme: dark;
 }
 
 /* 主题切换过渡动画 */
@@ -221,31 +219,39 @@ body::after {
   animation: orbFloat2 8s ease-in-out infinite;
   animation-delay: -2s;
   /* 流畅丝滑的颜色流转效果 */
-  transition: 
+  transition:
     background 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important,
     opacity 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important,
     filter 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
 }
 
 @keyframes orbFloat1 {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(30px, -30px) scale(1.1);
   }
+
   66% {
     transform: translate(-20px, 20px) scale(0.95);
   }
 }
 
 @keyframes orbFloat2 {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(-30px, 30px) scale(1.1);
   }
+
   66% {
     transform: translate(20px, -20px) scale(0.95);
   }
@@ -324,14 +330,16 @@ body:has(#memberInfoCard:not(.hidden))::after {
   max-width: 960px;
   margin: 0 auto;
   padding: 0 16px;
-  padding-top: 88px; /* 为固定导航栏预留空间 (header 高度约 72px + 额外间距) */
+  padding-top: 88px;
+  /* 为固定导航栏预留空间 (header 高度约 72px + 额外间距) */
 }
 
 /* 首页时容器全宽（仅当 welcome-hero 可见时） */
 .container:has(.welcome-hero:not(.hidden)) {
   max-width: 100% !important;
   padding: 0 !important;
-  padding-top: 0 !important; /* 首页不需要顶部间距，header悬浮在内容上 */
+  padding-top: 0 !important;
+  /* 首页不需要顶部间距，header悬浮在内容上 */
 }
 
 /* 通用隐藏类 */

@@ -254,9 +254,7 @@
   color: #0ea5e9;
 }
 
-.card-body {
-  /* 卡片主体区域 */
-}
+
 
 .card-footer {
   margin-top: 20px;
@@ -540,6 +538,17 @@
   transform: translateY(20px) scale(0.95);
   opacity: 0;
   animation: dialogEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+#addrModal .dialog {
+  width: 580px;
+}
+
+#addrModal .actions.actions--split {
+  justify-content: flex-end !important;
+  max-width: none !important;
+  width: 100% !important;
+  margin: 24px 0 0 !important;
 }
 
 @keyframes dialogEnter {
@@ -2010,7 +2019,14 @@ pre code {
 }
 
 .capsule-key-row {
-  align-items: flex-start;
+  align-items: center;
+}
+
+.capsule-key-row .success-key-code {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  font-weight: 500;
 }
 
 @media (max-width: 520px) {

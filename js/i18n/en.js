@@ -717,7 +717,7 @@ export default {
   'walletModal.createAddress': 'Create Address',
   'walletModal.importAddress': 'Import Address',
   'walletModal.createConfirm': 'Confirm to create a new sub-address and add it to the current account.',
-  'walletModal.privateKeyLabel': 'Private Key (Hex)',
+  'walletModal.privateKeyLabel': 'Private Key',
   'walletModal.privateKeyDoNotShare': 'Private Key (Do Not Share)',
   'walletModal.privateKeyFormatError': 'Private key format incorrect: must be 64-character hex string',
   'walletModal.pleaseEnterPrivateKey': 'Please enter private key Hex',

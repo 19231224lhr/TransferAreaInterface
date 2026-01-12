@@ -18,10 +18,9 @@
 }
 
 @media (max-width: 860px) {
+
   /* 在竖屏/窄屏时，使用单选下拉模式，不显示三个并排按钮 */
-  .transfer-mode-tabs:not(.no-org-mode) {
-    /* 保持flex布局用于compact模式 */
-  }
+
 
   .transfer-mode-tab {
     flex: none;
@@ -124,9 +123,7 @@
     padding: 16px;
   }
 
-  .total-balance-amount {
-    font-size: 26px;
-  }
+
 
   .balance-chart {
     height: 76px;
@@ -242,6 +239,7 @@
    减少动画模式支持（无障碍）
    ======================================== */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

@@ -724,7 +724,7 @@ export default {
   'walletModal.createAddress': '新建地址',
   'walletModal.importAddress': '导入地址',
   'walletModal.createConfirm': '确认新建一个子地址并加入当前账户。',
-  'walletModal.privateKeyLabel': '私钥（Hex）',
+  'walletModal.privateKeyLabel': '私钥',
   'walletModal.privateKeyDoNotShare': '私钥 (请勿泄露)',
   'walletModal.privateKeyFormatError': '私钥格式不正确：需为 64 位十六进制字符串',
   'walletModal.pleaseEnterPrivateKey': '请输入私钥 Hex',
