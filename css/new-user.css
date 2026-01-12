@@ -681,6 +681,10 @@
   background: #ffffff;
 }
 
+.new-key-card--private:hover {
+  background: #fef2f2;
+}
+
 .new-key-header {
   display: flex;
   align-items: center;

@@ -6,7 +6,7 @@
  */
 
 import { t, updatePageTranslations, loadLanguageSetting } from './i18n/index.js';
-import { initUserStateFromStorage, User } from './utils/storage';
+import { initUserStateFromStorage, User, hasStoredUser } from './utils/storage';
 import { showErrorToast, showStatusToast } from './utils/toast.js';
 import { initErrorBoundary } from './utils/security';
 import performanceModeManager from './utils/performanceMode.js';
@@ -429,6 +429,14 @@ function init(): void {
       requestAnimationFrame(flushUi);
     });
   }
+
+  // Check for new session + stored user scenario BEFORE router init
+  // If this is a fresh tab session (not validated) AND we have a stored user in localStorage,
+  // FORCE redirect to welcome page so the modal can show.
+  if (!sessionStorage.getItem('pangu_session_validated') && hasStoredUser()) {
+    location.hash = '#/welcome';
+  }
+
   initRouter();
 
   updatePageTranslations();
@@ -466,9 +474,11 @@ function init(): void {
   const confirmSkipCancel = document.getElementById(DOM_IDS.confirmSkipCancel);
 
   if (confirmSkipOk && !(confirmSkipOk as HTMLElement).dataset._bind) {
-    confirmSkipOk.addEventListener('click', () => {
+    confirmSkipOk.addEventListener('click', async () => {
+      // Skip joining organization - clear guarChoice for this user
       try {
-        localStorage.setItem('guarChoice', JSON.stringify({ type: 'none' }));
+        const { clearGuarChoice } = await import('./utils/storage');
+        clearGuarChoice();
       } catch {
         // ignore
       }

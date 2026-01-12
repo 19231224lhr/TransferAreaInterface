@@ -10,6 +10,7 @@
 
 import { store, selectUser } from './store.js';
 import { persistUserToStorage, User } from './storage';
+import { SESSION_IGNORE_USER_KEY } from '../config/constants';
 
 type Unsubscribe = () => void;
 
@@ -52,7 +53,14 @@ function persistNow(): void {
   const user = selectUser(store.getState());
 
   // If user is null, remove from storage.
+  // If user is null, remove from storage.
   if (!user) {
+    // CRITICAL: If we are locally ignoring the user (e.g. "Use Another Account" in Welcome Modal),
+    // we must NOT clear the global localStorage. The user still exists, just not for this tab.
+    if (sessionStorage.getItem(SESSION_IGNORE_USER_KEY) === 'true') {
+      return;
+    }
+
     if (lastUserJson !== null) {
       persistUserToStorage(null);
       lastUserJson = null;

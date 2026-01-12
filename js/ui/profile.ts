@@ -261,6 +261,9 @@ function handleAvatarFileSelect(e: Event): void {
     });
   };
   reader.readAsDataURL(file);
+
+  // Clear input value to allow selecting the same file again
+  input.value = '';
 }
 
 /**

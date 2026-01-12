@@ -10,6 +10,11 @@ import {
   STORAGE_KEY,
   PROFILE_STORAGE_KEY,
   GUAR_CHOICE_KEY,
+  ACTIVE_ACCOUNT_KEY,
+  getUserStorageKey,
+  getUserProfileKey,
+  getGuarChoiceKey,
+  SESSION_IGNORE_USER_KEY,
   DEFAULT_GROUP,
   GROUP_LIST,
   GuarantorGroup
@@ -236,24 +241,78 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
 // Internal: Pure localStorage IO (no Store side effects)
 // ========================================
 
-function readUserFromStorage(): User | null {
+/**
+ * Get the current active account ID
+ */
+function getActiveAccountId(): string | null {
   try {
-    const rawAcc = localStorage.getItem(STORAGE_KEY);
+    // Check session isolation flag
+    if (sessionStorage.getItem(SESSION_IGNORE_USER_KEY) === 'true') {
+      return null;
+    }
+    return localStorage.getItem(ACTIVE_ACCOUNT_KEY);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if there is a stored user in localStorage, ignoring session flags.
+ * Used for "Welcome Back" detection.
+ */
+export function hasStoredUser(): boolean {
+  try {
+    return !!localStorage.getItem(ACTIVE_ACCOUNT_KEY);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Set session ignore flag to isolate this tab from logged-in user
+ */
+export function setSessionIgnoreUser(ignore: boolean): void {
+  try {
+    if (ignore) {
+      sessionStorage.setItem(SESSION_IGNORE_USER_KEY, 'true');
+      // If we are ignoring the user, we should also clear the Store's user state
+      // to trigger UI updates immediately
+      setUser(null);
+    } else {
+      sessionStorage.removeItem(SESSION_IGNORE_USER_KEY);
+    }
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Set the current active account ID
+ */
+function setActiveAccountId(accountId: string | null): void {
+  try {
+    if (accountId) {
+      localStorage.setItem(ACTIVE_ACCOUNT_KEY, accountId);
+    } else {
+      localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+    }
+  } catch (e) {
+    console.warn('Failed to set active account ID', e);
+  }
+}
+
+function readUserFromStorage(): User | null {
+  const activeId = getActiveAccountId();
+  if (!activeId) {
+    // Try legacy migration
+    return migrateLegacyUser();
+  }
+
+  try {
+    const key = getUserStorageKey(activeId);
+    const rawAcc = localStorage.getItem(key);
     if (rawAcc) {
       return JSON.parse(rawAcc) as User;
-    }
-
-    // Try legacy storage key
-    const legacy = localStorage.getItem('walletUser');
-    if (legacy) {
-      const basic = JSON.parse(legacy);
-      const acc = toAccount(basic, null);
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(acc));
-      } catch {
-        // ignore
-      }
-      return acc;
     }
   } catch (e) {
     console.warn('Failed to read user data from storage', e);
@@ -262,20 +321,82 @@ function readUserFromStorage(): User | null {
   return null;
 }
 
+/**
+ * Migrate legacy single-user data to accountId-based storage
+ */
+function migrateLegacyUser(): User | null {
+  try {
+    // Check for old walletAccount key (non-suffixed)
+    const rawAcc = localStorage.getItem(STORAGE_KEY);
+    if (rawAcc) {
+      const user = JSON.parse(rawAcc) as User;
+      if (user.accountId) {
+        console.info('[Storage] Migrating legacy user data for accountId:', user.accountId);
+
+        // Save to new accountId-specific key
+        const newKey = getUserStorageKey(user.accountId);
+        localStorage.setItem(newKey, rawAcc);
+        localStorage.removeItem(STORAGE_KEY);
+        setActiveAccountId(user.accountId);
+
+        // Migrate profile data
+        const rawProfile = localStorage.getItem(PROFILE_STORAGE_KEY);
+        if (rawProfile) {
+          const newProfileKey = getUserProfileKey(user.accountId);
+          localStorage.setItem(newProfileKey, rawProfile);
+          localStorage.removeItem(PROFILE_STORAGE_KEY);
+        }
+
+        // Migrate guarantor choice
+        const rawChoice = localStorage.getItem(GUAR_CHOICE_KEY);
+        if (rawChoice) {
+          const newChoiceKey = getGuarChoiceKey(user.accountId);
+          localStorage.setItem(newChoiceKey, rawChoice);
+          localStorage.removeItem(GUAR_CHOICE_KEY);
+        }
+
+        console.info('[Storage] Legacy data migration completed');
+        return user;
+      }
+    }
+
+    // Try legacy walletUser key
+    const legacy = localStorage.getItem('walletUser');
+    if (legacy) {
+      const basic = JSON.parse(legacy);
+      const acc = toAccount(basic, null);
+      if (acc.accountId) {
+        const newKey = getUserStorageKey(acc.accountId);
+        localStorage.setItem(newKey, JSON.stringify(acc));
+        localStorage.removeItem('walletUser');
+        setActiveAccountId(acc.accountId);
+        return acc;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to migrate legacy user data', e);
+  }
+
+  return null;
+}
+
 function writeUserToStorage(user: User | null): void {
   try {
-    if (!user) {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem('walletUser');
+    if (!user || !user.accountId) {
+      // Clear current active user data
+      const activeId = getActiveAccountId();
+      if (activeId) {
+        const key = getUserStorageKey(activeId);
+        localStorage.removeItem(key);
+      }
+      setActiveAccountId(null);
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    // Remove legacy to avoid split-brain
-    try {
-      localStorage.removeItem('walletUser');
-    } catch {
-      // ignore
-    }
+
+    // Save to accountId-specific key
+    const key = getUserStorageKey(user.accountId);
+    localStorage.setItem(key, JSON.stringify(user));
+    setActiveAccountId(user.accountId);
   } catch (e) {
     console.warn('Failed to write user data to storage', e);
   }
@@ -393,15 +514,28 @@ export function saveUser(user: Partial<User>): void {
 }
 
 /**
- * Clear account storage
+ * Clear account storage for current user
  */
 export function clearAccountStorage(): void {
+  const activeId = getActiveAccountId();
+
+  if (activeId) {
+    // Clear current user data
+    try { localStorage.removeItem(getUserStorageKey(activeId)); } catch { }
+    try { localStorage.removeItem(getUserProfileKey(activeId)); } catch { }
+    try { localStorage.removeItem(getGuarChoiceKey(activeId)); } catch { }
+  }
+
+  // Clear legacy keys
   try { localStorage.removeItem(STORAGE_KEY); } catch { }
   try { localStorage.removeItem('walletUser'); } catch { }
   try { localStorage.removeItem(PROFILE_STORAGE_KEY); } catch { }
   try { localStorage.removeItem('guarChoice'); } catch { }
   try { localStorage.removeItem('capsuleAddressCache'); } catch { }
   try { localStorage.removeItem('orgPublicKeyCache'); } catch { }
+
+  // Clear active account tracking
+  setActiveAccountId(null);
 
   // Sync to centralized store for state management
   setUser(null);
@@ -416,8 +550,14 @@ export function clearAccountStorage(): void {
  * @returns Profile data with defaults
  */
 export function loadUserProfile(): UserProfile {
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    return { nickname: '', avatar: null, signature: '' };
+  }
+
   try {
-    const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
+    const key = getUserProfileKey(user.accountId);
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw) as UserProfile;
   } catch (e) {
     console.warn('Failed to load profile', e);
@@ -430,8 +570,15 @@ export function loadUserProfile(): UserProfile {
  * @param profile - Profile data to save
  */
 export function saveUserProfile(profile: UserProfile): void {
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    console.warn('Cannot save profile: no active user');
+    return;
+  }
+
   try {
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    const key = getUserProfileKey(user.accountId);
+    localStorage.setItem(key, JSON.stringify(profile));
   } catch (e) {
     console.warn('Failed to save profile', e);
   }
@@ -471,8 +618,10 @@ export function getJoinedGroup(): GuarantorGroup | null {
   }
 
   // 2. Try guarChoice from localStorage
+  const accountId = u?.accountId;
   try {
-    const raw = localStorage.getItem(GUAR_CHOICE_KEY);
+    const key = accountId ? getGuarChoiceKey(accountId) : GUAR_CHOICE_KEY;
+    const raw = localStorage.getItem(key);
     if (raw) {
       const c = JSON.parse(raw) as GuarChoice;
       if (c && c.groupID) {
@@ -534,8 +683,15 @@ export function getJoinedGroup(): GuarantorGroup | null {
  * @param choice - Organization choice to save
  */
 export function saveGuarChoice(choice: GuarChoice): void {
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    console.warn('Cannot save guarantor choice: no active user');
+    return;
+  }
+
   try {
-    localStorage.setItem(GUAR_CHOICE_KEY, JSON.stringify(choice));
+    const key = getGuarChoiceKey(user.accountId);
+    localStorage.setItem(key, JSON.stringify(choice));
   } catch (e) {
     console.warn('Failed to save organization choice', e);
   }
@@ -545,6 +701,14 @@ export function saveGuarChoice(choice: GuarChoice): void {
  * Clear guarantor organization choice
  */
 export function clearGuarChoice(): void {
+  const user = loadUser();
+  if (user && user.accountId) {
+    try {
+      const key = getGuarChoiceKey(user.accountId);
+      localStorage.removeItem(key);
+    } catch { }
+  }
+  // Also clear legacy key
   try {
     localStorage.removeItem(GUAR_CHOICE_KEY);
   } catch { }
@@ -558,7 +722,18 @@ export function clearGuarChoice(): void {
 export function resetOrgSelectionForNewUser(): boolean {
   let changed = false;
 
+  const user = loadUser();
+  const accountId = user?.accountId;
+
   try {
+    if (accountId) {
+      const key = getGuarChoiceKey(accountId);
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        changed = true;
+      }
+    }
+    // Also clear legacy key
     if (localStorage.getItem(GUAR_CHOICE_KEY)) {
       localStorage.removeItem(GUAR_CHOICE_KEY);
       changed = true;

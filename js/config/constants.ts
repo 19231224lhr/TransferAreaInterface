@@ -60,6 +60,46 @@ export const PROFILE_STORAGE_KEY = 'userProfile';
 /** LocalStorage key for guarantor organization choice */
 export const GUAR_CHOICE_KEY = 'guarChoice';
 
+/** LocalStorage key for tracking active account ID */
+export const ACTIVE_ACCOUNT_KEY = 'activeAccountId';
+
+/**
+ * Key for session-based user ignore flag
+ * If present in sessionStorage, the app acts as if no user is logged in for this tab
+ */
+export const SESSION_IGNORE_USER_KEY = 'sessionIgnoreUser';
+
+// ========================================
+// Dynamic Storage Key Helpers
+// ========================================
+
+/**
+ * Generate user-specific storage key for wallet data
+ * @param accountId - User account ID
+ * @returns Storage key for wallet data
+ */
+export function getUserStorageKey(accountId: string): string {
+  return `${STORAGE_KEY}_${accountId}`;
+}
+
+/**
+ * Generate user-specific storage key for profile data
+ * @param accountId - User account ID
+ * @returns Storage key for profile data
+ */
+export function getUserProfileKey(accountId: string): string {
+  return `${PROFILE_STORAGE_KEY}_${accountId}`;
+}
+
+/**
+ * Generate user-specific storage key for guarantor choice
+ * @param accountId - User account ID
+ * @returns Storage key for guarantor choice
+ */
+export function getGuarChoiceKey(accountId: string): string {
+  return `${GUAR_CHOICE_KEY}_${accountId}`;
+}
+
 // ========================================
 // Default Values
 // ========================================

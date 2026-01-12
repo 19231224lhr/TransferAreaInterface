@@ -115,7 +115,13 @@ export default {
   'welcome.totalVolume': '交易总额',
   'welcome.security': '安全保障',
   'welcome.cardHolder': '持卡人',
+  'welcome.cardHolder': '持卡人',
   'welcome.expiry': '有效期',
+  'welcome.back': '欢迎回来',
+  'welcome.backDesc': '我们要如何开始本次会话？',
+  'welcome.continueAs': '继续使用身份',
+  'welcome.useOther': '使用其他账户',
+  'welcome.useOtherDesc': '本次会话将独立运行',
 
   // 钱包管理页面
   'entry.title': '钱包管理',

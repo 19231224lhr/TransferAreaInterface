@@ -747,20 +747,18 @@ function saveOrganizationAndNavigate(group: GroupInfo): void {
     aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
   }
 
-  // 保存到 localStorage
-  try {
-    localStorage.setItem('guarChoice', JSON.stringify({
-      type: 'join',
-      groupID: group.groupID,
-      aggreNode: group.aggreNode,
-      assignNode: group.assignNode,
-      pledgeAddress: group.pledgeAddress,
-      assignAPIEndpoint: group.assignAPIEndpoint,
-      aggrAPIEndpoint: group.aggrAPIEndpoint,
-      assignNodeUrl: assignNodeUrl,
-      aggrNodeUrl: aggrNodeUrl
-    }));
-  } catch { /* ignore */ }
+  // 保存到 localStorage（使用 saveGuarChoice 确保 accountId 隔离）
+  saveGuarChoice({
+    type: 'join',
+    groupID: group.groupID,
+    aggreNode: group.aggreNode,
+    assignNode: group.assignNode,
+    pledgeAddress: group.pledgeAddress,
+    assignAPIEndpoint: group.assignAPIEndpoint,
+    aggrAPIEndpoint: group.aggrAPIEndpoint,
+    assignNodeUrl: assignNodeUrl,
+    aggrNodeUrl: aggrNodeUrl
+  });
 
   // 保存到用户账户
   const u = loadUser();
@@ -886,20 +884,18 @@ async function handleJoinGroupWithAPI(group: GroupInfo): Promise<void> {
       aggrNodeUrl = buildAggrNodeUrl(group.aggrAPIEndpoint);
     }
 
-    // 保存到 localStorage
-    try {
-      localStorage.setItem('guarChoice', JSON.stringify({
-        type: 'join',
-        groupID: group.groupID,
-        aggreNode: group.aggreNode,
-        assignNode: group.assignNode,
-        pledgeAddress: group.pledgeAddress,
-        assignAPIEndpoint: group.assignAPIEndpoint,
-        aggrAPIEndpoint: group.aggrAPIEndpoint,
-        assignNodeUrl: assignNodeUrl,
-        aggrNodeUrl: aggrNodeUrl
-      }));
-    } catch { /* ignore */ }
+    // 保存到 localStorage（使用 saveGuarChoice 确保 accountId 隔离）
+    saveGuarChoice({
+      type: 'join',
+      groupID: group.groupID,
+      aggreNode: group.aggreNode,
+      assignNode: group.assignNode,
+      pledgeAddress: group.pledgeAddress,
+      assignAPIEndpoint: group.assignAPIEndpoint,
+      aggrAPIEndpoint: group.aggrAPIEndpoint,
+      assignNodeUrl: assignNodeUrl,
+      aggrNodeUrl: aggrNodeUrl
+    });
 
     // 保存到用户账户
     const u = loadUser();
