@@ -69,6 +69,12 @@ export const ACTIVE_ACCOUNT_KEY = 'activeAccountId';
  */
 export const SESSION_IGNORE_USER_KEY = 'sessionIgnoreUser';
 
+/**
+ * Key for session-based user ID tracking
+ * Stores the user ID for this specific tab, ensuring tab isolation even after refresh
+ */
+export const SESSION_USER_ID_KEY = 'sessionUserId';
+
 // ========================================
 // Dynamic Storage Key Helpers
 // ========================================
@@ -98,6 +104,24 @@ export function getUserProfileKey(accountId: string): string {
  */
 export function getGuarChoiceKey(accountId: string): string {
   return `${GUAR_CHOICE_KEY}_${accountId}`;
+}
+
+/**
+ * Generate user-specific storage key for theme preference
+ * @param accountId - User account ID
+ * @returns Storage key for theme preference
+ */
+export function getUserThemeKey(accountId: string): string {
+  return `${THEME_STORAGE_KEY}_${accountId}`;
+}
+
+/**
+ * Generate user-specific storage key for language preference
+ * @param accountId - User account ID
+ * @returns Storage key for language preference
+ */
+export function getUserLanguageKey(accountId: string): string {
+  return `${I18N_STORAGE_KEY}_${accountId}`;
 }
 
 // ========================================

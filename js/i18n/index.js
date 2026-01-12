@@ -2,11 +2,12 @@
  * Internationalization (i18n) Core Module
  * 
  * Provides translation functions and language management for the application.
+ * Language preference is stored per-account for user isolation.
  */
 
 import zhCN from './zh-CN.js';
 import en from './en.js';
-import { I18N_STORAGE_KEY } from '../config/constants.ts';
+import { I18N_STORAGE_KEY, getUserLanguageKey, SESSION_USER_ID_KEY, ACTIVE_ACCOUNT_KEY } from '../config/constants.ts';
 import { store, setLanguageState, selectLanguage } from '../utils/store.js';
 import { DOM_IDS } from '../config/domIds';
 
@@ -18,6 +19,27 @@ const translations = {
 
 // Current language state
 let currentLanguage = 'zh-CN';
+
+/**
+ * Get the current active account ID for language storage
+ * Uses sessionStorage first (tab-specific), then falls back to localStorage
+ */
+function getCurrentAccountId() {
+  try {
+    return sessionStorage.getItem(SESSION_USER_ID_KEY) || localStorage.getItem(ACTIVE_ACCOUNT_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the storage key for language preference
+ * Returns account-specific key if logged in, otherwise global key
+ */
+function getLanguageStorageKey() {
+  const accountId = getCurrentAccountId();
+  return accountId ? getUserLanguageKey(accountId) : I18N_STORAGE_KEY;
+}
 
 /**
  * Format number with current locale
@@ -66,11 +88,16 @@ export function getCurrentLanguage() {
 
 /**
  * Load saved language setting from localStorage
+ * Loads from account-specific key if logged in
  * @returns {string} The loaded language code
  */
 export function loadLanguageSetting() {
   try {
-    const saved = localStorage.getItem(I18N_STORAGE_KEY);
+    const key = getLanguageStorageKey();
+    const saved = localStorage.getItem(key);
+
+    console.debug('[i18n] Loading language from:', key, saved);
+
     if (saved && translations[saved]) {
       currentLanguage = saved;
     }
@@ -84,11 +111,14 @@ export function loadLanguageSetting() {
 
 /**
  * Save language setting to localStorage
+ * Saves to account-specific key if logged in
  * @param {string} lang - Language code to save
  */
 export function saveLanguageSetting(lang) {
   try {
-    localStorage.setItem(I18N_STORAGE_KEY, lang);
+    const key = getLanguageStorageKey();
+    localStorage.setItem(key, lang);
+    console.debug('[i18n] Saved language to:', key, lang);
   } catch (e) {
     console.warn('Failed to save language setting', e);
   }
@@ -106,12 +136,12 @@ export function setLanguage(lang) {
   }
   currentLanguage = lang;
   saveLanguageSetting(lang);
-  
+
   // Sync to centralized store for state management
   setLanguageState(lang);
-  
+
   updatePageTranslations();
-  
+
   // Update welcome page buttons if on welcome page
   const currentHash = (location.hash || '#/welcome').replace(/^#/, '');
   if (currentHash === '/welcome') {
@@ -120,7 +150,7 @@ export function setLanguage(lang) {
       window.updateWelcomeButtons();
     }
   }
-  
+
   return true;
 }
 
@@ -141,7 +171,7 @@ export function t(key, paramsOrDefault) {
   if (!text && currentLanguage === 'zh-CN') {
     text = translations['en']?.[key];
   }
-  
+
   // If no translation found, use default value (if string) or key
   if (!text) {
     if (typeof paramsOrDefault === 'string') {
@@ -149,14 +179,14 @@ export function t(key, paramsOrDefault) {
     }
     return key;
   }
-  
+
   // Replace parameters {param} if params is an object
   if (paramsOrDefault && typeof paramsOrDefault === 'object') {
     Object.keys(paramsOrDefault).forEach(param => {
       text = text.replace(new RegExp(`\\{${param}\\}`, 'g'), paramsOrDefault[param]);
     });
   }
-  
+
   return text;
 }
 
@@ -171,7 +201,7 @@ export function updatePageTranslations() {
       el.textContent = t(key);
     }
   });
-  
+
   // Update elements with data-i18n-placeholder attribute (input placeholders)
   document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
     const key = el.getAttribute('data-i18n-placeholder');
@@ -179,7 +209,7 @@ export function updatePageTranslations() {
       el.placeholder = t(key);
     }
   });
-  
+
   // Update elements with data-i18n-title attribute (tooltips)
   document.querySelectorAll('[data-i18n-title]').forEach(el => {
     const key = el.getAttribute('data-i18n-title');
@@ -191,17 +221,17 @@ export function updatePageTranslations() {
       }
     }
   });
-  
+
   // Update dynamically generated recipient cards
   updateRecipientCardTranslations();
-  
+
   // Update "no address available" text in dropdowns
   document.querySelectorAll('.custom-select__item.disabled').forEach(item => {
     if (item.textContent.includes('无可用地址') || item.textContent.includes('No address available')) {
       item.textContent = t('transfer.noAddressAvailable');
     }
   });
-  
+
   // Update language selector UI
   updateLanguageSelectorUI();
 }
@@ -221,24 +251,24 @@ function updateRecipientCardTranslations() {
       labels[4].textContent = t('transfer.guarantorOrgId');
       if (labels[5]) labels[5].textContent = t('transfer.transferGas');
     }
-    
+
     // Update button text
     const expandBtn = card.querySelector('[data-role="expand"] span');
     if (expandBtn) {
       const isExpanded = card.querySelector('.recipient-details')?.classList.contains('expanded');
       expandBtn.textContent = isExpanded ? t('transfer.collapseOptions') : t('wallet.advancedOptions');
     }
-    
+
     const removeBtn = card.querySelector('[data-role="remove"] span');
     if (removeBtn) removeBtn.textContent = t('transfer.delete');
-    
+
     const addBtn = card.querySelector('[data-role="add"] span');
     if (addBtn) addBtn.textContent = t('transfer.addRecipient');
-    
+
     // Update placeholders
     const addrInput = card.querySelector('[data-name="to"]');
     if (addrInput) addrInput.placeholder = t('transfer.enterRecipientAddress');
-    
+
     const gidInput = card.querySelector('[data-name="gid"]');
     if (gidInput) gidInput.placeholder = t('transfer.optional');
   });
@@ -250,7 +280,7 @@ function updateRecipientCardTranslations() {
 export function updateLanguageSelectorUI() {
   const selector = document.getElementById(DOM_IDS.languageSelector);
   if (!selector) return;
-  
+
   const options = selector.querySelectorAll('.language-option');
   options.forEach(opt => {
     const lang = opt.getAttribute('data-lang');

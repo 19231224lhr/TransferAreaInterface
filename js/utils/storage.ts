@@ -15,6 +15,7 @@ import {
   getUserProfileKey,
   getGuarChoiceKey,
   SESSION_IGNORE_USER_KEY,
+  SESSION_USER_ID_KEY,
   DEFAULT_GROUP,
   GROUP_LIST,
   GuarantorGroup
@@ -242,14 +243,27 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
 // ========================================
 
 /**
- * Get the current active account ID
+ * Get the current active account ID for this tab
+ * 
+ * Tab isolation logic:
+ * 1. If SESSION_IGNORE_USER_KEY is set, return null (user chose "use another account")
+ * 2. If SESSION_USER_ID_KEY exists in sessionStorage, use it (preserves user across refresh)
+ * 3. Otherwise fall back to localStorage ACTIVE_ACCOUNT_KEY (initial tab open)
  */
 function getActiveAccountId(): string | null {
   try {
-    // Check session isolation flag
+    // Check session isolation flag - user explicitly chose to ignore stored user
     if (sessionStorage.getItem(SESSION_IGNORE_USER_KEY) === 'true') {
       return null;
     }
+
+    // Check session-specific user ID first (tab isolation)
+    const sessionUserId = sessionStorage.getItem(SESSION_USER_ID_KEY);
+    if (sessionUserId) {
+      return sessionUserId;
+    }
+
+    // Fall back to global active account (new tab)
     return localStorage.getItem(ACTIVE_ACCOUNT_KEY);
   } catch {
     return null;
@@ -288,13 +302,25 @@ export function setSessionIgnoreUser(ignore: boolean): void {
 
 /**
  * Set the current active account ID
+ * 
+ * Updates both localStorage (global) and sessionStorage (tab-specific).
+ * This ensures:
+ * - New tabs see the most recently logged-in user
+ * - Existing tabs keep their own user on refresh
  */
 function setActiveAccountId(accountId: string | null): void {
   try {
     if (accountId) {
+      // Update global active account (for new tabs)
       localStorage.setItem(ACTIVE_ACCOUNT_KEY, accountId);
+      // Update session-specific user ID (for this tab's refresh)
+      sessionStorage.setItem(SESSION_USER_ID_KEY, accountId);
+      // Clear the "ignore user" flag since we now have a valid user for this tab
+      // This handles the case where user selected "use another account" and then logged in
+      sessionStorage.removeItem(SESSION_IGNORE_USER_KEY);
     } else {
       localStorage.removeItem(ACTIVE_ACCOUNT_KEY);
+      sessionStorage.removeItem(SESSION_USER_ID_KEY);
     }
   } catch (e) {
     console.warn('Failed to set active account ID', e);

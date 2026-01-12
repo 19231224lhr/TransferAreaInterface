@@ -43,8 +43,25 @@ function getWalletValueDivision(user) {
   return sum;
 }
 
-// Chart history storage key
-const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
+// Chart history storage key prefix (account-specific)
+const CHART_HISTORY_KEY_PREFIX = 'wallet_balance_chart_history_v2';
+
+/**
+ * Get the chart history storage key for the current user
+ * Uses sessionStorage to get account ID to ensure tab isolation
+ */
+function getChartHistoryKey() {
+  try {
+    const accountId = sessionStorage.getItem('sessionUserId') || localStorage.getItem('activeAccountId');
+    if (accountId) {
+      return `${CHART_HISTORY_KEY_PREFIX}_${accountId}`;
+    }
+  } catch (e) {
+    // ignore
+  }
+  // Fallback to global key if no account ID available
+  return CHART_HISTORY_KEY_PREFIX;
+}
 
 /**
  * Load chart history from localStorage
@@ -52,7 +69,8 @@ const CHART_HISTORY_KEY = 'wallet_balance_chart_history_v2';
  */
 const loadChartHistory = () => {
   try {
-    const data = localStorage.getItem(CHART_HISTORY_KEY);
+    const key = getChartHistoryKey();
+    const data = localStorage.getItem(key);
     return data ? JSON.parse(data) : [];
   } catch (e) {
     return [];
@@ -65,10 +83,11 @@ const loadChartHistory = () => {
  */
 const saveChartHistory = (history) => {
   try {
+    const key = getChartHistoryKey();
     // Keep more than display window so frequent balance changes don't immediately overwrite history.
     // Display still uses the last 10 points.
     const trimmed = history.slice(-120);
-    localStorage.setItem(CHART_HISTORY_KEY, JSON.stringify(trimmed));
+    localStorage.setItem(key, JSON.stringify(trimmed));
   } catch (e) { }
 };
 

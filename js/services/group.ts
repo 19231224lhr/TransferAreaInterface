@@ -449,16 +449,43 @@ export function verifyStructLocal(
 export function buildAssignNodeUrl(assignEndpoint: string): string {
   const baseUrl = new URL(API_BASE_URL);
   const protocol = baseUrl.protocol;
+  const currentHost = baseUrl.hostname; // e.g., 'localhost'
 
   if (assignEndpoint.startsWith(':')) {
     // Old format ":8081" -> Use current host + port
-    const host = baseUrl.hostname;
     const port = assignEndpoint.slice(1);
-    return `${protocol}//${host}:${port}`;
+    return `${protocol}//${currentHost}:${port}`;
   } else {
-    // New format "IP:PORT"
+    // New format "IP:PORT" or full URL
     if (!assignEndpoint.startsWith('http://') && !assignEndpoint.startsWith('https://')) {
+      // Parse IP:PORT format
+      const colonIndex = assignEndpoint.lastIndexOf(':');
+      if (colonIndex > 0) {
+        const ip = assignEndpoint.substring(0, colonIndex);
+        const port = assignEndpoint.substring(colonIndex + 1);
+
+        // 🔧 CORS Fix: If the IP is 127.0.0.1 and we're on localhost (or vice versa),
+        // use the current host to avoid cross-origin issues.
+        // Browser treats 127.0.0.1 and localhost as different origins!
+        if (ip === '127.0.0.1' || ip === 'localhost') {
+          return `${protocol}//${currentHost}:${port}`;
+        }
+
+        return `${protocol}//${assignEndpoint}`;
+      }
       return `${protocol}//${assignEndpoint}`;
+    }
+
+    // Full URL provided - check if it needs hostname normalization
+    try {
+      const endpointUrl = new URL(assignEndpoint);
+      if ((endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') &&
+        (currentHost === 'localhost' || currentHost === '127.0.0.1')) {
+        // Normalize to current host to avoid CORS issues
+        return `${endpointUrl.protocol}//${currentHost}:${endpointUrl.port}${endpointUrl.pathname}`;
+      }
+    } catch {
+      // Invalid URL, return as-is
     }
     return assignEndpoint;
   }
@@ -472,16 +499,41 @@ export function buildAssignNodeUrl(assignEndpoint: string): string {
 export function buildAggrNodeUrl(aggrEndpoint: string): string {
   const baseUrl = new URL(API_BASE_URL);
   const protocol = baseUrl.protocol;
+  const currentHost = baseUrl.hostname; // e.g., 'localhost'
 
   if (aggrEndpoint.startsWith(':')) {
     // Old format ":8082" -> Use current host + port
-    const host = baseUrl.hostname;
     const port = aggrEndpoint.slice(1);
-    return `${protocol}//${host}:${port}`;
+    return `${protocol}//${currentHost}:${port}`;
   } else {
-    // New format "IP:PORT"
+    // New format "IP:PORT" or full URL
     if (!aggrEndpoint.startsWith('http://') && !aggrEndpoint.startsWith('https://')) {
+      // Parse IP:PORT format
+      const colonIndex = aggrEndpoint.lastIndexOf(':');
+      if (colonIndex > 0) {
+        const ip = aggrEndpoint.substring(0, colonIndex);
+        const port = aggrEndpoint.substring(colonIndex + 1);
+
+        // 🔧 CORS Fix: If the IP is 127.0.0.1 and we're on localhost (or vice versa),
+        // use the current host to avoid cross-origin issues.
+        if (ip === '127.0.0.1' || ip === 'localhost') {
+          return `${protocol}//${currentHost}:${port}`;
+        }
+
+        return `${protocol}//${aggrEndpoint}`;
+      }
       return `${protocol}//${aggrEndpoint}`;
+    }
+
+    // Full URL provided - check if it needs hostname normalization
+    try {
+      const endpointUrl = new URL(aggrEndpoint);
+      if ((endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') &&
+        (currentHost === 'localhost' || currentHost === '127.0.0.1')) {
+        return `${endpointUrl.protocol}//${currentHost}:${endpointUrl.port}${endpointUrl.pathname}`;
+      }
+    } catch {
+      // Invalid URL, return as-is
     }
     return aggrEndpoint;
   }

@@ -2,16 +2,38 @@
  * Theme Management Module
  * 
  * Provides theme switching functionality (light/dark mode).
+ * Theme preference is stored per-account for user isolation.
  */
 
 import { t } from '../i18n/index.js';
 import { showSuccessToast } from '../utils/toast.js';
-import { THEME_STORAGE_KEY } from '../config/constants.ts';
+import { THEME_STORAGE_KEY, getUserThemeKey, SESSION_USER_ID_KEY, ACTIVE_ACCOUNT_KEY } from '../config/constants.ts';
 import { store, setThemeState, selectTheme } from '../utils/store.js';
 import { DOM_IDS } from '../config/domIds';
 
 // Current theme state
 let currentTheme = 'light';
+
+/**
+ * Get the current active account ID for theme storage
+ * Uses sessionStorage first (tab-specific), then falls back to localStorage
+ */
+function getCurrentAccountId() {
+  try {
+    return sessionStorage.getItem(SESSION_USER_ID_KEY) || localStorage.getItem(ACTIVE_ACCOUNT_KEY) || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Get the storage key for theme preference
+ * Returns account-specific key if logged in, otherwise global key
+ */
+function getThemeStorageKey() {
+  const accountId = getCurrentAccountId();
+  return accountId ? getUserThemeKey(accountId) : THEME_STORAGE_KEY;
+}
 
 /**
  * Get the current theme
@@ -42,9 +64,11 @@ export function setTheme(theme, showNotification = true) {
   // Update DOM
   document.documentElement.setAttribute('data-theme', theme);
 
-  // Save to localStorage
+  // Save to localStorage (account-specific)
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, theme);
+    const key = getThemeStorageKey();
+    localStorage.setItem(key, theme);
+    console.debug('[Theme] Saved theme to:', key, theme);
   } catch (e) {
     console.warn('Failed to save theme setting:', e);
   }
@@ -71,10 +95,15 @@ export function toggleTheme() {
 
 /**
  * Load saved theme setting from localStorage
+ * Loads from account-specific key if logged in
  */
 export function loadThemeSetting() {
   try {
-    const saved = localStorage.getItem(THEME_STORAGE_KEY);
+    const key = getThemeStorageKey();
+    const saved = localStorage.getItem(key);
+
+    console.debug('[Theme] Loading theme from:', key, saved);
+
     if (saved && (saved === 'light' || saved === 'dark')) {
       currentTheme = saved;
     } else {
