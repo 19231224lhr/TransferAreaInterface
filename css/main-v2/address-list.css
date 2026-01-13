@@ -1,6 +1,6 @@
-/* =====================================================
+﻿/* =====================================================
    Main V2 - Address List (地址列表)
-   �?main-v2.css 拆分
+   �?main-v2.css 拆分
    ===================================================== */
 
 /* === 地址管理区域 === */
@@ -194,7 +194,7 @@
 
 .address-list {
   padding: 8px 12px 40px;
-  /* 底部内边�?*/
+  /* 底部内边�?*/
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -206,7 +206,7 @@
 
 
 
-/* չ��/����ť */
+/* չ��/����ť */
 .addr-expand-btn {
   width: 100%;
   padding: 8px 0;
@@ -239,3 +239,128 @@
   transform: rotate(180deg);
 }
 
+
+/* 
+ * Smooth Expansion Animation 
+ */
+.addr-card-extra {
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  max-height: 800px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-bottom: 6px;
+}
+
+.address-list:not(.expanded) .addr-card-extra {
+  max-height: 0;
+  opacity: 0;
+  margin-bottom: 0;
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  border-width: 0;
+  transform: translateY(-20px);
+  pointer-events: none;
+}
+
+
+/* Wrapper for extra addresses */
+.extra-addr-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+  transition: all 0.5s ease-in-out;
+  max-height: 2000px;
+  opacity: 1;
+  margin-top: 6px; /* Gap from the item above */
+}
+
+.address-list:not(.expanded) .extra-addr-wrapper {
+  max-height: 0;
+  opacity: 0;
+  margin-top: -6px; /* Cancel out the gap from previous sibling */
+}
+
+
+
+/* =====================================================
+   丝滑展开/收起动画 (Smooth Expand/Collapse)
+   ===================================================== */
+
+/* 额外地址卡片（第4个及之后）的动画 */
+.addr-card--extra {
+  overflow: hidden;
+  transition: 
+    max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.3s ease,
+    transform 0.3s ease,
+    margin 0.3s ease,
+    padding 0.3s ease;
+  max-height: 0;
+  opacity: 0;
+  transform: translateY(-10px);
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+  pointer-events: none;
+}
+
+/* 展开状态下的额外地址卡片 */
+.address-list.expanded .addr-card--extra,
+#walletAddrList.expanded .addr-card--extra {
+  max-height: 500px;
+  opacity: 1;
+  transform: translateY(0);
+  margin-top: 8px !important;
+  margin-bottom: 0 !important;
+  pointer-events: auto;
+}
+
+/* 逐个卡片级联动画延迟 */
+.address-list.expanded .addr-card--extra:nth-child(4),
+#walletAddrList.expanded .addr-card--extra:nth-child(4) {
+  transition-delay: 0s;
+}
+
+.address-list.expanded .addr-card--extra:nth-child(5),
+#walletAddrList.expanded .addr-card--extra:nth-child(5) {
+  transition-delay: 0.05s;
+}
+
+.address-list.expanded .addr-card--extra:nth-child(6),
+#walletAddrList.expanded .addr-card--extra:nth-child(6) {
+  transition-delay: 0.1s;
+}
+
+.address-list.expanded .addr-card--extra:nth-child(7),
+#walletAddrList.expanded .addr-card--extra:nth-child(7) {
+  transition-delay: 0.15s;
+}
+
+.address-list.expanded .addr-card--extra:nth-child(n+8),
+#walletAddrList.expanded .addr-card--extra:nth-child(n+8) {
+  transition-delay: 0.2s;
+}
+
+/* 展开按钮丝滑旋转 */
+.addr-expand-btn {
+  transition: 
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.addr-expand-btn svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.addr-expand-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* 收起时的反向动画延迟 */
+.address-list:not(.expanded) .addr-card--extra,
+#walletAddrList:not(.expanded) .addr-card--extra {
+  transition-delay: 0s !important;
+}

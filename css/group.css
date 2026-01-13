@@ -27,7 +27,7 @@
   background: rgba(255, 255, 255, 0.6);
   border-radius: 24px;
   overflow: hidden;
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.06),
     0 1px 2px rgba(0, 0, 0, 0.04);
   animation: groupPageSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -38,6 +38,7 @@
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -65,7 +66,7 @@
   right: -50%;
   width: 100%;
   height: 100%;
-  background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 60%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 60%);
   pointer-events: none;
   animation: orbFloat 20s ease-in-out infinite;
 }
@@ -77,14 +78,21 @@
   left: -30%;
   width: 80%;
   height: 80%;
-  background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 50%);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
   pointer-events: none;
   animation: orbFloat 15s ease-in-out infinite reverse;
 }
 
 @keyframes orbFloat {
-  0%, 100% { transform: translate(0, 0); }
-  50% { transform: translate(10px, -10px); }
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(10px, -10px);
+  }
 }
 
 .group-sidebar-content {
@@ -106,6 +114,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -167,16 +176,28 @@
   animation: benefitEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
-.group-benefit:nth-child(1) { animation-delay: 0.15s; }
-.group-benefit:nth-child(2) { animation-delay: 0.2s; }
-.group-benefit:nth-child(3) { animation-delay: 0.25s; }
-.group-benefit:nth-child(4) { animation-delay: 0.3s; }
+.group-benefit:nth-child(1) {
+  animation-delay: 0.15s;
+}
+
+.group-benefit:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.group-benefit:nth-child(3) {
+  animation-delay: 0.25s;
+}
+
+.group-benefit:nth-child(4) {
+  animation-delay: 0.3s;
+}
 
 @keyframes benefitEnter {
   from {
     opacity: 0;
     transform: translateX(-16px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -231,6 +252,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -289,6 +311,7 @@
     opacity: 0;
     transform: translateY(12px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -341,12 +364,15 @@
 }
 
 @keyframes statusPulse {
-  0%, 100% { 
-    opacity: 1; 
+
+  0%,
+  100% {
+    opacity: 1;
     transform: scale(1);
   }
-  50% { 
-    opacity: 0.6; 
+
+  50% {
+    opacity: 0.6;
     transform: scale(1.15);
   }
 }
@@ -366,6 +392,7 @@
     opacity: 0;
     transform: translateY(16px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -556,6 +583,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -653,6 +681,7 @@
     opacity: 0;
     transform: scale(0.95);
   }
+
   to {
     opacity: 1;
     transform: scale(1);
@@ -681,8 +710,15 @@
 }
 
 @keyframes emptyIconFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .empty-icon-pulse {
@@ -694,12 +730,15 @@
 }
 
 @keyframes emptyPulse {
-  0%, 100% { 
-    transform: scale(1); 
+
+  0%,
+  100% {
+    transform: scale(1);
     opacity: 0.5;
   }
-  50% { 
-    transform: scale(1.15); 
+
+  50% {
+    transform: scale(1.15);
     opacity: 0.8;
   }
 }
@@ -769,6 +808,7 @@
    ======================================== */
 
 @media (prefers-reduced-motion: reduce) {
+
   .group-page,
   .group-brand,
   .group-benefit,
@@ -1183,8 +1223,13 @@
 }
 
 @keyframes logoRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .group-loading-state p {
@@ -1215,6 +1260,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1321,7 +1367,7 @@
 /* 滑块背景 - 深色模式 */
 [data-theme="dark"] .group-tabs::before {
   background: linear-gradient(135deg, rgba(13, 148, 136, 0.25), rgba(20, 184, 166, 0.2));
-  box-shadow: 
+  box-shadow:
     0 2px 8px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(20, 184, 166, 0.3);
   backdrop-filter: blur(8px);
@@ -1459,4 +1505,23 @@
   .group-search-action-btn {
     width: 100%;
   }
+}
+
+/* ========================================
+   深色模式 - 按钮样式修复
+   ======================================== */
+
+[data-theme="dark"] .group-action-btn--back,
+[data-theme="dark"] .group-action-btn--secondary {
+  background: var(--color-card-bg-solid);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border);
+}
+
+[data-theme="dark"] .group-action-btn--back:hover,
+[data-theme="dark"] .group-action-btn--secondary:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }

@@ -311,6 +311,9 @@ export function onOnlineStatusChange(callback: (isOnline: boolean) => void): () 
 
 /**
  * Initialize online/offline detection
+ * 
+ * [DISABLED] Active probing has been removed.
+ * Only native browser online/offline events are used.
  */
 function initOnlineDetection(): void {
   const notifyOnlineStatus = (isOnline: boolean) => {
@@ -332,40 +335,8 @@ function initOnlineDetection(): void {
     notifyOnlineStatus(false);
   });
 
-  // Heartbeat: combines browser signal + external probe.
-  // Goal: show offline indicator when the Internet is actually unreachable (common expectation for “断网”),
-  // even if localhost remains reachable.
-  /* 
-   * [MODIFIED] Active probing (Baidu favicon) disabled per user request to avoid network log spam.
-   * Relying on native navigator.onLine for now.
-   */
-  // let intervalId: number | null = null;
-  // const schedule = (ms: number) => {
-  //   if (intervalId !== null) window.clearInterval(intervalId);
-  //   intervalId = window.setInterval(() => {
-  //     tick().catch(() => {});
-  //   }, ms);
-  // };
-
-  // const tick = async () => {
-  //   // Fast path: if the browser reports offline, trust it.
-  //   if (!navigator.onLine) {
-  //     if (lastKnownOnline !== false) notifyOnlineStatus(false);
-  //     schedule(5000);
-  //     return;
-  //   }
-
-  //   const reachable = await probeInternetReachability();
-  //   if (reachable !== lastKnownOnline) {
-  //     notifyOnlineStatus(reachable);
-  //   }
-  //   // Probe less often when stable online to reduce traffic.
-  //   schedule(reachable ? 15000 : 5000);
-  // };
-
-  // // Run once soon after init.
-  // tick().catch(() => {});
-  // schedule(15000);
+  // Note: Active probing (heartbeat) has been removed.
+  // The offline indicator will only show when the browser itself detects network loss.
 }
 
 // ========================================

@@ -222,15 +222,17 @@ function captureDraft(): TransferDraft {
 }
 
 async function applyDraft(draft: TransferDraft): Promise<void> {
-  // Addresses first, so change-address menus can be preserved
-  setCheckedAddresses(draft.srcAddr ?? []);
-
-  // Advanced options values (set hidden selects before fillChange runs)
-  setInputValue(DOM_IDS.extraGasPGC, draft.advanced?.extraGasPGC ?? '0');
-  setInputValue(DOM_IDS.txGasInput, draft.advanced?.txGasInput ?? '1');
+  // Preload change-address values so fillChange can preserve them.
   setInputValue(DOM_IDS.chAddrPGC, draft.advanced?.chAddrPGC ?? '');
   setInputValue(DOM_IDS.chAddrBTC, draft.advanced?.chAddrBTC ?? '');
   setInputValue(DOM_IDS.chAddrETH, draft.advanced?.chAddrETH ?? '');
+
+  // Addresses next; this triggers fillChange via the change event.
+  setCheckedAddresses(draft.srcAddr ?? []);
+
+  // Advanced options values
+  setInputValue(DOM_IDS.extraGasPGC, draft.advanced?.extraGasPGC ?? '0');
+  setInputValue(DOM_IDS.txGasInput, draft.advanced?.txGasInput ?? '1');
 
   const chk = document.getElementById(DOM_IDS.useTXCerChk) as HTMLInputElement | null;
   // Default to true (checked) if no draft value exists
