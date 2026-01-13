@@ -905,6 +905,10 @@ export default {
   'transfer.crossChainLimit': '跨链交易限制',
   'transfer.selectChangeAddress': '请为跨链交易选择主货币找零地址',
   'transfer.changeAddressMissing': '找零地址缺失',
+  'transfer.autoSelectedAddress': '已自动选择来源地址',
+  'transfer.autoSelectedAddressDesc': '根据转账需求自动选择了 {count} 个地址',
+  'transfer.autoSelectFailed': '无法自动选择地址',
+  'transfer.noMatchingAddress': '没有匹配该币种且余额充足的地址',
 
   // 账户轮询相关
   'polling.tooManyFailures': '账户同步暂停，请稍后刷新',

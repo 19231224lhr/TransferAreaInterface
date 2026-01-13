@@ -346,15 +346,109 @@ export function initTransferSubmit(): void {
 
       // Hide previous transaction result buttons
 
-
-      const sel = Array.from(addrList!.querySelectorAll('input[type="checkbox"]'))
+      let sel = Array.from(addrList!.querySelectorAll('input[type="checkbox"]'))
         .filter((x: any) => x.checked)
         .map((x: any) => x.value);
 
-      if (sel.length === 0) {
+      // ========== 自动选择 From 地址功能 ==========
+      // 条件: 1) 没有选择 From 地址, 2) 只有1个收款人, 3) 收款人已验证币种
+      const recipientRows = Array.from(billList!.querySelectorAll('.recipient-card'));
+
+      if (sel.length === 0 && recipientRows.length === 1) {
+        const row = recipientRows[0];
+        const mtEl = row.querySelector('[data-name="mt"]') as HTMLElement | null;
+        const valEl = row.querySelector('[data-name="val"]') as HTMLInputElement | null;
+        const toEl = row.querySelector('[data-name="to"]') as HTMLInputElement | null;
+
+        // 获取已验证的币种
+        const verifiedType = toEl?.dataset?.verifiedType;
+        const mtVal = mtEl?.dataset?.val;
+        const targetType = verifiedType !== undefined ? Number(verifiedType) : (mtVal !== undefined ? Number(mtVal) : null);
+        const amount = Number(valEl?.value || 0);
+
+        // 只有当币种已确认且金额大于0时才尝试自动选择
+        if (targetType !== null && !isNaN(targetType) && amount > 0) {
+          const extraGas = Number(gasInput?.value || 0);
+          const txGas = Number(txGasInput?.value || 1);
+
+          // 获取所有匹配币种的地址
+          interface AddressCandidate { addr: string; balance: number; gas: number; }
+          const candidates: AddressCandidate[] = [];
+
+          for (const [addr, meta] of Object.entries(walletMap)) {
+            const addrType = Number((meta as AddressData).type || 0);
+            if (addrType !== targetType) continue;
+
+            const utxoVal = Number((meta as AddressData).value?.utxoValue || (meta as AddressData).value?.totalValue || 0);
+            const txCerVal = Object.values((meta as AddressData).txCers || {}).reduce((sum: number, v) => sum + Number(v || 0), 0);
+            const availableBalance = utxoVal + txCerVal;
+            const availableGas = readAddressInterest(meta as AddressData);
+
+            if (availableBalance > 0) {
+              candidates.push({ addr, balance: availableBalance, gas: availableGas });
+            }
+          }
+
+          if (candidates.length > 0) {
+            candidates.sort((a, b) => b.balance - a.balance);
+
+            let selectedAddrs: string[] = [];
+            let totalBalance = 0;
+
+            // 策略1: 找单个满足需求的地址
+            const singleMatch = candidates.find(c => c.balance >= amount);
+            if (singleMatch) {
+              selectedAddrs = [singleMatch.addr];
+              totalBalance = singleMatch.balance;
+            } else {
+              // 策略2: 贪婪地组合多个地址
+              for (const c of candidates) {
+                if (totalBalance >= amount) break;
+                selectedAddrs.push(c.addr);
+                totalBalance += c.balance;
+              }
+            }
+
+            if (totalBalance >= amount - 1e-8) {
+              // 自动选择这些地址
+              const checkboxes = addrList!.querySelectorAll('input[type="checkbox"]');
+              const labels = addrList!.querySelectorAll('label.src-addr-item');
+
+              checkboxes.forEach((cb, idx) => {
+                const input = cb as HTMLInputElement;
+                const shouldCheck = selectedAddrs.includes(input.value);
+                input.checked = shouldCheck;
+                if (labels[idx]) {
+                  labels[idx].classList.toggle('selected', shouldCheck);
+                }
+              });
+
+              sel = selectedAddrs;
+              addrList!.dispatchEvent(new Event('change', { bubbles: true }));
+
+              showToast(
+                t('transfer.autoSelectedAddressDesc', { count: String(selectedAddrs.length) }),
+                'info',
+                t('transfer.autoSelectedAddress'),
+                3000
+              );
+            } else {
+              showTxValidationError(t('tx.insufficientBalance'), null, t('transfer.autoSelectFailed'));
+              return;
+            }
+          } else {
+            showTxValidationError(t('transfer.noMatchingAddress'), null, t('transfer.autoSelectFailed'));
+            return;
+          }
+        } else if (sel.length === 0) {
+          showTxValidationError(t('toast.pleaseSelectSourceAddress'), null, t('tx.addressNotSelected'));
+          return;
+        }
+      } else if (sel.length === 0) {
         showTxValidationError(t('toast.pleaseSelectSourceAddress'), null, t('tx.addressNotSelected'));
         return;
       }
+      // ========== 自动选择结束 ==========
 
       for (const addr of sel) {
         if (!getAddrMeta(addr)) {
@@ -363,7 +457,7 @@ export function initTransferSubmit(): void {
         }
       }
 
-      const rows = Array.from(billList!.querySelectorAll('.recipient-card'));
+      const rows = recipientRows;
       if (rows.length === 0) {
         showTxValidationError(t('wallet.addRecipient'), null, t('tx.missingTransferInfo'));
         return;

@@ -898,6 +898,10 @@ export default {
   'transfer.crossChainLimit': 'Cross-chain Transaction Limit',
   'transfer.selectChangeAddress': 'Please select main currency change address for cross-chain transaction',
   'transfer.changeAddressMissing': 'Change address missing',
+  'transfer.autoSelectedAddress': 'Source address auto-selected',
+  'transfer.autoSelectedAddressDesc': 'Automatically selected {count} address(es) based on your transfer requirements',
+  'transfer.autoSelectFailed': 'Unable to auto-select addresses',
+  'transfer.noMatchingAddress': 'No address matches the required coin type with sufficient balance',
 
   // Account polling related
   'polling.tooManyFailures': 'Account sync paused, please refresh later',
