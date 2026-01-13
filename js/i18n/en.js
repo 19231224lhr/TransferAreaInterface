@@ -933,4 +933,8 @@ export default {
   'encryption.maxRetriesExceeded': 'Too many incorrect attempts, please try again later',
   'encryption.migrationTitle': 'Security Upgrade',
   'encryption.migrationDesc': 'Your private key is not encrypted. For security, it is recommended to set a payment password immediately.',
+
+  // Docs Page
+  'docs.title': 'User Guide',
+  'docs.subtitle': 'PanguPay Onboarding Guide',
 };

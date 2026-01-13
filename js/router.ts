@@ -37,7 +37,8 @@ type RoutePath =
   | '/inquiry-main'
   | '/group-detail'
   | '/profile'
-  | '/history';
+  | '/history'
+  | '/docs';
 
 // Lazy page loaders (registered on demand)
 const pageLoaders: Record<RoutePath, () => Promise<PageModule>> = {
@@ -54,7 +55,8 @@ const pageLoaders: Record<RoutePath, () => Promise<PageModule>> = {
   '/inquiry-main': () => import('./pages/joinGroup'),
   '/group-detail': () => import('./pages/groupDetail.js'),
   '/profile': () => import('./ui/profile'),
-  '/history': () => import('./pages/history.js')
+  '/history': () => import('./pages/history.js'),
+  '/docs': () => Promise.resolve({})
 };
 
 // Route to page config mapping
@@ -72,7 +74,8 @@ const routeToPageId: Record<RoutePath, string> = {
   '/inquiry-main': 'inquiry',
   '/group-detail': 'group-detail',
   '/profile': 'profile',
-  '/history': 'history'
+  '/history': 'history',
+  '/docs': 'docs'
 };
 
 function getWindowFn(name: string): (() => void) | null {
@@ -110,7 +113,7 @@ async function callPageFn(
   const fb =
     fallbackFnName
       ? getWindowFn(fallbackFnName) ||
-        (mod && typeof mod[fallbackFnName] === 'function' ? (mod[fallbackFnName] as () => void) : null)
+      (mod && typeof mod[fallbackFnName] === 'function' ? (mod[fallbackFnName] as () => void) : null)
       : null;
 
   if (fn) fn();
@@ -298,7 +301,7 @@ export async function router(): Promise<void> {
 
   // Clean up page-level event listeners from previous page to prevent memory leaks
   cleanupPageListeners();
-  
+
   // Reinitialize header user menu after cleanup
   initUserMenu();
 
@@ -337,7 +340,7 @@ export async function router(): Promise<void> {
       const errorDiv = document.createElement('div');
       errorDiv.id = DOM_IDS.pageLoadError;
       errorDiv.className = 'page-load-error';
-        renderInto(errorDiv, viewHtml`
+      renderInto(errorDiv, viewHtml`
           <div style="text-align:center;padding:60px 20px;">
             <h2 style="color:#ef4444;margin-bottom:16px;">页面加载失败</h2>
             <p style="color:#64748b;margin-bottom:24px;">无法加载页面模板，请刷新重试</p>
@@ -472,6 +475,11 @@ export async function router(): Promise<void> {
     case '/history':
       showCard(pageElement);
       void callPageFn('/history', 'initHistoryPage', 'resetHistoryPageState');
+      break;
+
+    case '/docs':
+      showCard(pageElement);
+      // No init function needed for static docs page
       break;
 
     default:

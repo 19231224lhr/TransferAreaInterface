@@ -940,4 +940,8 @@ export default {
   'encryption.maxRetriesExceeded': '密码错误次数过多，请稍后再试',
   'encryption.migrationTitle': '安全升级',
   'encryption.migrationDesc': '检测到您的私钥未加密，为了安全起见，建议您立即设置支付密码进行加密保护',
+
+  // 文档页面
+  'docs.title': '用户指南',
+  'docs.subtitle': 'PanguPay 新手漫游指南',
 };

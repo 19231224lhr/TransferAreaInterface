@@ -128,6 +128,13 @@ export const PAGE_TEMPLATES: PageTemplateConfig[] = [
         displayName: 'Transaction History',
         isDynamic: true,
         templatePath: 'pages/history.html',
+    },
+    {
+        id: 'docs',
+        containerId: 'docsCard',
+        displayName: 'User Documentation',
+        isDynamic: true,
+        templatePath: 'pages/docs.html',
     }
 ];
 
