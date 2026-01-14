@@ -46,6 +46,10 @@ const DOC_GROUPS: DocGroup[] = [
     title: { 'zh-CN': '帮助与排查', en: 'Help' }
   },
   {
+    id: 'legal',
+    title: { 'zh-CN': '隐私与条款', en: 'Legal' }
+  },
+  {
     id: 'developer',
     title: { 'zh-CN': '开发者', en: 'Developer' }
   }
@@ -130,6 +134,36 @@ const DOCS: DocItem[] = [
     sourceUrl: {
       'zh-CN': new URL('../../docs/site/glossary.zh-CN.md', import.meta.url).toString(),
       en: new URL('../../docs/site/glossary.en.md', import.meta.url).toString()
+    }
+  },
+  {
+    id: 'privacy',
+    groupId: 'legal',
+    title: { 'zh-CN': '隐私政策', en: 'Privacy Policy' },
+    subtitle: { 'zh-CN': '我们如何处理数据与本地存储', en: 'How we handle data and local storage' },
+    sourceUrl: {
+      'zh-CN': new URL('../../docs/site/privacy.zh-CN.md', import.meta.url).toString(),
+      en: new URL('../../docs/site/privacy.en.md', import.meta.url).toString()
+    }
+  },
+  {
+    id: 'terms',
+    groupId: 'legal',
+    title: { 'zh-CN': '使用条款', en: 'Terms of Service' },
+    subtitle: { 'zh-CN': '使用本系统前请先阅读', en: 'Please read before using the service' },
+    sourceUrl: {
+      'zh-CN': new URL('../../docs/site/terms.zh-CN.md', import.meta.url).toString(),
+      en: new URL('../../docs/site/terms.en.md', import.meta.url).toString()
+    }
+  },
+  {
+    id: 'cookies',
+    groupId: 'legal',
+    title: { 'zh-CN': 'Cookie 政策', en: 'Cookie Policy' },
+    subtitle: { 'zh-CN': '我们使用的 Cookies 与替代方案', en: 'Cookies we use (and alternatives)' },
+    sourceUrl: {
+      'zh-CN': new URL('../../docs/site/cookies.zh-CN.md', import.meta.url).toString(),
+      en: new URL('../../docs/site/cookies.en.md', import.meta.url).toString()
     }
   },
   {
@@ -280,22 +314,23 @@ export function initDocsPage(): void {
   const card = document.getElementById('docsCard');
   if (!card) return;
 
-  // Idempotent init
-  if (!card.dataset._bind) {
-    const navEl = card.querySelector<HTMLElement>('#docsNav');
-    if (navEl) {
-      globalEventManager.add(navEl, 'click', (ev: Event) => {
-        const target = ev.target as Element | null;
-        const link = target?.closest?.('[data-doc]') as HTMLElement | null;
-        const id = link?.getAttribute('data-doc') || '';
-        if (!id) return;
-        ev.preventDefault();
-        setActiveDocId(id);
-        renderAll(id);
-      });
-    }
+  const navEl = card.querySelector<HTMLElement>('#docsNav');
+  if (navEl) {
+    // Rebind on each visit; listeners are cleaned up on navigation.
+    globalEventManager.removeAll(navEl);
+    globalEventManager.add(navEl, 'click', (ev: Event) => {
+      const target = ev.target as Element | null;
+      const link = target?.closest?.('[data-doc]') as HTMLElement | null;
+      const id = link?.getAttribute('data-doc') || '';
+      if (!id) return;
+      ev.preventDefault();
+      setActiveDocId(id);
+      renderAll(id);
+    });
+  }
 
-    // Re-render docs when language changes
+  // Idempotent init for language subscription
+  if (!card.dataset._bind) {
     const w = window as unknown as Record<string, unknown>;
     if (!w.__docsLangUnsub) {
       (w as any).__docsLangUnsub = store.subscribeToSelector(selectLanguage, () => {

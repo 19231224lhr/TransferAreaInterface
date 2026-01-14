@@ -43,39 +43,49 @@
     border-right-color: rgba(148, 163, 184, 0.15);
 }
 
-.docs-sidebar-header {
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid rgba(14, 165, 233, 0.1);
+/* --- Header & Back Button --- */
+.docs-header {
+    position: relative;
+    margin-bottom: 32px;
+    padding-right: 48px;
 }
 
-.docs-back-btn {
-    display: inline-flex;
+.docs-back-icon-btn {
+    position: absolute;
+    top: 4px;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid var(--color-border);
     color: var(--color-text-secondary);
-    text-decoration: none;
-    font-size: 0.9em;
-    font-weight: 500;
-    padding: 10px 16px;
-    border-radius: 10px;
+    border-radius: 50%;
     cursor: pointer;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 250, 252, 0.8));
-    border: 1px solid rgba(14, 165, 233, 0.15);
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.06);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.docs-back-btn:hover {
-    background: linear-gradient(135deg, #0ea5e9, #38bdf8);
-    color: white;
-    border-color: transparent;
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25);
-    transform: translateY(-1px);
+.docs-back-icon-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
-[data-theme="dark"] .docs-back-btn {
-    background: linear-gradient(135deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.9));
-    border-color: rgba(148, 163, 184, 0.2);
+.docs-back-icon-btn:hover {
+    color: var(--color-primary);
+    background: rgba(14, 165, 233, 0.08);
+    border-color: var(--color-primary);
+    transform: translateX(-2px);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.15);
+}
+
+[data-theme="dark"] .docs-back-icon-btn {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .docs-back-icon-btn:hover {
+    border-color: var(--color-primary);
 }
 
 .docs-nav-group {
@@ -83,25 +93,14 @@
 }
 
 .docs-nav-title {
-    font-size: 0.7rem;
+    font-size: 0.8rem;
     text-transform: uppercase;
-    letter-spacing: 0.12em;
-    color: var(--color-text-tertiary);
-    margin-bottom: 10px;
-    padding-left: 12px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.docs-nav-title::before {
-    content: '';
-    display: block;
-    width: 3px;
-    height: 12px;
-    background: linear-gradient(180deg, #0ea5e9, #8b5cf6);
-    border-radius: 2px;
+    letter-spacing: 0.05em;
+    color: var(--color-text-primary);
+    margin: 24px 0 10px;
+    padding-left: 14px;
+    font-weight: 800;
+    opacity: 1;
 }
 
 .docs-nav-link {
@@ -115,20 +114,18 @@
     font-weight: 500;
     margin-bottom: 4px;
     border: 1px solid transparent;
+    transition: all 0.2s ease;
 }
 
 .docs-nav-link:hover {
-    color: var(--color-primary);
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.08), rgba(139, 92, 246, 0.04));
-    border-color: rgba(14, 165, 233, 0.15);
+    color: var(--color-text-primary);
+    background: rgba(14, 165, 233, 0.05);
 }
 
 .docs-nav-link.active {
     color: var(--color-primary);
-    background: linear-gradient(135deg, rgba(14, 165, 233, 0.12), rgba(139, 92, 246, 0.08));
-    border-color: rgba(14, 165, 233, 0.2);
+    background: rgba(14, 165, 233, 0.1);
     font-weight: 600;
-    box-shadow: 0 2px 8px rgba(14, 165, 233, 0.1);
 }
 
 /* --- Main Content --- */
@@ -253,21 +250,22 @@
 }
 
 .docs-article code {
-    background-color: rgba(14, 165, 233, 0.08);
-    border: 1px solid rgba(14, 165, 233, 0.15);
-    padding: 1px 4px;
-    border-radius: 4px;
+    background-color: #f1f5f9 !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 2px 6px !important;
+    border-radius: 6px !important;
     font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
     font-size: 0.85em;
-    color: #0ea5e9;
+    color: #475569 !important;
     margin: 0 3px;
-    vertical-align: baseline;
+    vertical-align: 1px;
+    box-shadow: none !important;
 }
 
 [data-theme="dark"] .docs-article code {
-    background-color: rgba(14, 165, 233, 0.15);
-    border-color: rgba(14, 165, 233, 0.2);
-    color: #38bdf8;
+    background-color: rgba(30, 41, 59, 1) !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
 }
 
 .docs-article pre {

@@ -1,29 +1,27 @@
 <div class="fade-in" id="docsCard" style="padding: 0; background: transparent; box-shadow: none; border: none;">
-  <div class="docs-wrapper">
-    <!-- Sidebar -->
-    <aside class="docs-sidebar">
-      <div class="docs-sidebar-header">
-        <button class="docs-back-btn" data-router-bypass="true" onclick="history.back()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          <span data-i18n="docs.backToWallet">Back to Wallet</span>
-        </button>
-      </div>
+    <div class="docs-wrapper">
+        <!-- Sidebar -->
+        <aside class="docs-sidebar">
 
-      <nav id="docsNav"></nav>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="docs-main">
-      <div class="docs-article">
-        <header class="docs-header">
-          <h1 class="docs-title" id="docsTitle"></h1>
-          <p class="docs-subtitle" id="docsSubtitle"></p>
-        </header>
+            <nav id="docsNav"></nav>
+        </aside>
 
-        <div id="docsContent"></div>
-      </div>
-    </main>
-  </div>
+        <!-- Main Content -->
+        <main class="docs-main">
+            <div class="docs-article">
+                <header class="docs-header">
+                    <button class="docs-back-icon-btn" onclick="history.back()" aria-label="Back">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7" />
+                        </svg>
+                    </button>
+                    <h1 class="docs-title" id="docsTitle"></h1>
+                    <p class="docs-subtitle" id="docsSubtitle"></p>
+                </header>
+
+                <div id="docsContent"></div>
+            </div>
+        </main>
+    </div>
 </div>

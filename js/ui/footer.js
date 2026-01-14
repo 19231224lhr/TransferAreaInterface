@@ -9,6 +9,7 @@ let brandObserver = null;
 let animationFrame = null;
 
 const FLOAT_TRANSITION = 'transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+const DOCS_ACTIVE_KEY = 'pp.docs.activeDoc.v1';
 
 function ensureFloatLetterTransition(letter) {
   // Important: transition must be set BEFORE the first transform update.
@@ -26,6 +27,9 @@ export function initFooter() {
   const footer = document.querySelector('.page-footer');
   if (!footer) return;
 
+  // Footer meta links (Docs / Privacy / Terms / Cookies)
+  bindFooterMetaLinks(footer);
+
   const floatingLetters = document.querySelectorAll('.footer-brand-letter.float');
   if (floatingLetters.length === 0) return;
 
@@ -37,6 +41,46 @@ export function initFooter() {
   
   // Initial animation state
   updateFloatingLetters(0);
+}
+
+function bindFooterMetaLinks(footerEl) {
+  const meta = footerEl.querySelector('.footer-meta-links');
+  if (!meta) return;
+  if (meta.dataset && meta.dataset._bindMeta) return;
+
+  meta.addEventListener('click', (ev) => {
+    const target = ev.target;
+    if (!(target instanceof Element)) return;
+
+    const link = target.closest('a.footer-meta-link[data-doc]');
+    if (!(link instanceof HTMLAnchorElement)) return;
+
+    const docId = link.getAttribute('data-doc') || '';
+    if (!docId) return;
+
+    // Prevent the global router click handler from running; we handle navigation here.
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    try {
+      localStorage.setItem(DOCS_ACTIVE_KEY, docId);
+    } catch (_) {
+      // ignore
+    }
+
+    try {
+      if (typeof window.PanguPay?.router?.routeTo === 'function') {
+        window.PanguPay.router.routeTo('#/docs');
+        return;
+      }
+    } catch (_) {
+      // ignore
+    }
+
+    location.hash = '#/docs';
+  });
+
+  if (meta.dataset) meta.dataset._bindMeta = '1';
 }
 
 /**
