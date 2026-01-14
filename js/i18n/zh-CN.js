@@ -944,4 +944,5 @@ export default {
   // 文档页面
   'docs.title': '用户指南',
   'docs.subtitle': 'PanguPay 新手漫游指南',
+  'docs.backToWallet': '返回钱包',
 };

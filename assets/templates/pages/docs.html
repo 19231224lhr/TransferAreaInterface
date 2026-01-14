@@ -1,232 +1,29 @@
 <div class="fade-in" id="docsCard" style="padding: 0; background: transparent; box-shadow: none; border: none;">
-    <div class="docs-wrapper">
-        <!-- Sidebar -->
-        <aside class="docs-sidebar">
-            <div class="docs-sidebar-header">
-                <button class="docs-back-btn" onclick="history.back()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                        <path d="M19 12H5M12 19l-7-7 7-7" />
-                    </svg>
-                    Back to Wallet
-                </button>
-            </div>
+  <div class="docs-wrapper">
+    <!-- Sidebar -->
+    <aside class="docs-sidebar">
+      <div class="docs-sidebar-header">
+        <button class="docs-back-btn" data-router-bypass="true" onclick="history.back()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <path d="M19 12H5M12 19l-7-7 7-7" />
+          </svg>
+          <span data-i18n="docs.backToWallet">Back to Wallet</span>
+        </button>
+      </div>
 
-            <div class="docs-nav-group">
-                <div class="docs-nav-title">Start Here</div>
-                <a href="#/docs" class="docs-nav-link active">User Guide</a>
-                <a class="docs-nav-link" style="opacity: 0.5; cursor: not-allowed">FAQ (Soon)</a>
-            </div>
+      <nav id="docsNav"></nav>
+    </aside>
 
-            <div class="docs-nav-group">
-                <div class="docs-nav-title">Developer</div>
-                <a class="docs-nav-link" style="opacity: 0.5; cursor: not-allowed">API Reference</a>
-                <a class="docs-nav-link" style="opacity: 0.5; cursor: not-allowed">SDK (Soon)</a>
-            </div>
-        </aside>
+    <!-- Main Content -->
+    <main class="docs-main">
+      <div class="docs-article">
+        <header class="docs-header">
+          <h1 class="docs-title" id="docsTitle"></h1>
+          <p class="docs-subtitle" id="docsSubtitle"></p>
+        </header>
 
-        <!-- Main Content -->
-        <main class="docs-main">
-            <div class="docs-article">
-                <header class="docs-header">
-                    <h1 class="docs-title" data-i18n="docs.title">用户指南</h1>
-                    <p class="docs-subtitle" data-i18n="docs.subtitle">PanguPay 新手漫游指南</p>
-                </header>
-
-                <div class="docs-intro">
-                    <p>欢迎来到 PanguPay！这是一份为您精心准备的漫游指南。</p>
-                    <p>无论您是区块链世界的初来乍到者，还是经验丰富的探索者，我们都希望这份文档能像一位贴心的向导，陪伴您轻松完成每一次操作。</p>
-                    <p>我们深知，面对陌生的系统难免会感到迷茫，但请放心，我们会用最温柔、直白的语言，把复杂的技术细节藏在身后，只把最简单、流畅的体验呈现给您。</p>
-                </div>
-
-                <section class="docs-section">
-                    <h3>1. 启程：初次相遇</h3>
-
-                    <div class="docs-subsection">
-                        <h4>1.1 如果您是新朋友（创建账户）</h4>
-                        <p>第一次来到这里，我们需要为您准备一把“钥匙”。</p>
-                        <ol>
-                            <li><strong>出发</strong>：在欢迎页点击 <strong>“创建账户/创建钱包”</strong>。</li>
-                            <li><strong>获取钥匙</strong>：系统会为您生成专属的 <strong>账号 ID</strong>、<strong>公钥</strong> 和
-                                <strong>私钥</strong>。
-                                <br><span
-                                    style="font-size: 0.9em; color: var(--text-muted);">小贴士：私钥就像您家大门的钥匙，拥有它就能掌控一切。</span>
-                            </li>
-                            <li><strong>妥善保管</strong>：请务必将这些信息（尤其是私钥）抄写在纸上或保存在安全的离线设备中。</li>
-                            <li><strong>设置口令</strong>：设置一个您记得住的密码，用于日常解锁（就像手机锁屏密码一样）。</li>
-                        </ol>
-                        <div class="docs-alert warning">
-                            <strong>守护秘密</strong>：您的私钥只保存在您当前的浏览器中，我们不会（也无法）上传到任何服务器。请不要把私钥截图发给任何人，这是只属于您一个人的秘密。
-                        </div>
-                    </div>
-
-                    <div class="docs-subsection">
-                        <h4>1.2 如果您是老朋友（导入账户）</h4>
-                        <p>换了电脑或浏览器？没关系，带上您的“钥匙”回来就好。</p>
-                        <ol>
-                            <li><strong>回家</strong>：选择 <strong>“导入钱包/导入账户”</strong>。</li>
-                            <li><strong>验证</strong>：输入您之前备份的私钥或账户信息。</li>
-                            <li><strong>解锁</strong>：设置或输入密码，一切就又是熟悉的模样了。</li>
-                        </ol>
-                    </div>
-                </section>
-
-                <section class="docs-section">
-                    <h3>2. 探索：您的控制台（主页面）</h3>
-                    <p>进入主页面后，您的面前主要分为两个区域：<strong>资产管家（左侧）</strong> 和 <strong>交易中心（右侧）</strong>。</p>
-
-                    <div class="docs-subsection">
-                        <h4>资产管家（左侧）</h4>
-                        <p>这里是您的账本：</p>
-                        <ul>
-                            <li><strong>资产总览</strong>：一眼看清您的身家（包含 PGC、BTC、ETH 等多种资产）。</li>
-                            <li><strong>同步余额</strong>：点击右上角的刷新按钮，让数据保持最新。</li>
-                            <li><strong>历史足迹</strong>：点击“历史”按钮，回顾您的每一次交易往来。</li>
-                            <li><strong>地址名册</strong>：您可以在这里创建新地址（就像在银行多开几张卡），方便管理不同用途的资金。</li>
-                        </ul>
-                    </div>
-                </section>
-
-                <section class="docs-section">
-                    <h3>3. 核心体验：发送交易</h3>
-                    <p>这是您最常使用的功能。别担心“构造交易”、“UTXO”这些晦涩的词汇，跟着我们的引导，只需像写信一样简单。</p>
-                    <p>我们会根据您是否加入“担保组织”，自动为您筛选适合的模式。</p>
-
-                    <div class="docs-subsection">
-                        <h4>Step 1：选择模式 —— 您想怎么转？</h4>
-                        <p>在右侧区域的上方，您会看到几个选项：</p>
-                        <ul>
-                            <li><strong>普通/快速转账</strong>（默认）：
-                                <br><em>适用场景</em>：日常转账，就像给朋友发红包一样简单快捷。
-                                <br><em>说明</em>：如果您还是“散户”（未加入组织），系统会默认锁定在此模式，这是最稳妥的选择。
-                            </li>
-                            <li><strong>跨链转账</strong>（进阶）：
-                                <br><em>适用场景</em>：需要将资产跨越区块链网络流转（例如转给 ETH 地址）。
-                                <br><em>要求</em>：需要您已加入担保组织，且对方地址必须是 <code>0x</code> 开头的格式。
-                            </li>
-                            <li><strong>质押转账</strong>（特殊）：
-                                <br><em>适用场景</em>：参与组织治理或特定业务。
-                            </li>
-                        </ul>
-
-                        <h4>Step 2：选择来源 —— 钱从哪里出？</h4>
-                        <p>在 <strong>“来源地址 (From)”</strong> 列表中，勾选您想用来付款的地址：</p>
-                        <ul>
-                            <li><strong>从哪扣款</strong>：您可以选择一个，也可以选择多个地址一起凑钱（普通模式下）。</li>
-                            <li><strong>余额检查</strong>：系统会贴心地标出每个地址的余额。如果显示灰色，说明余额不足或暂时被锁定（可能有未完成的交易），请换一个试试。</li>
-                        </ul>
-                        <div class="docs-alert info">
-                            小秘密：如果您只有一个地址，系统已经帮您自动勾选好了，直接进行下一步吧！
-                        </div>
-
-                        <h4>Step 3：填写去向 —— 钱转给谁？</h4>
-                        <p>点击 <strong>“添加收款人”</strong>，告诉我们信件寄给谁：</p>
-                        <ol>
-                            <li><strong>收款地址</strong>：粘贴对方的钱包地址。请务必仔细核对，区块链转账一旦发出就无法撤回哦。</li>
-                            <li><strong>转账金额</strong>：输入您想转出的数额。</li>
-                            <li><strong>选择币种</strong>：默认是 PGC（盘古币），您也可以选择 BTC 或 ETH。</li>
-                        </ol>
-
-                        <h4>Step 4：高级选项（可跳过）</h4>
-                        <p>对于大多数情况，您完全可以忽略这一步，系统默认的设置已经足够好用。但如果您有特殊需求，点击 <strong>“高级选项”</strong>：</p>
-                        <ul>
-                            <li><strong>加速交易 (Extra Gas)</strong>：如果网络拥堵，您可以额外支付一点点 Gas 费，让矿工优先处理您的交易。</li>
-                            <li><strong>找零去处 (Change Address)</strong>：如果你支付了 100 元，只需付 90 元，剩下的 10
-                                元“找零”退回哪里？默认会退回您的主地址，您也可以指定其他地址。</li>
-                        </ul>
-
-                        <h4>Step 5：发送 —— 见证奇迹</h4>
-                        <p>一切就绪，点击 <strong>“构造交易”</strong> 按钮。</p>
-                        <ol>
-                            <li><strong>安全检查</strong>：系统会最后帮您检查一遍余额够不够、地址对不对。</li>
-                            <li><strong>签名确认</strong>：为了安全，系统会请您输入密码进行签名确认。</li>
-                            <li><strong>发送成功</strong>：稍等片刻，您会看到“提交成功”的提示。您的交易已经飞向区块链网络了！</li>
-                        </ol>
-                        <p>您可以去左侧的“交易记录”里查看它的状态，看着它从“确认中”变成“成功”，是不是很有成就感？</p>
-                    </div>
-                </section>
-
-                <section class="docs-section">
-                    <h3>4. 遇到小插曲怎么办？</h3>
-                    <p>在使用过程中，如果遇到提示，请不要慌张，这通常是系统在保护您的安全：</p>
-                    <ul>
-                        <li><strong>“余额不足”</strong>：您选的地址里钱不够啦，试着减少转账金额，或者多勾选几个有钱的地址。</li>
-                        <li><strong>“地址格式错误”</strong>：请检查一下收款地址是不是复制错了？有没有多复制了空格？如果是跨链转账，确认识别的是 <code>0x</code> 开头吗？
-                        </li>
-                        <li><strong>“UTXO 被锁定”</strong>：这表示该地址上一笔交易还在确认中，资产暂时冻结。请哪怕只等几秒钟，待前一笔交易完成后再试。</li>
-                        <li><strong>“找零地址缺失”</strong>：极少数情况下发生，请去“高级选项”里手动点选一下找零地址即可。</li>
-                    </ul>
-                </section>
-
-                <section class="docs-section">
-                    <h3>5. 进阶玩法：加入组织</h3>
-                    <p>在 PanguPay 中，用户被分为两类：<strong>散户</strong> 和 <strong>担保组织成员</strong>。了解您的身份权限，能帮助您更好地使用系统。</p>
-
-                    <div class="docs-subsection">
-                        <h4>5.1 身份与权益对比</h4>
-                        <div class="docs-table-wrapper">
-                            <table class="docs-table">
-                                <thead>
-                                    <tr>
-                                        <th>功能/权益</th>
-                                        <th>散户 (普通用户)</th>
-                                        <th>担保组织成员 (VIP 用户)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td><strong>适用人群</strong></td>
-                                        <td>初次使用者、不常交易的用户</td>
-                                        <td>频繁交易者、有跨链需求的用户</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>转账模式</strong></td>
-                                        <td>仅限 <strong>普通/快速转账</strong></td>
-                                        <td>解锁 <strong>跨链转账</strong>、<strong>质押转账</strong> 等所有模式</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>交易确认</strong></td>
-                                        <td>需等待全网广播，约 1-3 分钟</td>
-                                        <td>组织内部极速处理，秒级确认</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Gas 费率</strong></td>
-                                        <td>标准网络费率</td>
-                                        <td>享受组织内部低费率优惠</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>跨链能力</strong></td>
-                                        <td>❌ (无法跨链)</td>
-                                        <td>✅ (支持 PGC ↔ BTC/ETH)</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>隐私保护</strong></td>
-                                        <td>标准公开账本</td>
-                                        <td>支持组织内隐私交易 (Capsule)</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                        <div class="docs-alert info">
-                            <strong>简单来说</strong>：如果不加入组织，您依然可以正常收付款，就像在银行柜台排队办理业务；而加入组织后，您就拥有了 VIP
-                            通道，不仅速度快、费用低，还能办理跨国（跨链）汇款！
-                        </div>
-
-                        <h4>5.2 如何成为“VIP”？</h4>
-                        <ol>
-                            <li>点击顶部导航栏的 <strong>“组织”</strong> 页面。</li>
-                            <li>在列表中挑选一个合眼缘的 <strong>担保组织</strong>（可以看它的成员数、费率等信息）。</li>
-                            <li>点击 <strong>“申请加入”</strong> 并签名确认。</li>
-                            <li>等待组织管理员通过后，您就拥有了更强大的力量！</li>
-                        </ol>
-                    </div>
-                </section>
-
-                <section class="docs-section"
-                    style="border-top: 1px solid var(--border-color); padding-top: 40px; margin-top: 60px;">
-                    <p>此指南旨在为您提供最轻松的指引。而在这一切简洁操作的背后，是我们对安全与体验的极致追求。</p>
-                    <p><strong>祝您在 PanguPay 的旅程愉快！</strong></p>
-                </section>
-            </div>
-        </main>
-    </div>
+        <div id="docsContent"></div>
+      </div>
+    </main>
+  </div>
 </div>

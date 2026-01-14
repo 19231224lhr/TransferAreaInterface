@@ -56,7 +56,7 @@ const pageLoaders: Record<RoutePath, () => Promise<PageModule>> = {
   '/group-detail': () => import('./pages/groupDetail.js'),
   '/profile': () => import('./ui/profile'),
   '/history': () => import('./pages/history.js'),
-  '/docs': () => Promise.resolve({})
+  '/docs': () => import('./pages/docs')
 };
 
 // Route to page config mapping
@@ -92,7 +92,7 @@ async function loadPageModule(route: RoutePath): Promise<PageModule | null> {
   if (!loader) return null;
 
   try {
-    return await withLoading(loader(), t('common.loading') || '加载中...');
+    return await withLoading(loader(), t('common.loading') || '加载�?..');
   } catch (err) {
     console.warn(`[router] failed to load page '${route}'`, err);
     return null;
@@ -244,14 +244,11 @@ export function showCard(card: HTMLElement): void {
   );
   if (innerPage) innerPage.classList.remove('hidden');
 
-  // Control footer visibility (hide on welcome page, show on others)
+  // Control footer visibility (show on all pages)
   const pageFooter = document.getElementById(DOM_IDS.pageFooter);
   if (pageFooter) {
-    if (card.id === 'welcomeCard') {
-      pageFooter.classList.add('hidden');
-    } else {
-      pageFooter.classList.remove('hidden');
-    }
+    // Footer is now visible on all pages
+    pageFooter.classList.remove('hidden');
   }
 
   // Scroll to top
@@ -479,7 +476,7 @@ export async function router(): Promise<void> {
 
     case '/docs':
       showCard(pageElement);
-      // No init function needed for static docs page
+      void callPageFn('/docs', 'initDocsPage');
       break;
 
     default:

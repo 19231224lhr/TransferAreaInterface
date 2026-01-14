@@ -174,6 +174,29 @@
     margin-bottom: 36px;
 }
 
+.docs-article h2 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 24px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.docs-article h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 16px 0 8px;
+}
+
+.docs-article h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    margin: 14px 0 6px;
+}
+
 .docs-section h3 {
     font-size: 1.35rem;
     font-weight: 600;
@@ -219,13 +242,94 @@
     font-weight: 600;
 }
 
-.docs-article code {
-    background-color: var(--color-code-bg);
-    padding: 1px 5px;
-    border-radius: 3px;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-    font-size: 0.85em;
+.docs-article a {
     color: var(--color-primary);
+    text-decoration: none;
+    border-bottom: 1px dashed rgba(14, 165, 233, 0.35);
+}
+
+.docs-article a:hover {
+    border-bottom-style: solid;
+}
+
+.docs-article code {
+    background-color: rgba(14, 165, 233, 0.08);
+    border: 1px solid rgba(14, 165, 233, 0.15);
+    padding: 1px 4px;
+    border-radius: 4px;
+    font-family: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    font-size: 0.85em;
+    color: #0ea5e9;
+    margin: 0 3px;
+    vertical-align: baseline;
+}
+
+[data-theme="dark"] .docs-article code {
+    background-color: rgba(14, 165, 233, 0.15);
+    border-color: rgba(14, 165, 233, 0.2);
+    color: #38bdf8;
+}
+
+.docs-article pre {
+    background-color: var(--color-card-bg-secondary);
+    border: 1px solid var(--color-border);
+    padding: 12px 14px;
+    border-radius: 8px;
+    overflow: auto;
+    margin: 16px 0;
+}
+
+.docs-article pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--color-text-primary);
+    font-size: 0.85rem;
+    display: block;
+    margin: 0;
+    border: none;
+}
+
+.docs-article blockquote {
+    margin: 16px 0;
+    padding: 12px 16px;
+    border-left: 3px solid var(--color-primary);
+    background-color: rgba(14, 165, 233, 0.06);
+    border-radius: 6px;
+    color: var(--color-text-secondary);
+}
+
+.docs-article hr {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 24px 0;
+}
+
+.docs-article table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+    margin: 16px 0;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.docs-article th,
+.docs-article td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text-secondary);
+}
+
+.docs-article th {
+    background-color: var(--color-card-bg-secondary);
+    color: var(--color-text-primary);
+    font-weight: 600;
+}
+
+.docs-article tr:last-child td {
+    border-bottom: none;
 }
 
 /* --- Alerts / Callouts --- */

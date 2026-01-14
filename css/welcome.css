@@ -18,9 +18,10 @@
   min-height: 100vh;
   padding: 80px 8% 40px 12%;
   margin: 0;
-  margin-top: 0 !important; /* 确保没有顶部外边距 */
+  margin-top: 0 !important;
+  /* 确保没有顶部外边距 */
   background: transparent;
-  overflow: hidden;
+  /* overflow: hidden; Removed to allow background to flow into footer */
   animation: heroFadeIn 1s ease-out both;
 }
 
@@ -30,7 +31,7 @@ body:has(.welcome-hero:not(.hidden)) .footer {
 }
 
 /* 首页时容器宽度放大 */
-.welcome-hero ~ *:not(.modal):not(.overlay):not(.header) {
+.welcome-hero~*:not(.modal):not(.overlay):not(.header) {
   max-width: 960px;
 }
 
@@ -44,6 +45,7 @@ body:has(.welcome-hero:not(.hidden)) {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -54,7 +56,7 @@ body:has(.welcome-hero:not(.hidden)) {
 .welcome-bg {
   position: absolute;
   inset: 0;
-  overflow: hidden;
+  /* overflow: hidden; Removed to allow background to flow into footer */
   pointer-events: none;
   z-index: 0;
 }
@@ -109,12 +111,16 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes orbFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(30px, -30px) scale(1.1);
   }
+
   66% {
     transform: translate(-20px, 20px) scale(0.95);
   }
@@ -123,7 +129,7 @@ body:has(.welcome-hero:not(.hidden)) {
 .welcome-grid-pattern {
   position: absolute;
   inset: 0;
-  background-image: 
+  background-image:
     linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
   background-size: 40px 40px;
@@ -149,18 +155,50 @@ body:has(.welcome-hero:not(.hidden)) {
   animation: particleFloat 6s ease-in-out infinite;
 }
 
-.p1 { top: 20%; left: 10%; animation-delay: 0s; }
-.p2 { top: 60%; left: 5%; animation-delay: -1s; }
-.p3 { top: 40%; left: 85%; animation-delay: -2s; }
-.p4 { top: 80%; left: 90%; animation-delay: -3s; }
-.p5 { top: 10%; left: 60%; animation-delay: -4s; }
-.p6 { top: 70%; left: 50%; animation-delay: -5s; }
+.p1 {
+  top: 20%;
+  left: 10%;
+  animation-delay: 0s;
+}
+
+.p2 {
+  top: 60%;
+  left: 5%;
+  animation-delay: -1s;
+}
+
+.p3 {
+  top: 40%;
+  left: 85%;
+  animation-delay: -2s;
+}
+
+.p4 {
+  top: 80%;
+  left: 90%;
+  animation-delay: -3s;
+}
+
+.p5 {
+  top: 10%;
+  left: 60%;
+  animation-delay: -4s;
+}
+
+.p6 {
+  top: 70%;
+  left: 50%;
+  animation-delay: -5s;
+}
 
 @keyframes particleFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) rotate(0deg);
     opacity: 0.6;
   }
+
   50% {
     transform: translateY(-30px) rotate(180deg);
     opacity: 1;
@@ -182,6 +220,7 @@ body:has(.welcome-hero:not(.hidden)) {
     opacity: 0;
     transform: translateX(-40px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -214,19 +253,25 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes badgePulse {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 0 0 rgba(14, 165, 233, 0.2);
   }
+
   50% {
     box-shadow: 0 0 0 8px rgba(14, 165, 233, 0);
   }
 }
 
 @keyframes dotPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     opacity: 1;
   }
+
   50% {
     transform: scale(1.2);
     opacity: 0.7;
@@ -262,6 +307,7 @@ body:has(.welcome-hero:not(.hidden)) {
   0% {
     background-position: 0% center;
   }
+
   100% {
     background-position: 200% center;
   }
@@ -285,17 +331,15 @@ body:has(.welcome-hero:not(.hidden)) {
 .feature-card {
   flex: 1;
   padding: 16px;
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.85) 0%,
-    rgba(255, 255, 255, 0.6) 50%,
-    rgba(248, 250, 252, 0.7) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.85) 0%,
+      rgba(255, 255, 255, 0.6) 50%,
+      rgba(248, 250, 252, 0.7) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.9);
   border-radius: 20px;
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(14, 165, 233, 0.06),
     0 1px 3px rgba(0, 0, 0, 0.04),
     inset 0 1px 0 rgba(255, 255, 255, 1);
@@ -313,11 +357,9 @@ body:has(.welcome-hero:not(.hidden)) {
   left: 0;
   right: 0;
   height: 50%;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.8) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.8) 0%,
+      rgba(255, 255, 255, 0) 100%);
   pointer-events: none;
   border-radius: 20px 20px 0 0;
 }
@@ -330,11 +372,9 @@ body:has(.welcome-hero:not(.hidden)) {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    circle at center,
-    rgba(14, 165, 233, 0.15) 0%,
-    transparent 50%
-  );
+  background: radial-gradient(circle at center,
+      rgba(14, 165, 233, 0.15) 0%,
+      transparent 50%);
   opacity: 0;
   transform: scale(0.5);
   transition: all 0.5s ease;
@@ -343,17 +383,15 @@ body:has(.welcome-hero:not(.hidden)) {
 
 .feature-card:hover {
   transform: translateY(-6px) scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(14, 165, 233, 0.15),
     0 8px 16px rgba(14, 165, 233, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 1);
   border-color: rgba(14, 165, 233, 0.3);
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.95) 0%,
-    rgba(240, 249, 255, 0.8) 50%,
-    rgba(224, 242, 254, 0.7) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.95) 0%,
+      rgba(240, 249, 255, 0.8) 50%,
+      rgba(224, 242, 254, 0.7) 100%);
 }
 
 .feature-card:hover::after {
@@ -367,17 +405,15 @@ body:has(.welcome-hero:not(.hidden)) {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    rgba(14, 165, 233, 0.15) 0%,
-    rgba(56, 189, 248, 0.1) 50%,
-    rgba(139, 92, 246, 0.1) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(14, 165, 233, 0.15) 0%,
+      rgba(56, 189, 248, 0.1) 50%,
+      rgba(139, 92, 246, 0.1) 100%);
   border-radius: 14px;
   color: #0ea5e9;
   margin-bottom: 16px;
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(14, 165, 233, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(14, 165, 233, 0.15);
@@ -389,25 +425,21 @@ body:has(.welcome-hero:not(.hidden)) {
   position: absolute;
   inset: 0;
   border-radius: 14px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    transparent 50%
-  );
+  background: linear-gradient(135deg,
+      rgba(255, 255, 255, 0.5) 0%,
+      transparent 50%);
   pointer-events: none;
 }
 
 .feature-card:hover .feature-icon {
   transform: scale(1.1) rotate(-3deg);
-  box-shadow: 
+  box-shadow:
     0 8px 20px rgba(14, 165, 233, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  background: linear-gradient(
-    135deg,
-    rgba(14, 165, 233, 0.2) 0%,
-    rgba(56, 189, 248, 0.15) 50%,
-    rgba(139, 92, 246, 0.15) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(14, 165, 233, 0.2) 0%,
+      rgba(56, 189, 248, 0.15) 50%,
+      rgba(139, 92, 246, 0.15) 100%);
 }
 
 .feature-icon svg {
@@ -467,7 +499,7 @@ body:has(.welcome-hero:not(.hidden)) {
 .welcome-btn-primary {
   background: linear-gradient(135deg, #0ea5e9, #0284c7);
   color: #fff;
-  box-shadow: 
+  box-shadow:
     0 4px 14px rgba(14, 165, 233, 0.35),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
@@ -476,14 +508,14 @@ body:has(.welcome-hero:not(.hidden)) {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, transparent 50%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .welcome-btn-primary:hover {
   transform: translateY(-2px) scale(1.02);
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(14, 165, 233, 0.45),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
@@ -567,10 +599,10 @@ body:has(.welcome-hero:not(.hidden)) {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(14, 165, 233, 0.1), 
-    transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(14, 165, 233, 0.1),
+      transparent);
   transition: left 0.4s ease;
 }
 
@@ -623,10 +655,10 @@ body:has(.welcome-hero:not(.hidden)) {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, 
-    transparent, 
-    rgba(255, 255, 255, 0.2), 
-    transparent);
+  background: linear-gradient(90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent);
   transition: left 0.4s ease;
 }
 
@@ -645,7 +677,7 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 /* 当右侧按钮被点击时，隐藏左侧按钮的分隔线 */
-.split-btn-home:active ~ .split-btn-login::after,
+.split-btn-home:active~.split-btn-login::after,
 .split-login-container:has(.split-btn-home:active) .split-btn-login::after {
   opacity: 0;
 }
@@ -661,6 +693,7 @@ body:has(.welcome-hero:not(.hidden)) {
     opacity: 0;
     transform: scale(0.9) translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -718,6 +751,7 @@ body:has(.welcome-hero:not(.hidden)) {
     opacity: 0;
     transform: translateX(40px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -732,7 +766,7 @@ body:has(.welcome-hero:not(.hidden)) {
   background: linear-gradient(145deg, #1e293b 0%, #334155 50%, #1e293b 100%);
   border-radius: 24px;
   padding: 28px;
-  box-shadow: 
+  box-shadow:
     0 30px 60px -15px rgba(0, 0, 0, 0.3),
     0 15px 30px -10px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
@@ -750,9 +784,12 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes cardFloat {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: rotateY(-12deg) rotateX(8deg) translateY(0);
   }
+
   50% {
     transform: rotateY(-12deg) rotateX(8deg) translateY(-15px);
   }
@@ -761,22 +798,23 @@ body:has(.welcome-hero:not(.hidden)) {
 .card-shine {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    105deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.1) 45%,
-    rgba(255, 255, 255, 0.2) 50%,
-    rgba(255, 255, 255, 0.1) 55%,
-    transparent 80%
-  );
+  background: linear-gradient(105deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.1) 45%,
+      rgba(255, 255, 255, 0.2) 50%,
+      rgba(255, 255, 255, 0.1) 55%,
+      transparent 80%);
   transform: translateX(-100%);
   animation: cardShine 3s ease-in-out infinite;
 }
 
 @keyframes cardShine {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateX(-100%);
   }
+
   50% {
     transform: translateX(100%);
   }
@@ -857,13 +895,13 @@ body:has(.welcome-hero:not(.hidden)) {
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: linear-gradient(145deg, rgba(255,255,255,0.95), rgba(248,250,252,0.9));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 252, 0.9));
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.8);
-  box-shadow: 
-    0 10px 40px rgba(0,0,0,0.1),
-    0 4px 12px rgba(0,0,0,0.05),
-    inset 0 1px 0 rgba(255,255,255,1);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow:
+    0 10px 40px rgba(0, 0, 0, 0.1),
+    0 4px 12px rgba(0, 0, 0, 0.05),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
 }
 
 .wallet-icon {
@@ -891,8 +929,15 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes floatWallet {
-  0%, 100% { transform: translateY(0) rotate(-2deg); }
-  50% { transform: translateY(-12px) rotate(1deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(1deg);
+  }
 }
 
 /* NFT艺术卡片 */
@@ -908,11 +953,11 @@ body:has(.welcome-hero:not(.hidden)) {
   background: linear-gradient(145deg, #1a1a2e, #16213e);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 
-    0 15px 40px rgba(0,0,0,0.3),
-    0 5px 15px rgba(0,0,0,0.2),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 15px 40px rgba(0, 0, 0, 0.3),
+    0 5px 15px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .nft-image {
@@ -925,12 +970,12 @@ body:has(.welcome-hero:not(.hidden)) {
 .nft-gradient {
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, 
-    #667eea 0%, 
-    #764ba2 25%, 
-    #f093fb 50%,
-    #f5576c 75%,
-    #4facfe 100%);
+  background: linear-gradient(135deg,
+      #667eea 0%,
+      #764ba2 25%,
+      #f093fb 50%,
+      #f5576c 75%,
+      #4facfe 100%);
   background-size: 300% 300%;
   animation: gradientShift 4s ease infinite;
 }
@@ -938,9 +983,9 @@ body:has(.welcome-hero:not(.hidden)) {
 .nft-pattern {
   position: absolute;
   inset: 0;
-  background: 
-    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3) 0%, transparent 30%),
-    radial-gradient(circle at 70% 70%, rgba(255,255,255,0.2) 0%, transparent 25%);
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 30%),
+    radial-gradient(circle at 70% 70%, rgba(255, 255, 255, 0.2) 0%, transparent 25%);
 }
 
 .nft-info {
@@ -952,7 +997,7 @@ body:has(.welcome-hero:not(.hidden)) {
 
 .nft-name {
   font-size: 10px;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   font-weight: 500;
 }
 
@@ -966,13 +1011,27 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes gradientShift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 @keyframes floatNft {
-  0%, 100% { transform: translateY(0) rotate(-3deg); }
-  50% { transform: translateY(-12px) rotate(3deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(3deg);
+  }
 }
 
 /* 加密币圆形 - 升级版 */
@@ -991,13 +1050,13 @@ body:has(.welcome-hero:not(.hidden)) {
   align-items: center;
   justify-content: center;
   position: relative;
-  box-shadow: 
+  box-shadow:
     0 0 0 3px rgba(247, 147, 26, 0.18),
     0 0 0 6px rgba(247, 147, 26, 0.08),
     0 12px 40px rgba(247, 147, 26, 0.35),
     0 4px 16px rgba(247, 147, 26, 0.25),
-    inset 0 2px 0 rgba(255,255,255,0.35),
-    inset 0 -2px 0 rgba(0,0,0,0.15);
+    inset 0 2px 0 rgba(255, 255, 255, 0.35),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.15);
   overflow: hidden;
 }
 
@@ -1006,7 +1065,7 @@ body:has(.welcome-hero:not(.hidden)) {
   position: absolute;
   width: 46px;
   height: 46px;
-  border: 2px solid rgba(255,255,255,0.25);
+  border: 2px solid rgba(255, 255, 255, 0.25);
   border-radius: 50%;
 }
 
@@ -1018,9 +1077,9 @@ body:has(.welcome-hero:not(.hidden)) {
   font-size: 30px;
   font-weight: 700;
   color: white;
-  text-shadow: 
-    0 2px 4px rgba(0,0,0,0.25),
-    0 0 20px rgba(255,255,255,0.3);
+  text-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.25),
+    0 0 20px rgba(255, 255, 255, 0.3);
   z-index: 2;
 }
 
@@ -1029,8 +1088,15 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes floatCoin {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-15px) rotate(10deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  50% {
+    transform: translateY(-15px) rotate(10deg);
+  }
 }
 
 /* 数据图表卡 */
@@ -1044,11 +1110,11 @@ body:has(.welcome-hero:not(.hidden)) {
   padding: 14px 18px;
   background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.9));
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.1);
-  box-shadow: 
-    0 15px 50px rgba(0,0,0,0.25),
-    0 5px 15px rgba(0,0,0,0.15),
-    inset 0 1px 0 rgba(255,255,255,0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 15px 50px rgba(0, 0, 0, 0.25),
+    0 5px 15px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .chart-bars {
@@ -1066,15 +1132,36 @@ body:has(.welcome-hero:not(.hidden)) {
   animation: barPulse 2s ease-in-out infinite;
 }
 
-.chart-bars span:nth-child(1) { animation-delay: 0s; }
-.chart-bars span:nth-child(2) { animation-delay: 0.1s; }
-.chart-bars span:nth-child(3) { animation-delay: 0.2s; }
-.chart-bars span:nth-child(4) { animation-delay: 0.3s; }
-.chart-bars span:nth-child(5) { animation-delay: 0.4s; }
+.chart-bars span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.chart-bars span:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.chart-bars span:nth-child(3) {
+  animation-delay: 0.2s;
+}
+
+.chart-bars span:nth-child(4) {
+  animation-delay: 0.3s;
+}
+
+.chart-bars span:nth-child(5) {
+  animation-delay: 0.4s;
+}
 
 @keyframes barPulse {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+
+  50% {
+    opacity: 1;
+  }
 }
 
 .chart-trend {
@@ -1085,8 +1172,15 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes floatChart {
-  0%, 100% { transform: translateY(0) rotate(2deg); }
-  50% { transform: translateY(-10px) rotate(-1deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(2deg);
+  }
+
+  50% {
+    transform: translateY(-10px) rotate(-1deg);
+  }
 }
 
 /* 3D立方体 */
@@ -1116,19 +1210,38 @@ body:has(.welcome-hero:not(.hidden)) {
   position: absolute;
   width: 40px;
   height: 40px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: linear-gradient(135deg, 
-    rgba(102, 126, 234, 0.6), 
-    rgba(118, 75, 162, 0.6));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(135deg,
+      rgba(102, 126, 234, 0.6),
+      rgba(118, 75, 162, 0.6));
   backdrop-filter: blur(4px);
 }
 
-.cube-face.front { transform: translateZ(20px); }
-.cube-face.back { transform: rotateY(180deg) translateZ(20px); }
-.cube-face.right { transform: rotateY(90deg) translateZ(20px); }
-.cube-face.left { transform: rotateY(-90deg) translateZ(20px); }
-.cube-face.top { transform: rotateX(90deg) translateZ(20px); background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8)); }
-.cube-face.bottom { transform: rotateX(-90deg) translateZ(20px); background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3)); }
+.cube-face.front {
+  transform: translateZ(20px);
+}
+
+.cube-face.back {
+  transform: rotateY(180deg) translateZ(20px);
+}
+
+.cube-face.right {
+  transform: rotateY(90deg) translateZ(20px);
+}
+
+.cube-face.left {
+  transform: rotateY(-90deg) translateZ(20px);
+}
+
+.cube-face.top {
+  transform: rotateX(90deg) translateZ(20px);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+}
+
+.cube-face.bottom {
+  transform: rotateX(-90deg) translateZ(20px);
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+}
 
 .cube-shadow {
   position: absolute;
@@ -1142,20 +1255,49 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes cubeRotate {
-  0% { transform: rotateX(-20deg) rotateY(0deg); }
-  100% { transform: rotateX(-20deg) rotateY(360deg); }
+  0% {
+    transform: rotateX(-20deg) rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateX(-20deg) rotateY(360deg);
+  }
 }
 
 @keyframes cubeShadow {
-  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
-  25% { opacity: 0.4; transform: translateX(-50%) scale(0.8); }
-  50% { opacity: 0.6; transform: translateX(-50%) scale(1); }
-  75% { opacity: 0.4; transform: translateX(-50%) scale(0.8); }
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+
+  25% {
+    opacity: 0.4;
+    transform: translateX(-50%) scale(0.8);
+  }
+
+  50% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+
+  75% {
+    opacity: 0.4;
+    transform: translateX(-50%) scale(0.8);
+  }
 }
 
 @keyframes floatCube {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-15px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-15px);
+  }
 }
 
 /* 以太坊标志 */
@@ -1177,9 +1319,19 @@ body:has(.welcome-hero:not(.hidden)) {
 }
 
 @keyframes floatEth {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  33% { transform: translateY(-10px) rotate(5deg); }
-  66% { transform: translateY(-5px) rotate(-3deg); }
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+
+  33% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+
+  66% {
+    transform: translateY(-5px) rotate(-3deg);
+  }
 }
 
 /* 响应式设计 */
@@ -1204,61 +1356,64 @@ body:has(.welcome-hero:not(.hidden)) {
     padding: 40px 32px;
     min-height: auto;
   }
-  
+
   .welcome-content {
     order: 1;
     text-align: center;
     align-items: center;
   }
-  
+
   .welcome-title {
     font-size: 40px;
     align-items: center;
   }
-  
+
   .welcome-subtitle {
     max-width: 100%;
   }
-  
+
   .feature-cards {
     width: 100%;
   }
-  
+
   .welcome-visual {
     order: 0;
     padding: 20px 0;
   }
-  
+
   .visual-card {
     transform: rotateY(0) rotateX(0);
   }
-  
+
   .visual-card:hover {
     transform: scale(1.02);
   }
-  
+
   @keyframes cardFloat {
-    0%, 100% {
+
+    0%,
+    100% {
       transform: translateY(0);
     }
+
     50% {
       transform: translateY(-8px);
     }
   }
-  
+
   .floating-icons {
     display: none;
   }
-  
+
   .welcome-footer-info {
     flex-wrap: wrap;
     justify-content: center;
   }
-  
+
   .welcome-actions {
     justify-content: center;
   }
-  
+
   .welcome-badge {
     align-self: center;
   }
@@ -1269,47 +1424,47 @@ body:has(.welcome-hero:not(.hidden)) {
     padding: 30px 20px;
     gap: 32px;
   }
-  
+
   .welcome-title {
     font-size: 32px;
   }
-  
+
   .welcome-subtitle {
     font-size: 15px;
   }
-  
+
   .welcome-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .welcome-btn {
     width: 100%;
     justify-content: center;
   }
-  
+
   .split-login-container {
     width: 100%;
     flex-direction: row;
   }
-  
+
   .split-btn-login,
   .split-btn-home {
     flex: 1;
     justify-content: center;
   }
-  
+
   .visual-card {
     width: 280px;
     height: 170px;
     padding: 20px;
   }
-  
+
   .card-number {
     font-size: 16px;
     letter-spacing: 2px;
   }
-  
+
   .feature-cards {
     flex-direction: column;
   }
@@ -1330,50 +1485,42 @@ body:has(.welcome-hero:not(.hidden)) {
 
 /* 特性卡片 */
 [data-theme="dark"] .feature-card {
-  background: linear-gradient(
-    145deg,
-    rgba(30, 41, 59, 0.85) 0%,
-    rgba(30, 41, 59, 0.6) 50%,
-    rgba(51, 65, 85, 0.7) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(30, 41, 59, 0.85) 0%,
+      rgba(30, 41, 59, 0.6) 50%,
+      rgba(51, 65, 85, 0.7) 100%);
   border-color: rgba(56, 189, 248, 0.15);
-  box-shadow: 
+  box-shadow:
     0 4px 24px rgba(0, 0, 0, 0.2),
     0 1px 3px rgba(0, 0, 0, 0.1),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 [data-theme="dark"] .feature-card::before {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.05) 0%,
-    rgba(255, 255, 255, 0) 100%
-  );
+  background: linear-gradient(180deg,
+      rgba(255, 255, 255, 0.05) 0%,
+      rgba(255, 255, 255, 0) 100%);
 }
 
 [data-theme="dark"] .feature-card:hover {
-  background: linear-gradient(
-    145deg,
-    rgba(30, 41, 59, 0.95) 0%,
-    rgba(51, 65, 85, 0.8) 50%,
-    rgba(71, 85, 105, 0.7) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(30, 41, 59, 0.95) 0%,
+      rgba(51, 65, 85, 0.8) 50%,
+      rgba(71, 85, 105, 0.7) 100%);
   border-color: rgba(56, 189, 248, 0.3);
-  box-shadow: 
+  box-shadow:
     0 20px 40px rgba(0, 0, 0, 0.3),
     0 8px 16px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 [data-theme="dark"] .feature-icon {
-  background: linear-gradient(
-    135deg,
-    rgba(56, 189, 248, 0.2) 0%,
-    rgba(56, 189, 248, 0.1) 50%,
-    rgba(167, 139, 250, 0.15) 100%
-  );
+  background: linear-gradient(135deg,
+      rgba(56, 189, 248, 0.2) 0%,
+      rgba(56, 189, 248, 0.1) 50%,
+      rgba(167, 139, 250, 0.15) 100%);
   border-color: rgba(56, 189, 248, 0.2);
-  box-shadow: 
+  box-shadow:
     0 4px 12px rgba(56, 189, 248, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
@@ -1452,7 +1599,7 @@ body:has(.welcome-hero:not(.hidden)) {
 [data-theme="dark"] .visual-card {
   background: linear-gradient(145deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
   border-color: rgba(56, 189, 248, 0.15);
-  box-shadow: 
+  box-shadow:
     0 30px 60px -15px rgba(0, 0, 0, 0.5),
     0 15px 30px -10px rgba(0, 0, 0, 0.4),
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
@@ -1463,7 +1610,7 @@ body:has(.welcome-hero:not(.hidden)) {
 [data-theme="dark"] .wallet-inner {
   background: linear-gradient(145deg, rgba(30, 41, 59, 0.95), rgba(51, 65, 85, 0.9));
   border-color: rgba(56, 189, 248, 0.2);
-  box-shadow: 
+  box-shadow:
     0 10px 40px rgba(0, 0, 0, 0.3),
     0 4px 12px rgba(0, 0, 0, 0.2),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
@@ -1472,7 +1619,7 @@ body:has(.welcome-hero:not(.hidden)) {
 [data-theme="dark"] .chart-inner {
   background: linear-gradient(145deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.9));
   border-color: rgba(56, 189, 248, 0.15);
-  box-shadow: 
+  box-shadow:
     0 15px 50px rgba(0, 0, 0, 0.4),
     0 5px 15px rgba(0, 0, 0, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.05);

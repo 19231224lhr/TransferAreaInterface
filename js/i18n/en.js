@@ -937,4 +937,5 @@ export default {
   // Docs Page
   'docs.title': 'User Guide',
   'docs.subtitle': 'PanguPay Onboarding Guide',
+  'docs.backToWallet': 'Back to Wallet',
 };

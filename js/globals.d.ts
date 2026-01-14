@@ -323,5 +323,20 @@ declare global {
   }
 }
 
+declare module '*.md?raw' {
+  const content: string;
+  export default content;
+}
+
+declare module '*.md' {
+  const content: string;
+  export default content;
+}
+
+declare module '*?raw' {
+  const content: string;
+  export default content;
+}
+
 // Make this a module (required for declare global to work)
 export { };
