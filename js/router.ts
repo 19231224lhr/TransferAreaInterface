@@ -304,7 +304,7 @@ export async function router(): Promise<void> {
 
   const h = (location.hash || '#/welcome').replace(/^#/, '') as RoutePath | string;
   const u = loadUser();
-  const allowNoUser: string[] = ['/welcome', '/login', '/new', '/set-password', '/profile'];
+  const allowNoUser: string[] = ['/welcome', '/login', '/new', '/set-password', '/profile', '/docs'];
 
   // Update route state in store for centralized state management
   setRoute(h);
