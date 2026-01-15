@@ -1,16 +1,16 @@
 ﻿/* ========================================
-   Toast ��ʾ�����ʽ
+   Toast Notifications
    
-   ��;��ȫ��֪ͨ��ʾ����������
-   �������ɹ�/����/����/��Ϣ����״̬
+   Stacked message cards with status styles.
+   Types: success / error / warning / info
    ======================================== */
 
 .toast-container {
   position: fixed;
   top: 100px;
-  /* �����Աܿ�ͷ��� */
+  /* Offset from top to clear header */
   right: 24px;
-  /* �Ƴ����ж�λ����Ϊ���Ͻ� */
+  /* High z-index to overlay UI */
   z-index: 10000;
   display: flex;
   flex-direction: column;
@@ -39,10 +39,10 @@
   animation: toastSlideIn 0.5s cubic-bezier(0.2, 0, 0, 1) both;
   width: 300px;
   overflow: hidden;
-  /* ȷ���˳�����ʱ�����ݲü� */
+  /* Hide overflow for rounded corners */
 }
 
-/* Toast ״̬���� - ��ǿ�����ʸ� */
+/* Toast error style - red highlight */
 .toast--error {
   background: linear-gradient(135deg,
       rgba(255, 255, 255, 0.7),
@@ -91,7 +91,7 @@
     inset 0 -1px 0 rgba(59, 130, 246, 0.1);
 }
 
-/* Toast ���� - �������Ĳ໬Ч�� */
+/* Toast entrance animation */
 @keyframes toastSlideIn {
   0% {
     opacity: 0;
@@ -113,11 +113,11 @@
   100% {
     opacity: 0;
     transform: translateX(20px) scale(0.95);
-    /* ����������λ�ƣ����ٸı�߶� */
+    /* Slide out and fade */
   }
 }
 
-/* Toast ͼ�� */
+/* Toast icon */
 .toast-icon {
   width: 36px;
   height: 36px;
@@ -151,7 +151,7 @@
   background: linear-gradient(135deg, #3b82f6, #2563eb);
 }
 
-/* Toast ���� */
+/* Toast content */
 .toast-content {
   flex: 1;
   min-width: 0;
@@ -171,7 +171,7 @@
   line-height: 1.4;
 }
 
-/* Toast �رհ�ť */
+/* Toast close button */
 .toast-close {
   width: 28px;
   height: 28px;
@@ -197,14 +197,14 @@
   height: 16px;
 }
 
-/* Toast �˳����� */
+/* Toast exit state */
 .toast.toast--exiting {
   animation: toastSlideOut 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 
 /* ========================================
-   ��ɫģʽ����
+   Dark theme
    ======================================== */
 
 [data-theme="dark"] .toast {
@@ -235,7 +235,7 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* �ɹ���ʾ - ��ɫģʽ */
+/* Dark theme - success */
 [data-theme="dark"] .toast--success {
   background: linear-gradient(135deg,
       rgba(34, 197, 94, 0.15),
@@ -251,7 +251,7 @@
   stroke: white;
 }
 
-/* ������ʾ - ��ɫģʽ */
+/* Dark theme - error */
 [data-theme="dark"] .toast--error {
   background: linear-gradient(135deg,
       rgba(239, 68, 68, 0.15),
@@ -267,7 +267,7 @@
   stroke: white;
 }
 
-/* ������ʾ - ��ɫģʽ */
+/* Dark theme - warning */
 [data-theme="dark"] .toast--warning {
   background: linear-gradient(135deg,
       rgba(251, 191, 36, 0.15),
@@ -283,7 +283,7 @@
   stroke: white;
 }
 
-/* ��Ϣ��ʾ - ��ɫģʽ */
+/* Dark theme - info */
 [data-theme="dark"] .toast--info {
   background: linear-gradient(135deg,
       rgba(56, 189, 248, 0.15),

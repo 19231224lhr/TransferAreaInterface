@@ -659,7 +659,7 @@ export async function unbindAddressOnBackend(
     }
 
     if (!response.ok) {
-      console.error('[Address] �?Unbind address failed:', responseData);
+      console.error('[Address] Unbind address failed:', responseData);
       
       // Parse specific error messages
       const errorMsg = responseData.message || (responseData as any).error || '';
@@ -711,11 +711,11 @@ export async function unbindAddressOnBackend(
       };
     }
 
-    console.info('[Address] �?Address unbound successfully on backend');
+    console.info('[Address] Address unbound successfully on backend');
     return { success: true, data: responseData };
 
   } catch (error) {
-    console.error('[Address] �?Unbind address error:', error);
+    console.error('[Address] Unbind address error:', error);
     
     if (error instanceof ApiRequestError) {
       return {

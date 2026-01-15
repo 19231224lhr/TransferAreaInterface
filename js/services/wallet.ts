@@ -1,10 +1,10 @@
 /**
  * Wallet Service Module (Reactive Version)
  * 
- * 使用响应式绑定系统重构的钱包服务模块�?
- * 提供钱包管理功能，包括渲染、余额更新和组织面板�?
+ * 使用响应式绑定系统重构的钱包服务模块。
+ * 提供钱包管理功能，包括渲染、余额更新和组织面板。
  * 
- * 性能优化�?
+ * 性能优化
  * - 使用 scheduleBatchUpdate 进行批量 DOM 更新
  * - 使用 rafDebounce 进行输入验证防抖
  * - 使用 DocumentFragment 优化列表渲染
@@ -443,23 +443,23 @@ export function renderWallet(): void {
     const hasLockedUtxos = lockedUtxos.length > 0;
     const unlockedUtxoBalance = Math.max(0, amtCash0 - lockedBalance);
 
-    // 获取 TXCer 信息（仅主货币地址�?TXCer�?
+    // 获取 TXCer 信息（仅主货币地址的 TXCer）
     const txCers = meta?.txCers || {};
     const txCerIds = Object.keys(txCers);
     const hasTXCers = txCerIds.length > 0;
     const txCerBalance = Object.values(txCers).reduce((sum, val) => sum + (val as number), 0);
     const txCerCount = txCerIds.length;
 
-    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用�?
+    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用）
     const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
       if (!isTXCerLocked(id)) return sum;
       return sum + (Number((txCers as any)[id]) || 0);
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
 
-    // 总余�?= 所�?UTXO（包括锁定） + TXCer（包括锁定）
+    // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
     const totalBalance = amtCash0 + txCerBalance;
-    // 可用余额 = 未锁�?UTXO + 未锁�?TXCer
+    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
     // 如果有锁定的 UTXO，添加标记类
@@ -467,7 +467,7 @@ export function renderWallet(): void {
       item.classList.add('has-locked-utxos');
     }
 
-    // 如果�?TXCer，添加标记类
+    // 如果有 TXCer，添加标记类
     if (hasTXCers) {
       item.classList.add('has-txcers');
     }
@@ -639,7 +639,7 @@ export function renderWallet(): void {
     fragment.appendChild(btn);
   }
 
-  // 清除骨架屏状�?
+  // 清除骨架屏状态
   clearSkeletonState(list);
 
   // Single DOM update
@@ -801,11 +801,11 @@ export async function handleDeleteAddress(address: string): Promise<void> {
         }
 
         // Backend succeeded - proceed with local deletion
-        console.info('[Wallet] �?Address unbound on backend, proceeding with local deletion');
+        console.info('[Wallet] Address unbound on backend, proceeding with local deletion');
 
       } catch (error) {
         hideUnifiedOverlay();
-        console.error('[Wallet] �?Unbind address error:', error);
+        console.error('[Wallet] Unbind address error:', error);
         const errMsg = error instanceof Error ? error.message : t('error.unknownError', 'Unknown error');
         showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errMsg}`);
         return;
@@ -948,13 +948,13 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
 
   if (priv) {
     if (title) title.textContent = t('wallet.exportPrivateKey');
-    // 隐藏普通文本，显示私钥�?
+    // 隐藏普通文本，显示私钥
     if (text) {
       text.classList.add('hidden');
       text.classList.remove('tip--error');
     }
 
-    // 显示私钥�?
+    // 显示私钥
     if (keyRow) keyRow.classList.remove('hidden');
     if (keyCode) keyCode.textContent = priv;
 
@@ -1015,7 +1015,7 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
   const handler = () => {
     modal?.classList.add('hidden');
     ok?.removeEventListener('click', handler);
-    // 重置状�?
+    // 重置状态
     if (keyRow) keyRow.classList.add('hidden');
     if (text) text.classList.remove('hidden');
     if (copyBtn) {
@@ -1110,7 +1110,7 @@ if (typeof window !== 'undefined') {
 // ============================================================================
 
 /**
- * 生成随机十六进制字符�?
+ * 生成随机十六进制字符串
  */
 function generateRandomHex(length: number): string {
   const bytes = new Uint8Array(length);
@@ -1119,10 +1119,10 @@ function generateRandomHex(length: number): string {
 }
 
 /**
- * 生成模拟�?ECDSA 签名 (用于测试数据)
+ * 生成模拟 ECDSA 签名（用于测试数据）
  */
 function generateMockSignature(): { R: string; S: string } {
-  // 生成64位十六进制的 R �?S �?(模拟256位大整数)
+  // 生成64位十六进制的 R / S（模拟256位大整数）
   return {
     R: generateRandomHex(32),
     S: generateRandomHex(32)
@@ -1138,7 +1138,7 @@ function getExpandedAddresses(): string[] {
 }
 
 /**
- * 恢复地址卡片的展开状�?
+ * 恢复地址卡片的展开状态
  */
 function restoreExpandedAddresses(addresses: string[]): void {
   if (!addresses.length) return;
@@ -1203,7 +1203,7 @@ export function updateCurrencyDisplay(u: User): void {
 
 /**
  * Update a specific address card display without re-rendering entire wallet
- * 直接更新 DOM，不使用 scheduleBatchUpdate 以避免延迟导致的状态问�?
+ * 直接更新 DOM，不使用 scheduleBatchUpdate 以避免延迟导致的状态问题
  */
 function updateAddressCardDisplay(address: string, found: AddressMetadata): void {
   const key = String(address).toLowerCase();
@@ -1289,7 +1289,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
         txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance.toFixed(4)} ${coinType}`;
       }
 
-      // 直接更新详情�?
+      // 直接更新详情
       const detailRows = card.querySelectorAll('.addr-detail-row');
       detailRows.forEach(row => {
         const label = row.querySelector('.addr-detail-label');
@@ -1542,7 +1542,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
 
       hideUnifiedOverlay();
       const result = await createNewAddressOnBackend(address, pubXHex, pubYHex, coinType);
-      showUnifiedLoading(t('walletModal.importing', '���ڵ���...'));
+      showUnifiedLoading(t('walletModal.importing', '导入中...'));
 
       if (!result.success) {
         hideUnifiedOverlay();
@@ -1557,7 +1557,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
         const allowDuplicate = /already|exists/i.test(errorMsg || '');
         if (!allowDuplicate) {
           showUnifiedError(
-            t('toast.importFailed', '����ʧ��'),
+            t('toast.importFailed', '导入失败'),
             errorMsg
           );
           return;
@@ -1609,7 +1609,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
 
   } catch (error) {
     hideUnifiedOverlay();
-    console.error('[Wallet] �?Import address error:', error);
+    console.error('[Wallet] Import address error:', error);
     showUnifiedError(
       t('toast.importFailed', '导入失败'),
       error instanceof Error ? error.message : t('error.unknownError')
@@ -2118,7 +2118,7 @@ export function rebuildAddrList(): void {
   const addrList = document.getElementById(DOM_IDS.srcAddrList);
   if (!addrList) return;
 
-  // 清除骨架屏状�?
+  // 清除骨架屏状态
   clearSkeletonState(addrList);
 
   const fragment = document.createDocumentFragment();
@@ -2148,7 +2148,7 @@ export function rebuildAddrList(): void {
     }, 0);
     const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
 
-    // 可用余额 = 未锁�?UTXO + 未锁�?TXCer
+    // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
     const coinInfo = getCoinInfo(tId);
@@ -2547,17 +2547,17 @@ export { initRecipientCards, initAdvancedOptions };
 // ============================================================================
 
 /**
- * 显示钱包页面骨架�?
+ * 显示钱包页面骨架屏
  * 在页面首次加载时调用，提供更好的加载体验
  */
 export function showWalletSkeletons(): void {
-  // 地址列表骨架�?
+  // 地址列表骨架
   const addrList = document.getElementById(DOM_IDS.walletAddrList);
   if (addrList && !isShowingSkeleton(addrList)) {
     showAddressListSkeleton(addrList, { count: 3 });
   }
 
-  // 转账来源地址骨架�?
+  // 转账来源地址骨架
   const srcAddrList = document.getElementById(DOM_IDS.srcAddrList);
   if (srcAddrList && !isShowingSkeleton(srcAddrList)) {
     showSrcAddrSkeleton(srcAddrList, { count: 2 });
@@ -2565,7 +2565,7 @@ export function showWalletSkeletons(): void {
 }
 
 /**
- * 隐藏钱包页面骨架�?
+ * 隐藏钱包页面骨架屏
  * 在数据加载完成后调用
  */
 export function hideWalletSkeletons(): void {
@@ -2856,7 +2856,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
 
     // Calculate and log totals
     const totals = calculateTotalBalance(balances);
-    console.info('[Wallet] �?Refresh complete:', {
+    console.info('[Wallet] Refresh complete:', {
       addressesUpdated: updatedCount,
       totalBalance: totals.totalBalance,
       totalInterest: totals.totalInterest,
@@ -2871,7 +2871,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
     return true;
 
   } catch (error) {
-    console.error('[Wallet] �?Refresh failed:', error);
+    console.error('[Wallet] Refresh failed:', error);
     showErrorToast(
       error instanceof Error ? error.message : t('error.unknownError', '未知错误'),
       t('wallet.refreshFailed', '刷新失败')

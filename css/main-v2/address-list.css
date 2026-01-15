@@ -1,6 +1,6 @@
 ﻿/* =====================================================
    Main V2 - Address List (地址列表)
-   �?main-v2.css 拆分
+   Split from main-v2.css
    ===================================================== */
 
 /* === 地址管理区域 === */
@@ -194,7 +194,7 @@
 
 .address-list {
   padding: 8px 12px 40px;
-  /* 底部内边�?*/
+  /* Bottom padding */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -206,7 +206,7 @@
 
 
 
-/* չ��/����ť */
+/* Expand / collapse button */
 .addr-expand-btn {
   width: 100%;
   padding: 8px 0;

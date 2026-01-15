@@ -92,7 +92,7 @@ async function loadPageModule(route: RoutePath): Promise<PageModule | null> {
   if (!loader) return null;
 
   try {
-    return await withLoading(loader(), t('common.loading') || '加载�?..');
+    return await withLoading(loader(), t('common.loading') || '加载中...');
   } catch (err) {
     console.warn(`[router] failed to load page '${route}'`, err);
     return null;

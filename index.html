@@ -13,7 +13,7 @@
   <!-- Elliptic Curve Cryptography Library (for P-256 key derivation) -->
   <script src="https://cdn.jsdelivr.net/npm/elliptic@6.5.4/dist/elliptic.min.js"></script>
 
-  <!-- 涓婚鍒濆鍖?- 閬垮厤闂儊 -->
+  <!-- Theme initialization - use stored theme -->
   <script>
     (function () {
       var theme = localStorage.getItem('appTheme') || 'light';
@@ -21,10 +21,10 @@
     })();
   </script>
 
-  <!-- 
-    CSS 宸茶縼绉诲埌 JS 妯″潡鍖栧鍏?(js/app.js)
-    鐢?Vite 鑷姩澶勭悊鎵撳寘銆佸帇缂╁拰 HMR
-    璇﹁: css/index.css
+  <!--
+    CSS is bundled by js/app.js (Vite).
+    HMR is enabled during development.
+    Source: css/index.css
   -->
   <style>
     /* Ensure detail modal styles are present */
@@ -91,34 +91,34 @@
 
       <!-- 鐢ㄦ埛鍖哄煙 -->
       <div id="userBar" class="user-bar">
-        <button id="userButton" class="user-button" aria-label="鐢ㄦ埛淇℃伅" data-i18n-aria="header.userInfo">
+        <button id="userButton" class="user-button" aria-label="用户信息" data-i18n-aria="header.userInfo">
           <div class="user-avatar" id="userAvatar">
             <svg class="avatar-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
               stroke-width="2">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            <img class="avatar-img hidden" src="" alt="鐢ㄦ埛澶村儚">
+            <img class="avatar-img hidden" src="" alt="????">
           </div>
-          <span id="userLabel" class="user-label" data-i18n="common.notLoggedIn">鏈櫥褰?/span>
+          <span id="userLabel" class="user-label" data-i18n="common.notLoggedIn">未登录</span>
           <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2">
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </button>
         <div id="userMenu" class="user-menu hidden">
-          <!-- 鐢ㄦ埛淇℃伅澶撮儴 - 鐐瑰嚮杩涘叆涓汉淇℃伅椤?-->
-          <div class="menu-header" title="鐐瑰嚮缂栬緫涓汉淇℃伅" data-i18n-title="header.editProfile">
+          <!-- User menu header - click to edit profile -->
+          <div class="menu-header" title="点击编辑个人信息" data-i18n-title="header.editProfile">
             <div class="menu-header-avatar" id="menuHeaderAvatar">
               <svg class="avatar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <img class="avatar-img hidden" src="" alt="鐢ㄦ埛澶村儚">
+              <img class="avatar-img hidden" src="" alt="????">
             </div>
             <div class="menu-header-info">
               <span class="menu-header-title" id="menuHeaderTitle">Amiya</span>
-              <span class="menu-header-sub" id="menuHeaderSub">杩欎釜浜哄緢鎳掞紝杩樻病鏈変慨鏀硅繖閲屻€?/span>
+              <span class="menu-header-sub" id="menuHeaderSub">杩欎釜浜哄緢鎳掞紝杩樻病鏈変慨鏀硅繖閲屻€</span>
             </div>
             <svg class="menu-header-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -139,10 +139,10 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label" data-i18n="header.accountId">璐︽埛 ID</span>
+                <span class="menu-card-label" data-i18n="header.accountId">账户 ID</span>
                 <code id="menuAccountId" class="menu-card-value"></code>
               </div>
-              <button class="menu-card-action-btn" id="menuAccountKeyBtn" title="鏌ョ湅绉侀挜">
+              <button class="menu-card-action-btn" id="menuAccountKeyBtn" title="????">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path
                     d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
@@ -158,7 +158,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label" data-i18n="header.addressInfo">鍦板潃淇℃伅</span>
+                <span class="menu-card-label" data-i18n="header.addressInfo">地址信息</span>
                 <code id="menuAddress" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -179,7 +179,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label" data-i18n="header.guarantorOrg">鎷呬繚缁勭粐</span>
+                <span class="menu-card-label" data-i18n="header.guarantorOrg">担保组织</span>
                 <code id="menuOrg" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -196,7 +196,7 @@
                 </svg>
               </div>
               <div class="menu-card-content">
-                <span class="menu-card-label" data-i18n="header.balance">浣欓</span>
+                <span class="menu-card-label" data-i18n="header.balance">余额</span>
                 <code id="menuBalance" class="menu-card-value"></code>
               </div>
               <svg class="menu-card-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -226,7 +226,7 @@
             </div>
           </div>
 
-          <!-- 鏈櫥褰曠姸鎬?-->
+          <!-- ????? -->
           <div id="menuEmpty" class="menu-empty hidden">
             <div class="menu-empty-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -234,8 +234,8 @@
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
             </div>
-            <div class="menu-empty-text" data-i18n="header.notLoggedIn">灏氭湭鐧诲綍</div>
-            <div class="menu-empty-hint" data-i18n="header.loginHint">璇峰厛鍒涘缓鎴栧鍏ヨ处鎴?/div>
+            <div class="menu-empty-text" data-i18n="header.notLoggedIn">尚未登录</div>
+            <div class="menu-empty-hint" data-i18n="header.loginHint">请先创建或导入账户</div>
           </div>
 
           <!-- 閫€鍑烘寜閽?-->
@@ -245,7 +245,7 @@
               <polyline points="16 17 21 12 16 7" />
               <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
-            <span data-i18n="common.logout">閫€鍑虹櫥褰?/span>
+            <span data-i18n="common.logout">退出登录</span>
           </button>
         </div>
       </div>
@@ -276,17 +276,17 @@
     </svg>
 
     <!-- ================================================================== -->
-    <!-- 椤甸潰鍐呭鐢辨ā鏉跨郴缁熷姩鎬佸姞杞?                                         -->
+    <!-- ?????????????                                          -->
     <!-- Page templates are loaded dynamically by templateLoader.ts         -->
-    <!-- Source: assets/templates/pages/ 鈫?Served at: /templates/pages/     -->
+    <!-- Source: assets/templates/pages/ ? Served at: /templates/pages/     -->
     <!-- ================================================================== -->
 
-    <!-- 鑷畾涔?Toast 鎻愮ず缁勪欢 -->
+    <!-- ??? Toast ???? -->
     <div id="toastContainer" class="toast-container"></div>
 
     <div id="actionOverlay" class="overlay overlay--modern hidden">
       <div class="overlay-loader" id="unifiedActionCard">
-        <!-- 鍔犺浇鐘舵€?-->
+        <!-- ???? -->
         <div class="unified-loading" id="unifiedLoading">
           <div class="overlay-loader-visual">
             <div class="new-loader-logo">
@@ -318,7 +318,7 @@
           <div class="success-content-wrapper" id="successContentWrapper">
             <div class="success-key-row hidden" id="successKeyRow">
               <code class="success-key-code" id="successKeyCode"></code>
-              <button class="success-copy-btn" id="successCopyBtn" title="澶嶅埗绉侀挜">
+              <button class="success-copy-btn" id="successCopyBtn" title="????">
                 <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -332,13 +332,13 @@
           </div>
           <div class="success-actions">
             <button id="unifiedCancelBtn" class="unified-btn unified-btn--secondary hidden"
-              data-i18n="modal.cancel">鍙栨秷</button>
-            <button id="unifiedOkBtn" class="unified-btn unified-btn--primary" data-i18n="modal.ok">濂界殑</button>
+              data-i18n="modal.cancel">取消</button>
+            <button id="unifiedOkBtn" class="unified-btn unified-btn--primary" data-i18n="modal.ok">好的</button>
           </div>
         </div>
       </div>
     </div>
-    <!-- 鏈姞鍏ユ媴淇濈粍缁囨彁绀哄脊绐?-->
+    <!-- ??????????? -->
     <div id="noOrgModal" class="modal modal--danger hidden" role="dialog" aria-modal="true">
       <div class="dialog no-org-dialog">
         <div class="no-org-dialog-header">
@@ -349,74 +349,74 @@
               <circle cx="12" cy="16" r="1.2" fill="currentColor" />
             </svg>
           </div>
-          <h3 data-i18n="modal.noOrgTitle">鏈姞鍏ユ媴淇濈粍缁?/h3>
+          <h3 data-i18n="modal.noOrgTitle">未加入担保组织</h3>
         </div>
-        <p class="tip" data-i18n="modal.noOrgDesc">褰撳墠璐︽埛灏氭湭鍔犲叆鎷呬繚缁勭粐锛岃繖鍙兘瀵艰嚧锛?/p>
+        <p class="tip" data-i18n="modal.noOrgDesc">当前账户尚未加入担保组织，这可能导致：</p>
         <ul class="no-org-dialog-list">
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10" />
               <polyline points="12 6 12 12 16 14" />
             </svg>
-            <span data-i18n="modal.noOrgReason1">浜ゆ槗纭鏃堕棿鏇撮暱</span>
+            <span data-i18n="modal.noOrgReason1">交易确认时间更长</span>
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
             </svg>
-            <span data-i18n="modal.noOrgReason2">Gas 璐圭敤鏄捐憲澧炲姞</span>
+            <span data-i18n="modal.noOrgReason2">Gas 费用显著增加</span>
           </li>
           <li>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
-            <span data-i18n="modal.noOrgReason3">鏃犳硶浣跨敤蹇€熻浆璐︾瓑楂樼骇鍔熻兘</span>
+            <span data-i18n="modal.noOrgReason3">无法使用快速转账等高级功能</span>
           </li>
         </ul>
         <div class="actions">
-          <button id="noOrgModalCancel" class="btn secondary" data-i18n="modal.noOrgCancel">鎴戠煡閬撲簡</button>
-          <button id="noOrgModalOk" class="btn primary" data-i18n="modal.noOrgOk">鍓嶅線鍔犲叆</button>
+          <button id="noOrgModalCancel" class="btn secondary" data-i18n="modal.noOrgCancel">我知道了</button>
+          <button id="noOrgModalOk" class="btn primary" data-i18n="modal.noOrgOk">前往加入</button>
         </div>
       </div>
     </div>
     <div id="confirmSkipModal" class="modal modal--danger hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 data-i18n="join.confirmSkip">纭涓嶅姞鍏ユ媴淇濈粍缁?/h3>
-        <p class="tip" data-i18n="join.confirmSkipDesc">杩欐槸涓€涓鍛婃搷浣滐紝纭鍚庡皢涓嶅姞鍏ユ媴淇濈粍缁囧苟杩涘叆涓嬩竴姝ャ€?/p>
+        <h3 data-i18n="join.confirmSkip">确认不加入担保组织</h3>
+        <p class="tip" data-i18n="join.confirmSkipDesc">不加入担保组织将无法使用快速转账，交易确认更慢，Gas 费用更高。确认继续？</p>
         <div class="actions">
-          <button id="confirmSkipCancel" class="btn secondary" data-i18n="common.cancel">鍙栨秷</button>
-          <button id="confirmSkipOk" class="btn danger" data-i18n="common.confirm">纭</button>
+          <button id="confirmSkipCancel" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="confirmSkipOk" class="btn danger" data-i18n="common.confirm">确认</button>
         </div>
       </div>
     </div>
     <div id="confirmExitModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>纭閫€鍑洪挶鍖?/h3>
-        <p class="tip">閫€鍑哄悗灏嗘竻绌哄綋鍓嶄俊鎭苟杩斿洖棣栭〉銆?/p>
+        <h3>??????</h3>
+        <p class="tip">????????????????</p>
         <div class="actions">
           <button id="confirmExitCancel" class="btn secondary">鍙栨秷</button>
-          <button id="confirmExitOk" class="btn primary">纭</button>
+          <button id="confirmExitOk" class="btn primary">??</button>
         </div>
       </div>
     </div>
     <div id="confirmProceedModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 data-i18n="modal.confirmSubAddress">纭瀵煎叆瀛愬湴鍧€</h3>
-        <p id="confirmProceedText" class="tip">褰撳墠瀛愬湴鍧€鏁帮細0锛屾槸鍚︾‘璁ょ户缁笅涓€姝ワ紵</p>
+        <h3 data-i18n="modal.confirmSubAddress">确认导入子地址</h3>
+        <p id="confirmProceedText" class="tip">???????0???????????</p>
         <div class="actions">
-          <button id="confirmProceedCancel" class="btn secondary" data-i18n="modal.cancel">鍙栨秷</button>
-          <button id="confirmProceedOk" class="btn primary" data-i18n="modal.confirm">纭</button>
+          <button id="confirmProceedCancel" class="btn secondary" data-i18n="modal.cancel">取消</button>
+          <button id="confirmProceedOk" class="btn primary" data-i18n="modal.confirm">确认</button>
         </div>
       </div>
     </div>
     <div id="actionModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
         <h3 id="actionTitle">鎿嶄綔鎴愬姛</h3>
-        <p id="actionText" class="tip">宸插畬鎴愭湰娆℃搷浣?/p>
+        <p id="actionText" class="tip">宸插畬鎴愭湰娆℃搷浣</p>
         <div class="actions">
-          <button id="actionCancelBtn" class="btn secondary hidden" data-i18n="modal.cancel">鍙栨秷</button>
-          <button id="actionOkBtn" class="btn primary" data-i18n="modal.ok">濂界殑</button>
+          <button id="actionCancelBtn" class="btn secondary hidden" data-i18n="modal.cancel">取消</button>
+          <button id="actionOkBtn" class="btn primary" data-i18n="modal.ok">好的</button>
         </div>
       </div>
     </div>
@@ -424,8 +424,8 @@
     <div id="txDetailModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog tx-detail-dialog">
         <div class="tx-detail-header">
-          <h3 id="txDetailTitle">浜ゆ槗缁撴瀯浣?/h3>
-          <button id="txDetailClose" class="tx-detail-close" type="button" aria-label="鍏抽棴">
+          <h3 id="txDetailTitle">浜ゆ槗缁撴瀯浣</h3>
+          <button id="txDetailClose" class="tx-detail-close" type="button" aria-label="??">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -441,39 +441,39 @@
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
-            <span>澶嶅埗鍐呭</span>
+            <span>????</span>
           </button>
-          <button id="txDetailOk" class="tx-detail-btn tx-detail-btn--ok" type="button">纭畾</button>
+          <button id="txDetailOk" class="tx-detail-btn tx-detail-btn--ok" type="button">??</button>
         </div>
       </div>
     </div>
     <div id="confirmGasModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 id="confirmGasTitle">纭鍏戞崲 Gas</h3>
+        <h3 id="confirmGasTitle">???? Gas</h3>
         <p id="confirmGasText" class="tip"></p>
         <div class="actions actions--split">
-          <button id="confirmGasCancel" class="btn secondary">鍙栨秷</button>
-          <button id="confirmGasOk" class="btn primary">纭</button>
+          <button id="confirmGasCancel" class="btn secondary">??</button>
+          <button id="confirmGasOk" class="btn primary">??</button>
         </div>
       </div>
     </div>
     <div id="confirmDelModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>纭鍒犻櫎鍦板潃</h3>
-        <p id="confirmDelText" class="tip">鏄惁鍒犻櫎璇ュ湴鍧€鍙婂叾鏈湴鏁版嵁锛?/p>
+        <h3>??????</h3>
+        <p id="confirmDelText" class="tip">??????????????</p>
         <div class="actions">
-          <button id="confirmDelCancel" class="btn secondary">鍙栨秷</button>
-          <button id="confirmDelOk" class="btn danger">鍒犻櫎</button>
+          <button id="confirmDelCancel" class="btn secondary">??</button>
+          <button id="confirmDelOk" class="btn danger">??</button>
         </div>
       </div>
     </div>
     <div id="addrModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 id="addrModalTitle" data-i18n="walletModal.createAddress">鏂板缓鍦板潃</h3>
+        <h3 id="addrModalTitle" data-i18n="walletModal.createAddress">新建地址</h3>
         <div id="addrCreateBox" class="result">
           <div class="form">
             <div class="form-row">
-              <label data-i18n="walletModal.coinTypeLabel">甯佺绫诲瀷</label>
+              <label data-i18n="walletModal.coinTypeLabel">币种类型</label>
               <div class="option-input-wrapper custom-select" id="addrTypeSelectWrapper">
                 <div class="custom-select__value" id="addrTypeSelectDisplay">
                   <span class="coin-icon coin--pgc">P</span>
@@ -503,47 +503,47 @@
               </div>
             </div>
           </div>
-          <p class="tip" data-i18n="walletModal.createConfirm">纭鏂板缓涓€涓瓙鍦板潃骞跺姞鍏ュ綋鍓嶈处鎴枫€?/p>
+          <p class="tip" data-i18n="walletModal.createConfirm">确认新建一个子地址并加入当前账户。</p>
         </div>
         <div id="addrImportBox" class="result hidden">
           <div class="form">
-            <div class="form-row"><label data-i18n="walletModal.privateKeyLabel">绉侀挜锛圚ex锛?/label><input id="addrPrivHex"
-                class="input" type="text" data-i18n-placeholder="entry.enterPrivateKeyHex" placeholder="璇疯緭鍏ョ閽?Hex" />
+            <div class="form-row"><label data-i18n="walletModal.privateKeyLabel">私钥</label><input id="addrPrivHex"
+                class="input" type="text" data-i18n-placeholder="entry.enterPrivateKeyHex" placeholder="请输入私钥 Hex" />
             </div>
           </div>
           <p id="addrError" class="tip tip--error hidden"></p>
         </div>
         <div class="actions actions--split">
-          <button id="addrCancelBtn" class="btn secondary" data-i18n="common.cancel">鍙栨秷</button>
-          <button id="addrOkBtn" class="btn primary" data-i18n="common.confirm">纭</button>
+          <button id="addrCancelBtn" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="addrOkBtn" class="btn primary" data-i18n="common.confirm">确认</button>
         </div>
       </div>
     </div>
     <!-- Import Address Preview Modal -->
     <div id="importPreviewModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog import-preview-dialog">
-        <h3 id="importPreviewTitle" data-i18n="walletModal.importPreviewTitle">瀵煎叆鍦板潃棰勮</h3>
+        <h3 id="importPreviewTitle" data-i18n="walletModal.importPreviewTitle">导入地址预览</h3>
         <div class="import-preview-content">
-          <p class="import-preview-tip" data-i18n="walletModal.importPreviewTip">璇风‘璁や互涓嬪湴鍧€淇℃伅鏄惁姝ｇ‘锛?/p>
+          <p class="import-preview-tip" data-i18n="walletModal.importPreviewTip">请确认以下地址信息是否正确：</p>
           <div class="import-preview-info">
             <div class="preview-row">
-              <span class="preview-label" data-i18n="walletModal.addressLabel">鍦板潃</span>
+              <span class="preview-label" data-i18n="walletModal.addressLabel">地址</span>
               <span id="importPreviewAddress" class="preview-value preview-address"></span>
             </div>
             <div class="preview-row">
-              <span class="preview-label" data-i18n="walletModal.publicKeyXLabel">鍏挜 X</span>
+              <span class="preview-label" data-i18n="walletModal.publicKeyXLabel">公钥 X</span>
               <span id="importPreviewPubX" class="preview-value preview-pubkey"></span>
             </div>
             <div class="preview-row">
-              <span class="preview-label" data-i18n="walletModal.publicKeyYLabel">鍏挜 Y</span>
+              <span class="preview-label" data-i18n="walletModal.publicKeyYLabel">公钥 Y</span>
               <span id="importPreviewPubY" class="preview-value preview-pubkey"></span>
             </div>
 
           </div>
         </div>
         <div class="actions actions--split">
-          <button id="importPreviewCancelBtn" class="btn secondary" data-i18n="common.cancel">鍙栨秷</button>
-          <button id="importPreviewConfirmBtn" class="btn primary" data-i18n="walletModal.confirmImport">纭瀵煎叆</button>
+          <button id="importPreviewCancelBtn" class="btn secondary" data-i18n="common.cancel">取消</button>
+          <button id="importPreviewConfirmBtn" class="btn primary" data-i18n="walletModal.confirmImport">确认导入</button>
         </div>
       </div>
     </div>
@@ -565,7 +565,7 @@
     <div class="footer-content">
       <!-- Tagline -->
       <div class="footer-tagline">
-        <span data-i18n="footer.tagline">鍖哄潡閾句笌浣犲悓棰戯紝淇℃伅浜堜綘鏃犻檺銆?/span>
+        <span data-i18n="footer.tagline">区块链与你同频，信息予你无限。</span>
       </div>
     </div>
 
@@ -588,18 +588,18 @@
       <div class="footer-copyright">
         <span>&copy; 2024 PanguPay</span>
         <span>&bull;</span>
-        <span data-i18n="footer.allRights">All rights reserved</span>
+        <span data-i18n="footer.allRights">版权所有</span>
       </div>
       <div class="footer-meta-links">
-        <a href="#/docs" class="footer-meta-link" data-i18n="footer.docs">Docs</a>
-        <a href="#/docs" class="footer-meta-link" data-doc="privacy" data-i18n="footer.privacy">Privacy</a>
-        <a href="#/docs" class="footer-meta-link" data-doc="terms" data-i18n="footer.terms">Terms</a>
-        <a href="#/docs" class="footer-meta-link" data-doc="cookies" data-i18n="footer.cookies">Cookies</a>
+        <a href="#/docs" class="footer-meta-link" data-i18n="footer.docs">文档</a>
+        <a href="#/docs" class="footer-meta-link" data-doc="privacy" data-i18n="footer.privacy">隐私政策</a>
+        <a href="#/docs" class="footer-meta-link" data-doc="terms" data-i18n="footer.terms">服务条款</a>
+        <a href="#/docs" class="footer-meta-link" data-doc="cookies" data-i18n="footer.cookies">Cookie 政策</a>
       </div>
     </div>
   </footer>
 
-  <!-- 鍘熷鍗曟枃浠剁増鏈凡澶囦唤涓?app.js.backup -->
+  <!-- ??????????? app.js.backup -->
   <!-- <script src="/app.js?v=20251204n"></script> -->
 
   <!-- 妯″潡鍖栫増鏈?-->
