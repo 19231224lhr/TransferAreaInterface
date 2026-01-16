@@ -6,22 +6,38 @@
  * @module config/api
  */
 
+import { IS_DEV } from './constants';
+
 // ============================================================================
 // Environment Configuration
 // ============================================================================
 
 /**
- * Get API base URL from environment or default
- * In development: localhost:8080
- * In production: can be configured via environment variables or build-time config
+ * Get API base URL based on IS_DEV flag
+ * 
+ * - IS_DEV = true  → 开发模式，使用 localhost:8080
+ * - IS_DEV = false → 生产模式，自动使用当前服务器地址 + 8080 端口
  */
 function getApiBaseUrl(): string {
-  // Check for custom configuration in window (can be set by build process)
+  // 1. 优先使用手动注入的配置（如果有）
   if (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) {
     return (window as any).__API_BASE_URL__;
   }
 
-  // Default to localhost for development
+  // 2. 根据 IS_DEV 标志决定
+  if (IS_DEV) {
+    // 开发模式：使用 localhost
+    return 'http://localhost:8080';
+  }
+
+  // 3. 生产模式：自动使用当前服务器地址
+  // 例如：用户访问 http://47.84.207.191 → API 指向 http://47.84.207.191:8080
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    return `${protocol}//${hostname}:8080`;
+  }
+
+  // 4. 兜底（SSR 或其他环境）
   return 'http://localhost:8080';
 }
 
