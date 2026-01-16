@@ -16,6 +16,8 @@ import { encryptAndSavePrivateKey, hasEncryptedKey } from '../utils/keyEncryptio
 import { clearLegacyKey } from '../utils/keyEncryption';
 import { DOM_IDS } from '../config/domIds';
 import { UTXOData } from '../types/blockchain';
+import { ec as EC } from 'elliptic';
+import { sha256 } from 'js-sha256';
 
 // ========================================
 // Type Definitions
@@ -49,37 +51,35 @@ export interface AddressMetadata {
 
 /**
  * Generate a new user account with ECDSA P-256 keypair
+ * Uses elliptic library + js-sha256 for HTTP compatibility (no crypto.subtle needed)
  * @returns Account data with accountId, address, privHex, pubXHex, pubYHex
  */
 export async function newUser(): Promise<AccountData> {
-  // Generate keypair
-  const keyPair = await crypto.subtle.generateKey(
-    { name: 'ECDSA', namedCurve: 'P-256' },
-    true,
-    ['sign', 'verify']
-  );
+  // Generate keypair using elliptic library (works in non-HTTPS)
+  const ec = new EC('p256');
+  const keyPair = ec.genKeyPair();
 
-  // Export JWK to get private key d, public key x/y
-  const jwkPub = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-  const jwkPriv = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+  // Get private key (ensure 64 hex chars with padding)
+  const privHex = keyPair.getPrivate('hex').padStart(64, '0');
 
-  const dBytes = base64urlToBytes(jwkPriv.d!);
-  const xBytes = base64urlToBytes(jwkPub.x!);
-  const yBytes = base64urlToBytes(jwkPub.y!);
+  // Get public key coordinates (ensure 64 hex chars each)
+  const pubPoint = keyPair.getPublic();
+  const pubXHex = pubPoint.getX().toString(16).padStart(64, '0');
+  const pubYHex = pubPoint.getY().toString(16).padStart(64, '0');
 
-  const privHex = bytesToHex(dBytes);
-  const pubXHex = bytesToHex(xBytes);
-  const pubYHex = bytesToHex(yBytes);
+  // Convert to bytes
+  const xBytes = hexToBytes(pubXHex);
+  const yBytes = hexToBytes(pubYHex);
 
   // Uncompressed public key: 0x04 || X || Y
-  const uncompressed = new Uint8Array(1 + xBytes.length + yBytes.length);
+  const uncompressed = new Uint8Array(1 + 32 + 32);
   uncompressed[0] = 0x04;
   uncompressed.set(xBytes, 1);
-  uncompressed.set(yBytes, 1 + xBytes.length);
+  uncompressed.set(yBytes, 33);
 
-  // Address = SHA-256(uncompressed)[0..20]
-  const sha = await crypto.subtle.digest('SHA-256', uncompressed);
-  const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
+  // Address = SHA-256(uncompressed)[0..20] using js-sha256 (works in non-HTTPS)
+  const shaHash = sha256.array(uncompressed);
+  const address = bytesToHex(new Uint8Array(shaHash.slice(0, 20)));
 
   // User ID = 8 digits (aligned with Go's Generate8DigitNumberBasedOnInput)
   const accountId = generate8DigitFromInputHex(privHex);
@@ -302,33 +302,31 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
   try {
     const t0 = Date.now();
 
-    // Generate new keypair
-    const keyPair = await crypto.subtle.generateKey(
-      { name: 'ECDSA', namedCurve: 'P-256' },
-      true,
-      ['sign', 'verify']
-    );
+    // Generate new keypair using elliptic library (works in non-HTTPS)
+    const ec = new EC('p256');
+    const keyPair = ec.genKeyPair();
 
-    const jwkPub = await crypto.subtle.exportKey('jwk', keyPair.publicKey);
-    const jwkPriv = await crypto.subtle.exportKey('jwk', keyPair.privateKey);
+    // Get private key (ensure 64 hex chars with padding)
+    const privHex = keyPair.getPrivate('hex').padStart(64, '0');
 
-    const dBytes = base64urlToBytes(jwkPriv.d!);
-    const xBytes = base64urlToBytes(jwkPub.x!);
-    const yBytes = base64urlToBytes(jwkPub.y!);
+    // Get public key coordinates (ensure 64 hex chars each)
+    const pubPoint = keyPair.getPublic();
+    const pubXHex = pubPoint.getX().toString(16).padStart(64, '0');
+    const pubYHex = pubPoint.getY().toString(16).padStart(64, '0');
 
-    const privHex = bytesToHex(dBytes);
-    const pubXHex = bytesToHex(xBytes);
-    const pubYHex = bytesToHex(yBytes);
+    // Convert to bytes
+    const xBytes = hexToBytes(pubXHex);
+    const yBytes = hexToBytes(pubYHex);
 
-    // Create uncompressed public key
-    const uncompressed = new Uint8Array(1 + xBytes.length + yBytes.length);
+    // Create uncompressed public key: 0x04 || X || Y
+    const uncompressed = new Uint8Array(1 + 32 + 32);
     uncompressed[0] = 0x04;
     uncompressed.set(xBytes, 1);
-    uncompressed.set(yBytes, 1 + xBytes.length);
+    uncompressed.set(yBytes, 33);
 
-    // Generate address (SHA-256 of uncompressed public key, first 20 bytes)
-    const sha = await crypto.subtle.digest('SHA-256', uncompressed);
-    const addr = bytesToHex(new Uint8Array(sha).slice(0, 20));
+    // Generate address using js-sha256 (works in non-HTTPS)
+    const shaHash = sha256.array(uncompressed);
+    const addr = bytesToHex(new Uint8Array(shaHash.slice(0, 20)));
 
     console.info(`[Account] Generated new address: ${addr}`);
 
