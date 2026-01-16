@@ -98,7 +98,7 @@ export default {
   // 欢迎页面
   'welcome.badge': '安全 · 快速 · 去中心化',
   'welcome.titleLine1': '开启您的',
-  'welcome.titleLine2': '数字资产之旅',
+  'welcome.titleLine2': 'Web3世界之旅',
   'welcome.subtitle': '基于 UTXO 模型的新一代区块链钱包，为您提供安全可靠的资产管理体验',
   'welcome.feature1.title': '安全保障',
   'welcome.feature1.desc': '本地加密存储，私钥永不上传',
@@ -135,7 +135,7 @@ export default {
   'entry.walletsAdded': '已添加地址',
   'entry.encryptionAlgo': '加密算法',
   'entry.selectAction': '选择操作方式',
-  'entry.selectActionDesc': '生成新钱包或导入已有钱包，开启您的数字资产之旅',
+  'entry.selectActionDesc': '生成新钱包或导入已有钱包，开启您的Web3世界之旅',
   'entry.createWallet': '新建钱包',
   'entry.createWalletDesc': '生成全新的密钥对',
   'entry.importWallet': '导入钱包',

@@ -96,7 +96,7 @@ export default {
   // Welcome Page
   'welcome.badge': 'Secure · Fast · Decentralized',
   'welcome.titleLine1': 'Start Your',
-  'welcome.titleLine2': 'Digital Asset Journey',
+  'welcome.titleLine2': 'Web3 World Journey',
   'welcome.subtitle': 'Next-generation blockchain wallet based on UTXO model, providing secure and reliable asset management',
   'welcome.back': 'Welcome Back',
   'welcome.backDesc': 'How would you like to start this session?',
@@ -132,7 +132,7 @@ export default {
   'entry.walletsAdded': 'Addresses Added',
   'entry.encryptionAlgo': 'Encryption',
   'entry.selectAction': 'Select Action',
-  'entry.selectActionDesc': 'Create a new wallet or import an existing one to start your digital asset journey',
+  'entry.selectActionDesc': 'Create a new wallet or import an existing one to start your Web3 journey',
   'entry.createWallet': 'Create Wallet',
   'entry.createWalletDesc': 'Generate a new key pair',
   'entry.importWallet': 'Import Wallet',
