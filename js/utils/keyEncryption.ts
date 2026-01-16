@@ -2,14 +2,17 @@
  * Private Key Encryption Module
  * 
  * Provides secure encryption/decryption for private keys using password-based encryption.
- * Uses Web Crypto API with PBKDF2 for key derivation and AES-GCM for encryption.
+ * Uses crypto-js with PBKDF2 for key derivation and AES for encryption.
+ * Compatible with HTTP environments (no Web Crypto API dependency).
  * 
  * Security considerations:
  * - PBKDF2 with 100,000 iterations for key derivation
  * - Random salt for each encryption operation
- * - AES-256-GCM for authenticated encryption
+ * - AES-256 for encryption
  * - Random IV for each encryption
  */
+
+import CryptoJS from 'crypto-js';
 
 // ========================================
 // Type Definitions
@@ -118,36 +121,40 @@ function bufferToString(buffer: Uint8Array): string {
 }
 
 // ========================================
-// Crypto Functions
+// Crypto Functions (using crypto-js)
 // ========================================
 
 /**
  * Derive encryption key from password using PBKDF2
+ * Returns a WordArray suitable for AES encryption
  */
-async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey> {
-  // Import password as key material
-  const passwordBuffer = stringToBuffer(password);
-  const keyMaterial = await crypto.subtle.importKey(
-    'raw',
-    passwordBuffer as BufferSource,
-    { name: 'PBKDF2' },
-    false,
-    ['deriveBits', 'deriveKey']
-  );
+function deriveKey(password: string, salt: CryptoJS.lib.WordArray): CryptoJS.lib.WordArray {
+  return CryptoJS.PBKDF2(password, salt, {
+    keySize: KEY_LENGTH / 32, // 256 bits = 8 words (32 bits each)
+    iterations: PBKDF2_ITERATIONS,
+    hasher: CryptoJS.algo.SHA256
+  });
+}
 
-  // Derive AES key using PBKDF2
-  return crypto.subtle.deriveKey(
-    {
-      name: 'PBKDF2',
-      salt: salt as BufferSource,
-      iterations: PBKDF2_ITERATIONS,
-      hash: 'SHA-256'
-    },
-    keyMaterial,
-    { name: 'AES-GCM', length: KEY_LENGTH },
-    false,
-    ['encrypt', 'decrypt']
-  );
+/**
+ * Generate random bytes as WordArray
+ */
+function randomBytes(length: number): CryptoJS.lib.WordArray {
+  return CryptoJS.lib.WordArray.random(length);
+}
+
+/**
+ * Convert WordArray to hex string
+ */
+function wordArrayToHex(wordArray: CryptoJS.lib.WordArray): string {
+  return wordArray.toString(CryptoJS.enc.Hex);
+}
+
+/**
+ * Convert hex string to WordArray
+ */
+function hexToWordArray(hex: string): CryptoJS.lib.WordArray {
+  return CryptoJS.enc.Hex.parse(hex);
 }
 
 /**
@@ -157,7 +164,7 @@ async function deriveKey(password: string, salt: Uint8Array): Promise<CryptoKey>
  * @returns Encrypted data with salt and IV
  */
 export async function encryptPrivateKey(
-  privateKeyHex: string, 
+  privateKeyHex: string,
   password: string
 ): Promise<EncryptResult> {
   if (!privateKeyHex || !password) {
@@ -165,23 +172,23 @@ export async function encryptPrivateKey(
   }
 
   // Generate random salt and IV
-  const salt = crypto.getRandomValues(new Uint8Array(SALT_LENGTH));
-  const iv = crypto.getRandomValues(new Uint8Array(IV_LENGTH));
+  const salt = randomBytes(SALT_LENGTH);
+  const iv = randomBytes(IV_LENGTH);
 
   // Derive key from password
-  const key = await deriveKey(password, salt);
+  const key = deriveKey(password, salt);
 
-  // Encrypt the private key
-  const encryptedBuffer = await crypto.subtle.encrypt(
-    { name: 'AES-GCM', iv: iv as BufferSource },
-    key,
-    stringToBuffer(privateKeyHex) as BufferSource
-  );
+  // Encrypt the private key using AES
+  const encrypted = CryptoJS.AES.encrypt(privateKeyHex, key, {
+    iv: iv,
+    mode: CryptoJS.mode.CBC,
+    padding: CryptoJS.pad.Pkcs7
+  });
 
   return {
-    encrypted: bufferToHex(encryptedBuffer),
-    salt: bufferToHex(salt),
-    iv: bufferToHex(iv)
+    encrypted: encrypted.ciphertext.toString(CryptoJS.enc.Hex),
+    salt: wordArrayToHex(salt),
+    iv: wordArrayToHex(iv)
   };
 }
 
@@ -194,32 +201,43 @@ export async function encryptPrivateKey(
  * @returns Decrypted private key in hex format
  */
 export async function decryptPrivateKey(
-  encryptedHex: string, 
-  salt: string, 
-  iv: string, 
+  encryptedHex: string,
+  salt: string,
+  iv: string,
   password: string
 ): Promise<string> {
   if (!encryptedHex || !salt || !iv || !password) {
     throw new Error('All parameters are required for decryption');
   }
 
-  // Convert hex strings back to buffers
-  const encryptedBuffer = hexToBuffer(encryptedHex);
-  const saltBuffer = hexToBuffer(salt);
-  const ivBuffer = hexToBuffer(iv);
+  // Convert hex strings back to WordArrays
+  const encryptedWordArray = hexToWordArray(encryptedHex);
+  const saltWordArray = hexToWordArray(salt);
+  const ivWordArray = hexToWordArray(iv);
 
   // Derive key from password
-  const key = await deriveKey(password, saltBuffer);
+  const key = deriveKey(password, saltWordArray);
 
   try {
-    // Decrypt
-    const decryptedBuffer = await crypto.subtle.decrypt(
-      { name: 'AES-GCM', iv: ivBuffer as BufferSource },
-      key,
-      encryptedBuffer as BufferSource
-    );
+    // Create cipherParams object for decryption
+    const cipherParams = CryptoJS.lib.CipherParams.create({
+      ciphertext: encryptedWordArray
+    });
 
-    return bufferToString(new Uint8Array(decryptedBuffer));
+    // Decrypt
+    const decrypted = CryptoJS.AES.decrypt(cipherParams, key, {
+      iv: ivWordArray,
+      mode: CryptoJS.mode.CBC,
+      padding: CryptoJS.pad.Pkcs7
+    });
+
+    const result = decrypted.toString(CryptoJS.enc.Utf8);
+
+    if (!result) {
+      throw new Error('Decryption failed. Incorrect password.');
+    }
+
+    return result;
   } catch {
     // Decryption failed - likely wrong password
     throw new Error('Decryption failed. Incorrect password.');
@@ -284,7 +302,7 @@ export function hasEncryptedKey(accountId: string): boolean {
  */
 export function hasLegacyKey(user: UserForEncryption | null | undefined): boolean {
   if (!user) return false;
-  
+
   // Check for unencrypted private key in user object
   const privHex = (user.keys && user.keys.privHex) || user.privHex;
   return !!privHex && typeof privHex === 'string' && privHex.length === 64;
@@ -297,7 +315,7 @@ export function hasLegacyKey(user: UserForEncryption | null | undefined): boolea
  * @returns Migration result
  */
 export async function migrateToEncrypted(
-  user: UserForEncryption | null | undefined, 
+  user: UserForEncryption | null | undefined,
   password: string
 ): Promise<MigrationResult> {
   if (!user || !password) {
@@ -320,9 +338,9 @@ export async function migrateToEncrypted(
     // Return success - caller should clear the plaintext key from user object
     return { success: true };
   } catch (err) {
-    return { 
-      success: false, 
-      error: (err as Error).message || 'Migration failed' 
+    return {
+      success: false,
+      error: (err as Error).message || 'Migration failed'
     };
   }
 }
@@ -337,16 +355,16 @@ export function clearLegacyKey<T extends UserForEncryption>(user: T | null | und
   if (!user) return user;
 
   const updated = { ...user };
-  
+
   // Clear plaintext key from keys object
   if (updated.keys) {
-    updated.keys = { 
-      ...updated.keys, 
+    updated.keys = {
+      ...updated.keys,
       privHex: '', // Clear but keep structure
       _encrypted: true // Mark as encrypted
     };
   }
-  
+
   // Clear legacy privHex field
   if ('privHex' in updated) {
     delete updated.privHex;
@@ -367,7 +385,7 @@ export function clearLegacyKey<T extends UserForEncryption>(user: T | null | und
  */
 export async function getPrivateKey(accountId: string, password: string): Promise<string> {
   const encryptedData = loadEncryptedKey(accountId);
-  
+
   if (!encryptedData) {
     throw new Error('No encrypted key found for this account');
   }
@@ -403,8 +421,8 @@ export async function verifyPassword(accountId: string, password: string): Promi
  * @returns Result of password change
  */
 export async function changePassword(
-  accountId: string, 
-  oldPassword: string, 
+  accountId: string,
+  oldPassword: string,
   newPassword: string
 ): Promise<MigrationResult> {
   try {
@@ -419,9 +437,9 @@ export async function changePassword(
 
     return { success: true };
   } catch (err) {
-    return { 
-      success: false, 
-      error: (err as Error).message || 'Password change failed' 
+    return {
+      success: false,
+      error: (err as Error).message || 'Password change failed'
     };
   }
 }
