@@ -155,6 +155,7 @@ npm run build
 *   **[总览 (Overview)](docs/overview.md)**: 项目规模与核心指标。
 *   **[架构详解 (Architecture)](docs/architecture.md)**: 深入了解数据流与模块交互。
 *   **[开发者指南 (Developer Guide)](docs/developer-guide.md)**: 新手入门与代码规范。
+*   **[部署指南 (Deployment)](docs/deployment.md)**: 服务器部署、Git SSH 配置、Nginx 设置。
 *   **[交易机制 (Transactions)](docs/transactions.md)**: 三种交易模式的底层实现逻辑。
 *   **[后端接口 (Backend Connection)](docs/frontend-backend-connection.md)**: API 协议与网关对接规范。
 
