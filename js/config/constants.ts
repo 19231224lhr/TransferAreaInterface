@@ -14,7 +14,7 @@
  * true: Show developer features (Add funds, Clear data, View structs)
  * false: Production mode, hide dev features
  */
-export const IS_DEV = true;
+export const IS_DEV = false;
 
 // ========================================
 // Type Definitions
