@@ -219,6 +219,7 @@
   display: flex;
   flex-direction: column;
   background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
+  overflow: hidden;
 }
 
 .join-main-content {
@@ -228,6 +229,7 @@
   max-width: 560px;
   margin: 0 auto;
   width: 100%;
+  overflow: hidden;
 }
 
 /* 标签页切换 - 带滑块特效 */
@@ -635,6 +637,8 @@
   display: flex;
   align-items: flex-start;
   gap: 12px;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .join-search-field {
