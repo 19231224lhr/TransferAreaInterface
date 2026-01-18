@@ -54,13 +54,13 @@ const ACTIVITY_LISTENERS: Array<{
   event: string;
   options?: AddEventListenerOptions | boolean;
 }> = [
-  { target: window, event: 'mousedown', options: { passive: true } },
-  { target: window, event: 'mousemove', options: { passive: true } },
-  { target: window, event: 'click', options: { passive: true } },
-  { target: window, event: 'keydown', options: { passive: true } },
-  { target: window, event: 'touchstart', options: { passive: true } },
-  { target: window, event: 'wheel', options: { passive: true } }
-];
+    { target: window, event: 'mousedown', options: { passive: true } },
+    { target: window, event: 'mousemove', options: { passive: true } },
+    { target: window, event: 'click', options: { passive: true } },
+    { target: window, event: 'keydown', options: { passive: true } },
+    { target: window, event: 'touchstart', options: { passive: true } },
+    { target: window, event: 'wheel', options: { passive: true } }
+  ];
 const LOCK_SCREEN_ID = DOM_IDS.screenLockOverlay;
 const STORAGE_KEY = 'screenLockState';
 let isVerifying = false;
@@ -102,7 +102,7 @@ function createLockScreenElement(): HTMLElement {
         <!-- Logo and branding -->
         <div class="screen-lock-header">
           <div class="screen-lock-logo">
-            <img src="/assets/logo.png" alt="PanguPay" class="screen-lock-logo-img" />
+            <img src="/logo.png" alt="PanguPay" class="screen-lock-logo-img" />
             <div class="screen-lock-logo-glow"></div>
           </div>
           <h2 id="${DOM_IDS.lockScreenTitle}" class="screen-lock-title" data-i18n="lock.title">钱包已锁定</h2>
@@ -176,9 +176,9 @@ function createLockScreenElement(): HTMLElement {
       </div>
     </div>
   `;
-  
+
   renderInto(overlay, template);
-  
+
   return overlay;
 }
 
@@ -207,26 +207,26 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
   const unlockBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockUnlockBtn)) as HTMLButtonElement;
   const toggleBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockToggleVisibility)) as HTMLButtonElement;
   const logoutBtn = overlay.querySelector(idSelector(DOM_IDS.screenLockLogoutBtn)) as HTMLButtonElement;
-  
+
   // Unlock button click
   unlockBtn?.addEventListener('click', handleUnlockAttempt);
-  
+
   // Enter key to unlock
   passwordInput?.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       handleUnlockAttempt();
     }
   });
-  
+
   // Toggle password visibility
   toggleBtn?.addEventListener('click', () => {
     if (passwordInput) {
       const isPassword = passwordInput.type === 'password';
       passwordInput.type = isPassword ? 'text' : 'password';
-      
+
       const eyeOpen = toggleBtn.querySelector('.eye-open');
       const eyeClosed = toggleBtn.querySelector('.eye-closed');
-      
+
       if (isPassword) {
         eyeOpen?.classList.remove('hidden');
         eyeClosed?.classList.add('hidden');
@@ -236,7 +236,7 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
       }
     }
   });
-  
+
   // Logout button - switch account
   logoutBtn?.addEventListener('click', () => {
     stopAccountPolling();
@@ -244,23 +244,23 @@ function bindLockScreenEvents(overlay: HTMLElement): void {
     import('./storage').then(({ clearAccountStorage }) => {
       // Clear all user data properly
       clearAccountStorage();
-      
+
       // Reset wallet refresh flag for next login
       if (typeof window.PanguPay?.pages?.resetWalletRefreshFlag === 'function') {
         window.PanguPay.pages.resetWalletRefreshFlag();
       }
-      
+
       // Clear screen lock state
       localStorage.removeItem(STORAGE_KEY);
-      
+
       // Update header to show logged out state
       if (typeof window.PanguPay?.ui?.updateHeaderUser === 'function') {
         window.PanguPay.ui.updateHeaderUser(null);
       }
-      
+
       // Unlock screen
       unlockScreen();
-      
+
       // Redirect to welcome page
       if (typeof window.PanguPay?.router?.routeTo === 'function') {
         window.PanguPay.router.routeTo('#/welcome');
@@ -288,42 +288,42 @@ async function handleUnlockAttempt(): Promise<void> {
   const passwordInput = overlay?.querySelector(idSelector(DOM_IDS.screenLockPassword)) as HTMLInputElement;
   const errorEl = overlay?.querySelector(idSelector(DOM_IDS.screenLockError)) as HTMLElement;
   const unlockBtn = overlay?.querySelector(idSelector(DOM_IDS.screenLockUnlockBtn)) as HTMLButtonElement;
-  
+
   const password = passwordInput?.value?.trim();
-  
+
   if (!password) {
     showLockError(errorEl, t('lock.enterPassword', '请输入密码'));
     passwordInput?.focus();
     return;
   }
-  
+
   // Disable button during verification
   if (unlockBtn) {
     unlockBtn.disabled = true;
     unlockBtn.classList.add('loading');
   }
   isVerifying = true;
-  
+
   try {
     const user = loadUser();
     if (!user?.accountId) {
       throw new Error('No user found');
     }
-    
+
     const isValid = await verifyPassword(user.accountId, password);
-    
+
     if (isValid) {
       // Success - unlock screen
       hideLockError(errorEl);
       unlockScreen();
-      
+
       state.config.onUnlock?.();
     } else {
       // Wrong password
       showLockError(errorEl, t('lock.wrongPassword', '密码错误，请重试'));
       passwordInput?.focus();
       passwordInput?.select();
-      
+
       // Shake animation
       overlay?.querySelector('.screen-lock-card')?.classList.add('shake');
       setTimeout(() => {
@@ -373,12 +373,12 @@ function hideLockError(errorEl: HTMLElement | null): void {
  */
 function resetActivityTimer(): void {
   state.lastActivity = Date.now();
-  
+
   // Clear existing timer
   if (state.timerId !== null) {
     clearTimeout(state.timerId);
   }
-  
+
   // Set new timer
   state.timerId = window.setTimeout(() => {
     checkAndLock();
@@ -399,7 +399,7 @@ function handleActivity(): void {
  */
 function checkAndLock(): void {
   const user = loadUser();
-  
+
   // Only lock if user is logged in and has encrypted key
   if (user?.accountId && hasEncryptedKey(user.accountId)) {
     lockScreen();
@@ -415,7 +415,7 @@ function checkAndLock(): void {
  */
 export function lockScreen(): void {
   if (state.isLocked) return;
-  
+
   const user = loadUser();
   if (!user?.accountId || !hasEncryptedKey(user.accountId)) {
     // No encrypted key, can't lock
@@ -427,50 +427,50 @@ export function lockScreen(): void {
     clearTimeout(state.timerId);
     state.timerId = null;
   }
-  
+
   state.isLocked = true;
-  
+
   const overlay = getLockScreenElement();
-  
+
   // Update account ID display
   const accountIdEl = overlay.querySelector(idSelector(DOM_IDS.screenLockAccountId));
   if (accountIdEl) {
     accountIdEl.textContent = user.accountId;
   }
-  
+
   // Clear password input
   const passwordInput = overlay.querySelector(idSelector(DOM_IDS.screenLockPassword)) as HTMLInputElement;
   if (passwordInput) {
     passwordInput.value = '';
     passwordInput.type = 'password';
   }
-  
+
   // Reset visibility toggle
   const eyeOpen = overlay.querySelector('.eye-open');
   const eyeClosed = overlay.querySelector('.eye-closed');
   eyeOpen?.classList.add('hidden');
   eyeClosed?.classList.remove('hidden');
-  
+
   // Hide error
   const errorEl = overlay.querySelector(idSelector(DOM_IDS.screenLockError)) as HTMLElement;
   hideLockError(errorEl);
-  
+
   // Show overlay with animation
   overlay.classList.add('visible');
   document.body.classList.add('screen-locked');
-  
+
   // Focus password input after animation
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       passwordInput?.focus({ preventScroll: true });
     });
   });
-  
+
   // Update translations
   if (typeof window.PanguPay?.i18n?.updatePageTranslations === 'function') {
     window.PanguPay.i18n.updatePageTranslations();
   }
-  
+
   state.config.onLock?.();
 }
 
@@ -479,24 +479,24 @@ export function lockScreen(): void {
  */
 export function unlockScreen(): void {
   if (!state.isLocked) return;
-  
+
   state.isLocked = false;
-  
+
   const overlay = document.getElementById(LOCK_SCREEN_ID);
   if (overlay) {
     overlay.classList.remove('visible');
     overlay.classList.add('unlocking');
-    
+
     setTimeout(() => {
       overlay.classList.remove('unlocking');
     }, 300);
   }
-  
+
   document.body.classList.remove('screen-locked');
-  
+
   // Restart activity timer
   resetActivityTimer();
-  
+
   // Update header to show correct user info after unlock
   const user = loadUser();
   if (user && typeof window.PanguPay?.ui?.updateHeaderUser === 'function') {
@@ -523,11 +523,11 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
   if (config) {
     state.config = { ...state.config, ...config };
   }
-  
+
   // Force timeout to 10 minutes (not configurable) and disable lock on page load
   state.config.timeout = DEFAULT_TIMEOUT;
   state.config.lockOnStart = false;
-  
+
   // Clear any stale persisted lock state to avoid unexpected auto-lock after refresh
   localStorage.removeItem(STORAGE_KEY);
 
@@ -535,7 +535,7 @@ export function initScreenLock(config?: Partial<ScreenLockConfig>): void {
   ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
     target.addEventListener(event, handleActivity, options as AddEventListenerOptions | boolean | undefined);
   });
-  
+
   const user = loadUser();
 
   // Start idle timer only when user is logged in and we are not locked yet
@@ -552,19 +552,19 @@ export function cleanupScreenLock(): void {
   ACTIVITY_LISTENERS.forEach(({ target, event, options }) => {
     target.removeEventListener(event, handleActivity, options as EventListenerOptions | boolean | undefined);
   });
-  
+
   // Clear timer
   if (state.timerId !== null) {
     clearTimeout(state.timerId);
     state.timerId = null;
   }
-  
+
   // Remove overlay
   const overlay = document.getElementById(LOCK_SCREEN_ID);
   if (overlay) {
     overlay.remove();
   }
-  
+
   document.body.classList.remove('screen-locked');
 }
 

@@ -555,7 +555,7 @@ export function updateProfileDisplay(): void {
 
     if (isLoggedIn) {
       container.classList.add('avatar--active');
-      img.src = avatar || '/assets/avatar.png';
+      img.src = avatar || '/avatar.png';
       img.classList.remove('hidden');
     } else {
       container.classList.remove('avatar--active');

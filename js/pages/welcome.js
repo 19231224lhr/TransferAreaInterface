@@ -102,7 +102,7 @@ function checkWelcomeBack() {
   let accountId = localStorage.getItem('activeAccountId');
   if (!accountId) return;
 
-  const avatarUrl = profile?.avatar || 'assets/avatar.png';
+  const avatarUrl = profile?.avatar || '/avatar.png';
   const displayName = profile?.nickname || accountId;
 
   // Inject Styles if not present
