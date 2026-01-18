@@ -107,8 +107,9 @@ export async function importLocallyFromPrivHex(privHex: string): Promise<Account
     const uncompressedHex = '04' + result.x + result.y;
     const uncompressed = hexToBytes(uncompressedHex);
 
-    const sha = await crypto.subtle.digest('SHA-256', uncompressed as BufferSource);
-    const address = bytesToHex(new Uint8Array(sha).slice(0, 20));
+    // Use js-sha256 (works in non-HTTPS environment) instead of crypto.subtle.digest
+    const shaHash = sha256.array(uncompressed);
+    const address = bytesToHex(new Uint8Array(shaHash.slice(0, 20)));
     const accountId = generate8DigitFromInputHex(normalized);
 
     return {
