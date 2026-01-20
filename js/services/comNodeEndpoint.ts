@@ -53,6 +53,12 @@ const CACHE_KEY = 'comNodeEndpoint';
 /** Cache TTL: 24 hours */
 const CACHE_TTL = 24 * 60 * 60 * 1000;
 
+/** Cached endpoint health check interval */
+const HEALTH_CHECK_TTL = 60 * 1000;
+
+/** Health check timeout in milliseconds */
+const HEALTH_CHECK_TIMEOUT = 2000;
+
 // ============================================================================
 // Module State
 // ============================================================================
@@ -71,6 +77,10 @@ let comNodeStatus: ComNodeStatus = {
 /** Flag to track if connection toast has been shown this session */
 let hasShownConnectedToast = false;
 
+/** Cached health check state */
+let lastHealthCheckAt = 0;
+let lastHealthCheckOk = true;
+
 /** Status change listeners */
 const statusListeners: Set<(status: ComNodeStatus) => void> = new Set();
 
@@ -84,14 +94,32 @@ const statusListeners: Set<(status: ComNodeStatus) => void> = new Set();
  * - "192.168.1.10:8081" -> "http://192.168.1.10:8081"
  */
 function normalizeEndpoint(endpoint: string): string {
+  const { protocol, host: currentHost } = getBaseHostAndProtocol();
+
   if (endpoint.startsWith(':')) {
-    // ":8081" -> "http://localhost:8081"
-    return `http://localhost${endpoint}`;
-  } else if (!endpoint.startsWith('http')) {
-    // "192.168.1.10:8081" -> "http://192.168.1.10:8081"
-    return `http://${endpoint}`;
+    // ":8081" -> "http://<current-host>:8081"
+    return `${protocol}//${currentHost}${endpoint}`;
   }
-  return endpoint;
+  if (!endpoint.startsWith('http://') && !endpoint.startsWith('https://')) {
+    // "192.168.1.10:8081" -> "http://192.168.1.10:8081"
+    const colonIndex = endpoint.lastIndexOf(':');
+    if (colonIndex > 0) {
+      const hostPart = endpoint.substring(0, colonIndex);
+      const portPart = endpoint.substring(colonIndex + 1);
+      const resolvedHost = isLocalHost(hostPart) ? currentHost : hostPart;
+      return `${protocol}//${resolvedHost}:${portPart}`;
+    }
+    const resolvedHost = isLocalHost(endpoint) ? currentHost : endpoint;
+    return `${protocol}//${resolvedHost}`;
+  }
+  try {
+    const url = new URL(endpoint);
+    const resolvedHost = isLocalHost(url.hostname) ? currentHost : url.hostname;
+    const portPart = url.port ? `:${url.port}` : '';
+    return `${url.protocol}//${resolvedHost}${portPart}${url.pathname}`;
+  } catch {
+    return endpoint;
+  }
 }
 
 /**
@@ -126,6 +154,71 @@ function writeCache(url: string): void {
     timestamp: Date.now()
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+}
+
+function getBaseHostAndProtocol(): { host: string; protocol: string } {
+  try {
+    const base = new URL(API_BASE_URL);
+    return {
+      host: base.hostname || 'localhost',
+      protocol: base.protocol || 'http:'
+    };
+  } catch {
+    // fallback to window
+  }
+  if (typeof window !== 'undefined' && window.location) {
+    return {
+      host: window.location.hostname || 'localhost',
+      protocol: window.location.protocol || 'http:'
+    };
+  }
+  return { host: 'localhost', protocol: 'http:' };
+}
+
+function isLocalHost(host: string): boolean {
+  const h = host.trim().toLowerCase();
+  return h === 'localhost' || h === '127.0.0.1';
+}
+
+function joinUrl(base: string, path: string): string {
+  const normalizedBase = base.endsWith('/') ? base.slice(0, -1) : base;
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${normalizedBase}${normalizedPath}`;
+}
+
+async function checkComNodeHealth(url: string): Promise<boolean> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT);
+
+  try {
+    const healthUrl = joinUrl(url, API_ENDPOINTS.COM_HEALTH);
+    const resp = await fetch(healthUrl, { method: 'GET', signal: controller.signal });
+    return resp.ok;
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function validateCachedEndpoint(url: string): Promise<boolean> {
+  const now = Date.now();
+  if (now-lastHealthCheckAt < HEALTH_CHECK_TTL) {
+    return lastHealthCheckOk;
+  }
+
+  const ok = await checkComNodeHealth(url);
+  lastHealthCheckAt = now;
+  lastHealthCheckOk = ok;
+
+  updateStatus({
+    isAvailable: ok,
+    endpoint: ok ? url : null,
+    errorMessage: ok ? null : t('comNode.notAvailable', 'ComNode 端点不可用，请稍后重试'),
+    lastCheck: Date.now()
+  });
+
+  return ok;
 }
 
 /**
@@ -253,8 +346,12 @@ export async function getComNodeURL(
 ): Promise<string | null> {
   // 1. Check in-memory cache (unless force refresh)
   if (!forceRefresh && cachedComNodeURL) {
-    console.debug('[ComNodeEndpoint] Using in-memory cache:', cachedComNodeURL);
-    return cachedComNodeURL;
+    const ok = await validateCachedEndpoint(cachedComNodeURL);
+    if (ok) {
+      console.debug('[ComNodeEndpoint] Using in-memory cache:', cachedComNodeURL);
+      return cachedComNodeURL;
+    }
+    clearComNodeCache();
   }
 
   // 2. Check localStorage cache (unless force refresh)
@@ -262,14 +359,12 @@ export async function getComNodeURL(
     const cached = readCache();
     if (cached) {
       cachedComNodeURL = cached.url;
-      updateStatus({
-        isAvailable: true,
-        endpoint: cached.url,
-        errorMessage: null,
-        lastCheck: cached.timestamp
-      });
-      console.debug('[ComNodeEndpoint] Using localStorage cache:', cached.url);
-      return cached.url;
+      const ok = await validateCachedEndpoint(cached.url);
+      if (ok) {
+        console.debug('[ComNodeEndpoint] Using localStorage cache:', cached.url);
+        return cached.url;
+      }
+      clearComNodeCache();
     }
   }
 
@@ -285,6 +380,8 @@ export function clearComNodeCache(): void {
   cachedComNodeURL = null;
   localStorage.removeItem(CACHE_KEY);
   hasShownConnectedToast = false; // Reset toast flag for new session
+  lastHealthCheckAt = 0;
+  lastHealthCheckOk = true;
   updateStatus({
     isAvailable: false,
     endpoint: null,

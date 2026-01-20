@@ -14,7 +14,21 @@
  * true: Show developer features (Add funds, Clear data, View structs)
  * false: Production mode, hide dev features
  */
-export const IS_DEV = false;
+function getRuntimeDevFlag(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  const runtime = (window as any).__PANGU_DEV__;
+  if (typeof runtime === 'boolean') {
+    return runtime;
+  }
+  if (typeof runtime === 'string') {
+    return runtime.toLowerCase() === 'true';
+  }
+  return false;
+}
+
+export const IS_DEV = getRuntimeDevFlag();
 
 // ========================================
 // Type Definitions
@@ -133,9 +147,7 @@ export const DEFAULT_GROUP: GuarantorGroup = {
   groupID: '10000000',
   aggreNode: '39012088',
   assignNode: '17770032',
-  pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09',
-  assignAPIEndpoint: ':8082',  // AssignNode 端口
-  aggrAPIEndpoint: ':8082'     // AggrNode 端口（与 AssignNode 共用）
+  pledgeAddress: '5bd548d76dcb3f9db1d213db01464406bef5dd09'
 };
 
 /** List of available guarantor organizations */

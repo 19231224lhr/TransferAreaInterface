@@ -479,9 +479,8 @@ export function buildAssignNodeUrl(assignEndpoint: string): string {
     // Full URL provided - check if it needs hostname normalization
     try {
       const endpointUrl = new URL(assignEndpoint);
-      if ((endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') &&
-        (currentHost === 'localhost' || currentHost === '127.0.0.1')) {
-        // Normalize to current host to avoid CORS issues
+      if (endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') {
+        // Normalize to current host to avoid localhost/remote mismatch
         return `${endpointUrl.protocol}//${currentHost}:${endpointUrl.port}${endpointUrl.pathname}`;
       }
     } catch {
@@ -528,8 +527,7 @@ export function buildAggrNodeUrl(aggrEndpoint: string): string {
     // Full URL provided - check if it needs hostname normalization
     try {
       const endpointUrl = new URL(aggrEndpoint);
-      if ((endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') &&
-        (currentHost === 'localhost' || currentHost === '127.0.0.1')) {
+      if (endpointUrl.hostname === '127.0.0.1' || endpointUrl.hostname === 'localhost') {
         return `${endpointUrl.protocol}//${currentHost}:${endpointUrl.port}${endpointUrl.pathname}`;
       }
     } catch {

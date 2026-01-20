@@ -29,22 +29,39 @@
 | 特性 | 开发模式 | 生产模式 |
 |:-----|:---------|:---------|
 | **启动命令** | `npm run dev` | `npm run build` + Nginx |
-| **IS_DEV 标志** | `true` | `false` |
-| **后端地址** | `http://localhost:3001` | `http://服务器IP:3001` |
+| **运行时开关** | `__PANGU_DEV__ = true` | `__PANGU_DEV__ = false` |
+| **后端地址** | `__API_BASE_URL__ = http://localhost:3001` | `__API_BASE_URL__ = http://服务器IP:3001` |
 | **访问地址** | `http://localhost:3000` | `http://服务器IP:3000` |
 | **热更新** | ✅ 支持 | ❌ 需重新构建 |
 | **代码压缩** | ❌ 未压缩 | ✅ 压缩优化 |
 
 ### 切换模式
 
-修改 `js/config/constants.ts` 中的 `IS_DEV` 变量：
+修改 `public/runtime-config.js`（构建后也可直接改 `dist/runtime-config.js`）：
 
-```typescript
+```js
 // 开发模式
-export const IS_DEV = true;
+window.__PANGU_DEV__ = true;
+window.__API_BASE_URL__ = "http://localhost:3001";
 
 // 生产模式
-export const IS_DEV = false;
+window.__PANGU_DEV__ = false;
+window.__API_BASE_URL__ = "http://服务器IP:3001";
+```
+
+### 本地测试（前后端都在本机）
+
+只需把前后端的开发模式打开即可，本地即可完整联调：
+
+1. 前端运行时配置（`public/runtime-config.js`）：
+```js
+window.__PANGU_DEV__ = true;
+window.__API_BASE_URL__ = "http://localhost:3001";
+```
+2. 后端配置：在 `UTXO-Area/config.yaml` 的 `runtime` 中设 `dev_mode: true`。
+3. 启动后端节点（BootNode → ComNode → 其他节点），然后运行前端：
+```bash
+npm run dev
 ```
 
 ---
@@ -94,10 +111,11 @@ npm install
 
 ### 2. 修改配置
 
-确保 `js/config/constants.ts` 中：
+修改 `public/runtime-config.js`：
 
-```typescript
-export const IS_DEV = false;
+```js
+window.__PANGU_DEV__ = false;
+window.__API_BASE_URL__ = "http://服务器IP:3001";
 ```
 
 ### 3. 构建生产版本
@@ -173,10 +191,11 @@ sudo ufw allow 3000:3010/tcp
 
 ### 后端地址自动识别
 
-前端会根据 `IS_DEV` 自动选择后端地址：
+前端会按如下优先级选择后端地址：
 
-- `IS_DEV = true` → `http://localhost:3001`
-- `IS_DEV = false` → `http://当前域名:3001`
+- `window.__API_BASE_URL__`（如果已配置）
+- `__PANGU_DEV__ = true` → `http://localhost:3001`
+- `__PANGU_DEV__ = false` → `http://当前域名:3001`
 
 ---
 
