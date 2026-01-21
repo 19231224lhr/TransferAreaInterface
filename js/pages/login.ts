@@ -486,7 +486,8 @@ async function handleNextClick(): Promise<void> {
       isInGroup: result.IsInGroup,
       entrySource: 'login', // 标记用户通过登录进入
       guarGroupBootMsg: result.GuarGroupBootMsg || null, // 保存完整的担保组织信息
-      guarGroup: groupInfo
+      guarGroup: groupInfo,
+      txHistory: []
     };
     
     // Merge wallet data from backend
@@ -785,6 +786,7 @@ async function handleLoginClick(): Promise<void> {
         pubXHex: data.pubXHex,
         pubYHex: data.pubYHex,
         flowOrigin: 'login',
+        txHistory: [],
         _encrypted: true
       });
     }

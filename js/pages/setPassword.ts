@@ -359,7 +359,8 @@ async function handleSubmit(): Promise<void> {
       address: data.address,
       pubXHex: data.pubXHex,
       pubYHex: data.pubYHex,
-      flowOrigin: 'new'
+      flowOrigin: 'new',
+      txHistory: []
     });
 
     // 更新 header

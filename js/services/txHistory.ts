@@ -1,7 +1,7 @@
 /**
  * Transaction history storage and helpers.
  *
- * Stores history on the user object so it is cleared on logout.
+ * Stores history on the user object; login/new entry resets it and logout clears storage.
  */
 
 import { loadUser, saveUser, TxHistoryRecord } from '../utils/storage';
