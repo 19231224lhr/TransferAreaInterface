@@ -627,8 +627,13 @@ export function saveUserProfile(profile: UserProfile): void {
  * @returns Joined group or null
  */
 export function getJoinedGroup(): GuarantorGroup | null {
-  // 1. First, try to get from user.guarGroup (contains full backend info)
   const u = loadUser();
+  if (u?.isInGroup === false) {
+    console.debug('[Storage] getJoinedGroup: user not in group');
+    return null;
+  }
+
+  // 1. First, try to get from user.guarGroup (contains full backend info)
   if (u?.guarGroup && u.guarGroup.groupID) {
     // Return the full guarGroup info which includes assignAPIEndpoint from backend
     const result = {
@@ -640,6 +645,21 @@ export function getJoinedGroup(): GuarantorGroup | null {
       aggrAPIEndpoint: u.guarGroup.aggrAPIEndpoint
     };
     console.debug('[Storage] getJoinedGroup from user.guarGroup:', result);
+    return result;
+  }
+
+  // 1.5. Try guarGroupBootMsg from login (contains API endpoints)
+  if (u?.guarGroupBootMsg && u.orgNumber) {
+    const boot = u.guarGroupBootMsg as any;
+    const result = {
+      groupID: u.orgNumber,
+      aggreNode: boot.AggrID || boot.aggreNode || '',
+      assignNode: boot.AssiID || boot.assignNode || '',
+      pledgeAddress: boot.PledgeAddress || boot.pledgeAddress || '',
+      assignAPIEndpoint: boot.AssignAPIEndpoint || boot.assignAPIEndpoint,
+      aggrAPIEndpoint: boot.AggrAPIEndpoint || boot.aggrAPIEndpoint
+    };
+    console.debug('[Storage] getJoinedGroup from guarGroupBootMsg:', result);
     return result;
   }
 
@@ -695,7 +715,12 @@ export function getJoinedGroup(): GuarantorGroup | null {
     const g = Array.isArray(GROUP_LIST)
       ? GROUP_LIST.find(x => x.groupID === gid)
       : null;
-    const result = g || DEFAULT_GROUP;
+    const result = g || {
+      groupID: gid,
+      aggreNode: '',
+      assignNode: '',
+      pledgeAddress: ''
+    };
     console.debug('[Storage] getJoinedGroup from orgNumber + GROUP_LIST:', result);
     return result;
   }

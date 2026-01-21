@@ -415,7 +415,7 @@ function handleBackClick(): void {
 async function handleNextClick(): Promise<void> {
   // Import auth service dynamically to avoid circular dependencies
   const { userReOnline } = await import('../services/auth.js');
-  const { loadUser, saveUser } = await import('../utils/storage.js');
+  const { loadUser, saveUser, saveGuarChoice, clearGuarChoice } = await import('../utils/storage.js');
   
   const user = loadUser();
   if (!user || !user.accountId) {
@@ -466,13 +466,27 @@ async function handleNextClick(): Promise<void> {
       user.pubYHex
     );
     
+    const bootMsg = result.GuarGroupBootMsg as any;
+    const groupId = result.IsInGroup ? String(result.GuarantorGroupID || '') : '';
+    const groupInfo = result.IsInGroup && groupId
+      ? {
+        groupID: groupId,
+        aggreNode: bootMsg?.AggrID || '',
+        assignNode: bootMsg?.AssiID || '',
+        pledgeAddress: bootMsg?.PledgeAddress || '',
+        assignAPIEndpoint: bootMsg?.AssignAPIEndpoint,
+        aggrAPIEndpoint: bootMsg?.AggrAPIEndpoint
+      }
+      : undefined;
+
     // Update user data with re-online response
     const updatedUser = {
       ...user,
-      orgNumber: result.IsInGroup ? result.GuarantorGroupID : '',
+      orgNumber: groupId,
       isInGroup: result.IsInGroup,
       entrySource: 'login', // 标记用户通过登录进入
-      guarGroupBootMsg: result.GuarGroupBootMsg || null // 保存完整的担保组织信息
+      guarGroupBootMsg: result.GuarGroupBootMsg || null, // 保存完整的担保组织信息
+      guarGroup: groupInfo
     };
     
     // Merge wallet data from backend
@@ -526,6 +540,20 @@ async function handleNextClick(): Promise<void> {
     
     // Save updated user data
     saveUser(updatedUser);
+
+    if (result.IsInGroup && groupInfo) {
+      saveGuarChoice({
+        type: 'login',
+        groupID: groupInfo.groupID,
+        aggreNode: groupInfo.aggreNode,
+        assignNode: groupInfo.assignNode,
+        pledgeAddress: groupInfo.pledgeAddress,
+        assignAPIEndpoint: groupInfo.assignAPIEndpoint,
+        aggrAPIEndpoint: groupInfo.aggrAPIEndpoint
+      });
+    } else {
+      clearGuarChoice();
+    }
     
     // Store group info if user is in a group
     if (result.IsInGroup && result.GuarGroupBootMsg) {

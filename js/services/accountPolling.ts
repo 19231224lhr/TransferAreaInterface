@@ -1089,18 +1089,18 @@ export function startAccountPolling(): void {
     // 如果 SSE 断了，这里也可以尝试重连，但 startSSESync 内部有检查
   }
 
-  // 检查用户是否加入了担保组织
-  const group = getJoinedGroup();
-  if (!group?.groupID) {
-    console.info('[AccountPolling] User not in organization, polling not started');
-    return;
-  }
-
   const user = getCurrentUser();
   if (!user?.accountId) {
     console.info('[AccountPolling] No user logged in, polling not started');
     return;
   }
+  if (user.isInGroup === false || !user.orgNumber) {
+    console.info('[AccountPolling] User not in organization, polling not started');
+    return;
+  }
+
+  // 检查用户是否加入了担保组织
+  const group = getJoinedGroup() || { groupID: user.orgNumber };
 
   console.info(`[AccountPolling] Starting SSE Sync for user ${user.accountId} in group ${group.groupID}`);
 
