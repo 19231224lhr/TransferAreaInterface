@@ -16,7 +16,7 @@
 
 import { apiClient, isNetworkError, isTimeoutError } from './api';
 import { parseBigIntJson } from '../utils/bigIntJson';
-import { API_ENDPOINTS } from '../config/api';
+import { API_BASE_URL, API_ENDPOINTS } from '../config/api';
 import { saveUser, getJoinedGroup, User } from '../utils/storage';
 import { store, selectUser } from '../utils/store.js';
 import { showSuccessToast, showMiniToast, showErrorToast, showStatusToast } from '../utils/toast.js';
@@ -946,7 +946,6 @@ function startSSESync(userId: string, group: any): void {
     // If no direct endpoint, we assume we can't use SSE efficiently or at all properly via proxy if proxy doesn't support it,
     // but let's try relative path if running on same origin.
     // Ideally assignAPIEndpoint should be present.
-    const { API_BASE_URL } = require('../config/api');
     baseUrl = API_BASE_URL || '';
   }
 

@@ -16,7 +16,7 @@ import { t } from '../i18n/index.js';
 import { IS_DEV } from '../config/constants';
 import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
 import { store, selectUser, setUser } from '../utils/store.js';
-import { readAddressInterest } from '../utils/helpers.js';
+import { readAddressInterest, copyToClipboard } from '../utils/helpers.js';
 import { getActionModalElements, showConfirmModal, showModalTip, showUnifiedLoading, hideUnifiedOverlay } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast.js';
 import { importFromPrivHex } from './account';
@@ -961,28 +961,17 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
     if (copyBtn) {
       copyBtn.classList.remove('copied');
 
-      copyBtn.onclick = () => {
-        navigator.clipboard.writeText(priv).then(() => {
-          copyBtn.classList.add('copied');
-          showSuccessToast(t('wallet.copied', 'Copied'));
-          setTimeout(() => {
-            copyBtn.classList.remove('copied');
-          }, 2000);
-        }).catch(() => {
-          const textarea = document.createElement('textarea');
-          textarea.value = priv;
-          textarea.style.position = 'fixed';
-          textarea.style.opacity = '0';
-          document.body.appendChild(textarea);
-          textarea.select();
-          document.execCommand('copy');
-          document.body.removeChild(textarea);
-          copyBtn.classList.add('copied');
-          showSuccessToast(t('wallet.copied', 'Copied'));
-          setTimeout(() => {
-            copyBtn.classList.remove('copied');
-          }, 2000);
-        });
+      copyBtn.onclick = async () => {
+        const ok = await copyToClipboard(priv);
+        if (!ok) {
+          showErrorToast(t('toast.copyFailed', 'Copy failed'));
+          return;
+        }
+        copyBtn.classList.add('copied');
+        showSuccessToast(t('wallet.copied', 'Copied'));
+        setTimeout(() => {
+          copyBtn.classList.remove('copied');
+        }, 2000);
       };
     }
   } else {

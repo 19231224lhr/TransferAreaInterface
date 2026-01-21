@@ -37,7 +37,7 @@
 
 ### 切换模式
 
-修改 `public/runtime-config.js`（构建后也可直接改 `dist/runtime-config.js`）：
+修改 `assets/runtime-config.js`（构建后也可直接改 `dist/runtime-config.js`）：
 
 ```js
 // 开发模式
@@ -53,7 +53,7 @@ window.__API_BASE_URL__ = "http://服务器IP:3001";
 
 只需把前后端的开发模式打开即可，本地即可完整联调：
 
-1. 前端运行时配置（`public/runtime-config.js`）：
+1. 前端运行时配置（`assets/runtime-config.js`）：
 ```js
 window.__PANGU_DEV__ = true;
 window.__API_BASE_URL__ = "http://localhost:3001";
@@ -111,7 +111,7 @@ npm install
 
 ### 2. 修改配置
 
-修改 `public/runtime-config.js`：
+修改 `assets/runtime-config.js`：
 
 ```js
 window.__PANGU_DEV__ = false;
