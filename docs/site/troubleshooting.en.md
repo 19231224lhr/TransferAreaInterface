@@ -91,7 +91,7 @@ Avoid rapid retries that can cause temporary locks:
 
 ## 3. Local Integration Notes (Dev/QA)
 In local integration setups:
-- frontend default Gateway is `http://localhost:8080`
+- frontend default Gateway is `http://localhost:3001`
 - confirm backend is running and `/health` responds
 - open browser DevTools (Console/Network) to see request errors
 

@@ -5,11 +5,11 @@ This page is for **developers / QA**. It helps you run the frontend + backend lo
 ## 1. Repo Layout (What You’re Running)
 This project usually has two parts:
 - Frontend: `TransferAreaInterface` (Vite + TypeScript, default port 3000)
-- Backend: `UTXO-Area` (Go, provides HTTP Gateway, default port 8080)
+- Backend: `UTXO-Area` (Go, provides HTTP Gateway, default port 3001)
 
 Frontend default Gateway:
-- `http://localhost:8080`  
-Configured in: `TransferAreaInterface/js/config/api.ts`
+- `http://localhost:3001`  
+Configured in: `TransferAreaInterface/js/config/api.ts` (can be overridden via `assets/runtime-config.js` using `window.__API_BASE_URL__`)
 
 ---
 
@@ -43,7 +43,7 @@ A typical startup sequence (example):
 
 ### 3.2 How to confirm the Gateway is reachable
 Frontend depends on the HTTP Gateway. Quick checks:
-- open `http://localhost:8080/health` in your browser
+- open `http://localhost:3001/health` in your browser
 - or request it via curl/PowerShell (any OK/JSON response is fine)
 
 If `/health` fails:
@@ -80,11 +80,11 @@ Then open:
 
 ### 6.1 Where does the frontend send requests?
 Default base URL in `TransferAreaInterface/js/config/api.ts`:
-- `API_BASE_URL = http://localhost:8080`
+- `API_BASE_URL = http://localhost:3001` (dev mode)
 
 If you need to point to a different backend temporarily:
-- prefer a local proxy/hosts approach
-- or inject `window.__API_BASE_URL__` before the app loads (build-time / pre-load setup)
+- prefer editing `TransferAreaInterface/assets/runtime-config.js`: `window.__API_BASE_URL__ = "http://<HOST>:3001"`
+- or inject `window.__API_BASE_URL__` before the app loads
 
 ### 6.2 Frontend logs
 Browser DevTools:
@@ -98,8 +98,8 @@ Backend logs typically include:
 - transaction receive/processing logs
 
 For deeper reference:
-- Frontend doc: `TransferAreaInterface/docs/frontend-backend-connection.md`
-- Backend docs: `UTXO-Area/docs/` (00-Overview, 04-Integration-Guide, etc.)
+- Frontend docs: `TransferAreaInterface/docs/README.md`, `TransferAreaInterface/docs/04-api-integration.md`
+- Backend docs: `UTXO-Area/docs/README.md`
 
 ---
 

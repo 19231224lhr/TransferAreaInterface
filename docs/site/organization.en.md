@@ -62,7 +62,7 @@ To return to “normal user” mode:
 
 ### 6.1 “Join” fails or does nothing
 Check in order:
-- is the backend Gateway running? (local default is `http://localhost:8080`)
+- is the backend Gateway running? (local default is `http://localhost:3001`)
 - is your network available?
 - do you need to enter a payment password (encrypted key prompts)?
 - refresh and try again

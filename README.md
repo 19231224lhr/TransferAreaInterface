@@ -140,24 +140,29 @@ npm run build
 
 ## ⚙️ 配置说明 (Configuration)
 
-本项目包含全局开发模式开关，位于 `js/config/constants.ts` 文件中：
+本项目的运行时配置建议通过 `assets/runtime-config.js` 注入（部署后也可直接改 `dist/runtime-config.js`）：
 
-*   `export const IS_DEV = true;`
-    *   **True (默认)**: 开启开发模式。界面将显示辅助调试工具，包括"增加/清空地址"按钮、"查看账户结构体"开关等。
-    *   **False**: 生产模式。隐藏所有开发调试入口，仅保留核心用户功能，界面更加简洁纯净。
+*   `window.__PANGU_DEV__`
+    *   **true**: 开启开发模式。界面将显示辅助调试工具，包括“增加/清空地址”按钮、“查看账户结构体”开关等。
+    *   **false**: 生产模式。隐藏调试入口，仅保留核心用户功能。
+*   `window.__API_BASE_URL__`
+    *   后端 Gateway/BootNode 的基础地址（例如 `http://localhost:3001`）。优先级高于自动推断逻辑。
+
+对应实现：`js/config/constants.ts`（读取 `__PANGU_DEV__`）与 `js/config/api.ts`（计算 `API_BASE_URL`）。
 
 ---
 
 ## 📚 开发文档
 
-更多详细技术细节，请参阅 `docs/` 目录：
+交接与开发文档位于 `docs/`：
 
-*   **[总览 (Overview)](docs/overview.md)**: 项目规模与核心指标。
-*   **[架构详解 (Architecture)](docs/architecture.md)**: 深入了解数据流与模块交互。
-*   **[开发者指南 (Developer Guide)](docs/developer-guide.md)**: 新手入门与代码规范。
-*   **[部署指南 (Deployment)](docs/deployment.md)**: 服务器部署、Git SSH 配置、Nginx 设置。
-*   **[交易机制 (Transactions)](docs/transactions.md)**: 三种交易模式的底层实现逻辑。
-*   **[后端接口 (Backend Connection)](docs/frontend-backend-connection.md)**: API 协议与网关对接规范。
+*   **[开始阅读 (Start Here)](docs/README.md)**
+*   **[01 核心设计与 UI](docs/01-core-design-and-ui.md)**：担保组织 / 委员会 / TXCer / 胶囊地址在前端如何呈现
+*   **[02 前端架构](docs/02-architecture.md)**：路由、模板、状态、Services 分层与数据流
+*   **[03 代码地图](docs/03-code-map.md)**：目录结构 + 常见改动入口
+*   **[04 后端对接](docs/04-api-integration.md)**：端点、SSE/轮询、BigInt、签名/序列化对齐
+*   **[05 联调/部署/排障](docs/05-operations.md)**
+*   **[06 Roadmap](docs/06-roadmap.md)**
 
 ---
 

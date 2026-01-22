@@ -90,7 +90,7 @@
 
 ## 3. 联调环境常见问题（开发/测试同学）
 如果你在本地联调（前端 + 后端）：
-- 前端默认 Gateway：`http://localhost:8080`
+- 前端默认 Gateway：`http://localhost:3001`
 - 先确认后端服务已启动并能访问 `/health`
 - 打开浏览器开发者工具（Console/Network）查看请求是否报错
 

@@ -6,7 +6,7 @@ Welcome to **PanguPay**! This quick start helps you complete your **first transf
 - A desktop browser (Chrome / Edge) is recommended for the smoothest experience.
 - First-time user: create an account and set a payment password.
 - Existing user: import your private key and unlock your wallet.
-- In local development, the default backend Gateway is `http://localhost:8080` (your developer usually starts it for you).
+- In local development, the default backend Gateway is `http://localhost:3001` (your developer usually starts it for you).
 
 ---
 

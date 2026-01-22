@@ -3,8 +3,8 @@
  * 
  * 快速转账交易构造模块
  * 
- * ⚠️ 重要：本实现严格遵循后端文档
- * 参考文档：docs/Gateway/用户快速转账交易构造指南.md
+ * ⚠️ 重要：本实现严格对齐后端 Go 结构体与验签/序列化规则
+ * 参考文档：docs/04-api-integration.md
  * 
  * 签名规则：
  * 1. TXInputNormal.InputSignature：使用【地址私钥】对 TXOutput 哈希签名

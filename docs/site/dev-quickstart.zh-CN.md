@@ -5,10 +5,10 @@
 ## 1. 项目结构（你现在在哪）
 本项目通常包含两部分：
 - 前端：`TransferAreaInterface`（Vite + TS，默认端口 3000）
-- 后端：`UTXO-Area`（Go，提供 HTTP Gateway，默认端口 8080）
+- 后端：`UTXO-Area`（Go，提供 HTTP Gateway，默认端口 3001）
 
-前端默认会请求：`http://localhost:8080`  
-对应配置在：`TransferAreaInterface/js/config/api.ts`
+前端默认会请求：`http://localhost:3001`  
+对应配置在：`TransferAreaInterface/js/config/api.ts`（也可以通过 `assets/runtime-config.js` 注入 `window.__API_BASE_URL__` 覆盖）
 
 ---
 
@@ -42,7 +42,7 @@
 
 ### 3.2 如何确认 Gateway 可用？
 前端依赖 HTTP Gateway，一般可通过以下方式确认：
-- 在浏览器打开：`http://localhost:8080/health`
+- 在浏览器打开：`http://localhost:3001/health`
 - 或用命令行请求该地址（返回 OK/JSON 即可）
 
 如果 `/health` 不通：
@@ -78,11 +78,11 @@ npm run dev
 ## 6. 常用排查路径（最快定位）
 
 ### 6.1 前端请求去哪了？
-默认在 `TransferAreaInterface/js/config/api.ts`：`API_BASE_URL = http://localhost:8080`
+默认在 `TransferAreaInterface/js/config/api.ts`：`API_BASE_URL = http://localhost:3001`（开发模式）
 
 如果你需要临时改后端地址：
-- 推荐在本地用反向代理/hosts 方案
-- 或在构建前注入 `window.__API_BASE_URL__`（需要在应用加载前设置）
+- 推荐直接改 `TransferAreaInterface/assets/runtime-config.js`：`window.__API_BASE_URL__ = "http://<HOST>:3001"`
+- 或在应用加载前注入 `window.__API_BASE_URL__`
 
 ### 6.2 看前端日志
 浏览器开发者工具：
@@ -96,8 +96,8 @@ npm run dev
 - 交易接收与处理日志
 
 如果你需要更完整的链路说明，可以补充阅读：
-- 前端：`TransferAreaInterface/docs/frontend-backend-connection.md`
-- 后端：`UTXO-Area/docs/`（00-Overview、04-Integration-Guide 等）
+- 前端：`TransferAreaInterface/docs/README.md`、`TransferAreaInterface/docs/04-api-integration.md`
+- 后端：`UTXO-Area/docs/README.md`
 
 ---
 
