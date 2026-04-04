@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Extended UTXO Model | 学术全文翻译阅读器</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&family=Lora:wght@400;500;600&family=Noto+Serif+SC:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #faf8f3;
+      --card: rgba(255, 253, 249, 0.94);
+      --ink: #1d2431;
+      --muted: #5a6678;
+      --nav: #1b2a4a;
+      --line: rgba(27, 42, 74, 0.12);
+      --accent-rust: #c96b37;
+      --accent-teal: #2b7a78;
+      --accent-ochre: #d3a044;
+      --accent-slate: #6b7a95;
+      --shadow: 0 18px 42px rgba(27, 42, 74, 0.08);
+      --radius: 22px;
+      --topbar: 48px;
+      --max: 1320px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(211, 160, 68, 0.10), transparent 28%),
+        radial-gradient(circle at 88% 8%, rgba(43, 122, 120, 0.08), transparent 24%),
+        linear-gradient(180deg, #fdfbf6 0%, var(--bg) 38%, #f6f2e8 100%);
+      font-family: "Noto Serif SC", serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    code, pre, .mono { font-family: "JetBrains Mono", monospace; }
+    .ui, button, .chip, .toc-link, .topbar-button, .small-note, .section-kicker, .meta-label, th {
+      font-family: "IBM Plex Sans", sans-serif;
+    }
+    .latin { font-family: "Lora", "Noto Serif SC", serif; }
+
+    .topbar {
+      position: fixed;
+      inset: 0 0 auto 0;
+      z-index: 40;
+      height: var(--topbar);
+      background: rgba(27, 42, 74, 0.96);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(16px);
+      color: #f7f3ea;
+    }
+
+    .topbar-inner,
+    .page {
+      width: min(var(--max), calc(100vw - 28px));
+      margin: 0 auto;
+    }
+
+    .topbar-inner {
+      height: 100%;
+      display: grid;
+      grid-template-columns: minmax(200px, 1fr) minmax(280px, 1.2fr) auto;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.11);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .brand-title {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .progress-box {
+      display: grid;
+      gap: 4px;
+      justify-items: center;
+    }
+
+    .progress-track {
+      width: 100%;
+      height: 8px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, #ffcb77 0%, #65b891 50%, #74a9ff 100%);
+      transition: width 0.18s linear;
+    }
+
+    .progress-text {
+      font-size: 11px;
+      opacity: 0.9;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .topbar-actions {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .topbar-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fffdf7;
+      font-size: 12px;
+      font-weight: 700;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .topbar-button:hover { transform: translateY(-1px); background: rgba(255, 255, 255, 0.18); }
+
+    .page {
+      padding-top: 68px;
+      padding-bottom: 72px;
+    }
+
+    .panel {
+      margin-bottom: 22px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-body { padding: 24px; }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .section-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(27, 42, 74, 0.07);
+      color: var(--nav);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .section-head h1,
+    .section-head h2 {
+      margin: 10px 0 0;
+      color: var(--nav);
+      font-family: "IBM Plex Sans", sans-serif;
+      line-height: 1.12;
+    }
+
+    .section-head h1 { font-size: clamp(30px, 4vw, 44px); }
+    .section-head h2 { font-size: clamp(24px, 3vw, 32px); }
+
+    .section-desc {
+      margin: 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.7;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+    }
+
+    .meta-card,
+    .summary-card,
+    .signal-card,
+    .principle-card,
+    .translation-card,
+    .svg-card,
+    .toc-panel {
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+    }
+
+    .meta-card,
+    .summary-card,
+    .signal-card,
+    .principle-card,
+    .translation-card,
+    .toc-panel {
+      padding: 18px;
+    }
+
+    .meta-card h3,
+    .summary-card h3,
+    .signal-card h3,
+    .principle-card h3,
+    .translation-card h3 {
+      margin: 0 0 12px;
+      color: var(--nav);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 17px;
+      line-height: 1.3;
+    }
+
+    .meta-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .meta-row {
+      display: grid;
+      gap: 4px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed rgba(27, 42, 74, 0.10);
+    }
+
+    .meta-row:last-child {
+      padding-bottom: 0;
+      border-bottom: 0;
+    }
+
+    .meta-label {
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .meta-value {
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .summary-line {
+      margin: 0 0 14px;
+      color: var(--nav);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: clamp(24px, 3.4vw, 34px);
+      line-height: 1.25;
+    }
+
+    .summary-copy {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .flat-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+      display: grid;
+      gap: 10px;
+    }
+
+    .flat-list li {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(250, 248, 243, 0.92);
+      border: 1px solid rgba(27, 42, 74, 0.08);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .reader-grid {
+      display: grid;
+      grid-template-columns: 300px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .toc-panel {
+      position: sticky;
+      top: 62px;
+      max-height: calc(100vh - 78px);
+      overflow: auto;
+    }
+
+    .toc-panel h3 {
+      margin: 0 0 6px;
+      color: var(--nav);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 18px;
+    }
+
+    .small-note {
+      margin: 0 0 14px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    .toc-links {
+      display: grid;
+      gap: 6px;
+    }
+
+    .toc-link {
+      display: block;
+      padding: 10px 12px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(27, 42, 74, 0.88);
+      transition: background 0.18s ease, transform 0.18s ease;
+    }
+
+    .toc-link:hover {
+      background: rgba(27, 42, 74, 0.08);
+      transform: translateX(2px);
+    }
+
+    .toc-link.active {
+      background: rgba(43, 122, 120, 0.12);
+      color: var(--nav);
+      box-shadow: inset 0 0 0 1px rgba(43, 122, 120, 0.16);
+    }
+
+    .toc-link.level-2 { padding-left: 12px; }
+    .toc-link.level-3 {
+      margin-left: 14px;
+      padding-left: 12px;
+      font-size: 12px;
+    }
+
+    .content-stack {
+      display: grid;
+      gap: 22px;
+      min-width: 0;
+    }
+
+    .svg-card {
+      padding: 14px;
+      overflow: hidden;
+    }
+
+    .svg-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .arch-svg {
+      display: block;
+      width: 100%;
+      min-width: 780px;
+      height: auto;
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(255, 252, 245, 0.98), rgba(248, 244, 235, 0.98));
+      border: 1px solid rgba(27, 42, 74, 0.08);
+    }
+
+    .arch-notes {
+      display: grid;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .arch-note {
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(27, 42, 74, 0.08);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    .principles-grid,
+    .signal-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .principle-copy,
+    .signal-copy {
+      margin: 0;
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink);
+    }
+
+    .principle-quote {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent-teal);
+      background: rgba(43, 122, 120, 0.08);
+      border-radius: 0 14px 14px 0;
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      font-weight: 700;
+      line-height: 1.7;
+      color: var(--nav);
+    }
+
+    .signal-card ul {
+      margin: 0;
+      padding-left: 1.2em;
+    }
+
+    .signal-card li {
+      margin-bottom: 10px;
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+    }
+
+    .translation-shell {
+      padding: 24px;
+    }
+
+    .translation-card {
+      margin-bottom: 16px;
+    }
+
+    .translation-card p {
+      margin: 0;
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--ink);
+    }
+
+    .paper-body {
+      display: grid;
+      gap: 28px;
+    }
+
+    .paper-section {
+      scroll-margin-top: 70px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(27, 42, 74, 0.08);
+    }
+
+    .paper-section:first-of-type {
+      padding-top: 0;
+      border-top: 0;
+    }
+
+    .paper-section h2,
+    .paper-section h3,
+    .paper-section h4 {
+      margin: 0 0 14px;
+      color: var(--nav);
+      font-family: "IBM Plex Sans", sans-serif;
+      line-height: 1.2;
+    }
+
+    .paper-section h2 { font-size: 30px; }
+    .paper-section h3 { font-size: 22px; }
+    .paper-section h4 { font-size: 18px; }
+
+    .paper-section p {
+      margin: 0 0 14px;
+      font-size: 16px;
+      line-height: 1.8em;
+    }
+
+    .paper-section ul,
+    .paper-section ol {
+      margin: 0 0 14px 1.25em;
+      padding: 0;
+    }
+
+    .paper-section li {
+      margin-bottom: 10px;
+      line-height: 1.8em;
+    }
+
+    .formula {
+      margin: 14px 0;
+      padding: 14px 16px;
+      overflow-x: auto;
+      border-radius: 16px;
+      border: 1px solid rgba(27, 42, 74, 0.10);
+      background: rgba(27, 42, 74, 0.05);
+      font-family: "JetBrains Mono", monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+
+    .figure-note {
+      margin: 14px 0 10px;
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent-ochre);
+      border-radius: 0 14px 14px 0;
+      background: rgba(211, 160, 68, 0.11);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 13px;
+      line-height: 1.7;
+      color: var(--nav);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      overflow: hidden;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.80);
+      box-shadow: inset 0 0 0 1px rgba(27, 42, 74, 0.08);
+    }
+
+    th, td {
+      padding: 11px 12px;
+      border-bottom: 1px solid rgba(27, 42, 74, 0.08);
+      text-align: left;
+      vertical-align: top;
+      font-size: 14px;
+      line-height: 1.65;
+    }
+
+    th {
+      background: rgba(27, 42, 74, 0.06);
+      color: var(--nav);
+      font-weight: 700;
+      font-size: 12px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    .reference-list {
+      margin: 0;
+      padding-left: 1.25em;
+    }
+
+    .reference-list li {
+      margin-bottom: 12px;
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .muted {
+      color: var(--muted);
+      font-family: "IBM Plex Sans", sans-serif;
+      font-size: 13px;
+      line-height: 1.75;
+    }
+
+    @media (max-width: 1080px) {
+      .topbar-inner { grid-template-columns: 1fr; height: auto; padding: 8px 0; }
+      .topbar { height: auto; }
+      .page { padding-top: 118px; }
+      .overview-grid,
+      .reader-grid,
+      .principles-grid,
+      .signal-grid { grid-template-columns: 1fr; }
+      .toc-panel { position: static; max-height: none; }
+    }
+
+    @media (max-width: 720px) {
+      .page { width: min(var(--max), calc(100vw - 18px)); }
+      .panel-body,
+      .translation-shell { padding: 18px 16px; }
+      .paper-section h2 { font-size: 26px; }
+      .paper-section h3 { font-size: 20px; }
+      .summary-line { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="chip">EUTXO</span>
+        <span class="brand-title">The Extended UTXO Model</span>
+      </div>
+      <div class="progress-box">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text ui" id="progressText">0% read</div>
+      </div>
+      <div class="topbar-actions">
+        <a class="topbar-button" href="#full-translation">全文翻译</a>
+      </div>
+    </div>
+  </header>
+  <main class="page">
+    <section class="panel">
+      <div class="panel-body">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">Paper Overview</span>
+            <h1>The Extended UTXO Model</h1>
+          </div>
+          <p class="section-desc">基于你提供的 PDF 生成。页面优先保留完整中文全文翻译，再以轻量方式呈现核心方法图、第一性原理卡片和最重要的形式化结论。</p>
+        </div>
+        <div class="overview-grid">
+          <article class="meta-card">
+            <h3>论文信息</h3>
+            <div class="meta-grid">
+              <div class="meta-row">
+                <div class="meta-label">标题</div>
+                <div class="meta-value latin">The Extended UTXO Model</div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">作者</div>
+                <div class="meta-value">Manuel M. T. Chakravarty, James Chapman, Kenneth MacKenzie, Orestis Melkonian, Michael Peyton Jones, Philip Wadler</div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">机构</div>
+                <div class="meta-value">
+                  1. IOHK, Utrecht, The Netherlands<br />
+                  2. IOHK, Glasgow, Scotland<br />
+                  3. IOHK, Edinburgh, Scotland<br />
+                  4. IOHK, London, England<br />
+                  5. University of Edinburgh, Edinburgh, Scotland
+                </div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">会议 / 期刊</div>
+                <div class="meta-value">FC 2020 Workshops, LNCS 12063, pp. 525-539, 2020</div>
+              </div>
+              <div class="meta-row">
+                <div class="meta-label">方法名</div>
+                <div class="meta-value">Extended UTXO (EUTXO)；Constraint Emitting Machines (CEM)</div>
+              </div>
+            </div>
+          </article>
+
+          <article class="summary-card">
+            <h3>概览</h3>
+            <p class="summary-line">让 UTXO 也能安全承载状态机合约。</p>
+            <p class="summary-copy">论文要解决的核心矛盾是：如何在不引入共享可变状态的前提下，提升 UTXO 模型对智能合约的表达能力，并让这种提升能被形式化证明。</p>
+            <ul class="flat-list">
+              <li><strong>研究问题：</strong>账户模型靠全局状态换取表达力，但会显著增加并发语义复杂度；UTXO 能否兼顾表达力与语义简洁性？</li>
+              <li><strong>方法：</strong>把输出从 <span class="mono">(validator, value)</span> 扩展为 <span class="mono">(validator, value, datum)</span>，再把 <span class="mono">context</span> 与有效时间区间纳入验证，并用 CEM 把状态机转译为链上交易。</li>
+              <li><strong>结论：</strong>EUTXO 能支持 plain UTXO 无法自然支持的状态机类合约；作者还证明了 CEM 与 EUTXO 账本行为之间的弱双模拟，并在 Agda 中完成机械化形式化。</li>
+            </ul>
+          </article>
+        </div>
+      </div>
+    </section>
+    <div class="reader-grid">
+      <aside class="toc-panel panel" id="toc">
+        <h3>目录导航</h3>
+        <p class="small-note">按 PDF 中真实章节层级整理，点击可跳转；当前阅读位置会自动高亮。</p>
+        <nav class="toc-links">
+          <a class="toc-link level-2" href="#translation-abstract">Abstract</a>
+          <a class="toc-link level-2" href="#translation-1">1 Introduction</a>
+          <a class="toc-link level-2" href="#translation-2">2 Extending UTXO</a>
+          <a class="toc-link level-2" href="#translation-3">3 Formal Model</a>
+          <a class="toc-link level-3" href="#translation-3-1">3.1 Basic Types and Notation</a>
+          <a class="toc-link level-3" href="#translation-3-2">3.2 EUTXO: Enhanced Scripting</a>
+          <a class="toc-link level-3" href="#translation-3-3">3.3 A Formal Description of the EUTXO Model</a>
+          <a class="toc-link level-3" href="#translation-3-4">3.4 The Context Type</a>
+          <a class="toc-link level-3" href="#translation-3-5">3.5 Validity of EUTXO Transactions</a>
+          <a class="toc-link level-2" href="#translation-4">4 Expressiveness of EUTXO</a>
+          <a class="toc-link level-3" href="#translation-4-1">4.1 Constraint Emitting Machines</a>
+          <a class="toc-link level-3" href="#translation-4-2">4.2 Transitions-as-Transactions</a>
+          <a class="toc-link level-3" href="#translation-4-3">4.3 Behavioural Equivalence</a>
+          <a class="toc-link level-2" href="#translation-5">5 Related Work</a>
+          <a class="toc-link level-2" href="#translation-ref">References</a>
+        </nav>
+      </aside>
+      <div class="content-stack">
+        <section class="panel" id="architecture">
+          <div class="panel-body">
+            <div class="section-head">
+              <div>
+                <span class="section-kicker">Core Diagram</span>
+                <h2>核心架构图</h2>
+              </div>
+              <p class="section-desc">根据方法章节与图 1 重绘，保留最关键的数据流：状态如何进入验证器、约束如何落到交易、以及后继状态如何继续或停止。</p>
+            </div>
+            <div class="svg-card">
+              <div class="svg-wrap">
+                <svg class="arch-svg" viewBox="0 0 1200 720" xmlns="http://www.w3.org/2000/svg" aria-labelledby="archTitle archDesc" role="img">
+                  <title id="archTitle">EUTXO 与 CEM 的简化手绘风格核心架构图</title>
+                  <desc id="archDesc">从带 datum 的状态、redeemer 与 context 进入 CEM step 和 validatorC，再生成满足约束的交易与后继输出。</desc>
+                  <defs>
+                    <filter id="rough" x="-10%" y="-10%" width="120%" height="120%">
+                      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="1" seed="7" result="noise" />
+                      <feDisplacementMap in="SourceGraphic" in2="noise" scale="0.8" />
+                    </filter>
+                    <marker id="arrowMain" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                      <path d="M0,0 L12,6 L0,12 z" fill="#1b2a4a" />
+                    </marker>
+                    <marker id="arrowSoft" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+                      <path d="M0,0 L12,6 L0,12 z" fill="#7c8aa3" />
+                    </marker>
+                  </defs>
+
+                  <path d="M120 190 C180 180 220 180 280 190" fill="none" stroke="#1b2a4a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#arrowMain)" />
+                  <path d="M120 360 C180 360 220 360 280 360" fill="none" stroke="#1b2a4a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#arrowMain)" />
+                  <path d="M120 530 C180 540 220 540 280 530" fill="none" stroke="#7c8aa3" stroke-width="3" stroke-dasharray="8 10" stroke-linecap="round" marker-end="url(#arrowSoft)" />
+                  <path d="M450 280 C520 280 560 280 640 280" fill="none" stroke="#1b2a4a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#arrowMain)" />
+                  <path d="M640 280 C730 280 770 280 850 280" fill="none" stroke="#1b2a4a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#arrowMain)" />
+                  <path d="M1010 250 C1060 220 1090 190 1105 140" fill="none" stroke="#1b2a4a" stroke-width="3.5" stroke-linecap="round" marker-end="url(#arrowMain)" />
+                  <path d="M1010 310 C1060 350 1090 390 1105 440" fill="none" stroke="#7c8aa3" stroke-width="3" stroke-dasharray="8 10" stroke-linecap="round" marker-end="url(#arrowSoft)" />
+                  <path d="M380 420 C455 430 560 430 640 340" fill="none" stroke="#7c8aa3" stroke-width="3" stroke-dasharray="8 10" stroke-linecap="round" marker-end="url(#arrowSoft)" />
+
+                  <g filter="url(#rough)">
+                    <rect x="34" y="128" width="220" height="104" rx="24" fill="#fff7ea" stroke="#c96b37" stroke-width="3" />
+                    <rect x="36" y="130" width="220" height="104" rx="24" fill="none" stroke="#1b2a4a" stroke-opacity="0.12" stroke-width="1.8" />
+                    <text x="144" y="165" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">状态输入</text>
+                    <text x="144" y="196" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">Datum / State</text>
+                    <text x="144" y="218" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="34" y="300" width="220" height="104" rx="24" fill="#edf9f6" stroke="#2b7a78" stroke-width="3" />
+                    <rect x="36" y="302" width="220" height="104" rx="24" fill="none" stroke="#1b2a4a" stroke-opacity="0.12" stroke-width="1.8" />
+                    <text x="144" y="338" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">转移输入</text>
+                    <text x="144" y="369" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">Redeemer / Input</text>
+                    <text x="144" y="391" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="34" y="472" width="220" height="104" rx="24" fill="#f3f0fb" stroke="#6b7a95" stroke-width="3" />
+                    <rect x="36" y="474" width="220" height="104" rx="24" fill="none" stroke="#1b2a4a" stroke-opacity="0.12" stroke-width="1.8" />
+                    <text x="144" y="510" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">交易摘要</text>
+                    <text x="144" y="541" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">Context + Interval</text>
+                    <text x="144" y="563" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="282" y="205" width="190" height="140" rx="28" fill="#fff8ef" stroke="#1b2a4a" stroke-width="3.2" />
+                    <rect x="285" y="208" width="190" height="140" rx="28" fill="none" stroke="#c96b37" stroke-opacity="0.18" stroke-width="2" />
+                    <text x="377" y="244" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">状态机语义</text>
+                    <text x="377" y="275" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">CEM step</text>
+                    <text x="377" y="306" text-anchor="middle" font-family="JetBrains Mono" font-size="13" fill="#1d2431">S × I → Maybe(S × TxConstraints)</text>
+                    <text x="377" y="327" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="640" y="206" width="220" height="148" rx="28" fill="#eef6ff" stroke="#1b2a4a" stroke-width="3.2" />
+                    <rect x="643" y="209" width="220" height="148" rx="28" fill="none" stroke="#2b7a78" stroke-opacity="0.18" stroke-width="2" />
+                    <text x="750" y="246" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">链上验证器</text>
+                    <text x="750" y="277" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">validatorC</text>
+                    <text x="750" y="306" text-anchor="middle" font-family="IBM Plex Sans" font-size="18" fill="#1d2431">检查合法转移、约束与输出</text>
+                    <text x="750" y="329" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="870" y="206" width="174" height="148" rx="28" fill="#fef7ea" stroke="#d3a044" stroke-width="3.2" />
+                    <rect x="873" y="209" width="174" height="148" rx="28" fill="none" stroke="#1b2a4a" stroke-opacity="0.12" stroke-width="2" />
+                    <text x="957" y="244" text-anchor="middle" font-family="IBM Plex Sans" font-size="24" font-weight="700" fill="#1b2a4a">合法交易</text>
+                    <text x="957" y="275" text-anchor="middle" font-family="IBM Plex Sans" font-size="21" fill="#1b2a4a">Tx + Constraints</text>
+                    <text x="957" y="306" text-anchor="middle" font-family="IBM Plex Sans" font-size="17" fill="#1d2431">满足 <tspan font-family="JetBrains Mono">satisfies()</tspan></text>
+                    <text x="957" y="329" text-anchor="middle" font-family="JetBrains Mono" font-size="15" fill="#5a6678">[未在论文中明确说明]</text>
+
+                    <rect x="1046" y="52" width="126" height="130" rx="24" fill="#edf9f6" stroke="#2b7a78" stroke-width="3" />
+                    <text x="1109" y="92" text-anchor="middle" font-family="IBM Plex Sans" font-size="22" font-weight="700" fill="#1b2a4a">继续输出</text>
+                    <text x="1109" y="122" text-anchor="middle" font-family="IBM Plex Sans" font-size="18" fill="#1b2a4a">Continuing</text>
+                    <text x="1109" y="146" text-anchor="middle" font-family="IBM Plex Sans" font-size="17" fill="#1d2431">携带状态 s'</text>
+
+                    <rect x="1046" y="390" width="126" height="130" rx="24" fill="#f7f1ef" stroke="#6b7a95" stroke-width="3" />
+                    <text x="1109" y="432" text-anchor="middle" font-family="IBM Plex Sans" font-size="22" font-weight="700" fill="#1b2a4a">终态停止</text>
+                    <text x="1109" y="462" text-anchor="middle" font-family="IBM Plex Sans" font-size="18" fill="#1b2a4a">Final Halt</text>
+                    <text x="1109" y="486" text-anchor="middle" font-family="IBM Plex Sans" font-size="17" fill="#1d2431">不再生成输出</text>
+                  </g>
+
+                  <g filter="url(#rough)">
+                    <path d="M500 118 q120 -48 218 10 q18 14 8 34 q-10 22 -32 18 q-112 -28 -208 12 q-26 10 -36 -12 q-10 -24 20 -42z" fill="#fff7ea" stroke="#c96b37" stroke-width="2.8" />
+                    <text x="608" y="124" text-anchor="middle" font-family="IBM Plex Sans" font-size="20" font-weight="700" fill="#1b2a4a">决策 A</text>
+                    <text x="608" y="148" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">用 datum 携带状态</text>
+                    <text x="608" y="170" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">不引入全局可变存储</text>
+
+                    <path d="M496 486 q140 -42 254 12 q16 12 8 32 q-8 22 -32 18 q-132 -24 -230 12 q-24 8 -34 -12 q-10 -20 34 -62z" fill="#edf9f6" stroke="#2b7a78" stroke-width="2.8" />
+                    <text x="624" y="493" text-anchor="middle" font-family="IBM Plex Sans" font-size="20" font-weight="700" fill="#1b2a4a">决策 B</text>
+                    <text x="624" y="517" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">用 context 检查</text>
+                    <text x="624" y="539" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">contract continuity</text>
+
+                    <path d="M910 564 q112 -46 224 2 q16 10 10 30 q-6 20 -28 18 q-116 -16 -210 14 q-24 8 -34 -12 q-12 -22 38 -52z" fill="#f3f0fb" stroke="#6b7a95" stroke-width="2.8" />
+                    <text x="1024" y="570" text-anchor="middle" font-family="IBM Plex Sans" font-size="20" font-weight="700" fill="#1b2a4a">决策 C</text>
+                    <text x="1024" y="594" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">终态必须停止</text>
+                    <text x="1024" y="616" text-anchor="middle" font-family="IBM Plex Sans" font-size="16" fill="#1d2431">避免陈旧 UTXO 残留</text>
+                  </g>
+                </svg>
+              </div>
+              <div class="arch-notes">
+                <div class="arch-note"><strong>状态流：</strong>状态被放进 <span class="mono">datum</span>，转移信号来自 <span class="mono">redeemer</span>，验证器再借助 <span class="mono">context</span> 检查当前交易是否延续同一合约。</div>
+                <div class="arch-note"><strong>约束流：</strong>CEM 不直接“修改链”，而是发射 <span class="mono">TxConstraints</span>，再由 <span class="mono">validatorC</span> 检查交易是否满足这些结构性约束。</div>
+                <div class="arch-note"><strong>终止条件：</strong>若目标状态为终态，链上不再创建继续该状态机的输出，这一点是论文区分教科书式 Mealy 机与链上状态机的重要设计。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section class="panel" id="principles">
+          <div class="panel-body">
+            <div class="section-head">
+              <div>
+                <span class="section-kicker">First Principles</span>
+                <h2>第一性原理卡片</h2>
+              </div>
+              <p class="section-desc">只保留 3 张，并严格锚定论文里的真实设计与论证，不做脱离文本的泛化发挥。</p>
+            </div>
+            <div class="principles-grid">
+              <article class="principle-card">
+                <h3>为什么 EUTXO 能在不引入全局状态的情况下表达状态机？</h3>
+                <p class="principle-copy">论文把“状态”拆成了局部可携带的数据而不是全局可变存储。输出新增 <span class="mono">datum</span> 后，当前状态可随 UTXO 一起流动；验证器再通过 <span class="mono">context</span> 检查后继交易是否仍属于同一合约。于是状态被局部化到使用点，表达力上升，但共享可变状态并没有被重新引入。</p>
+                <div class="principle-quote"><strong>核心原理：</strong>把状态变成被交易携带和验证的数据，而不是让所有节点长期维护一份全局可变内存。</div>
+              </article>
+              <article class="principle-card">
+                <h3>为什么“有效时间区间”比直接暴露当前时间更合理？</h3>
+                <p class="principle-copy">作者非常在意验证阶段的确定性。若脚本能直接读取精确当前时间，它就可能因链上瞬时环境不同而分支，用户在提交前也无法准确模拟结果与资源消耗。把时间设计成交易自带的有效区间后，脚本只知道“当前 tick 落在区间内”，从而保留了链下可预测性。</p>
+                <div class="principle-quote"><strong>核心原理：</strong>对脚本暴露“交易声明的时间边界”，而不是暴露“会实时变化的系统事实”。</div>
+              </article>
+              <article class="principle-card">
+                <h3>为什么作者要证明 weak bisimulation，而不只说“能实现状态机”？</h3>
+                <p class="principle-copy">“能写出来”并不能保证链上行为与高层状态机语义一致。论文进一步要求：CEM 的每个相关转移都能落成合法交易，而链上与该合约相关的合法交易也能回译为 CEM 转移。同时又允许账本夹杂无关交易，因此采用的是弱双模拟而非强双模拟。</p>
+                <div class="principle-quote"><strong>核心原理：</strong>开放账本上要证明的是“相关行为保持对应”，而不是“世界上每一步都只服务这一个合约”。</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="signals">
+          <div class="panel-body">
+            <div class="section-head">
+              <div>
+                <span class="section-kicker">Lightweight Signals</span>
+                <h2>指标 / 证据 / 局限</h2>
+              </div>
+              <p class="section-desc">这篇论文不是数值 benchmark 论文，因此这里保留的是作者明确给出的形式性质、关键证据和写在文中的边界条件。</p>
+            </div>
+            <div class="signal-grid">
+              <article class="signal-card">
+                <h3>形式性质</h3>
+                <p class="signal-copy">[论文未设置独立数值评估指标]。作者主要讨论以下非数值性质：</p>
+                <ul>
+                  <li><strong>Determinism：</strong>验证时所见 <span class="mono">context</span> 完全由交易决定；越强越好，意味着链下可准确模拟。</li>
+                  <li><strong>Soundness：</strong>CEM 的合法步可构造为链上的合法交易；成立越完整越好。</li>
+                  <li><strong>Completeness：</strong>与当前 CEM 相关的链上合法交易可对应回 CEM 转移；成立越完整越好。</li>
+                  <li><strong>Weak bisimulation：</strong>在允许账本存在无关内部步时，两边行为仍保持对应；成立越强越好。</li>
+                </ul>
+              </article>
+              <article class="signal-card">
+                <h3>关键证据</h3>
+                <ul>
+                  <li><strong>比较对象：</strong>plain UTXO / Bitcoin 与 EUTXO。<br /> <strong>核心结论：</strong>EUTXO 能把多签签名收集过程搬到链上，plain UTXO 需要额外链下通信。</li>
+                  <li><strong>比较对象：</strong>CEM 高层状态机 与 链上 EUTXO 合约。<br /> <strong>核心结论：</strong>作者给出 soundness、completeness 与 weak bisimulation，而不是只给工程示例。</li>
+                  <li><strong>比较对象：</strong>Marlowe 等真实合约需求 与 状态机实现能力。<br /> <strong>核心结论：</strong>论文指出 Marlowe 的完整功能已成功实现为 EUTXO 状态机，说明方法不止适用于玩具案例。</li>
+                </ul>
+              </article>
+              <article class="signal-card">
+                <h3>局限性</h3>
+                <ul>
+                  <li>链上层面无法直接强制“初始态”概念，因此论文显式说明每个合约需要先建立某种初始信任。</li>
+                  <li>若目标状态是终态，文中的 correspondence 证明没有继续用输出去见证它；作者承认这是为简化定义做出的处理。</li>
+                  <li>当前形式化只处理有限的一阶约束；作者认为可以扩展，但本文未展开。</li>
+                  <li>交易费用、forge 字段与更多元数据被省略；账本也被简化为交易列表。</li>
+                  <li>“花费者如何知道该提供哪份 validator 与 datum”被留给链下机制或未来链上机制，本文未正式建模。</li>
+                </ul>
+              </article>
+            </div>
+          </div>
+        </section>
+        <section class="panel" id="full-translation">
+          <div class="translation-shell">
+            <div class="section-head">
+              <div>
+                <span class="section-kicker">Full Translation</span>
+                <h2>全文翻译</h2>
+              </div>
+              <p class="section-desc">本文无独立 Conclusion / Appendix；以下覆盖从 Abstract 到 §5 Related Work 的正文，并附上 References。数学表达保留原符号，图 1-6 的可识别内容已尽量转写为 HTML。</p>
+            </div>
+
+            <article class="translation-card">
+              <h3>术语统一表</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>术语</th>
+                    <th>统一译法</th>
+                    <th>说明</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr><td class="mono">UTXO</td><td>未花费交易输出</td><td>保留英文缩写，中文解释首次展开。</td></tr>
+                  <tr><td class="mono">Extended UTXO / EUTXO</td><td>扩展 UTXO</td><td>方法名统一保留英文缩写。</td></tr>
+                  <tr><td class="mono">validator</td><td>验证器</td><td>指锁定输出并检查消费条件的脚本。</td></tr>
+                  <tr><td class="mono">redeemer</td><td>解锁参数</td><td>文中也可理解为状态机输入或花费见证。</td></tr>
+                  <tr><td class="mono">datum</td><td>数据附件</td><td>附着在输出上的合约专属数据，用于承载状态。</td></tr>
+                  <tr><td class="mono">context</td><td>上下文摘要</td><td>验证时可见的交易摘要对象。</td></tr>
+                  <tr><td class="mono">contract continuity</td><td>合约连续性</td><td>同一合约沿整条交易链持续延续。</td></tr>
+                  <tr><td class="mono">validity interval</td><td>有效时间区间</td><td>交易允许被处理的 tick 区间。</td></tr>
+                  <tr><td class="mono">tick</td><td>tick</td><td>账本推进的离散时刻，可类比区块高度。</td></tr>
+                  <tr><td class="mono">Constraint Emitting Machines / CEM</td><td>约束发射机</td><td>建立在 Mealy 机上的状态机类。</td></tr>
+                  <tr><td class="mono">soundness</td><td>可靠性</td><td>CEM 合法步能够在链上落地。</td></tr>
+                  <tr><td class="mono">completeness</td><td>完备性</td><td>链上相关合法步能够回译到 CEM。</td></tr>
+                  <tr><td class="mono">weak bisimulation</td><td>弱双模拟</td><td>允许账本存在与目标合约无关的内部步。</td></tr>
+                </tbody>
+              </table>
+            </article>
+
+            <div class="paper-body">
+              <section class="paper-section observed-section" id="translation-abstract">
+                <h2>Abstract / 摘要</h2>
+                <p>比特币和以太坊分别承载着当今最有价值、也最流行的两类加密货币，但它们采用的是两种相当不同的账本模型，分别称为 UTXO 模型与账户模型。与此同时，这两条公有链在所支持的智能合约表达能力上也有明显差异，而这并非偶然。以太坊之所以明确选择账户模型，就是为了更方便地支持表达能力更强的智能合约；另一方面，比特币选择 UTXO 也有其充分理由，其中包括：在复杂的并发与分布式计算环境中，它的语义模型仍保持简洁。</p>
+                <p>这就提出了一个问题：是否有可能在保留 UTXO 模型语义简洁性的同时，也支持高表达力的智能合约？本文对此给出肯定回答。我们提出扩展 UTXO（Extended UTXO, EUTXO），它是在比特币 UTXO 模型上的一种扩展，支持显著更强的验证脚本形式，包括能够实现通用状态机的脚本，以及能够在整条交易链上强制维护不变式的脚本。</p>
+                <p>为了展示该模型的能力，我们还提出了一种适合在账本上执行的状态机形式，它建立在 Mealy 机之上，被称为 Constraint Emitting Machines（CEM）。我们对 CEM 进行了形式化定义，展示了如何将其编译到 EUTXO 上，并证明了这两个系统之间的弱双模拟。本文全部工作都使用 Agda 证明助手完成了形式化。</p>
+                <p><strong>关键词：</strong>Blockchain；UTXO；Functional programming；State machines</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-1">
+                <h2>1 引言 <span class="latin">Introduction</span></h2>
+                <p>比特币是最广为人知、也最有价值的加密货币，它采用一种基于 UTXO（未花费交易输出）概念的图式账本模型。单笔交易由输入列表与输出列表组成，其中输出表示某个特定数量的加密货币，这些输出可以被后续交易的输入所花费。每个输出只能被恰好一个输入花费。此外，这些花费连接不允许形成环，因此一组互相花费的交易可以被视为一张有向无环图：若某笔交易有 <span class="mono">m</span> 个输入和 <span class="mono">n</span> 个输出，那么它在图中就是一个拥有 <span class="mono">m</span> 条入边和 <span class="mono">n</span> 条出边的节点。交易输入消耗的价值总和必须等于输出提供的价值总和，因此价值是守恒的。</p>
+                <p>某个输出是否能被输入消费，是由附着在该输出上的函数 <span class="mono">ν</span> 决定的，本文称其为输出的验证器。交易输入通过提供一个 redeemer 对象 <span class="mono">ρ</span> 来证明自己有资格花费该输出，使得 <span class="mono">ν(ρ) = true</span>；在比特币语境中，redeemer 常被称为 witness。最简单的情况里，redeemer 是对待花费交易哈希的私钥签名，验证器中嵌入对应公钥并完成校验。通过更复杂的验证器和 redeemer，也可以实现更复杂的协议。</p>
+                <p>这种基于图的数据流方式的好处在于，它与区块链的并发、分布式本性非常契合。特别是，它避免引入共享可变状态；而共享可变状态在并发与分布式计算中会带来极其复杂的语义问题。</p>
+                <p>尽管如此，UTXO 模型总体上，尤其是比特币，在可编程性表达能力方面长期受到批评。以太坊的账户式账本以及合约账户概念，很大程度上正是为了解决这些限制而提出的。不幸的是，它通过引入共享可变状态来实现这一点，从而显著增加了合约代码的语义复杂性。合约作者如果不理解这种语义的细节，就有可能引入安全问题，例如导致臭名昭著的 DAO 攻击的递归合约调用漏洞。</p>
+                <p>本文的核心贡献，是提出一种对基础 UTXO 账本模型的扩展，它一方面<strong>可被证明地提高表达能力</strong>，另一方面又<strong>保留 UTXO 图的数据流性质</strong>；尤其重要的是，它依然不引入任何共享可变状态。更具体地说，本文有以下贡献：</p>
+                <ul>
+                  <li>提出 EUTXO 模型，并在第 2 节做非形式化说明，在第 3 节给出形式化定义。</li>
+                  <li>展示 EUTXO 能支持一种基础 UTXO 无法支持的状态机形式，即 Constraint Emitting Machines（CEM），相关内容见第 4 节。</li>
+                  <li>对 EUTXO 与 CEM 都给出形式化，并基于 Melkonian 等人的既有工作，在 Agda 证明助手中证明两者之间的弱双模拟。</li>
+                </ul>
+                <p>第 5 节总结相关工作。EUTXO 模型将用于 Cardano 的账本层，而 Cardano 是 IOHK 正在开发的一条大型区块链系统。它也是 Cardano 智能合约平台 Plutus 的基础。Plutus 包含一门小型函数式编程语言 Plutus Core，用来实现脚本。虽然本文不打算展开 Cardano 的技术细节，但作者指出，读者可以在在线 playground 中体验 Plutus 平台。</p>
+                <p>作者还指出，未来工作包括对 EUTXO 与 Ethereum 账户模型做正式比较。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-2">
+                <h2>2 扩展 UTXO <span class="latin">Extending UTXO</span></h2>
+                <p>已有多种状态机形式被提议用来刻画那些超出基础 UTXO 模型能力范围的智能合约功能，例如一些工作就使用 Ethereum 的账户模型完成此事。然而，我们自然会追问：是否可以扩展基础 UTXO 模型，使其在不切换到账户模型的前提下，也支持更具表达力的状态机？</p>
+                <p>如果把一条连续交易链中的每一笔交易都看作状态机演化中的一个步骤，那么 UTXO 模型至少需要补上两项功能。第一，它必须能够维护状态机状态；第二，它必须能够强制整条交易序列始终沿用同一份合约代码，作者把这一点称为 <span class="mono">contract continuity</span>（合约连续性）。</p>
+                <p>为了维护状态机状态，我们把 UTXO 输出从原来的二元组 <span class="mono">(ν, value)</span> 扩展为三元组 <span class="mono">(ν, value, δ)</span>，其中 <span class="mono">δ</span> 是任意合约专属数据，即 datum。为了让验证器能够强制合约连续性，我们还把“尝试花费该输出的整笔交易”一起传给验证器执行。于是验证器就能检查当前消费交易产生的后继输出是否仍然使用同一合约的验证器代码，很多时候甚至就是同一个验证器。因此，当一笔交易 <span class="mono">tx</span> 中的某个输入携带 redeemer <span class="mono">ρ</span> 去花费输出 <span class="mono">(ν, value, δ)</span> 时，我们检查的是：</p>
+                <div class="formula">ν(value, δ, ρ, tx) = true</div>
+                <p>由于 <span class="mono">δ</span> 可以携带任意数据，而验证器 <span class="mono">ν</span> 又能对消费它的交易 <span class="mono">tx</span> 施加任意有效性约束，因此 EUTXO 的表达力其实超出了“支持状态机”这一范围。不过本文把讨论收束在状态机实现上，把更广义的计算模式留给未来研究。</p>
+                <p>作为简单示例，作者讨论一个 <span class="mono">n-of-m</span> 多重签名合约。具体来说，系统中有一笔价值为 <span class="mono">value_msc</span> 的资产，它必须获得一个预先固定的 <span class="mono">m</span> 人所有者集合中至少 <span class="mono">n</span> 人的批准才能被花费。在 plain UTXO（例如比特币）中，多签方案通常要求所有签名在线下先收集完；而在 Ethereum 与 EUTXO 中，签名收集过程本身可以在链上完成，从而无需额外的链下通信。</p>
+                <p>为此，作者使用图 1 所示的状态机，并假定阈值 <span class="mono">n</span> 以及授权签名集合 <span class="mono">sigs_auth</span> 已写入合约代码。在 EUTXO 的实现里，作者使用验证器 <span class="mono">ν_msc</span> 和 datum <span class="mono">δ_msc</span> 来锁定 <span class="mono">value_msc</span>。datum 存放机器状态：若只是持有被锁定资产，则状态为 <span class="mono">Holding</span>；若正在为某笔支付收集签名，则状态为 <span class="mono">Collecting((value, κ, d), sigs)</span>。初始输出为 <span class="mono">(ν_msc, value_msc, Holding)</span>。</p>
+                <p>验证器 <span class="mono">ν_msc</span> 通过查看花费输入上的 redeemer 来判断应走哪条状态转移边。该 redeemer，也就是状态机输入，可以是四种形式之一：<span class="mono">Propose(value, κ, d)</span> 表示提出一笔支付；<span class="mono">Add(sig)</span> 表示为该支付追加一个签名；<span class="mono">Cancel</span> 表示在截止时间过后取消提案；<span class="mono">Pay</span> 表示在收集到足够签名后执行支付。随后，验证器会检查消费交易 <span class="mono">tx</span> 是否是新机器状态的合法表示。这意味着 <span class="mono">tx</span> 必须继续用 <span class="mono">ν_msc</span> 锁定相应价值，并且新的 datum <span class="mono">δ'_msc</span> 必须是按照状态图从 <span class="mono">δ_msc</span> 演化得到的后继状态。</p>
+                <p>EUTXO 的表达能力远不止这个链上多签例子。作者进一步指出，金融合约领域特定语言 Marlowe 的完整功能，也已经成功实现为运行在 EUTXO 模型上的状态机。</p>
+
+                <div class="figure-note"><strong>图 1：</strong>多重签名状态机的转移图；边上的标签表示来自 redeemer 的输入和相应转移约束。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>源状态</th>
+                      <th>触发输入</th>
+                      <th>转移约束 / 结果</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><span class="mono">Holding</span></td>
+                      <td><span class="mono">Propose(value, κ, d)</span></td>
+                      <td>进入 <span class="mono">Collect(value, κ, d, sigs)</span>，并令 <span class="mono">sigs_new = {}</span>。</td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">Collect(value, κ, d, sigs)</span></td>
+                      <td><span class="mono">Add sig</span></td>
+                      <td>保持在收集状态，并令 <span class="mono">sigs_new = sigs_old ∪ {sig}</span>，条件是 <span class="mono">sig ∈ sigs_auth</span>。</td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">Collect(value, κ, d, sigs)</span></td>
+                      <td><span class="mono">Cancel</span></td>
+                      <td>若 <span class="mono">d expired</span>，返回 <span class="mono">Holding</span>。</td>
+                    </tr>
+                    <tr>
+                      <td><span class="mono">Collect(value, κ, d, sigs)</span></td>
+                      <td><span class="mono">Pay</span></td>
+                      <td>若 <span class="mono">|sigs| ≥ n</span>，完成支付并回到持有 / 结束该支付流程。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <section class="paper-section observed-section" id="translation-3">
+                <h2>3 形式模型 <span class="latin">Formal Model</span></h2>
+                <p>这一节给出 EUTXO 的形式化定义。作者采用的是直接的集合论风格表达，它有两个目的：第一，这种写法几乎可以直接翻译成 Haskell 之类的实现语言；第二，它很适合进一步做机械化形式化。后文第 4 节会基于这一点继续推进。</p>
+                <p>作者说明，这里给出的定义本质上仍然建立在 Zahnentferner 对带脚本 UTXO 加密货币的抽象模型之上，只是加入了前面介绍的三项增强：datum、context 和有效时间区间。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-3-1">
+                <h3>3.1 基本类型与记号 <span class="latin">Basic Types and Notation</span></h3>
+                <p>图 2 给出了后文会用到的基本类型与记号。作者总体沿用了 Zahnentferner 的记法，并特别强调一个原始类型 <span class="mono">Data</span>：它用于向脚本传入信息。读者可以把它理解成某种标准化的结构化数据格式，例如 JSON 或 CBOR。本文并不依赖某一种具体编码，因此保持抽象；作者只要求这种数据形式应当同时被脚本语言与链下交互语言良好支持。</p>
+                <p>作者进一步假设：对脚本语言中的每个非函数类型 <span class="mono">T</span>，都存在对应的 <span class="mono">toData</span> 与 <span class="mono">fromData</span> 函数，用于在具体类型与抽象 <span class="mono">Data</span> 之间转换。</p>
+
+                <div class="figure-note"><strong>图 2：</strong>基本类型与记号。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>记号</th>
+                      <th>原文定义</th>
+                      <th>中文说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td class="mono">B</td><td>the type of booleans</td><td>布尔类型。</td></tr>
+                    <tr><td class="mono">N</td><td>the type of natural numbers</td><td>自然数类型。</td></tr>
+                    <tr><td class="mono">Z</td><td>the type of integers</td><td>整数类型。</td></tr>
+                    <tr><td class="mono">(φ1:T1, ..., φn:Tn)</td><td>a record type with fields φ1, ..., φn of types T1, ..., Tn</td><td>记录类型，带有字段 <span class="mono">φ1...φn</span>。</td></tr>
+                    <tr><td class="mono">t.φ</td><td>the value of φ for t, where t has type T and φ is a field of T</td><td>记录 <span class="mono">t</span> 的字段 <span class="mono">φ</span> 的取值。</td></tr>
+                    <tr><td class="mono">Set[T]</td><td>the type of (finite) sets over T</td><td><span class="mono">T</span> 上有限集合的类型。</td></tr>
+                    <tr><td class="mono">List[T]</td><td>the type of lists over T, with <span class="mono">[-]</span> as indexing and <span class="mono">|-|</span> as length</td><td><span class="mono">T</span> 上列表的类型，支持索引与长度。</td></tr>
+                    <tr><td class="mono">h :: t</td><td>the list with head h and tail t</td><td>表头为 <span class="mono">h</span>、表尾为 <span class="mono">t</span> 的列表。</td></tr>
+                    <tr><td class="mono">x ↦ f(x)</td><td>an anonymous function</td><td>匿名函数。</td></tr>
+                    <tr><td class="mono">c#</td><td>a cryptographic collision-resistant hash of c</td><td>对象 <span class="mono">c</span> 的抗碰撞密码学哈希。</td></tr>
+                    <tr><td class="mono">Interval[A]</td><td>the type of intervals over a totally-ordered set A</td><td>全序集合 <span class="mono">A</span> 上区间的类型。</td></tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-3-2">
+                <h3>3.2 EUTXO：增强型脚本 <span class="latin">EUTXO: Enhanced Scripting</span></h3>
+                <p>相较于标准 UTXO 模型，作者做出的第一项改变是：交易输出除了验证器外，还允许携带一段名为 datum 的数据，并在验证时作为额外参数传给脚本。这样一来，合约就能在不改变自身“代码”的情况下携带某些状态，而作者正是用这一点来承载后文的状态机状态。</p>
+                <p>第二项改变是：验证器在执行时还能收到一个类型为 <span class="mono">Context</span> 的额外参数，也就是当前正在验证的交易的某种摘要信息。正是这个摘要，使验证器能够施加强于基础 UTXO 的条件，尤其是检查当前交易输出，从而保证合约连续性。</p>
+                <p>第三项改变是：作者通过为交易加入有效时间区间，给脚本提供了受控的时间访问能力。该区间表示交易在哪些 tick 期间允许被处理，它是对“time-to-live”的一种推广。验证阶段的脚本只知道当前 tick 位于此区间中，但不知道其精确值。</p>
+                <p>最后，验证器收到的所有参数，也就是 redeemer、datum 与 Context，都会统一编码为 <span class="mono">Data</span> 类型。因此客户端有责任把自己想使用的具体类型编码成 <span class="mono">Data</span>，并在验证器内部再解码回来。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-3-3">
+                <h3>3.3 EUTXO 模型的形式化描述 <span class="latin">A Formal Description of the EUTXO Model</span></h3>
+                <p>这一节正式给出 EUTXO 模型的类型与操作。图 3 列出了其所需的类型和运算，其中一部分在论文中定义，另一部分由底层账本提供，作者称之为 ledger primitives。</p>
+                <p>作者沿用比特币的术语，把交易输出的目标称为“地址”。在本文系统里，它只代表脚本地址，也就是脚本的哈希；而在更完整的系统中，地址还可能包含公钥地址等其他形式。tick 则是账本系统中单调递增的推进单位，可类比为多数区块链里的区块号或区块高度。作者假定每个账本状态都存在某种“当前 tick”。</p>
+                <p>交易输入在模型中被表示为集合，而输出被表示为列表。作者特别说明，输出不能简单建模为集合，因为我们需要一种方式唯一标识某个输出，以便后续输入引用它，而“交易 id + 输出索引”的组合天然更适合列表；此外，如果采用结构相等性，那么两个“向同一地址支付同一数额”的输出就会被视作相等，这不符合现实中输出必须具有独立身份的要求。</p>
+                <p>验证器脚本与完整 datum 对象虽然概念上属于被花费的输出，但在实现上是由交易输入提供的；输出本身只保存它们的地址或哈希。这样做的主要动机是节省内存，因为 UTXO 集在验证期间必须被快速访问并驻留内存，因此输出尽量保持常数大小会更有利，而较大的脚本与 datum 只在真正消费该输出时才提交。</p>
+                <p>作者也承认，这会带来一个问题：花费者如何知道自己应提供哪一份验证器和 datum 才能匹配输出上的哈希？这可以通过链下机制解决，也可以考虑未来加入链上发现机制；Cardano 将提供某种相关机制，但本文不对其展开。此外，交易费用、forge 字段以及其他附加元数据，在现实系统中当然存在，但它们都与本文主线无关，因此被省略。账本结构本身也被简化成交易列表，而不是现实世界中的完整区块链结构；作者真正依赖的，只是交易能够被唯一索引和检索。</p>
+
+                <div class="figure-note"><strong>图 3：</strong>EUTXO 模型的基础原语与类型。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>类别</th>
+                      <th>定义</th>
+                      <th>说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>Ledger primitive</td><td><span class="mono">Quantity</span></td><td>货币数量。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">Tick</span></td><td>账本推进的 tick。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">Address</span></td><td>区块链中的“地址”。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">Data</span></td><td>结构化数据类型。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">DataHash</span></td><td><span class="mono">Data</span> 值的哈希。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">TxId</span></td><td>交易标识符。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">txId : Tx → TxId</span></td><td>计算交易标识符的函数。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">Script</span></td><td>脚本的抽象类型。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">scriptAddr : Script → Address</span></td><td>脚本地址。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">dataHash : Data → DataHash</span></td><td>数据对象的哈希。</td></tr>
+                    <tr><td>Ledger primitive</td><td><span class="mono">[-] : Script → Data × Data × Data → B</span></td><td>把脚本应用到它的三个参数上。</td></tr>
+                    <tr><td>Defined type</td><td><span class="mono">Output = (value: Quantity, addr: Address, datumHash: DataHash)</span></td><td>输出保存价值、地址与 datum 哈希。</td></tr>
+                    <tr><td>Defined type</td><td><span class="mono">OutputRef = (id: TxId, index: N)</span></td><td>输出引用由交易 id 与输出索引构成。</td></tr>
+                    <tr><td>Defined type</td><td><span class="mono">Input = (outputRef: OutputRef, validator: Script, datum: Data, redeemer: Data)</span></td><td>输入显式携带脚本、datum 与 redeemer。</td></tr>
+                    <tr><td>Defined type</td><td><span class="mono">Tx = (inputs: Set[Input], outputs: List[Output], validityInterval: Interval[Tick])</span></td><td>交易由输入集合、输出列表和有效时间区间组成。</td></tr>
+                    <tr><td>Defined type</td><td><span class="mono">Ledger = List[Tx]</span></td><td>账本被简化为交易列表。</td></tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-3-4">
+                <h3>3.4 Context 类型 <span class="latin">The Context Type</span></h3>
+                <p>回顾第 3.2 节：当某个交易输入正在被验证时，验证器会收到一个类型为 <span class="mono">Context</span> 的对象，它以 <span class="mono">Data</span> 编码，包含与当前交易相关的信息。图 4 定义了这个类型以及一些相关类型。</p>
+                <p>从设计上看，Context 是图 3 中 <span class="mono">Tx</span> 类型信息在“某个特定输入接受验证”这一语境下的摘要版，并被整理成脚本容易消费的形式。作者列出三点变化。第一，<span class="mono">InputInfo</span> 会附加来自被花费输出的信息，特别是该输出附带的价值。第二，Context 中包含一个索引，标识当前正在验证的是哪个输入，这样脚本就能识别自己的地址。第三，验证器在 Context 中不再以脚本本体出现，而是只以地址出现，从而方便比较相等性，而无须要求脚本语言能够表示自身程序。</p>
+                <p>作者假设存在如下函数：</p>
+                <div class="formula">toContext : Tx × Input × Ledger → Context</div>
+                <p>它把一笔交易、其中某个输入以及当前账本状态，总结成验证器可消费的上下文对象。</p>
+                <p>这一设计最重要的性质是确定性。Context 中提供的信息完全由交易自身决定，因此验证期间的脚本执行也是完全确定的。用户在提交交易之前，就可以准确模拟脚本是否通过验证以及资源消耗是多少；这对于按脚本执行收费的系统尤其重要。作者指出，许多系统破坏这种性质的方式，是允许脚本直接读取某个会变化的全局量，例如当前时间。在本文系统中，这个角色由当前 tick 扮演，而作者正是通过“只暴露有效时间区间而非精确 tick”来避开这种不确定性。</p>
+
+                <div class="figure-note"><strong>图 4：</strong>EUTXO 模型中的 <span class="mono">Context</span> 类型。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>类型</th>
+                      <th>定义</th>
+                      <th>中文说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td><span class="mono">OutputInfo</span></td><td><span class="mono">(value: Quantity, validatorHash: Address, datumHash: DataHash)</span></td><td>当前交易某个输出对脚本可见的摘要信息。</td></tr>
+                    <tr><td><span class="mono">InputInfo</span></td><td><span class="mono">(outputRef: OutputRef, validatorHash: Address, datum: Data, redeemer: Data, value: Quantity)</span></td><td>当前交易某个输入及其被花费输出的摘要。</td></tr>
+                    <tr><td><span class="mono">Context</span></td><td><span class="mono">(inputInfo: Set[InputInfo], outputInfo: List[OutputInfo], validityInterval: Interval[Tick], thisInput: N)</span></td><td>验证器在验证某个输入时能看到的当前交易摘要。</td></tr>
+                  </tbody>
+                </table>
+
+                <div class="figure-note"><strong>图 5：</strong>EUTXO 验证所需的辅助函数。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>函数</th>
+                      <th>原文定义</th>
+                      <th>作用</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td class="mono">lookupTx</td><td><span class="mono">lookupTx : Ledger × TxId → Tx</span></td><td>按交易 id 在账本中查找唯一交易。</td></tr>
+                    <tr><td class="mono">lookupTx(l, id)</td><td>the unique transaction in <span class="mono">l</span> whose id is <span class="mono">id</span></td><td>给出查找语义。</td></tr>
+                    <tr><td class="mono">unspentTxOutputs</td><td><span class="mono">unspentTxOutputs : Tx → Set[OutputRef]</span></td><td>求某笔交易产生的全部输出引用。</td></tr>
+                    <tr><td class="mono">unspentTxOutputs(t)</td><td><span class="mono">{(txId(t), 1), ..., (txId(t), |t.outputs|)}</span></td><td>枚举交易 <span class="mono">t</span> 的所有输出位置。</td></tr>
+                    <tr><td class="mono">unspentOutputs</td><td><span class="mono">unspentOutputs : Ledger → Set[OutputRef]</span></td><td>求当前账本中的未花费输出集合。</td></tr>
+                    <tr><td class="mono">unspentOutputs([])</td><td><span class="mono">{}</span></td><td>空账本的未花费输出为空集。</td></tr>
+                    <tr><td class="mono">unspentOutputs(t :: l)</td><td><span class="mono">(unspentOutputs(l) \ t.inputs) ∪ unspentTxOutputs(t)</span></td><td>从旧未花费集合中去掉已消费输入，再加入新交易输出。</td></tr>
+                    <tr><td class="mono">getSpentOutput</td><td><span class="mono">getSpentOutput : Input × Ledger → Output</span></td><td>找到某个输入真正消费的是哪一个输出。</td></tr>
+                    <tr><td class="mono">getSpentOutput(i, l)</td><td><span class="mono">lookupTx(l, i.outputRef.id).outputs[i.outputRef.index]</span></td><td>通过引用定位被花费输出。</td></tr>
+                  </tbody>
+                </table>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-3-5">
+                <h3>3.5 EUTXO 交易的有效性 <span class="latin">Validity of EUTXO Transactions</span></h3>
+                <p>图 6 定义了在当前 tick 下，一笔交易 <span class="mono">t</span> 对于某个有效账本 <span class="mono">l</span> 何时有效。作者把 Zahnentferner 文中的定义 6 与定义 14 结合起来，主要差异体现在规则 6。一个账本是有效的，当且仅当它要么为空，要么可写成 <span class="mono">t :: l'</span> 的形式，其中 <span class="mono">l'</span> 本身有效，并且 <span class="mono">t</span> 对于 <span class="mono">l'</span> 有效。</p>
+                <p>现实世界中的区块链往往还有创造或销毁价值的特殊规则，它们通常很具体，也与本文主题无关。因此作者只在规则 4 中放入一个简单的创世条件，允许账本中的第一笔交易创建价值。</p>
+                <p>另一个看似潜在的问题是：函数 <span class="mono">getSpentOutput</span> 会调用 <span class="mono">lookupTx</span>，而后者自然可能查找失败。不过规则 3 保证：在验证过程中，所有交易输入都引用真实存在且尚未花费的输出。在这一前提下，对于本文关心的交易，<span class="mono">lookupTx</span> 总会成功。</p>
+
+                <div class="figure-note"><strong>图 6：</strong>EUTXO 模型中交易 <span class="mono">t</span> 的有效性条件。</div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>规则</th>
+                      <th>原文条件</th>
+                      <th>中文说明</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>1</td>
+                      <td><span class="mono">currentTick ∈ t.validityInterval</span></td>
+                      <td>当前 tick 必须落在交易声明的有效时间区间之内。</td>
+                    </tr>
+                    <tr>
+                      <td>2</td>
+                      <td><span class="mono">For all o ∈ t.outputs, o.value ≥ 0</span></td>
+                      <td>所有输出价值都必须非负。</td>
+                    </tr>
+                    <tr>
+                      <td>3</td>
+                      <td><span class="mono">{i.outputRef : i ∈ t.inputs} ⊆ unspentOutputs(l)</span></td>
+                      <td>所有输入都必须引用当前尚未花费的输出。</td>
+                    </tr>
+                    <tr>
+                      <td>4</td>
+                      <td><span class="mono">Unless l is empty, Σ getSpentOutput(i,l).value = Σ o.value</span></td>
+                      <td>除创世情况外，输入总价值必须等于输出总价值。</td>
+                    </tr>
+                    <tr>
+                      <td>5</td>
+                      <td><span class="mono">If i1.outputRef = i2.outputRef then i1 = i2</span></td>
+                      <td>同一输出不能在同一笔交易中被重复花费。</td>
+                    </tr>
+                    <tr>
+                      <td>6</td>
+                      <td><span class="mono">For all i ∈ t.inputs, i.validator(..., toData(toContext(t, i, l))) = true</span></td>
+                      <td>每个输入都必须通过其验证器校验。</td>
+                    </tr>
+                    <tr>
+                      <td>7</td>
+                      <td><span class="mono">scriptAddr(i.validator) = getSpentOutput(i,l).addr</span></td>
+                      <td>输入提供的验证器脚本必须匹配被花费输出上的地址。</td>
+                    </tr>
+                    <tr>
+                      <td>8</td>
+                      <td><span class="mono">dataHash(i.datum) = getSpentOutput(i,l).datumHash</span></td>
+                      <td>输入提供的 datum 必须匹配被花费输出中保存的 datum 哈希。</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
+              <section class="paper-section observed-section" id="translation-4">
+                <h2>4 EUTXO 的表达能力 <span class="latin">Expressiveness of EUTXO</span></h2>
+                <p>这一节里，作者引入了一类状态机，用来直接而自然地建模运行在 EUTXO 账本上的智能合约。作者选择的这类机器与 Mealy 机非常接近。Mealy 机的转移函数不仅返回新状态，还会返回一个输出值；在本文里，这个输出值被解释成一组施加在当前交易上的约束。</p>
+                <p>作者并不宣称这类状态机已经完全刻画了账本的全部能力；之所以选择它，是因为它形式简洁，却足以覆盖相当广泛的智能合约使用场景。作者还说明，相关结果已在 Agda 中完成机械化，建立在第 3 节模型的可执行规格之上。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-4-1">
+                <h3>4.1 约束发射机 <span class="latin">Constraint Emitting Machines</span></h3>
+                <p>作者提出 Constraint Emitting Machines（CEM），它建立在 Mealy 机之上。一个 CEM 由状态类型 <span class="mono">S</span>、输入类型 <span class="mono">I</span>、一个判断某状态是否为终态的谓词 <span class="mono">final : S → Bool</span>，以及一个给出所有合法转移的函数组成：</p>
+                <div class="formula">step : S → I → Maybe (S × TxConstraints)</div>
+                <p>这个函数从源状态和输入符号出发，返回目标状态与一组交易约束；若不存在合法转移，则返回 <span class="mono">Nothing</span>。</p>
+                <p>作者强调，他们研究的这类状态机与教科书中的典型 Mealy 机有四点不同。第一，状态集合可以是无限的。第二，它没有“初始态”概念，因为链上层面无法直接强制合约必须从某个特定初始态起步。因此，每个合约都需要首先建立某种初始信任来启动过程。作者提到，未来可以在当前单状态关系之上建立 trace simulation，从而保证只有从合法初始态开始的轨迹会出现在链上，并把状态机的归纳性质迁移到账本层。</p>
+                <p>第三，终态的含义被重新定义了。传统上终态意味着“机器可以在此停止”，但如果在链上也允许这样，就会让陈旧状态残留在 UTXO 集中。因此在 CEM 中，终态意味着“机器必须停止”：从这一点往后不会再有继续转移，而终态也不会出现在 UTXO 集中。作者把这种含义与 stopped process 联系起来。</p>
+                <p>第四，输出值的集合被固定为“约束”，也就是对实现该状态转移的交易施加结构性要求。作者承认，目前形式化里考虑的只是有限的一阶约束，但这一设计以后可以在不大幅改动证明结构的前提下继续扩展。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-4-2">
+                <h3>4.2 把转移实现为交易 <span class="latin">Transitions-as-Transactions</span></h3>
+                <p>作者希望把一个由 CEM 定义的智能合约 <span class="mono">C</span> 编译成真正运行在链上的智能合约。基本想法是：从状态机的 <span class="mono">step</span> 函数派生出验证器脚本，用 datum 保存机器状态，用 redeemer 提供转移信号。于是，CEM 中的一个合法转移就会对应链上的一笔合法交易。</p>
+                <p>更具体地说，该验证器要确保三件事：当前交易确实把状态推进到了合法目标状态；当前交易满足状态机发射出的约束；如果目标状态是终态，那么交易就不应再创建继续该状态机的输出。作者将其写作：</p>
+                <div class="formula">validatorC(s, i, txInfo) =
+true  if  s --i→ (s', tx≡)
+          and satisfies(txInfo, tx≡)
+          and checkOutputs(s', txInfo)
+false otherwise</div>
+                <p>需要注意的是，状态机里的 <span class="mono">step</span> 函数返回新状态，而链上的验证器只返回布尔值。在链上，下一状态是通过继续该状态机的交易输出携带出来的，验证器只负责确认“你给出的下一状态是否正确”。用户完全可以在链下先运行一步 <span class="mono">step</span>，从而算出下一状态应该是什么。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-4-3">
+                <h3>4.3 行为等价性 <span class="latin">Behavioural Equivalence</span></h3>
+                <p>既然已经说明如何把状态机编译为链上合约，接下来的问题就是：我们如何确信这个链上合约的行为确实符合原始状态机语义？作者希望证明两件事。第一，CEM 中任何合法转移都能对应到链上的合法交易；第二，链上任何与该合约相关的合法交易，也都能对应回某个合法 CEM 转移。作者把这两条性质分别称为 soundness 与 completeness。</p>
+                <p>虽然状态机也是自动机，但自动机理论里的 trace equivalence 对这里来说过于粗糙。作者希望把状态机和账本都看成正在运行的进程，因此转而使用并发理论中的 bisimulation。不过，如果采用强双模拟，就要求账本上的每一步都与状态机中的一步一一对应；现实账本上会发生大量与当前合约无关的交易，因此作者采用的是弱双模拟：账本可以有额外的内部步，只要与目标合约相关的行为仍然保持对应即可。</p>
+                <p>作者首先定义过程关系：只要某个 CEM 状态 <span class="mono">s</span> 出现在当前 UTXO 集中，并被从该 CEM 派生出的验证器锁定，就记账本 <span class="mono">l</span> 与状态 <span class="mono">s</span> 对应：</p>
+                <div class="formula">l ∼ s</div>
+                <p>随后定义账本步。作者只考虑有效账本，因此一次有效账本步就是把一笔相对于当前账本 <span class="mono">l</span> 有效的新交易 <span class="mono">tx</span> 提交到账本上，得到扩展后的新账本 <span class="mono">l'</span>：</p>
+                <div class="formula">l --tx→ l'</div>
+                <p>命题 1 给出 soundness：给定一个合法的 CEM 转移 <span class="mono">s --i→ (s', tx≡)</span>，以及与源状态 <span class="mono">s</span> 对应的有效账本 <span class="mono">l</span>，我们总能构造出一笔合法交易提交，使得扩展后的账本 <span class="mono">l'</span> 与目标状态 <span class="mono">s'</span> 对应。作者额外说明，这里还要求被省略的那些约束在当前账本中可满足，并且目标状态不是终态，因为终态不会在账本里留下继续输出作为见证。如果扩展 correspondence 定义，也可以把终态纳入，但为保持简单，本文没有这样做。</p>
+                <p>命题 2 给出 completeness：如果账本中发生一次合法转移 <span class="mono">l --tx→ l'</span>，并且某个 CEM 状态 <span class="mono">s</span> 与原账本 <span class="mono">l</span> 对应，那么要么这笔交易与当前 CEM 无关，此时新账本 <span class="mono">l'</span> 仍对应原状态 <span class="mono">s</span>；要么这笔交易与该 CEM 有关，那么就能展示出相应的输入、目标状态和约束，使之构成一个合法 CEM 转移。同样地，若目标状态是终态，则存在与上面相同的对应性边界。</p>
+                <p>soundness 与 completeness 共同给出了本文所需的弱双模拟。作者最后提醒，这里的双模拟概念与教科书上的标准定义略有差异，因为它还带有关于约束以及终态特殊处理的额外前提。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-5">
+                <h2>5 相关工作 <span class="latin">Related Work</span></h2>
+                <p>Bitcoin Covenants 允许比特币交易限制未来输出的使用方式，包括把某种约束传播到后续输出。这为合约连续性和简单状态机实现提供了能力。作者承认，他们的工作受到了 Covenants 的启发，但指出本文引入 datum 是新的贡献，并且使状态传递更为简洁。</p>
+                <p>Bitcoin Modelling Language（BitML）是一种面向运行在比特币上的智能合约的理想化过程演算。BitML 合约的语义本质上就是一个带标签的状态转移系统，也就是状态机。不过，由于 plain UTXO 没有本文这些扩展，它的构造远没有这么直接，通常需要相当多的链下通信来搭建整个过程。更重要的是，BitML 的编译方案只涉及受限形式的状态机，而本文处理的是更一般的状态机，允许用户自定义状态类型和输入类型。BitML 建立在作者同一批人较早提出的比特币交易抽象模型之上；而本文的重要贡献之一，正是把那种抽象模型扩展到可以覆盖 Cardano 新增的功能。</p>
+                <p>Ethereum 及其智能合约语言 Solidity 当然足够强大，可以实现状态机，因为它们原生支持全局合约实例与状态。但这种方法有明显缺点：合约状态是全局的，并且必须由所有核心节点长期保存。在 EUTXO 模型中，合约状态被局部化到真正使用它的地方，而由客户端承担管理它的责任。</p>
+                <p>Scilla 是一种把智能合约写成状态机的中间层语言，它会编译到 Solidity，并且适合做形式化验证。由于 Scilla 支持 Ethereum 的异步消息机制，Scilla 合约对应的是一种更丰富的自动机类，即 Communicating State Transition Systems。作者表示，未来计划把这类状态机与本文的 CEM 做正式比较，这也会为系统比较 Ethereum 的账户模型与 Cardano 的 UTXO 模型铺路。</p>
+                <p>最后，还有工作尝试使用 timed automata 建模比特币合约，并借助 UPPAAL 模型检查器半自动验证具体合约的时间性质。虽然这是一种务实的验证方式，但它并未形式化地宣称这种自动机类别与比特币合约的真实语义严格对应。相比之下，本文的双模拟证明试图跨越的正是这道语义鸿沟。</p>
+              </section>
+
+              <section class="paper-section observed-section" id="translation-ref">
+                <h2>References / 参考文献</h2>
+                <p class="muted">参考文献保持论文原始书写形式，仅翻译了章节标题。</p>
+                <ol class="reference-list">
+                  <li>Andrychowicz, M., Dziembowski, S., Malinowski, D., Mazurek, Ł.: Modeling bitcoin contracts by timed automata. In: Legay, A., Bozga, M. (eds.) FORMATS 2014. LNCS, vol. 8711, pp. 7-22. Springer, Cham (2014). https://doi.org/10.1007/978-3-319-10512-3_2</li>
+                  <li>Atzei, N., Bartoletti, M., Lande, S., Zunino, R.: A formal model of Bitcoin transactions. In: Meiklejohn and Sako [10], pp. 541-560. https://doi.org/10.1007/978-3-662-58387-6_29</li>
+                  <li>Bartoletti, M., Zunino, R.: BitML: a calculus for bitcoin smart contracts. In: Proceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security, pp. 83-100. ACM (2018)</li>
+                  <li>Ethereum Foundation: Solidity documentation (2016-2019). https://solidity.readthedocs.io/</li>
+                  <li>Falkon, S.: The story of the DAO - its history and consequences (2017). medium.com. https://medium.com/swlh/the-story-of-the-dao-its-history-and-consequences-71e6a8a551ee</li>
+                  <li>IETF: RFC 7049 - Concise Binary Object Representation (CBOR), October 2013. https://tools.ietf.org/html/rfc7049 . Accessed 01 Jan 2020</li>
+                  <li>Larsen, K.G., Pettersson, P., Yi, W.: UPPAAL in a nutshell. Int. J. Softw. Tools Technol. Transfer 1(1-2), 134-152 (1997). https://doi.org/10.1007/s100090050010</li>
+                  <li>Mavridou, A., Laszka, A.: Designing secure Ethereum smart contracts: a finite state machine based approach. In: Meiklejohn and Sako [10], pp. 523-540. https://doi.org/10.1007/978-3-662-58387-6_28</li>
+                  <li>Mealy, G.H.: A method for synthesizing sequential circuits. The Bell Syst. Tech. J. 34(5), 1045-1079 (1955)</li>
+                  <li>Meiklejohn, S., Sako, K. (eds.): FC 2018. LNCS, vol. 10957. Springer, Heidelberg (2018). https://doi.org/10.1007/978-3-662-58387-6</li>
+                  <li>Melkonian, O., Swierstra, W., Chakravarty, M.M.: Formal investigation of the Extended UTxO model (Extended Abstract) (2019). https://omelkonian.github.io/data/publications/formal-utxo.pdf</li>
+                  <li>Möser, M., Eyal, I., Gün Sirer, E.: Bitcoin covenants. In: Clark, J., Meiklejohn, S., Ryan, P.Y.A., Wallach, D., Brenner, M., Rohloff, K. (eds.) FC 2016. LNCS, vol. 9604, pp. 126-141. Springer, Heidelberg (2016). https://doi.org/10.1007/978-3-662-53357-4_9</li>
+                  <li>Nanevski, A., Ley-Wild, R., Sergey, I., Delbianco, G.A.: Communicating state transition systems for fine-grained concurrent resources. In: Shao, Z. (ed.) ESOP 2014. LNCS, vol. 8410, pp. 290-310. Springer, Heidelberg (2014). https://doi.org/10.1007/978-3-642-54833-8_16</li>
+                  <li>Sangiorgi, D.: Introduction to Bisimulation and Coinduction. Cambridge University Press, Cambridge (2012)</li>
+                  <li>Lamela Seijas, P., Thompson, S.: Marlowe: financial contracts on blockchain. In: Margaria, T., Steffen, B. (eds.) ISoLA 2018. LNCS, vol. 11247, pp. 356-375. Springer, Cham (2018). https://doi.org/10.1007/978-3-030-03427-6_27</li>
+                  <li>Sergey, I., Nagaraj, V., Johannsen, J., Kumar, A., Trunov, A., Hao, K.C.G.: Safer smart contract programming with Scilla. In: Proceedings of the ACM on Programming Languages 3(OOPSLA) (2019). Article No: 185</li>
+                  <li>Zahnentferner, J.: An abstract model of UTxO-based cryptocurrencies with scripts. IACR Cryptology ePrint Archive 2018, p. 469 (2018). https://eprint.iacr.org/2018/469</li>
+                </ol>
+              </section>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+  <script>
+    (function () {
+      const progressFill = document.getElementById("progressFill");
+      const progressText = document.getElementById("progressText");
+      const observedSections = Array.from(document.querySelectorAll(".observed-section"));
+      const tocLinks = Array.from(document.querySelectorAll(".toc-link"));
+
+      function updateProgress() {
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        const ratio = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+        progressFill.style.width = (ratio * 100).toFixed(1) + "%";
+        progressText.textContent = Math.round(ratio * 100) + "% read";
+      }
+
+      const observer = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          const currentId = entry.target.id;
+          tocLinks.forEach(function (link) {
+            link.classList.toggle("active", link.getAttribute("href") === "#" + currentId);
+          });
+        });
+      }, {
+        rootMargin: "-22% 0px -65% 0px",
+        threshold: 0.01
+      });
+
+      observedSections.forEach(function (section) {
+        observer.observe(section);
+      });
+
+      updateProgress();
+      window.addEventListener("scroll", updateProgress, { passive: true });
+      window.addEventListener("resize", updateProgress);
+    })();
+  </script>
+</body>
+</html>

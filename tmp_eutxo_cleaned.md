@@ -1,0 +1,257 @@
+Manuel M. T. Chakravarty1(B), James Chapman2, Kenneth MacKenzie3, Orestis Melkonian3,5, Michael Peyton Jones4, and Philip Wadler5
+
+1 IOHK, Utrecht, The Netherlands
+
+manuel.chakravarty@iohk.io
+
+2 IOHK, Glasgow, Scotland
+
+james.chapman@iohk.io
+
+3 IOHK, Edinburgh, Scotland
+
+{kenneth.mackenzie,orestis.melkonian}@iohk.io
+
+4 IOHK, London, England
+
+michael.peyton-jones@iohk.io
+
+5 University of Edinburgh, Edinburgh, Scotland
+
+orestis.melkonian@ed.ac.uk, wadler@inf.ed.ac.uk
+
+Abstract. Bitcoin and Ethereum, hosting the two currently most valu-
+
+able and popular cryptocurrencies, use two rather diﬀerent ledger models, known as the UTXO model and the account model, respectively. At the same time, these two public blockchains diﬀer strongly in the expressiveness of the smart contracts that they support. This is no coincidence. Ethereum chose the account model explicitly to facilitate more expressive smart contracts. On the other hand, Bitcoin chose UTXO also for good reasons, including that its semantic model stays simple in a complex concurrent and distributed computing environment. This raises the question of whether it is possible to have expressive smart contracts, while keeping the semantic simplicity of the UTXO model. In this paper, we answer this question aﬃrmatively. We present Extended UTXO (EUTXO), an extension to Bitcoin’s UTXO model that supports a substantially more expressive form of validation scripts, including scripts that implement general state machines and enforce invariants across entire transaction chains. To demonstrate the power of this model, we also introduce a form of state machines suitable for execution on a ledger, based on Mealy machines and called Constraint Emitting Machines (CEM). We formalise CEMs, show how to compile them to EUTXO, and show a weak bisimulation between the two systems. All of our work is formalised using the Agda proof assistant.
+
+Keywords: Blockchain · UTXO · Functional programming · State
+
+machines Introduction Bitcoin, the most widely known and most valuable cryptocurrency, uses a graphbased ledger model built on the concept of UTXOs (unspent transaction out-
+
+puts) [2,17]. Individual transactions consist of a list of inputs and a list of outputs, where outputs represent a speciﬁc value (of a cryptocurrency) that is available to be spent by inputs of subsequent transactions. Each output can be spent by (i.e., connect to) exactly one input. Moreover, we don’t admit cycles in these connections, and hence we can regard a collection of transactions spending from each other as a directed acyclic graph, where a transaction with m inputs and n outputs is represented by a node in the graph with m edges in and n edges out. The sum of the values consumed by a transaction’s inputs must equal the sum of the values provided by its outputs, thus value is conserved. Whether an output can be consumed by an input is determined by a function ν attached to the output, which we call the output’s validator. A transaction input proves its eligibility to spent an output by providing a redeemer object ρ, such that ν(ρ) = true; redeemers are often called witnesses in Bitcoin. In the simplest case, the redeemer is a cryptographic hash of the spending transaction signed by an authorised spender’s private key, which is checked by the validator, which embeds the corresponding public key. More sophisticated protocols are possible by using more complex validator functions and redeemers—see [3] for a high-level model of what is possible with the functionality provided by Bitcoin. The beneﬁt of this graph-based approach to a cryptocurrency ledger is that it plays well with the concurrent and distributed nature of blockchains. In particular, it forgoes any notion of shared mutable state, which is known to lead to highly complex semantics in the face of concurrent and distributed computations involving that shared mutable state. Nevertheless, the UTXO model, generally, and Bitcoin, speciﬁcally, has been criticised for the limited expressiveness of programmability achieved by the validator concept. In particular, Ethereum’s account-based ledger and the associated notion of contract accounts has been motivated by the desire to overcome those limitations. Unfortunately, it does so by introducing a notion of shared mutable state, which signiﬁcantly complicates the semantics of contract code. In particular, contract authors need to understand the subtleties of this semantics or risk introducing security issues (such as the vulnerability to recursive contract invocations that led to the infamous DAO attack [5]). Contributions. The contribution of the present paper is to propose an extension to the basic UTXO ledger model, which (a) provably increases expressiveness, while simultaneously (b) preserving the dataﬂow properties of the UTXO graph; in particular, it forgoes introducing any notion of shared mutable state. More speciﬁcally, we make the following contributions:
+
+– We propose the EUTXO model, informally in Sect. 2 and formally in Sect. 3.
+
+– We demonstrate that the EUTXO model supports the implementation of a
+
+speciﬁc form of state machines (Constraint Emitting Machines, or CEMs), which the basic UTXO model does not support, in Sect. 4.
+
+– We provide formalisations of both the EUTXO model and Constraint Emit-
+
+ting Machines. We prove a weak bisimulation between the two using the Agda proof1 assistant, building on previous work by Melkonian et al. [11].
+
+1 https://github.com/omelkonian/formal-utxo/tree/a1574e6.
+
+Section 5 summarises related work. The EUTXO model will be used in the ledger of Cardano, a major blockchain system currently being developed by IOHK. It also provides the foundation of Cardano’s smart contract platform Plutus2, which includes a small functional programming language Plutus Core which is used to implement Scripts. Although a technical description of Cardano itself is beyond the scope of this paper, one can try out the Plutus Platform in an online playground.3 Other future work includes a formal comparison of EUTXO with Ethereum’s account-based model. Extending UTXO Various forms of state machines have been proposed to characterise smart contract functionality that goes beyond what is possible with the basic UTXO model—see, for example, [8,16] using Ethereum’s account-based model. However, we might wonder whether we can extend the basic UTXO model in such a way as to support more expressive state machines without switching to an account-based model. Given that we can regard the individual transactions in a continuous chain of transactions as individual steps in the evolution of a state machine, we require two pieces of additional functionality from the UTXO model: (a) we need to be able to maintain the machine state, and (b) we need to be able to enforce that the same contract code is used along the entire sequence of transactions—we call this contract continuity. To maintain the machine state, we extend UTXO outputs from being a pair of a validator ν and a cryptocurrency value value to being a triple (ν, value, δ) of validator, value, and a datum δ, where δ contains arbitrary contract-speciﬁc data. Furthermore, to enable validators to enforce contract continuity, we pass the entirety of the transaction that attempts to spend the output locked by a validator to the validator invocation. Thus a validator can inspect the transaction that attempts to spend its output and, in particular, it can ensure that the contract output of that transaction uses validator code belonging to the same contract—often, this will be the same validator. Overall, to check that an input with redeemer ρ that is part of the transaction tx is entitled to spend an output (ν, value, δ), we check that ν(value, δ, ρ, tx) = true. As we are allowing arbitrary data in δ and we enable the validator ν to impose arbitrary validity constraints on the consuming transaction tx, the resulting Extended UTXO (EUTXO) model goes beyond enabling state machines. However, in this paper we restrict ourselves to the implementation of state machines and leave the investigation of further-reaching computational patterns to future work. As a simple example of a state machine contract consider an n–of–m multisignature contract. Speciﬁcally, we have a given amount valuemsc of some cryptocurrency and we require the approval of at least n out of an a priori ﬁxed set of
+
+2 https://github.com/input-output-hk/plutus.
+
+3 https://prod.playground.plutus.iohkdev.io/.
+
+Fig. 1. Transition diagram for the multi-signature state machine; edges labelled with
+
+input from redeemer and transition constraints. m ≥n owners to spend valuemsc. With plain UTXO (e.g., on Bitcoin), a multisignature scheme requires out-of-band (oﬀ-chain) communication to collect all n signatures to spend valuemsc. On Ethereum, and also in the EUTXO model, we can collect the signatures on-chain, without any out-of-band communication. To do so, we use a state machine operating according to the transition diagram in Fig. 1, where we assume that the threshold n and authorised signatures sigsauth with |sigsauth| = m are baked into the contract code. In its implementation in the EUTXO model, we use a validator function νmsc accompanied by the datum δmsc to lock valuemsc. The datum δmsc stores the machine state, which is of the form Holding when only holding the locked value or Collecting((value, κ, d), sigs) when collecting signatures sigs for a payment of value to κ by the deadline d. The initial output for the contract is (νmsc, valuemsc, Holding). The validator νmsc implements the state transition diagram from Fig. 1 by using the redeemer of the spending input to determine the transition that needs to be taken. That redeemer (state machine input) can take four forms: (1) Propose(value, κ, d) to propose a payment of value to κ by the deadline d, (2) Add(sig) to add a signature sig to a payment, (3) Cancel to cancel a proposal after its deadline expired, and (4) Pay to make a payment once all required signatures have been collected. It then validates that the spending transaction tx is a valid representation of the newly reached machine state. This implies that tx needs to keep valuemsc locked by νmsc and that the state in the datum δ′ msc needs to be the successor state of δmsc according to the transition diagram. The increased expressiveness of the EUTXO model goes far beyond simple contracts such as this on-chain multi-signature contract. For example, the complete functionality of the Marlowe domain-speciﬁc language for ﬁnancial contracts [15] has been successfully implemented as a state machine on the EUTXO model.
+
+Formal Model
+
+3.1 Basic Types and Notation
+
+Figure 2 deﬁnes some basic types and notation used in the rest of the paper; we have generally followed the notation established by Zahnentferner in [17].
+
+Fig. 2. Basic types and notation
+
+The Data Type. We will make particular use of a primitive type Data which can be used to pass information into scripts. This is intended to be any relatively standard structured data format, for example JSON or CBOR [6]. The speciﬁc choice of type does not matter for this paper, so we have left it abstract. The intention is that this should be well supported by all the programming languages we are interested in, including whatever language is used for scripts, and whatever languages are used for oﬀ-chain code that interacts with the chain. We assume that for every (non-function) type T in the scripting language we have corresponding toData and fromData functions.
+
+3.2 EUTXO: Enhanced Scripting
+
+Our ﬁrst change to the standard UTXO model is that as well as the validator we allow transaction outputs to carry a piece of data called the datum (or datum object), which is passed in as an additional argument during validation. This allows a contract to carry some state (the datum) without changing its “code” (the validator). We will use this to carry the state of our state machines (see Sect. 2). The second change is that the validator receives some information about the transaction that is being validated. This information, which we call the context,
+
+is passed in as an additional argument of type Context. The information supplied in the context enables the validator to enforce much stronger conditions than is possible with a bare UTXO model—in particular, it can inspect the outputs of the current transaction, which is essential for ensuring contract continuity (see Sect. 2). The third change is that we provide some access to time by adding a validity interval to transactions. This is an interval of ticks (see Subsect. 3.3) during which a transaction can be processed (a generalisation of a “time-to-live”). Thus, any scripts which run during validation can assume that the current tick is within that interval, but do not know the precise value of the current tick. Finally, we represent all the arguments to the validator (redeemer, datum, Context) as values of type Data. Clients are therefore responsible for encoding whatever types they would like to use into Data (and decoding them inside the validator script).
+
+3.3 A Formal Description of the EUTXO Model
+
+In this section we give a formal description of the EUTXO model. The description is given in a straightforward set-theoretic form, which (1) admits an almost direct translation into languages like Haskell for implementation, and (2) is easily amenable to mechanical formalisation. We will make use of this in Sect. 4. The deﬁnitions in this section are essentially the deﬁnitions of UTXO-based cryptocurrencies with scripts from Zahnentferner [17], except that we have made the changes described above. Figure 3 lists the types and operations used in the the basic EUTXO model. Some of these are deﬁned here, the others must be provided by the ledger (“ledger primitives”). Addresses. We follow Bitcoin in referring to the targets of transaction outputs as “addresses”. In this system, they refer only to script addresses (likely a hash of the script), but in a full system they would likely include public-key addresses, and so on. Ticks. A tick is a monotonically increasing unit of progress in the ledger system. This corresponds to the “block number” or “block height” in most blockchain systems. We assume that there is some notion of a “current tick” for a given ledger. Inputs and Outputs. Transactions have a Set of inputs but a List of outputs. There are two reasons that we do not also have a Set of outputs although they are conceptually symmetrical:
+
+– We need a way to uniquely identify a transaction output, so that it can be
+
+referred to by a transaction input that spends it. The pair of a transaction id and an output index is suﬃcient for this, but other schemes are conceivable.
+
+Fig. 3. Primitives and types for the EUTXO model
+
+– A Set requires a notion of equality. If we use the obvious structural equality
+
+on outputs, then if we had two outputs paying X to address A, they would be equal. We need to distinguish these—outputs must have an identity beyond just their address and value. The Location of Validators and Datum Objects. Validator scripts and full datum objects are provided as parts of transaction inputs, even though they are conceptually part of the output being spent. The output instead speciﬁes them by providing the corresponding address or hash.4 This strategy reduces memory requirements, since the UTXO set must be kept in memory for rapid access while validating transactions. Hence it is desirable to keep outputs small—in our system they are constant size. Providing the much larger validator script only at the point where it is needed is thus a helpful saving. The same considerations apply to datum objects.
+
+4 That these match up is enforced by Rules 7 and 8 in Fig. 6.
+
+An important question is how the person who spends an output knows which validator and datum to provide in order to match the hashes on the output. This can always be accomplished via some oﬀ-chain mechanism, but we may want to include some on-chain way of accomplishing this.5 However, this is not directly relevant to this paper, so we have omitted it. Fees, Forge, and Additional Metadata. Transactions will typically have additional metadata, such as transaction fees or a “forge” ﬁeld that allows value to be created or destroyed. These are irrelevant to this paper, so have been omitted.6 Ledger Structure. We model a ledger as a simple list of transactions: a real blockchain ledger will be more complex than this, but the only property that we really require is that transactions in the ledger have some kind of address which allows them to be uniquely identiﬁed and retrieved.
+
+3.4 The Context Type
+
+Recall from the introduction to Sect. 3.2 that when a transaction input is being validated, the validator script is supplied with an object of type Context (encoded as Data) which contains information about the current transaction. The Context type is deﬁned in Fig. 4, along with some related types.
+
+Fig. 4. The Context type for the EUTXO model
+
+5 Cardano will provide a mechanism in this vein.
+
+6 Adding such ﬁelds might require amending Rule 4 to ensure value preservation.
+
+The Contents of Context. The Context type is a summary of the information contained in the Tx type in Fig. 3, situated in the context of a validating transaction, and made suitable for consumption in a script. That results in the following changes:
+
+1. The InputInfo type is augmented with information that comes from the output
+
+being spent, speciﬁcally the value attached to that output.
+
+2. The Context type includes an index that indicates the input currently being
+
+validated. This allows scripts to identify their own address, for example.
+
+3. Validators are included as their addresses, rather than as scripts. This allows
+
+easy equality comparisons without requiring script languages to be able to represent their own programs. We assume that there is a function toContext : Tx × Input × Ledger →Context which summarises a transaction in the context of an input and a ledger state. Determinism. The information provided by Context is entirely determined by the transaction itself. This means that script execution during validation is entirely deterministic, and can be simulated accurately by the user before submitting a transaction: thus both the outcome of script execution and the amount of resources consumed can be determined ahead of time. This is helpful for systems that charge for script execution, since users can reliably compute how much they will need to pay ahead of time. A common way for systems to violate this property is by providing access to some piece of mutable information, such as the current time (in our system, the current tick has this role). Scripts can then branch on this information, leading to non-deterministic behaviour. We sidestep this issue with the validation interval mechanism (see the introduction to Sect. 3.2).
+
+Fig. 5. Auxiliary functions for EUTXO validation
+
+3.5 Validity of EUTXO Transactions
+
+Figure 6 deﬁnes what it means for a transaction t to be valid for a valid ledger l during the tick currentTick, using some auxiliary functions from Fig. 5. Our deﬁnition combines Deﬁnitions 6 and 14 from Zahnentferner [17], diﬀering from the latter in Rule 6. A ledger l is valid if either l is empty or l is of the form t :: l′ with l′ valid and t valid for l′.
+
+Fig. 6. Validity of a transaction t in the EUTXO model
+
+Creating Value. Most blockchain systems have special rules for creating or destroying value. These are usually fairly idiosyncratic, and are not relevant to this paper, so we have provided a simple genesis condition in Rule 4 which allows the initial transaction in the ledger to create value.
+
+Lookup Failures. The function getSpentOutput calls lookupTx, which looks up the unique transaction in the ledger with a particular id and can of course fail. However Rule 3 ensures that during validation all of the transaction inputs refer to existing unspent outputs, and in these circumstances lookupTx will always succeed for the transactions of interest. Expressiveness of EUTXO In this section, we introduce a class of state machines that can admit a straightforward modelling of smart contracts running on an EUTXO ledger. The class we choose corresponds closely to Mealy machines [9] (deterministic state transducers). The transition function in a Mealy machine produces a value as well as a new state. We use this value to model the emission of constraints which apply to the current transaction in the ledger. We do not claim that this class captures the full power of the ledger: instead we choose it for its simplicity, which is suﬃcient to capture a wide variety of use cases. We demonstrate how one can represent a smart contracts using Mealy machines and formalise a weak bisimulation between the machine model and the ledger model. Furthermore, we have mechanised our results in Agda7, based on an executable speciﬁcation of the model described in Sect. 3.
+
+4.1 Constraint Emitting Machines
+
+We introduce Constraint Emitting Machines (CEM) which are based on Mealy machines. A CEM consists of its type of states S and inputs I, a predicate function ﬁnal : S →Bool indicating which states are ﬁnal and a valid set of transitions, given as a function step : S →I →Maybe (S × TxConstraints)8 from source state and input symbol to target state and constraints and denoted s i −−→(s′, tx≡). The class of state machines we are concerned with here diverge from the typical textbook description of Mealy Machines in the following aspects:
+
+– The set of states can be inﬁnite.
+
+– There is no notion of initial state, since we would not be able to enforce it
+
+on the blockchain level. Therefore, each contract should ﬁrst establish some initial trust to bootstrap the process. One possible avenue for overcoming this limitation is to build a notion of trace simulation on top of the current relation between single states, thus guaranteeing that only valid sequences starting from initial states appear on the ledger. For instance, this could be used to establish inductive properties of a state machine and carry them over to the ledger; we plan to investigate such concerns in future work.
+
+– While ﬁnal states traditionally indicate that the machine may halt at a
+
+given point, allowing this possibility would cause potentially stale states to clutter the UTXO set in the ledger. Thus, a CEM ﬁnal state indicates that
+
+7 https://github.com/omelkonian/formal-utxo/tree/a1574e6/Bisimulation.agda.
+
+8 The result may be Nothing, in case no valid transitions exist from a given state/input.
+
+the machine must halt. It will have no continuing transitions from this point onward and the ﬁnal state will not appear in the UTXO set. This corresponds to the notion of a stopped process [14] which cannot make any transitions.
+
+– The set of output values is ﬁxed to constraints which impose a certain struc-
+
+ture on the transaction that will implement the transition. Our current formalisation considers a limited set of ﬁrst-order constraints, but these can easily be extended without too many changes in the accompanying proofs.
+
+4.2 Transitions-as-Transactions
+
+We want to compile a smart contract C deﬁned as a CEM into a smart contract that runs on the chain. The idea is to derive a validator script from the step function, using the datum to hold the state of the machine, and the redeemer to provide the transition signal. A valid transition in a CEM will correspond to a single valid transaction on the chain. The validator is used to determine whether a transition is valid and the state machine can advance to the next state. More speciﬁcally, this validator should ensure that we are transitioning to a valid target state, the corresponding transaction satisﬁes the emitted constraints and that there are no outputs in case the target state is ﬁnal: validatorC(s, i, txInfo) = ⎧ ⎪ ⎪ ⎨ ⎪ ⎪ ⎩ true if s i −−→(s′, tx≡) and satisﬁes(txInfo, tx≡) and checkOutputs(s′, txInfo) false otherwise Note that unlike the step function which returns the new state, the validator only returns a boolean. On the chain the next state is provided with the transaction output that “continues” the state machine (if it continues), and the validator simply validates that the correct next state was provided.9
+
+4.3 Behavioural Equivalence
+
+We have explained how to compile state machines to smart contracts but how do we convince ourselves that these smart contracts will behave as intended? We would like to show (1) that any valid transition in a CEM corresponds to a valid transaction on the chain, and (2) that any valid transaction on the chain corresponds to a valid transition. We refer to these two properties as soundness and completeness below. While state machines correspond to automata, the automata theoretic notion of equivalence—trace equivalence—is too coarse when we consider state machines as running processes. Instead we use bisimulation, which was developed in concurrency theory for exactly this purpose, to capture when processes behave the same [14]. We consider both the state machine and the ledger itself to be running processes.
+
+9 A user can run the step function locally to determine the correct next state oﬀ-chain.
+
+If the state machine was the only user of the ledger then we could consider so-called strong bisimulation where we expect transitions in one process to correspond to transitions in the other and vice-versa. But, as we expect there to be other unrelated transactions occurring on the ledger we instead consider weak bisimulation where the ledger is allowed to make additional so-called internal transitions that are unrelated to the behaviour we are interested in observing. The bisimulation proof relates steps of the CEM to new transaction submissions on the blockchain. Note that we have a weak bisimulation, since it may be the case that a ledger step does not correspond to a CEM step. Deﬁnition 1 (Process relation). A CEM state s corresponds to a ledger l whenever s appears in the current UTXO set, locked by the validator derived from this CEM: l ∼s Deﬁnition 2 (Ledger step). Concerning the blockchain transactions, we only consider valid ledgers.10 Therefore, a valid step in the ledger consists of submitting a new transaction tx, valid w.r.t. to the current ledger l, resulting in an extended ledger l′: l tx −−−→l′
+
+Proposition 1 (Soundness). Given a valid CEM transition s
+
+i −−→(s′, tx≡) and a valid ledger l corresponding to source state s, we can construct a valid transaction submission to get a new, extended ledger l′ that corresponds to target state s′: s i −−→(s′, tx≡) l ∼s ∃tx l′ . l tx −−−→l′ ∧l′ ∼s′ sound
+
+Note. We also require that the omitted constraints are satisﬁable in the current
+
+ledger and the target state is not a ﬁnal one, since there would be no corresponding output in the ledger to witness l′ ∼s′. We could instead augment the deﬁnition of correspondence to account for ﬁnal states, but we have refrained from doing so for the sake of simplicity.
+
+Proposition 2 (Completeness). Given a valid ledger transition l
+
+tx −−−→l′ and a CEM state s that corresponds to l, either tx is irrelevant to the current CEM and we show that the extended ledger l′ still corresponds to source state s, or tx is relevant and we exhibit the corresponding CEM transition s i −−→(s′, tx≡)11: l tx −−−→l′ l ∼s l′ ∼s ∨∃i s′ tx≡. s i −−→(s′, tx≡) complete
+
+10 In our formal development, we enforce validity statically at compile time.
+
+11 We cannot provide a correspondence proof in case the target state is ﬁnal, as
+
+explained in the previous note.
+
+Together, soundness and completeness ﬁnally give us weak bisimulation. Note, however, that our notion of bisimulation diﬀers from the textbook one (e.g. in Sangiorgi [14]), due to the additional hypotheses that concern our special treatment of constraints and ﬁnal states. Related Work Bitcoin Covenants [12] allow Bitcoin transactions to restrict how the transferred value can be used in the future, including propagating themselves to ongoing outputs. This provides contract continuity and allows the implementation of simple state machines. Our work is inspired by Covenants, although our addition of a datum is novel and simpliﬁes the state passing. The Bitcoin Modelling Language (BitML) [3] is an idealistic process calculus that speciﬁcally targets smart contracts running on Bitcoin. The semantics of BitML contracts essentially comprise a (labelled) transition system, aka a state machine. Nonetheless, due to the constrained nature of the plain UTXO model without any extensions, the construction is far from straightforward and requires quite a bit of oﬀ-chain communication to set everything up. Most importantly, the BitML compilation scheme only concerns a restricted form of state machines, while ours deals with a more generic form that admits any user-deﬁned type of states and inputs. BitML builds upon an abstract model of Bitcoin transactions by the same authors [2]; one of our main contributions is an extended version of such an abstract model, which also accounts for the added functionality apparent in Cardano. Ethereum and its smart contract language, Solidity [4], are powerful enough to implement state machines, due to their native support for global contract instances and state. However, this approach has some major downsides, notably that contract state is global, and must be kept indeﬁnitely by all core nodes. In the EUTXO model, contract state is localised to where it is used, and it is the responsibility of clients to manage it. Scilla [16] is a intermediate-level language for writing smart contracts as state machines. It compiles to Solidity and is amendable to formal veriﬁcation. Since Scilla supports the asynchronous messaging capabilities of Ethereum, Scilla contracts correspond to a richer class of automata, called Communicating State Transition Systems [13]. In the future, we plan to formally compare this class of state machines with our own class of CEMs, which would also pave the way to a systematic comparison of Ethereum’s account-based model against Cardano’s UTXO-based one. Finally, there has been an attempt to model Bitcoin contracts using timed automata [1], which enables semi-automatic veriﬁcation using the UPPAAL model checker [7]. While this provides a pragmatic way to verify temporal properties of concrete smart contracts, there is no formal claim that this class of automata actually corresponds to the semantics of Bitcoin smart contracts. In contrast, our bisimulation proof achieves the bridging of this semantic gap.
+
+References
+
+1. Andrychowicz, M., Dziembowski, S., Malinowski, D., Mazurek, L.: Modeling bit-
+
+coin contracts by timed automata. In: Legay, A., Bozga, M. (eds.) FORMATS
+
+2014. LNCS, vol. 8711, pp. 7–22. Springer, Cham (2014). https://doi.org/10.1007/
+
+978-3-319-10512-3 2
+
+2. Atzei, N., Bartoletti, M., Lande, S., Zunino, R.: A formal model of Bitcoin trans-
+
+actions. In: Meiklejohn and Sako [10], pp. 541–560. https://doi.org/10.1007/9783-662-58387-6 29
+
+3. Bartoletti, M., Zunino, R.: BitML: a calculus for bitcoin smart contracts. In: Pro-
+
+ceedings of the 2018 ACM SIGSAC Conference on Computer and Communications Security, pp. 83–100. ACM (2018)
+
+4. Ethereum Foundation: Solidity
+
+documentation (2016–2019). https://solidity. readthedocs.io/
+
+5. Falkon,
+
+S.: The story of the DAO
+
+–
+
+its history and consequences (2017). medium.com. https://medium.com/swlh/the-story-of-the-dao-its-historyand-consequences-71e6a8a551ee
+
+6. IETF: RFC 7049 - Concise Binary Object Representation (CBOR), October 2013.
+
+https://tools.ietf.org/html/rfc7049 . Accessed 01 Jan 2020
+
+7. Larsen, K.G., Pettersson, P., Yi, W.: UPPAAL in a nutshell. Int. J. Softw. Tools
+
+Technol. Transfer 1(1–2), 134–152 (1997). https://doi.org/10.1007/s100090050010
+
+8. Mavridou, A., Laszka, A.: Designing secure Ethereum smart contracts: a ﬁnite
+
+state machine based approach. In: Meiklejohn and Sako [10], pp. 523–540. https:// doi.org/10.1007/978-3-662-58387-6 28
+
+9. Mealy, G.H.: A method for synthesizing sequential circuits. The Bell Syst. Tech.
+
+J. 34(5), 1045–1079 (1955)
+
+10. Meiklejohn, S., Sako, K. (eds.): FC 2018. LNCS, vol. 10957. Springer, Heidelberg
+
+(2018). https://doi.org/10.1007/978-3-662-58387-6
+
+11. Melkonian, O., Swierstra, W., Chakravarty, M.M.: Formal investigation of the
+
+Extended UTxO model (Extended Abstract) (2019). https://omelkonian.github. io/data/publications/formal-utxo.pdf
+
+12. M¨oser, M., Eyal, I., G¨un Sirer, E.: Bitcoin covenants. In: Clark, J., Meiklejohn,
+
+S., Ryan, P.Y.A., Wallach, D., Brenner, M., Rohloﬀ, K. (eds.) FC 2016. LNCS, vol. 9604, pp. 126–141. Springer, Heidelberg (2016). https://doi.org/10.1007/9783-662-53357-4 9
+
+13. Nanevski, A., Ley-Wild, R., Sergey, I., Delbianco, G.A.: Communicating state tran-
+
+sition systems for ﬁne-grained concurrent resources. In: Shao, Z. (ed.) ESOP 2014. LNCS, vol. 8410, pp. 290–310. Springer, Heidelberg (2014). https://doi.org/10. 1007/978-3-642-54833-8 16
+
+14. Sangiorgi, D.: Introduction to Bisimulation and Coinduction. Cambridge Univer-
+
+sity Press, Cambridge (2012)
+
+15. Lamela Seijas, P., Thompson, S.: Marlowe: ﬁnancial contracts on blockchain. In:
+
+Margaria, T., Steﬀen, B. (eds.) ISoLA 2018. LNCS, vol. 11247, pp. 356–375. Springer, Cham (2018). https://doi.org/10.1007/978-3-030-03427-6 27
+
+16. Sergey, I., Nagaraj, V., Johannsen, J., Kumar, A., Trunov, A., Hao, K.C.G.: Safer
+
+smart contract programming with Scilla. In: Proceedings of the ACM on Programming Languages 3(OOPSLA) (2019). Article No: 185
+
+17. Zahnentferner, J.: An abstract model of UTxO-based cryptocurrencies with scripts.
+
+IACR Cryptology ePrint Archive 2018, p. 469 (2018). https://eprint.iacr.org/2018/
