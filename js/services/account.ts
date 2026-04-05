@@ -18,6 +18,8 @@ import { DOM_IDS } from '../config/domIds';
 import { UTXOData } from '../types/blockchain';
 import { ec as EC } from 'elliptic';
 import { sha256 } from 'js-sha256';
+import { publicKeyEnvelopeFromHex, convertHexToPublicKey, AlgorithmECDSAP256 } from '../utils/signature';
+import { buildInitialSeedMetaFromPrivateKey } from '../utils/seedChain';
 
 // ========================================
 // Type Definitions
@@ -352,12 +354,12 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
         if (result.error === 'USER_CANCELLED') {
           console.info('[Account] User cancelled password input for new address');
           hideUnifiedOverlay();
-          showInfoToast(t('common.operationCancelled') || '操作已取消');
+          showInfoToast(t('common.operationCancelled') || '操作已取�?);
           return; // Exit without saving locally
         }
 
         // Backend failed - do NOT save locally, show error
-        console.error('[Account] ✗ Backend sync failed:', result.error);
+        console.error('[Account] �?Backend sync failed:', result.error);
         hideUnifiedOverlay();
         showErrorToast(
           t('address.createFailed', '创建地址失败'),
@@ -366,7 +368,7 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
         return; // Exit without saving locally
       }
 
-      console.info('[Account] ✓ Address synced with backend successfully');
+      console.info('[Account] �?Address synced with backend successfully');
     } else {
       console.info('[Account] User not in organization, creating address locally only');
     }
@@ -558,3 +560,4 @@ export async function handleCreate(showToastNotification: boolean = true): Promi
     if (loader) loader.classList.add('hidden');
   }
 }
+

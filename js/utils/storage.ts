@@ -21,7 +21,7 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
-import { UTXOData, TxCertificate } from '../types/blockchain';
+import { UTXOData, TxCertificate, PublicKeyNew, PublicKeyEnvelope } from '../types/blockchain';
 
 // ========================================
 // Type Definitions
@@ -809,3 +809,4 @@ export function computeCurrentOrgId(): string {
   const group = getJoinedGroup();
   return group ? group.groupID : '';
 }
+

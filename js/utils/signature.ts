@@ -1,159 +1,246 @@
 /**
- * ECDSA P-256 签名工具库
- * 
- * ⚠️ 重要：本实现严格遵循后端 Go 的签名规范
- * 参考文档：docs/04-api-integration.md
- * 
- * 签名流程（与后端完全一致）：
- * 1. 复制结构体，将排除字段设为零值（不是删除！）
- * 2. 对对象 key 做稳定排序（与 Go json.Marshal 对 map 的行为一致）
- * 3. JSON 序列化（bigint 先转十进制字符串，再把 X/Y/R/S/D 的引号去掉，使其在 JSON 中呈现为 number 字面量）
- * 4. 对 JSON UTF-8 字节数组计算 SHA-256 哈希
- * 5. 使用 ECDSA P-256 私钥对哈希字节数组签名
- * 6. 返回签名 (R, S) 作为十进制字符串
+ * Signature and backend JSON utilities aligned with the Go backend.
  */
 
 import { ec as EC } from 'elliptic';
 import { sha256 } from 'js-sha256';
 
-// 初始化 P-256 曲线（也叫 secp256r1 或 prime256v1）
 const ec = new EC('p256');
 
-// ============================================
-// 类型定义
-// ============================================
+export const AlgorithmECDSAP256 = 'ecdsa_p256';
 
-/**
- * 公钥格式（后端要求）
- * X/Y 可以是 bigint 或 string（BigInt-safe JSON 解析后是 string）
- */
+const BYTE_ARRAY_FIELDS = new Set([
+  'TXOutputHash',
+  'Data',
+  'SeedReveal',
+  'SeedAnchor',
+  'Signature',
+  'PublicKey'
+]);
+
+const SORTED_MAP_FIELDS = new Set([
+  'AddressMsg',
+  'GuarTable',
+  'ValueDivision',
+  'NewValueDiv',
+  'BackAssign',
+  'Addresstogroup'
+]);
+
 export interface PublicKeyNew {
   CurveName: string;
   X: bigint | string;
   Y: bigint | string;
 }
 
-/**
- * ECDSA 签名格式
- * R/S 使用 bigint 存储，序列化时转为十进制字符串
- */
 export interface EcdsaSignature {
-  R: bigint;
-  S: bigint;
+  R: bigint | string | null;
+  S: bigint | string | null;
 }
 
-/**
- * 用于网络传输的签名格式（十进制字符串）
- */
 export interface EcdsaSignatureWire {
-  R: string;
-  S: string;
+  R: string | null;
+  S: string | null;
 }
 
-// ============================================
-// 核心签名函数（严格遵循后端规范）
-// ============================================
+export interface SignatureEnvelope {
+  Algorithm: string;
+  Signature: number[] | string | null;
+}
 
-/**
- * 将排除字段设置为零值（与后端 reflect.Zero 对齐）
- * 
- * @param obj 要处理的对象
- * @param excludeFields 要排除的字段名数组
- */
+export interface PublicKeyEnvelope {
+  Algorithm: string;
+  PublicKey: number[] | string | null;
+}
+
+function hasBuffer(): boolean {
+  return typeof globalThis !== 'undefined' && typeof (globalThis as { Buffer?: unknown }).Buffer !== 'undefined';
+}
+
+export function normalizePrivateKeyHex(privateKeyHex: string): string {
+  return String(privateKeyHex || '').replace(/^0x/i, '').toLowerCase().padStart(64, '0');
+}
+
+export function isByteNumberArray(value: unknown): value is number[] {
+  return Array.isArray(value) && value.every((item) => Number.isInteger(item) && item >= 0 && item <= 255);
+}
+
+export function hexToBytes(hex: string): number[] {
+  const normalized = String(hex || '').replace(/^0x/i, '').toLowerCase();
+  if (!normalized) return [];
+  if (!/^[0-9a-f]+$/.test(normalized) || normalized.length % 2 !== 0) {
+    throw new Error('Invalid hex string');
+  }
+  const out: number[] = [];
+  for (let i = 0; i < normalized.length; i += 2) {
+    out.push(parseInt(normalized.slice(i, i + 2), 16));
+  }
+  return out;
+}
+
+export function bytesToHex(bytes: ArrayLike<number> | null | undefined): string {
+  if (!bytes) return '';
+  return Array.from(bytes, (value) => Number(value).toString(16).padStart(2, '0')).join('');
+}
+
+export function bytesToBase64(bytes: ArrayLike<number> | null | undefined): string {
+  if (!bytes) return '';
+  const arr = Uint8Array.from(Array.from(bytes, (value) => Number(value)));
+  if (arr.length === 0) return '';
+  if (hasBuffer()) {
+    return Buffer.from(arr).toString('base64');
+  }
+  let binary = '';
+  for (const byte of arr) {
+    binary += String.fromCharCode(byte);
+  }
+  return btoa(binary);
+}
+
+export function base64ToBytes(base64: string): number[] {
+  const normalized = String(base64 || '').trim();
+  if (!normalized) return [];
+  if (hasBuffer()) {
+    return Array.from(Buffer.from(normalized, 'base64'));
+  }
+  const binary = atob(normalized);
+  const out: number[] = [];
+  for (let i = 0; i < binary.length; i += 1) {
+    out.push(binary.charCodeAt(i));
+  }
+  return out;
+}
+
+export function decodeBackendBytes(value: unknown): number[] {
+  if (value == null) return [];
+  if (value instanceof Uint8Array) return Array.from(value);
+  if (isByteNumberArray(value)) return [...value];
+  if (typeof value === 'string') {
+    const normalized = value.trim();
+    if (!normalized) return [];
+    try {
+      return base64ToBytes(normalized);
+    } catch {
+      if (/^[0-9a-f]+$/i.test(normalized) && normalized.length % 2 === 0) {
+        return hexToBytes(normalized);
+      }
+      throw new Error('Invalid backend byte string');
+    }
+  }
+  return [];
+}
+
+export function hexToBigInt(hex: string): bigint {
+  const normalized = String(hex || '').replace(/^0x/i, '');
+  if (!normalized) return 0n;
+  return BigInt(`0x${normalized}`);
+}
+
+function decimalLikeToBigInt(value: bigint | string | number | null | undefined): bigint {
+  if (typeof value === 'bigint') return value;
+  if (typeof value === 'number') return BigInt(Math.trunc(value));
+  if (value == null || value === '') return 0n;
+  const text = String(value).trim();
+  if (!text) return 0n;
+  if (/^0x/i.test(text)) return BigInt(text);
+  return BigInt(text);
+}
+
+export function bigIntToHex(value: bigint | string | number | null | undefined, padLength: number = 64): string {
+  return decimalLikeToBigInt(value).toString(16).padStart(padLength, '0');
+}
+
+function bigintReplacer(_key: string, value: unknown): unknown {
+  if (typeof value === 'bigint') {
+    return value.toString(10);
+  }
+  return value;
+}
+
+function cloneForBackend(value: unknown, key?: string): unknown {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (typeof value === 'bigint') return value.toString(10);
+  if (value instanceof Uint8Array) {
+    return BYTE_ARRAY_FIELDS.has(String(key || '')) ? bytesToBase64(value) : Array.from(value);
+  }
+  if (Array.isArray(value)) {
+    if (BYTE_ARRAY_FIELDS.has(String(key || '')) && isByteNumberArray(value)) {
+      return bytesToBase64(value);
+    }
+    return value.map((item) => cloneForBackend(item));
+  }
+  if (typeof value !== 'object') return value;
+
+  const entries = Object.entries(value as Record<string, unknown>);
+  const sortedEntries = SORTED_MAP_FIELDS.has(String(key || ''))
+    ? [...entries].sort(([left], [right]) => left.localeCompare(right))
+    : entries;
+
+  const output: Record<string, unknown> = {};
+  for (const [childKey, childValue] of sortedEntries) {
+    output[childKey] = cloneForBackend(childValue, childKey);
+  }
+  return output;
+}
+
 function applyExcludeZeroValue(obj: Record<string, unknown>, excludeFields: string[]): void {
   for (const field of excludeFields) {
-    if (field === 'UserSig' || field === 'Sig' || field === 'GroupSig' || field === 'UserSignature') {
-      // 签名字段的零值是 {R: null, S: null}
-      // 因为 Go 的 EcdsaSignature 中 R 和 S 是 *big.Int 指针类型
-      // reflect.Zero() 返回 nil，JSON 序列化为 null
+    if (field === 'UserSig' || field === 'Sig' || field === 'GroupSig' || field === 'UserSignature' || field === 'InputSignature') {
       obj[field] = { R: null, S: null };
+      continue;
     }
-    // 注意：其他字段不需要特殊处理，因为我们只排除签名字段
-  }
-}
-
-/**
- * 仅对 map 字段做 key 排序（匹配 Go 对 map[string] 的排序输出）
- * ⚠️ 注意：不要对整个对象做全局 key 排序，会改变 struct 字段顺序导致签名不一致
- * 
- * @param obj 对象（会被原地修改）
- */
-function sortMapFieldsOnly(obj: Record<string, unknown>): void {
-  // 已知的 map 字段列表（根据后端结构体定义）
-  const mapFields = ['AddressMsg', 'GuarTable'];
-  
-  for (const field of mapFields) {
-    if (obj[field] && typeof obj[field] === 'object' && !Array.isArray(obj[field])) {
-      const mapValue = obj[field] as Record<string, unknown>;
-      const sortedKeys = Object.keys(mapValue).sort();
-      const sorted: Record<string, unknown> = {};
-      for (const k of sortedKeys) {
-        sorted[k] = mapValue[k];
-      }
-      obj[field] = sorted;
+    if (field === 'UserSignatureV2' || field === 'InputSignatureV2' || field === 'AddressOwnershipSig') {
+      obj[field] = { Algorithm: '', Signature: null };
+      continue;
+    }
+    if (field === 'SignPublicKeyV2' || field === 'SeedPublicKeyV2') {
+      obj[field] = { Algorithm: '', PublicKey: null };
+      continue;
+    }
+    const current = obj[field];
+    if (Array.isArray(current)) {
+      obj[field] = [];
+    } else if (typeof current === 'number') {
+      obj[field] = 0;
+    } else if (typeof current === 'string') {
+      obj[field] = '';
+    } else if (current && typeof current === 'object') {
+      obj[field] = {};
+    } else {
+      obj[field] = current ?? null;
     }
   }
 }
 
-/**
- * 对结构体进行签名（严格遵循后端规范）
- * 
- * ⚠️ 重要规则（来自后端权威文档）：
- * 1. 排除字段不能删除，必须设置为零值 {R: null, S: null}
- * 2. X/Y/R/S/D 必须是 JSON number（不带引号）
- * 3. 对 JSON UTF-8 字节数组做 SHA-256
- * 4. 不要全局排序 key，只对 map 字段（如 AddressMsg）做 key 排序
- * 
- * @param data 要签名的数据对象
- * @param privateKeyHex 私钥（hex 格式，64字符）
- * @param excludeFields 要排除的字段名数组（如 ['UserSig', 'Sig']）
- * @returns EcdsaSignature
- */
+export function serializeForBackend(obj: unknown): string {
+  const prepared = cloneForBackend(obj);
+  let json = JSON.stringify(prepared, bigintReplacer);
+  json = json.replace(/"(X|Y|R|S|D)":"(-?\d+)"/g, '"$1":$2');
+  return json;
+}
+
+function buildStructHashBytes(data: Record<string, unknown>, excludeFields: string[] = []): number[] {
+  const copy = JSON.parse(JSON.stringify(data, bigintReplacer)) as Record<string, unknown>;
+  applyExcludeZeroValue(copy, excludeFields);
+  const jsonStr = serializeForBackend(copy);
+  return sha256.array(jsonStr);
+}
+
 export function signStruct(
   data: Record<string, unknown>,
   privateKeyHex: string,
   excludeFields: string[] = []
 ): EcdsaSignature {
-  // 1. 深拷贝对象，同时将 bigint 转为十进制字符串
-  const copy = JSON.parse(JSON.stringify(data, bigintReplacer));
-  
-  // 2. 将排除字段设置为零值（不是删除！）
-  applyExcludeZeroValue(copy, excludeFields);
-  
-  // 3. 只对 map 字段做 key 排序（不要全局排序！）
-  sortMapFieldsOnly(copy);
-  
-  // 4. JSON 序列化，然后把 X/Y/R/S/D 的引号去掉变成 number
-  let jsonStr = JSON.stringify(copy);
-  jsonStr = jsonStr.replace(/"(X|Y|R|S|D)":"(\d+)"/g, '"$1":$2');
-  
-  // 5. 对 JSON UTF-8 字节数组计算 SHA-256 哈希
-  const hashBytes = sha256.array(jsonStr);
-  
-  // 6. 使用 ECDSA P-256 私钥对哈希字节数组签名
-  const key = ec.keyFromPrivate(privateKeyHex, 'hex');
+  const hashBytes = buildStructHashBytes(data, excludeFields);
+  const key = ec.keyFromPrivate(normalizePrivateKeyHex(privateKeyHex), 'hex');
   const signature = key.sign(hashBytes);
-  
-  // 7. 返回签名（内部使用 bigint 存储）
   return {
-    R: BigInt('0x' + signature.r.toString(16)),
-    S: BigInt('0x' + signature.s.toString(16))
+    R: BigInt(`0x${signature.r.toString(16)}`),
+    S: BigInt(`0x${signature.s.toString(16)}`)
   };
 }
 
-/**
- * 验证签名（用于本地测试）
- * 
-/**
- * 验证签名（用于本地测试）
- * 
- * @param data 原始数据对象
- * @param signature 签名
- * @param publicKeyHex 公钥 X 坐标（hex 格式）
- * @param publicKeyYHex 公钥 Y 坐标（hex 格式）
- * @param excludeFields 要排除的字段名数组
- * @returns 验证是否成功
- */
 export function verifyStruct(
   data: Record<string, unknown>,
   signature: EcdsaSignature,
@@ -162,220 +249,28 @@ export function verifyStruct(
   excludeFields: string[] = []
 ): boolean {
   try {
-    // 1. 深拷贝对象，同时将 bigint 转为十进制字符串
-    const copy = JSON.parse(JSON.stringify(data, bigintReplacer));
-    
-    // 2. 将排除字段设置为零值
-    applyExcludeZeroValue(copy, excludeFields);
-    
-    // 3. 只对 map 字段做 key 排序（不要全局排序！）
-    sortMapFieldsOnly(copy);
-    
-    // 4. JSON 序列化，然后把 X/Y/R/S/D 的引号去掉变成 number
-    let jsonStr = JSON.stringify(copy);
-    jsonStr = jsonStr.replace(/"(X|Y|R|S|D)":"(\d+)"/g, '"$1":$2');
-    
-    // 5. 对 JSON UTF-8 字节数组计算 SHA-256 哈希
-    const hashBytes = sha256.array(jsonStr);
-    
-    // 6. 构造公钥
+    const hashBytes = buildStructHashBytes(data, excludeFields);
     const key = ec.keyFromPublic({
       x: publicKeyHex,
       y: publicKeyYHex
     }, 'hex');
-    
-    // 7. 验证签名
     return key.verify(hashBytes, {
-      r: signature.R.toString(16),
-      s: signature.S.toString(16)
+      r: decimalLikeToBigInt(signature.R).toString(16),
+      s: decimalLikeToBigInt(signature.S).toString(16)
     });
   } catch (error) {
-    console.error('[签名] 验证失败:', error);
+    console.error('[signature] verifyStruct failed:', error);
     return false;
   }
 }
 
-// ============================================
-// 公钥和地址工具函数
-// ============================================
-
-/**
- * 从私钥生成公钥
- * 
- * @param privateKeyHex 私钥（hex 格式）
- * @returns PublicKeyNew
- */
-export function getPublicKeyFromPrivate(privateKeyHex: string): PublicKeyNew {
-  const key = ec.keyFromPrivate(privateKeyHex, 'hex');
-  const pubPoint = key.getPublic();
+export function signatureToJSON(signature: EcdsaSignature): EcdsaSignatureWire {
   return {
-    CurveName: 'P256',
-    X: BigInt('0x' + pubPoint.getX().toString(16)),
-    Y: BigInt('0x' + pubPoint.getY().toString(16))
+    R: signature.R == null ? null : decimalLikeToBigInt(signature.R).toString(10),
+    S: signature.S == null ? null : decimalLikeToBigInt(signature.S).toString(10)
   };
 }
 
-/**
- * 从私钥获取公钥的 hex 坐标
- * 
- * @param privateKeyHex 私钥（hex 格式）
- * @returns { x: string, y: string } 公钥坐标（hex 格式）
- */
-export function getPublicKeyHexFromPrivate(privateKeyHex: string): { x: string; y: string } {
-  const key = ec.keyFromPrivate(privateKeyHex, 'hex');
-  const pubPoint = key.getPublic();
-  return {
-    x: pubPoint.getX().toString(16).padStart(64, '0'),
-    y: pubPoint.getY().toString(16).padStart(64, '0')
-  };
-}
-
-/**
- * 生成新的密钥对
- * 
- * @returns { privateKey: string, publicKey: PublicKeyNew }
- */
-export function generateKeyPair(): { privateKey: string; publicKey: PublicKeyNew } {
-  const key = ec.genKeyPair();
-  return {
-    privateKey: key.getPrivate('hex'),
-    publicKey: {
-      CurveName: 'P256',
-      X: BigInt('0x' + key.getPublic().getX().toString(16)),
-      Y: BigInt('0x' + key.getPublic().getY().toString(16))
-    }
-  };
-}
-
-/**
- * 根据公钥生成钱包地址
- * 地址 = SHA256(公钥字节).hex 前 40 字符
- * 
- * @param publicKey 公钥
- * @returns 地址字符串（40字符 hex）
- */
-export function generateAddress(publicKey: PublicKeyNew): string {
-  // 将公钥 X, Y 转为 hex 并拼接
-  const xHex = publicKey.X.toString(16).padStart(64, '0');
-  const yHex = publicKey.Y.toString(16).padStart(64, '0');
-  const pubKeyHex = '04' + xHex + yHex; // 04 前缀表示未压缩公钥
-
-  // 将 hex 字符串转为字节数组
-  const bytes: number[] = [];
-  for (let i = 0; i < pubKeyHex.length; i += 2) {
-    bytes.push(parseInt(pubKeyHex.substr(i, 2), 16));
-  }
-
-  // SHA-256 哈希（使用 js-sha256）
-  const hash = sha256(bytes);
-
-  // 取前 20 字节（40 字符）
-  return hash.substring(0, 40);
-}
-
-// ============================================
-// 时间戳函数
-// ============================================
-
-/**
- * 获取当前时间戳（秒）
- * 使用标准 Unix 时间戳
- * 
- * @returns 当前时间戳（秒）
- */
-export function getTimestamp(): number {
-  return Math.floor(Date.now() / 1000);
-}
-
-/**
- * 获取自定义纪元时间戳（2020-01-01 00:00:00 UTC）
- * 部分 API 使用此格式
- * 
- * @returns 自定义纪元时间戳（秒）
- */
-export function getCustomEpochTimestamp(): number {
-  const EPOCH_2020 = new Date('2020-01-01T00:00:00Z').getTime();
-  return Math.floor((Date.now() - EPOCH_2020) / 1000);
-}
-
-// ============================================
-// JSON 序列化辅助函数
-// ============================================
-
-/**
- * bigint 替换器（用于 JSON.stringify）
- * 将 bigint 转为十进制字符串
- */
-function bigintReplacer(_key: string, value: unknown): unknown {
-  if (typeof value === 'bigint') {
-    return value.toString(10);
-  }
-  return value;
-}
-
-/**
- * 将对象序列化为后端可接受的 JSON 格式
- * 
- * ⚠️ 重要：根据后端权威文档，X/Y/R/S/D 必须是 JSON number（不带引号）！
- * Go 的 *big.Int 序列化为 JSON 时是数字字面量，不是字符串。
- * 
- * 解决方案：
- * 1. 先用 JSON.stringify + bigintReplacer 把 bigint 转成十进制字符串
- * 2. 再用正则表达式把 X/Y/R/S/D 字段的引号去掉，变成 JSON number 字面量
- * 
- * 例如：
- * - 输入：{"X":"123456789"}
- * - 输出：{"X":123456789}
- * 
- * @param obj 要序列化的对象
- * @returns JSON 字符串，其中 X/Y/R/S/D 字段为数字字面量（不带引号）
- */
-export function serializeForBackend(obj: unknown): string {
-  // 1. 先用 JSON.stringify 把 bigint 转成十进制字符串
-  let json = JSON.stringify(obj, bigintReplacer);
-  
-  // 2. 用正则表达式把 X/Y/R/S/D 字段的引号去掉，变成 JSON number 字面量
-  // 匹配 "X":"数字" 并替换为 "X":数字
-  json = json.replace(/"(X|Y|R|S|D)":"(\d+)"/g, '"$1":$2');
-  
-  return json;
-}
-
-/**
- * 将 hex 字符串转为 bigint
- * 
- * @param hex hex 字符串（可带或不带 0x 前缀）
- * @returns bigint
- */
-export function hexToBigInt(hex: string): bigint {
-  const cleanHex = hex.startsWith('0x') ? hex : '0x' + hex;
-  return BigInt(cleanHex);
-}
-
-/**
- * 将 bigint 或 string（十进制）转为 hex 字符串（无 0x 前缀）
- * 
- * @param value bigint 或十进制字符串
- * @param padLength 填充长度（默认 64）
- * @returns hex 字符串
- */
-export function bigIntToHex(value: bigint | string, padLength: number = 64): string {
-  // 如果是 string，先转为 BigInt
-  const bi = typeof value === 'string' ? BigInt(value) : value;
-  return bi.toString(16).padStart(padLength, '0');
-}
-
-// ============================================
-// 公钥格式转换
-// ============================================
-
-/**
- * 将 hex 格式公钥转换为后端要求的格式
- * 
- * @param pubXHex 公钥 X 坐标（hex 格式）
- * @param pubYHex 公钥 Y 坐标（hex 格式）
- * @returns PublicKeyNew
- */
 export function convertHexToPublicKey(pubXHex: string, pubYHex: string): PublicKeyNew {
   return {
     CurveName: 'P256',
@@ -384,15 +279,115 @@ export function convertHexToPublicKey(pubXHex: string, pubYHex: string): PublicK
   };
 }
 
-/**
- * 将 PublicKeyNew 转换为 hex 格式
- * 
- * @param publicKey PublicKeyNew
- * @returns { x: string, y: string }
- */
 export function convertPublicKeyToHex(publicKey: PublicKeyNew): { x: string; y: string } {
   return {
     x: bigIntToHex(publicKey.X),
     y: bigIntToHex(publicKey.Y)
   };
+}
+
+export function getPublicKeyFromPrivate(privateKeyHex: string): PublicKeyNew {
+  const key = ec.keyFromPrivate(normalizePrivateKeyHex(privateKeyHex), 'hex');
+  const pubPoint = key.getPublic();
+  return {
+    CurveName: 'P256',
+    X: BigInt(`0x${pubPoint.getX().toString(16)}`),
+    Y: BigInt(`0x${pubPoint.getY().toString(16)}`)
+  };
+}
+
+export function getPublicKeyHexFromPrivate(privateKeyHex: string): { x: string; y: string } {
+  const key = ec.keyFromPrivate(normalizePrivateKeyHex(privateKeyHex), 'hex');
+  const pubPoint = key.getPublic();
+  return {
+    x: pubPoint.getX().toString(16).padStart(64, '0'),
+    y: pubPoint.getY().toString(16).padStart(64, '0')
+  };
+}
+
+export function generateKeyPair(): { privateKey: string; publicKey: PublicKeyNew } {
+  const key = ec.genKeyPair();
+  return {
+    privateKey: key.getPrivate('hex').padStart(64, '0'),
+    publicKey: {
+      CurveName: 'P256',
+      X: BigInt(`0x${key.getPublic().getX().toString(16)}`),
+      Y: BigInt(`0x${key.getPublic().getY().toString(16)}`)
+    }
+  };
+}
+
+export function generateAddress(publicKey: PublicKeyNew): string {
+  const xHex = bigIntToHex(publicKey.X);
+  const yHex = bigIntToHex(publicKey.Y);
+  const publicKeyBytes = hexToBytes(`04${xHex}${yHex}`);
+  return sha256(publicKeyBytes).substring(0, 40);
+}
+
+export function getTimestamp(): number {
+  return Math.floor(Date.now() / 1000);
+}
+
+export function getCustomEpochTimestamp(): number {
+  const epoch2020 = new Date('2020-01-01T00:00:00Z').getTime();
+  return Math.floor((Date.now() - epoch2020) / 1000);
+}
+
+export function publicKeyEnvelopeFromHex(pubXHex: string, pubYHex: string): PublicKeyEnvelope {
+  const x = String(pubXHex || '').padStart(64, '0');
+  const y = String(pubYHex || '').padStart(64, '0');
+  return {
+    Algorithm: AlgorithmECDSAP256,
+    PublicKey: hexToBytes(`04${x}${y}`)
+  };
+}
+
+export function publicKeyEnvelopeFromPrivate(privateKeyHex: string): PublicKeyEnvelope {
+  const { x, y } = getPublicKeyHexFromPrivate(privateKeyHex);
+  return publicKeyEnvelopeFromHex(x, y);
+}
+
+export function publicKeyEnvelopeFromPublicKey(publicKey: PublicKeyNew): PublicKeyEnvelope {
+  const { x, y } = convertPublicKeyToHex(publicKey);
+  return publicKeyEnvelopeFromHex(x, y);
+}
+
+export function signHashEnvelope(
+  algorithm: string,
+  hash: ArrayLike<number>,
+  privateKeyHex: string
+): SignatureEnvelope {
+  if (algorithm !== AlgorithmECDSAP256) {
+    throw new Error(`Unsupported signature algorithm: ${algorithm}`);
+  }
+  const key = ec.keyFromPrivate(normalizePrivateKeyHex(privateKeyHex), 'hex');
+  const signature = key.sign(Array.from(hash));
+  return {
+    Algorithm: algorithm,
+    Signature: signature.toDER()
+  };
+}
+
+export function verifyHashEnvelope(
+  hash: ArrayLike<number>,
+  signature: SignatureEnvelope,
+  publicKey: PublicKeyEnvelope
+): boolean {
+  if (signature.Algorithm !== publicKey.Algorithm) {
+    return false;
+  }
+  if (signature.Algorithm !== AlgorithmECDSAP256) {
+    return false;
+  }
+  const publicKeyBytes = decodeBackendBytes(publicKey.PublicKey);
+  const signatureBytes = decodeBackendBytes(signature.Signature);
+  if (publicKeyBytes.length === 0 || signatureBytes.length === 0) {
+    return false;
+  }
+  const key = ec.keyFromPublic(bytesToHex(publicKeyBytes), 'hex');
+  return key.verify(Array.from(hash), signatureBytes);
+}
+
+export function hashBackendJson(data: unknown): number[] {
+  return sha256.array(serializeForBackend(data));
 }
