@@ -5,7 +5,16 @@
  */
 
 import { t } from '../i18n/index.js';
-import { loadUser, User, AddressData, getJoinedGroup } from '../utils/storage';
+import {
+  loadUser,
+  saveUser,
+  User,
+  AddressData,
+  TxHistoryRecord,
+  getJoinedGroup,
+  getAddressProtocolIssues,
+  hasAddressProtocolMetadata
+} from '../utils/storage';
 import { readAddressInterest } from '../utils/helpers.js';
 import { showConfirmModal } from '../ui/modal';
 import { BuildTXInfo } from './transaction';
@@ -26,7 +35,7 @@ import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId 
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 import { isCapsuleAddress } from './capsule';
-import { querySingleAddressGroup } from './accountQuery';
+import { querySingleAddressGroup, type NormalizedAddressGroupInfo } from './accountQuery';
 
 // ========================================
 // Type Definitions
@@ -39,6 +48,9 @@ export interface TransferBill {
   GuarGroupID: string;
   PublicKey: { Curve: string; XHex: string; YHex: string };
   ToInterest: number;
+  SeedAnchor?: number[] | string;
+  SeedChainStep?: number;
+  DefaultSpendAlgorithm?: string;
 }
 
 /** Wallet snapshot with strict AddressData typing */
@@ -86,16 +98,22 @@ function buildOutgoingHistoryRecords(
   fromAddresses: string[],
   txId: string,
   status: HistoryStatus,
-  options: { failureReason?: string; guarantorOrg?: string; txMode?: string; transferMode?: string } = {}
-) {
-  const records = [];
+  options: {
+    failureReason?: string;
+    guarantorOrg?: string;
+    txMode?: 'normal' | 'quick' | 'cross' | 'incoming' | 'unknown' | string;
+    transferMode?: TxHistoryRecord['transferMode'];
+  } = {}
+): TxHistoryRecord[] {
+  const records: TxHistoryRecord[] = [];
   const timestamp = Date.now();
   const from = fromAddresses[0] || '';
   const gas = Number(build.InterestAssign?.Gas || 0) || 0;
   const txHash = txId || 'N/A';
   const baseId = txId || `temp_${timestamp}`;
-  const fallbackMode = options.txMode === 'cross' ? 'cross' : (options.txMode === 'quick' ? 'quick' : 'normal');
-  const transferMode = options.transferMode || fallbackMode;
+  const fallbackMode: NonNullable<TxHistoryRecord['transferMode']> =
+    options.txMode === 'cross' ? 'cross' : (options.txMode === 'quick' ? 'quick' : 'normal');
+  const transferMode: NonNullable<TxHistoryRecord['transferMode']> = options.transferMode || fallbackMode;
   let idx = 0;
 
   for (const [to, bill] of Object.entries(build.Bill || {})) {
@@ -119,6 +137,127 @@ function buildOutgoingHistoryRecords(
   }
 
   return records;
+}
+
+function collectPendingSeedAdvances(
+  userNewTX: UserNewTX | null,
+  aggregateGTX: AggregateGTXForSubmit | null,
+  txId: string
+): Array<{ address: string; step: number; nextStep: number; txId: string }> {
+  const inputs = userNewTX?.TX?.TXInputsNormal
+    || aggregateGTX?.AllTransactions?.[0]?.TXInputsNormal
+    || [];
+  const result = new Map<string, { address: string; step: number; nextStep: number; txId: string }>();
+
+  for (const input of inputs as Array<any>) {
+    const address = normalizeAddrInput(input?.FromAddress || '');
+    const step = Number(input?.SeedChainStep || 0);
+    if (!address || step <= 0) continue;
+    if (!result.has(address)) {
+      result.set(address, {
+        address,
+        step,
+        nextStep: Math.max(0, step - 1),
+        txId
+      });
+    }
+  }
+
+  return Array.from(result.values());
+}
+
+function setPendingSeedAdvances(
+  entries: Array<{ address: string; step: number; nextStep: number; txId: string }>
+): void {
+  if (!entries.length) return;
+  const user = loadUser();
+  if (!user?.wallet?.addressMsg || !user.accountId) return;
+
+  let changed = false;
+  for (const entry of entries) {
+    const meta = user.wallet.addressMsg[entry.address];
+    if (!meta) continue;
+    meta.pendingSeedStep = entry.step;
+    meta.pendingNextSeedStep = entry.nextStep;
+    meta.pendingSeedTxId = entry.txId;
+    meta.pendingSeedAt = Date.now();
+    changed = true;
+  }
+
+  if (changed) {
+    saveUser(user);
+  }
+}
+
+function clearPendingSeedAdvanceByTxId(txId: string): void {
+  if (!txId) return;
+  const user = loadUser();
+  if (!user?.wallet?.addressMsg || !user.accountId) return;
+
+  let changed = false;
+  for (const meta of Object.values(user.wallet.addressMsg)) {
+    if (meta?.pendingSeedTxId === txId) {
+      delete (meta as any).pendingSeedStep;
+      delete (meta as any).pendingNextSeedStep;
+      delete (meta as any).pendingSeedTxId;
+      delete (meta as any).pendingSeedAt;
+      changed = true;
+    }
+  }
+
+  if (changed) {
+    saveUser(user);
+  }
+}
+
+function humanizeProtocolError(errorMsg: string, errorCode?: string): string {
+  if (errorCode === 'USER_NOT_IN_ORG') {
+    return t('transfer.userNotInOrgHint') ||
+      '您的账户未在后端担保组织中注册。请尝试退出当前组织后重新加入。';
+  }
+  if (errorCode === 'ADDRESS_REVOKED') {
+    return t('error.addressAlreadyRevoked') || '使用的地址已被解绑，请选择其他地址';
+  }
+  if (errorCode === 'SIGNATURE_FAILED') {
+    return t('error.signatureVerificationFailed') || '签名验证失败，请检查私钥是否正确';
+  }
+  if (errorCode === 'UTXO_SPENT') {
+    return t('transfer.utxoAlreadySpent') || 'UTXO 已被使用，请刷新页面后重试';
+  }
+  if (errorCode === 'TX_V2_SIGNATURE_FAILED') {
+    return '交易的 V2 用户签名验证失败，请重新登录后重试。';
+  }
+  if (errorCode === 'SEED_PROTOCOL_FAILED') {
+    return '地址 seed/V2 协议状态异常，可能需要等待确认、刷新钱包或修复地址状态。';
+  }
+  if (
+    errorMsg.includes('seed sweep required') ||
+    errorMsg.includes('seed step pending lock conflict') ||
+    errorMsg.includes('seed chain exhausted') ||
+    errorMsg.includes('missing V2 input signature')
+  ) {
+    return '地址 seed 步骤状态不满足当前交易要求，请刷新钱包后重试。';
+  }
+  if (errorMsg.includes('address not registered') || errorMsg.includes('not registered')) {
+    return '收款地址或发送地址尚未完成注册，当前无法发送。';
+  }
+  if (errorMsg.includes('missing SignPublicKeyV2')) {
+    return '地址缺少 V2 验签公钥元数据，请重新同步地址状态。';
+  }
+  if (
+    errorMsg.includes('can not find this peer') ||
+    errorMsg.includes('cannot find this peer') ||
+    errorMsg.includes('peer not found')
+  ) {
+    return t('transfer.peerNotReachableHint') || '担保节点未在线，暂时无法发送。';
+  }
+  if (errorMsg.includes('no alternative guarantor available') || errorMsg.includes('failed to reassign user')) {
+    return t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
+  }
+  if (errorMsg.includes('no available guarantor')) {
+    return t('transfer.noAvailableGuarantorHint') || '没有可用的担保节点，暂时无法发送。';
+  }
+  return errorMsg;
 }
 
 /**
@@ -195,6 +334,12 @@ export function updateTransferButtonState(): void {
   const guarGroup = getJoinedGroup();
   const user = loadUser();
   const hasJoined = !!(guarGroup && guarGroup.groupID && (user?.orgNumber || user?.guarGroup?.groupID));
+  const hasUsableSourceAddress = !!Object.values(user?.wallet?.addressMsg || {}).some((meta) => {
+    if (!meta?.privHex) return false;
+    if (meta.readOnly || meta.seedRepairRequired || meta.pendingSeedStep) return false;
+    if (!hasJoined && meta.registrationState && meta.registrationState !== 'registered') return false;
+    return true;
+  });
 
   // Get the mode selector to check transfer type
   const tfMode = document.getElementById(DOM_IDS.tfMode) as HTMLSelectElement | null;
@@ -225,15 +370,19 @@ export function updateTransferButtonState(): void {
   if (hasJoined) {
     // User is in guarantor org: allow quick and cross transfer
     const isSupportedMode = currentMode === 'quick' || currentMode === 'cross';
-    shouldEnable = isSupportedMode;
+    shouldEnable = isSupportedMode && hasUsableSourceAddress;
     if (!isSupportedMode) {
       disableReason = t('transfer.pledgeNotSupported') || '质押交易功能暂未开放';
+    } else if (!hasUsableSourceAddress) {
+      disableReason = '当前没有可转出的地址';
     }
   } else {
     // User is NOT in guarantor org: allow quick mode only (normal transfer to ComNode)
-    shouldEnable = currentMode === 'quick';
+    shouldEnable = currentMode === 'quick' && hasUsableSourceAddress;
     if (!shouldEnable) {
-      disableReason = t('transfer.normalTransferOnly') || '散户模式仅支持普通转账';
+      disableReason = hasUsableSourceAddress
+        ? (t('transfer.normalTransferOnly') || '散户模式仅支持普通转账')
+        : '当前没有已注册且可转出的地址';
     }
   }
 
@@ -477,7 +626,7 @@ export function initTransferSubmit(): void {
       const bills: Record<string, TransferBill> = {};
       const vd: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
       let outInterest = 0;
-      const addrTypeCache = new Map<string, { exists: boolean; type: number }>();
+      const addrTypeCache = new Map<string, NormalizedAddressGroupInfo>();
 
       for (const r of rows) {
         const toEl = r.querySelector('[data-name="to"]') as HTMLInputElement | null;
@@ -534,6 +683,8 @@ export function initTransferSubmit(): void {
           return;
         }
 
+        let resolvedRecipientInfo: NormalizedAddressGroupInfo | null = null;
+
         if (!isCross) {
           const verifiedType = toEl?.dataset?.verifiedType;
           if (verifiedType && Number(verifiedType) !== mt) {
@@ -549,6 +700,7 @@ export function initTransferSubmit(): void {
 
           const cached = addrTypeCache.get(normalizedTo);
           if (cached) {
+            resolvedRecipientInfo = cached;
             if (cached.exists && cached.type !== mt) {
               const expected = getCoinName(cached.type);
               const selected = getCoinName(mt);
@@ -569,9 +721,26 @@ export function initTransferSubmit(): void {
               );
               return;
             }
-            const exists = !!typeCheck.data.exists;
-            const expectedType = Number(typeCheck.data.type ?? 0);
-            addrTypeCache.set(normalizedTo, { exists, type: expectedType });
+            resolvedRecipientInfo = typeCheck.data;
+            const exists = !!resolvedRecipientInfo.exists;
+            const expectedType = Number(resolvedRecipientInfo.type ?? 0);
+            addrTypeCache.set(normalizedTo, resolvedRecipientInfo);
+            if (!exists) {
+              showTxValidationError(
+                t('tx.recipientAddressNotRegistered', '收款地址未在链上注册，当前协议不允许向未注册地址转账'),
+                toEl,
+                t('tx.addressError')
+              );
+              return;
+            }
+            if (!resolvedRecipientInfo.seedAnchor || !resolvedRecipientInfo.seedChainStep || !resolvedRecipientInfo.defaultSpendAlgorithm) {
+              showTxValidationError(
+                t('tx.recipientProtocolIncomplete', '收款地址协议状态不完整，缺少 seed/V2 元数据'),
+                toEl,
+                t('tx.addressError')
+              );
+              return;
+            }
             if (exists && expectedType !== mt) {
               const expected = getCoinName(expectedType);
               const selected = getCoinName(mt);
@@ -632,6 +801,9 @@ export function initTransferSubmit(): void {
         const effectivePy = isCross ? '' : py;
         const effectiveGid = isCross ? '' : gid;
         const effectiveInterest = isCross ? 0 : tInt;
+        const effectiveSeedAnchor = isCross ? undefined : resolvedRecipientInfo?.seedAnchor;
+        const effectiveSeedChainStep = isCross ? undefined : resolvedRecipientInfo?.seedChainStep;
+        const effectiveDefaultSpendAlgorithm = isCross ? undefined : resolvedRecipientInfo?.defaultSpendAlgorithm;
 
         const existingBill = bills[normalizedTo];
         if (existingBill) {
@@ -639,7 +811,10 @@ export function initTransferSubmit(): void {
           const sameGroup = existingBill.GuarGroupID === effectiveGid;
           const samePubKey = existingBill.PublicKey.XHex === effectivePx
             && existingBill.PublicKey.YHex === effectivePy;
-          if (!sameType || !sameGroup || !samePubKey) {
+          const sameSeed = JSON.stringify(existingBill.SeedAnchor || []) === JSON.stringify(effectiveSeedAnchor || [])
+            && Number(existingBill.SeedChainStep || 0) === Number(effectiveSeedChainStep || 0)
+            && String(existingBill.DefaultSpendAlgorithm || '') === String(effectiveDefaultSpendAlgorithm || '');
+          if (!sameType || !sameGroup || !samePubKey || !sameSeed) {
             showTxValidationError(t('tx.duplicateAddress'), null, t('tx.duplicateAddress'));
             return;
           }
@@ -652,7 +827,10 @@ export function initTransferSubmit(): void {
             Value: val,
             GuarGroupID: effectiveGid,
             PublicKey: { Curve: 'P256', XHex: effectivePx, YHex: effectivePy },
-            ToInterest: effectiveInterest
+            ToInterest: effectiveInterest,
+            SeedAnchor: effectiveSeedAnchor,
+            SeedChainStep: effectiveSeedChainStep,
+            DefaultSpendAlgorithm: effectiveDefaultSpendAlgorithm
           };
         }
         vd[mt] += val;
@@ -962,6 +1140,25 @@ export function initTransferSubmit(): void {
           showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
           return;
         }
+        const protocolIssues = getAddressProtocolIssues(addr, addrData);
+        if (!hasAddressProtocolMetadata(addrData) || protocolIssues.length > 0) {
+          const errMsg = protocolIssues[0] || (t('tx.addressProtocolIncomplete', '地址协议状态不完整，无法转账'));
+          console.error('[构造交易] 错误:', errMsg);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
+          return;
+        }
+        if (addrData.readOnly || addrData.seedRepairRequired) {
+          const errMsg = t('tx.addressReadOnly', '地址缺少可用 seed 私有状态，当前为只读');
+          console.error('[构造交易] 错误:', errMsg);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
+          return;
+        }
+        if (isNormalTransferMode && addrData.registrationState && addrData.registrationState !== 'registered') {
+          const errMsg = t('tx.addressNotRegistered', '散户地址尚未完成注册，无法发起转账');
+          console.error('[构造交易] 错误:', errMsg);
+          showToast(errMsg, 'error', t('toast.buildTxFailed'), 2000);
+          return;
+        }
       }
 
       // 🔒 锁定可能使用的 TXCer（防止与轮询更新产生竞态条件）
@@ -1002,7 +1199,10 @@ export function initTransferSubmit(): void {
               publicKeyX: bill.PublicKey?.XHex || '',
               publicKeyY: bill.PublicKey?.YHex || '',
               guarGroupID: bill.GuarGroupID || '',
-              interest: bill.ToInterest || 0
+              interest: bill.ToInterest || 0,
+              seedAnchor: bill.SeedAnchor,
+              seedChainStep: bill.SeedChainStep,
+              defaultSpendAlgorithm: bill.DefaultSpendAlgorithm
             })),
             changeAddresses: build.ChangeAddress,
             gas: build.InterestAssign.Gas,
@@ -1218,13 +1418,20 @@ export function initTransferSubmit(): void {
             addTxHistoryRecords(historyRecords);
           }
 
-          // 🔒 锁定使用到的 UTXO（仅担保交易需要，普通转账 ComNode 会处理）
-          if (userNewTX) {
+          const pendingSeedAdvances = collectPendingSeedAdvances(userNewTX, aggregateGTX, txIdToQuery);
+          if (pendingSeedAdvances.length > 0) {
+            setPendingSeedAdvances(pendingSeedAdvances);
+          }
+
+          // 🔒 锁定使用到的 UTXO（担保交易和散户普通转账都需要本地防重入）
+          const txInputsForLock = userNewTX?.TX?.TXInputsNormal
+            || aggregateGTX?.AllTransactions?.[0]?.TXInputsNormal
+            || [];
+          if (txInputsForLock.length > 0) {
             try {
               const utxosToLock: Omit<LockedUTXO, 'lockTime' | 'txId'>[] = [];
-              const txInputs = userNewTX.TX.TXInputsNormal || [];
 
-              for (const input of txInputs) {
+              for (const input of txInputsForLock as any[]) {
                 const fromAddrHint = input.FromAddress?.toLowerCase() || '';
                 const fromTxId = input.FromTXID || '';
                 const indexZ = input.FromTxPosition?.IndexZ ?? 0;
@@ -1366,25 +1573,9 @@ export function initTransferSubmit(): void {
           let title = t('toast.sendTxFailed') || '交易发送失败';
 
           if (errorCode === 'USER_NOT_IN_ORG') {
-            // User not in organization - this is a critical state mismatch
             title = t('error.userNotInGroup') || '用户不在担保组织内';
-            userFriendlyMsg = t('transfer.userNotInOrgHint') ||
-              '您的账户未在后端担保组织中注册。这可能是因为：\n' +
-              '1. 您导入的地址已属于其他组织\n' +
-              '2. 加入组织时发生了错误\n\n' +
-              '请尝试：退出当前组织，然后重新加入正确的组织。';
-          } else if (errorCode === 'ADDRESS_REVOKED') {
-            userFriendlyMsg = t('error.addressAlreadyRevoked') || '使用的地址已被解绑，请选择其他地址';
-          } else if (errorCode === 'SIGNATURE_FAILED') {
-            userFriendlyMsg = t('error.signatureVerificationFailed') || '签名验证失败，请检查私钥是否正确';
-          } else if (errorCode === 'UTXO_SPENT') {
-            userFriendlyMsg = t('transfer.utxoAlreadySpent') || 'UTXO 已被使用，请刷新页面后重试';
           }
-
-          // Intercept complex backend error messages and replace with user-friendly ones
-          if (errMsg.includes('no alternative guarantor available') || errMsg.includes('failed to reassign user')) {
-            userFriendlyMsg = t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
-          }
+          userFriendlyMsg = humanizeProtocolError(errMsg, errorCode);
 
           // 🔓 发送失败，解锁 TXCer（不删除）
           if (lockedTXCerIds.length > 0) {
@@ -1417,11 +1608,12 @@ export function initTransferSubmit(): void {
         const errMsg = sendErr?.message || String(sendErr);
         console.error('[发送交易] 发送异常:', errMsg);
 
-        let finalDisplayMsg = t('transfer.networkError') || '网络错误，请检查网络连接后重试：' + errMsg;
-
-        // Intercept complex backend error messages (e.g. from RPC)
-        if (errMsg.includes('no alternative guarantor available') || errMsg.includes('failed to reassign user')) {
-          finalDisplayMsg = t('error.guarantorReassignFailed') || '担保组织无法正确分配处理交易的担保人，请稍后';
+        let finalDisplayMsg = humanizeProtocolError(
+          errMsg,
+          errMsg.includes('V2 user signature') ? 'TX_V2_SIGNATURE_FAILED' : undefined
+        );
+        if (finalDisplayMsg === errMsg) {
+          finalDisplayMsg = t('transfer.networkError') || ('网络错误，请检查网络连接后重试：' + errMsg);
         }
 
         const transferMode = isNormalTransferMode ? 'normal' : (currentTfMode === 'cross' ? 'cross' : 'quick');
@@ -1530,10 +1722,12 @@ async function pollTXStatusInBackground(
     } else {
       // 交易验证失败 - 显示错误 toast 并解锁 UTXO
       const errorReason = confirmResult.errorReason || t('transfer.unknownError') || '未知错误';
-      console.log('[后台轮询] 交易验证失败:', txID, errorReason);
+      const humanizedReason = humanizeProtocolError(errorReason);
+      console.log('[后台轮询] 交易验证失败:', txID, humanizedReason);
+      clearPendingSeedAdvanceByTxId(txID);
       updateTxHistoryByTxId(txID, {
         status: 'failed',
-        failureReason: errorReason
+        failureReason: humanizedReason
       });
 
       // 🔓 解锁与此交易相关的 UTXO（交易失败，UTXO 可以再次使用）
@@ -1562,8 +1756,8 @@ async function pollTXStatusInBackground(
       }
 
       showToast(
-        t('transfer.txVerificationFailedShort', { reason: errorReason }) ||
-        `交易验证失败: ${errorReason}`,
+        t('transfer.txVerificationFailedShort', { reason: humanizedReason }) ||
+        `交易验证失败: ${humanizedReason}`,
         'error',
         t('transfer.txVerificationFailed') || '交易验证失败',
         8000  // 错误信息显示更久

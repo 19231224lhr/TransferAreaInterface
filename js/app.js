@@ -1,4 +1,4 @@
-/**
+﻿/**
  * PanguPay - Main Entry Point
  * 
  * This is the main entry file that initializes all modules and sets up the application.
@@ -525,6 +525,7 @@ Object.assign(PP.pages, {
   resetInquiryState: createLazyPageFn('joinGroup', 'resetInquiryState'),
   resetCreatingFlag: createLazyPageFn('newUser', 'resetCreatingFlag'),
   resetImportState: createLazyPageFn('import', 'resetImportState'),
+  resetWalletRefreshFlag: createLazyPageFn('main', 'resetWalletRefreshFlag'),
   handleMainRoute: createLazyPageFn('main', 'handleMainRoute'),
   updateGroupDetailDisplay: createLazyPageFn('groupDetail', 'updateGroupDetailDisplay'),
 });

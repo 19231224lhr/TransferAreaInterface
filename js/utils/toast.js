@@ -7,6 +7,7 @@
 import { t } from '../i18n/index.js';
 import { html as viewHtml, renderInto } from './view';
 import { DOM_IDS } from '../config/domIds';
+import { humanizeErrorMessage } from './errorHumanizer';
 
 // ========================================
 // Toast Icons
@@ -34,6 +35,7 @@ const TOAST_ICONS = {
 export function showToast(message, type = 'info', title = '', duration = 3000) {
   const container = document.getElementById(DOM_IDS.toastContainer);
   if (!container) return null;
+  const finalMessage = type === 'error' ? humanizeErrorMessage(message) : message;
 
   // Default titles based on type
   const defaultTitles = {
@@ -49,7 +51,7 @@ export function showToast(message, type = 'info', title = '', duration = 3000) {
     <div class="toast-icon">${TOAST_ICONS[type] || TOAST_ICONS.info}</div>
     <div class="toast-content">
       <p class="toast-title">${title || defaultTitles[type] || t('common.info')}</p>
-      <p class="toast-message">${message}</p>
+      <p class="toast-message">${finalMessage}</p>
     </div>
     <button class="toast-close" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

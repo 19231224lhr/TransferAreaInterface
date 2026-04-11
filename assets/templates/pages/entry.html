@@ -1,4 +1,4 @@
-<!-- Entry Page Template - 钱包管理页面 -->
+<!-- Entry Page Template - 钱包地址准备页面 -->
 <section class="hidden" id="entryCard">
   <div class="entry-page">
     <!-- 左侧：品牌展示区 -->
@@ -13,8 +13,8 @@
               <path d="M6 12h.01M18 12h.01" />
             </svg>
           </div>
-          <h1 class="entry-brand-title" data-i18n="entry.title">钱包管理</h1>
-          <p class="entry-brand-desc" data-i18n="entry.description">安全管理您的数字资产，支持多地址统一管理</p>
+          <h1 class="entry-brand-title" data-i18n="entry.title">钱包地址准备</h1>
+          <p class="entry-brand-desc" data-i18n="entry.description">这里管理的是可转账的钱包地址，而不是账户身份本身。每个地址会携带独立的 seed-chain 状态。</p>
         </div>
 
         <!-- 特性列表 -->
@@ -26,8 +26,8 @@
               </svg>
             </div>
             <div class="entry-benefit-text">
-              <h4 data-i18n="entry.benefit1.title">安全加密存储</h4>
-              <p data-i18n="entry.benefit1.desc">采用高强度加密算法，确保私钥安全</p>
+              <h4 data-i18n="entry.benefit1.title">地址恢复材料</h4>
+              <p data-i18n="entry.benefit1.desc">导入或创建的是地址级长期恢复材料，优先是 AddressRootSeed；老地址仍可能是兼容私钥。</p>
             </div>
           </div>
           <div class="entry-benefit">
@@ -40,8 +40,8 @@
               </svg>
             </div>
             <div class="entry-benefit-text">
-              <h4 data-i18n="entry.benefit2.title">多地址管理</h4>
-              <p data-i18n="entry.benefit2.desc">同时管理多个钱包地址，便捷切换</p>
+              <h4 data-i18n="entry.benefit2.title">协议状态可见</h4>
+              <p data-i18n="entry.benefit2.desc">每个地址都会显示注册状态、seed 状态和是否可转账。</p>
             </div>
           </div>
           <div class="entry-benefit">
@@ -53,8 +53,8 @@
               </svg>
             </div>
             <div class="entry-benefit-text">
-              <h4 data-i18n="entry.benefit3.title">一键导入</h4>
-              <p data-i18n="entry.benefit3.desc">支持通过私钥快速导入现有钱包</p>
+              <h4 data-i18n="entry.benefit3.title">恢复 seed 能力</h4>
+              <p data-i18n="entry.benefit3.desc">导入地址后，系统会结合后端返回的锚点和步数恢复本地 seed-chain 状态。</p>
             </div>
           </div>
         </div>
@@ -87,8 +87,8 @@
       <div class="entry-main-content">
         <!-- 页面标题 -->
         <div class="entry-header">
-          <h2 class="entry-header-title" data-i18n="entry.selectAction">选择操作方式</h2>
-          <p class="entry-header-desc" id="entryImportSuggest" data-i18n="entry.selectActionDesc">生成新钱包或导入已有钱包，开启您的数字资产之旅</p>
+          <h2 class="entry-header-title" data-i18n="entry.selectAction">准备钱包地址</h2>
+          <p class="entry-header-desc" id="entryImportSuggest" data-i18n="entry.selectActionDesc">创建或导入至少一个可转账地址。系统会在这里显示每个地址的协议状态与可用性。</p>
         </div>
 
         <!-- 用户状态信息区 (新增) -->
@@ -130,6 +130,10 @@
                 <span class="entry-status-label" data-i18n="entry.addressCount">钱包地址:</span>
                 <span class="entry-status-value" id="entryAddressCount">0</span>
               </div>
+              <div class="entry-status-item">
+                <span class="entry-status-label" data-i18n="entry.usableAddressCount">可转账地址:</span>
+                <span class="entry-status-value" id="entryUsableAddressCount">0</span>
+              </div>
               <!-- 总余额 -->
               <div class="entry-status-item">
                 <span class="entry-status-label" data-i18n="entry.totalBalance">总余额:</span>
@@ -149,8 +153,8 @@
               </svg>
             </div>
             <div class="entry-action-info">
-              <h4 data-i18n="entry.createWallet">新建钱包</h4>
-              <p data-i18n="entry.createWalletDesc">生成全新的密钥对</p>
+              <h4 data-i18n="entry.createWallet">创建钱包地址</h4>
+              <p data-i18n="entry.createWalletDesc">生成新的地址恢复材料并初始化可转账状态</p>
             </div>
             <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7" />
@@ -166,13 +170,33 @@
               </svg>
             </div>
             <div class="entry-action-info">
-              <h4 data-i18n="entry.importWallet">导入钱包</h4>
-              <p data-i18n="entry.importWalletDesc">使用已有私钥导入</p>
+              <h4 data-i18n="entry.importWallet">导入钱包地址</h4>
+              <p data-i18n="entry.importWalletDesc">使用地址恢复材料导入，并恢复该地址的 seed-chain 状态</p>
             </div>
             <svg class="entry-action-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </button>
+        </div>
+
+        <div class="tip-box tip--info entry-seed-tip">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 12v4" />
+            <path d="M12 8h.01" />
+          </svg>
+          <span data-i18n="entry.seedImportNotice">提示：这里不会展示 seed 明文。导入地址时推荐输入 AddressRootSeed 恢复材料；老地址也兼容私钥。系统会据此恢复后续交易所需的 seed-chain 本地状态。</span>
+        </div>
+
+        <div id="entryLockedNotice" class="tip-box tip--warning entry-locked-tip hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            <path d="M12 9v4" />
+            <path d="M12 17h.01" />
+          </svg>
+          <span id="entryLockedNoticeText" data-i18n="entry.lockedNotice">检测到未解锁地址。请先点击地址输入私钥解锁；如果无法解锁，请删除这些地址后再继续。</span>
         </div>
 
         <!-- 钱包列表区 -->
@@ -186,7 +210,7 @@
               </svg>
             </div>
             <div class="entry-wallet-info">
-              <span class="entry-wallet-label" data-i18n="entry.walletsAdded">已添加钱包</span>
+              <span class="entry-wallet-label" data-i18n="entry.walletsAdded">已准备地址</span>
               <span class="entry-wallet-count" id="walletCount">0</span>
             </div>
           </div>
@@ -203,7 +227,7 @@
               <path d="M12 8v6" />
               <circle cx="12" cy="17" r="0.5" fill="currentColor" />
             </svg>
-            <span data-i18n="entry.addWalletFirst">请先添加至少一个钱包地址</span>
+            <span data-i18n="entry.addWalletFirst">请先创建或导入至少一个可转账的钱包地址</span>
           </div>
         </div>
 

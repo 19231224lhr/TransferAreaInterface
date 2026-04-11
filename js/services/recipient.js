@@ -77,13 +77,17 @@ async function fetchAddrInfo(addr) {
       hasPubKey: !!pubKey
     });
 
-    return {
-      groupId,
-      pubKey,
-      isRetail: info.isRetail,
-      isInGroup: info.isInGroup,
-      type: info.type ?? 0  // 币种类型：0=PGC, 1=BTC, 2=ETH
-    };
+	    return {
+	      groupId,
+	      pubKey,
+	      isRetail: info.isRetail,
+	      isInGroup: info.isInGroup,
+	      type: info.type ?? 0,
+	      protocolReady: !!(info.seedAnchor && info.seedChainStep && info.defaultSpendAlgorithm),
+	      protocolReason: !!(info.seedAnchor && info.seedChainStep && info.defaultSpendAlgorithm)
+	        ? ''
+	        : '地址缺少 seed/V2 协议元数据'
+	    };
 
   } catch (error) {
     console.error('[Recipient] Fetch address info error:', error);
@@ -407,7 +411,9 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
         card.classList.add('expanded');
 
         // Show appropriate toast message based on address status
-        if (info.isRetail) {
+	        if (!info.protocolReady) {
+	          showErrorToast(info.protocolReason || '地址协议状态不完整，当前不可作为收款地址');
+	        } else if (info.isRetail) {
           // GroupID = "1": Address exists but not in any guarantor group
           if (info.pubKey) {
             showToast(t('tx.addressIsRetailWithPubKey'), 'info', '', 1000);

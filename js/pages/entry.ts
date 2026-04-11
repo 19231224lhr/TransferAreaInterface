@@ -11,10 +11,12 @@
  * @module pages/entry
  */
 
-import { loadUser } from '../utils/storage';
+import { loadUser, hasAddressProtocolMetadata } from '../utils/storage';
 import { t } from '../i18n/index.js';
 import { escapeHtml } from '../utils/security';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { importAddressMaterial } from '../services/account';
+import { humanizeErrorMessage } from '../utils/errorHumanizer';
 import {
   createReactiveState,
   type ReactiveState
@@ -30,6 +32,7 @@ import {
 interface EntryPageState {
   // 钱包数量
   walletCount: number;
+  usableAddressCount: number;
   
   // 是否有钱包
   hasWallets: boolean;
@@ -45,6 +48,9 @@ interface EntryPageState {
   
   // 是否显示空提示
   showEmptyTip: boolean;
+
+  // 登录进入时是否存在未解锁地址
+  hasLockedAddresses: boolean;
 }
 
 /**
@@ -54,6 +60,13 @@ interface AddressOrigin {
   label: string;
   cls: string;
   locked?: boolean; // 是否被锁定（外部导入未解锁）
+}
+
+interface AddressProtocolStatus {
+  label: string;
+  cls: string;
+  detail: string;
+  usable: boolean;
 }
 
 /**
@@ -74,11 +87,13 @@ interface AddressItem {
  */
 const initialState: EntryPageState = {
   walletCount: 0,
+  usableAddressCount: 0,
   hasWallets: false,
   isExpanded: false,
   showToggleBtn: false,
   nextBtnDisabled: true,
-  showEmptyTip: true
+  showEmptyTip: true,
+  hasLockedAddresses: false
 };
 
 /**
@@ -87,6 +102,9 @@ const initialState: EntryPageState = {
 const stateBindings = {
   walletCount: [
     { selector: idSelector(DOM_IDS.walletCount), type: 'text' as const }
+  ],
+  usableAddressCount: [
+    { selector: idSelector(DOM_IDS.entryUsableAddressCount), type: 'text' as const }
   ],
   hasWallets: [
     { selector: idSelector(DOM_IDS.walletBriefList), type: 'visible' as const }
@@ -135,6 +153,120 @@ function getAddressOrigin(addr: string): AddressOrigin {
   return { label: t('common.info') || '信息', cls: 'origin--unknown', locked: false };
 }
 
+function getAddressProtocolStatus(addr: string): AddressProtocolStatus {
+  const u = loadUser();
+  const addrData = u?.wallet?.addressMsg?.[addr] as any;
+  const isRetail = !(u?.orgNumber || u?.guarGroup?.groupID || u?.isInGroup);
+
+  if (!addrData) {
+    return {
+      label: t('entry.protocolSyncing') || '待同步',
+      cls: 'origin--unknown',
+      detail: t('entry.protocolReasonSyncing') || '地址协议状态尚未同步',
+      usable: false
+    };
+  }
+
+  if (addrData.locked) {
+    return {
+      label: t('entry.protocolReadonly') || '只读',
+      cls: 'origin--locked',
+      detail: t('entry.protocolReasonReadonly') || '该地址当前仅可查看，暂不可转出。',
+      usable: false
+    };
+  }
+
+  if (addrData.pendingSeedStep) {
+    return {
+      label: t('entry.protocolPending') || '推进中',
+      cls: 'origin--unknown',
+      detail: t('entry.protocolReasonPending') || '该地址正在等待上一笔交易确认并推进 seed 步骤。',
+      usable: false
+    };
+  }
+
+  if (addrData.seedRepairRequired) {
+    return {
+      label: t('entry.protocolRepair') || '待修复',
+      cls: 'origin--locked',
+      detail: t('entry.protocolReasonRepair') || '缺少本地 seed 私有状态，当前地址需要修复。',
+      usable: false
+    };
+  }
+
+  if (addrData.readOnly) {
+    return {
+      label: t('entry.protocolReadonly') || '只读',
+      cls: 'origin--locked',
+      detail: t('entry.protocolReasonReadonly') || '该地址当前仅可查看，暂不可转出。',
+      usable: false
+    };
+  }
+
+  if (addrData.registrationState === 'failed') {
+    return {
+      label: t('entry.protocolRegisterFailed') || '注册失败',
+      cls: 'origin--imported',
+      detail: addrData.registrationError || t('entry.protocolReasonRegisterFailed') || '该地址注册失败，请修复后再继续。',
+      usable: false
+    };
+  }
+
+  if (addrData.registrationState === 'pending') {
+    return {
+      label: t('entry.protocolRegistering') || '注册中',
+      cls: 'origin--external',
+      detail: t('entry.protocolReasonRegistering') || '该地址正在向后端注册，请稍后重试。',
+      usable: false
+    };
+  }
+
+  if (isRetail && addrData.registrationState !== 'registered') {
+    return {
+      label: t('entry.protocolAwaitRegister') || '待注册',
+      cls: 'origin--unknown',
+      detail: t('entry.protocolReasonAwaitRegister') || '该地址会在进入主钱包页面后统一执行注册。',
+      usable: false
+    };
+  }
+
+  if (!hasAddressProtocolMetadata(addrData)) {
+    return {
+      label: t('entry.protocolSyncing') || '待同步',
+      cls: 'origin--unknown',
+      detail: t('entry.protocolReasonSyncing') || '地址协议状态尚未同步',
+      usable: false
+    };
+  }
+
+  return {
+    label: t('entry.protocolReady') || '可转账',
+    cls: 'origin--created',
+    detail: t('entry.protocolReasonReady') || '地址协议状态完整，可用于后续转账。',
+    usable: true
+  };
+}
+
+function countLockedAddresses(addrs: string[]): number {
+  const u = loadUser();
+  const map = u?.wallet?.addressMsg || {};
+  return addrs.reduce((count, addr) => (map[addr]?.locked ? count + 1 : count), 0);
+}
+
+function updateLockedNotice(isFromLogin: boolean, lockedAddressCount: number): void {
+  const notice = document.getElementById('entryLockedNotice');
+  const text = document.getElementById('entryLockedNoticeText');
+  if (!notice || !text) return;
+
+  const shouldShow = isFromLogin && lockedAddressCount > 0;
+  notice.classList.toggle('hidden', !shouldShow);
+
+  if (!shouldShow) return;
+
+  text.textContent = t('entry.lockedNotice', { count: lockedAddressCount })
+    || `检测到 ${lockedAddressCount} 个未解锁地址。请先点击这些地址输入私钥解锁；如果无法解锁，请删除这些地址后再继续。`;
+}
+
 /**
  * 渲染钱包地址列表
  */
@@ -153,6 +285,7 @@ function renderWalletList(addrs: string[]): void {
   brief.replaceChildren();
   addrs.forEach(a => {
     const o = getAddressOrigin(a);
+    const protocol = getAddressProtocolStatus(a);
     const li = document.createElement('li');
     li.dataset.addr = a;
     
@@ -169,8 +302,14 @@ function renderWalletList(addrs: string[]): void {
     badge.className = `origin-badge ${o.cls}`;
     badge.textContent = o.label;
 
+    const protocolBadge = document.createElement('span');
+    protocolBadge.className = `origin-badge ${protocol.cls}`;
+    protocolBadge.textContent = protocol.label;
+    protocolBadge.title = protocol.detail;
+
     li.appendChild(addr);
     li.appendChild(badge);
+    li.appendChild(protocolBadge);
     
     // 添加删除按钮（所有地址都可以删除）
     const deleteBtn = document.createElement('button');
@@ -229,10 +368,10 @@ function updateExpandState(isExpanded: boolean): void {
  * 处理解锁地址（输入私钥）
  */
 async function handleUnlockAddress(address: string): Promise<void> {
-  // 使用自定义模态框输入私钥
-  const privKey = await showPrivateKeyInputModal(address);
+  // 使用自定义模态框输入恢复材料
+  const recoveryMaterial = await showPrivateKeyInputModal(address);
   
-  if (!privKey) return;
+  if (!recoveryMaterial) return;
 
   const normalizeAddress = (value: unknown): string =>
     String(value ?? '')
@@ -255,13 +394,8 @@ async function handleUnlockAddress(address: string): Promise<void> {
   
   try {
     const { saveUser, loadUser } = await import('../utils/storage.js');
-    
-    // 使用系统已有的方法解析私钥
-    if (typeof window.PanguPay?.account?.importFromPrivHex !== 'function') {
-      throw new Error(t('modal.systemError', 'System Error'));
-    }
-    
-    const keyData = await window.PanguPay.account.importFromPrivHex(privKey);
+
+    const keyData = await importAddressMaterial(recoveryMaterial);
     
     // 验证私钥是否匹配该地址
     const user = loadUser();
@@ -299,10 +433,18 @@ async function handleUnlockAddress(address: string): Promise<void> {
     }
     
     // 保存私钥并解锁地址
-    user.wallet.addressMsg[address].privHex = (keyData as any)?.privHex || privKey;
+    user.wallet.addressMsg[address].privHex = (keyData as any)?.privHex || recoveryMaterial;
     user.wallet.addressMsg[address].pubXHex = pubKeyX;
     user.wallet.addressMsg[address].pubYHex = pubKeyY;
+    if ((keyData as any)?.addressRootSeedHex) {
+      user.wallet.addressMsg[address].addressRootSeedHex = (keyData as any).addressRootSeedHex;
+    }
+    if (typeof (keyData as any)?.addressType === 'number') {
+      user.wallet.addressMsg[address].type = (keyData as any).addressType;
+    }
     user.wallet.addressMsg[address].locked = false;
+    user.wallet.addressMsg[address].readOnly = false;
+    user.wallet.addressMsg[address].seedRepairRequired = false;
     
     saveUser(user);
     
@@ -315,13 +457,13 @@ async function handleUnlockAddress(address: string): Promise<void> {
   } catch (error) {
     console.error('[Entry] Unlock address failed:', error);
     window.PanguPay?.ui?.showErrorToast?.(
-      (error as Error)?.message || t('entry.unlockFailed') || '解锁失败'
+      humanizeErrorMessage((error as Error)?.message || t('entry.unlockFailed') || '解锁失败')
     );
   }
 }
 
 /**
- * 显示私钥输入模态框
+ * 显示恢复材料输入模态框
  */
 function showPrivateKeyInputModal(address: string): Promise<string | null> {
   return new Promise((resolve) => {
@@ -341,7 +483,7 @@ function showPrivateKeyInputModal(address: string): Promise<string | null> {
               type="password" 
               id="unlockPrivKeyInput" 
               class="unlock-address-input" 
-              placeholder="${t('entry.enterPrivateKey') || '输入私钥 (Hex)'}"
+              placeholder="${t('entry.enterRecoveryMaterial') || '输入地址恢复材料（arsk_... 或兼容私钥）'}"
               autocomplete="off"
             />
             <button type="button" class="unlock-address-toggle" id="unlockToggleBtn">
@@ -536,6 +678,16 @@ function handleBackClick(): void {
 function handleNextClick(): void {
   const u = loadUser();
   const addrs = u?.wallet ? Object.keys(u.wallet.addressMsg || {}) : [];
+  const isFromLogin = u?.entrySource === 'login';
+  const lockedAddressCount = isFromLogin ? countLockedAddresses(addrs) : 0;
+
+  if (isFromLogin && lockedAddressCount > 0) {
+    window.PanguPay?.ui?.showErrorToast?.(
+      t('entry.lockedNextBlocked', { count: lockedAddressCount })
+      || `还有 ${lockedAddressCount} 个地址未解锁，请先解锁或删除后再继续。`
+    );
+    return;
+  }
   
   // 显示确认模态框
   const proceedModal = document.getElementById(DOM_IDS.confirmProceedModal);
@@ -662,6 +814,7 @@ export function updateWalletBrief(): void {
   const hasOrg = !!(u?.orgNumber);
   const isInGroup = u?.isInGroup || false;
   const isFromLogin = u?.entrySource === 'login';
+  const lockedAddressCount = isFromLogin ? countLockedAddresses(addrs) : 0;
   
   console.log('[Entry] updateWalletBrief:', {
     hasUser: !!u,
@@ -678,47 +831,38 @@ export function updateWalletBrief(): void {
     pageState = createReactiveState(initialState, stateBindings);
   }
   
-  // 计算锁定地址数量
-  let lockedAddressCount = 0;
-  if (isFromLogin) {
-    addrs.forEach(addr => {
-      const addrData = u?.wallet?.addressMsg?.[addr];
-      if (addrData && addrData.locked) {
-        lockedAddressCount++;
-        console.log('[Entry] Locked address:', addr, addrData);
-      }
-    });
-  }
+  let usableAddressCount = 0;
+  addrs.forEach(addr => {
+    const protocol = getAddressProtocolStatus(addr);
+    if (protocol.usable) usableAddressCount++;
+  });
   
-  console.log('[Entry] Locked addresses:', lockedAddressCount, '/', addrs.length);
+  console.log('[Entry] Usable addresses:', usableAddressCount, '/', addrs.length);
   
   // 计算状态
   const walletCount = addrs.length;
   const hasWallets = walletCount > 0;
   const showToggleBtn = walletCount > 3;
   
-  // 如果是从登录进入，只有所有地址都解锁才能点击下一步
-  // 如果是从新建进入，按原逻辑
   let nextBtnDisabled: boolean;
-  if (isFromLogin) {
-    nextBtnDisabled = lockedAddressCount > 0;
-  } else {
-    nextBtnDisabled = walletCount === 0 && !hasOrg;
-  }
+  nextBtnDisabled = (walletCount === 0 && !hasOrg) || (isFromLogin && lockedAddressCount > 0);
   
   const showEmptyTip = walletCount === 0 && !hasOrg && !isFromLogin;
   
   // 更新状态
   pageState.set({
     walletCount,
+    usableAddressCount,
     hasWallets,
     showToggleBtn,
     nextBtnDisabled,
-    showEmptyTip
+    showEmptyTip,
+    hasLockedAddresses: isFromLogin && lockedAddressCount > 0
   });
   
   // 渲染列表
   renderWalletList(addrs);
+  updateLockedNotice(isFromLogin, lockedAddressCount);
   
   // 处理折叠状态
   if (showToggleBtn) {
@@ -779,6 +923,7 @@ function updateUserStatusInfo(
   const orgIdItemEl = document.getElementById('entryOrgIdItem');
   const orgIdEl = document.getElementById('entryOrgId');
   const addressCountEl = document.getElementById('entryAddressCount');
+  const usableCountEl = document.getElementById(DOM_IDS.entryUsableAddressCount);
   const totalBalanceEl = document.getElementById('entryTotalBalance');
   
   console.log('[Entry] updateUserStatusInfo:', {
@@ -847,10 +992,16 @@ function updateUserStatusInfo(
     if (addressCountEl) {
       addressCountEl.textContent = String(addressCount);
     }
+
+    if (usableCountEl) {
+      const addrs = Object.keys(user.wallet?.addressMsg || {});
+      const usable = addrs.reduce((sum: number, addr: string) => sum + (getAddressProtocolStatus(addr).usable ? 1 : 0), 0);
+      usableCountEl.textContent = String(usable);
+    }
     
     // 更新总余额
     if (totalBalanceEl) {
-      const totalValue = user.wallet?.value || 0;
+      const totalValue = Number(user.wallet?.totalValue ?? user.wallet?.value ?? 0) || 0;
       totalBalanceEl.textContent = totalValue.toFixed(2);
     }
   } else {

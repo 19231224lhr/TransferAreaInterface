@@ -533,6 +533,14 @@
   line-height: 1.5;
 }
 
+.entry-seed-tip {
+  margin-bottom: 24px;
+}
+
+.entry-locked-tip {
+  margin-bottom: 24px;
+}
+
 /* ========================================
    钱包列表区
    ======================================== */
@@ -784,6 +792,32 @@
 .entry-empty-tip span {
   font-size: 14px;
   color: #94a3b8;
+}
+
+.entry-result-tip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  color: #475569;
+}
+
+.entry-result-tip svg {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: #0f766e;
+}
+
+.entry-result-tip span {
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 /* ========================================

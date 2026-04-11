@@ -21,7 +21,21 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
-import { UTXOData, TxCertificate, PublicKeyNew, PublicKeyEnvelope } from '../types/blockchain';
+import { UTXOData, TxCertificate, PublicKeyEnvelope } from '../types/blockchain';
+import {
+  AlgorithmECDSAP256,
+  convertPublicKeyToHex,
+  decodeBackendBytes,
+  publicKeyEnvelopeFromHex,
+  type PublicKeyNew as SignaturePublicKey
+} from './signature';
+import { deriveAddressKeypairFromAddressRootSeed } from './addressRootSeed';
+import {
+  DefaultSeedChainLength,
+  buildInitialSeedMetaFromPrivateKey,
+  recoverDeterministicSeedChainStateFromPrivateKey
+} from './seedChain';
+import { hasEncryptedKey } from './keyEncryption';
 
 // ========================================
 // Type Definitions
@@ -54,14 +68,39 @@ export interface AddressData {
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
+  addressRootSeedHex?: string;
   /** Whether address is locked (external import without private key) */
   locked?: boolean;
   /** Public key from backend (for external addresses) */
-  publicKeyNew?: {
-    CurveName: string;
-    X: number;
-    Y: number;
-  };
+  publicKeyNew?: SignaturePublicKey | null;
+  lastHeight?: number;
+  signPublicKeyV2?: PublicKeyEnvelope | null;
+  seedAnchor?: number[] | string;
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
+  registrationState?: AddressRegistrationState;
+  registrationError?: string;
+  seedRepairRequired?: boolean;
+  readOnly?: boolean;
+  lastProtocolSyncAt?: number;
+  seedLocalState?: AddressSeedLocalState | null;
+  pendingSeedStep?: number;
+  pendingNextSeedStep?: number;
+  pendingSeedTxId?: string;
+  pendingSeedAt?: number;
+}
+
+export type AddressRegistrationState = 'unknown' | 'pending' | 'registered' | 'failed';
+
+export interface AddressSeedLocalState {
+  mode: 'deterministic_p256';
+  chainLength: number;
+  step: number;
+  generation?: number;
+  source: 'plain' | 'encrypted' | 'missing';
+  available: boolean;
+  requiresUnlock?: boolean;
+  lastRecoveredAt?: number;
 }
 
 /** Wallet history record */
@@ -124,6 +163,8 @@ export interface User {
   guarGroupBootMsg?: any;
   /** Whether main-page address registration has been attempted */
   mainAddressRegistered?: boolean;
+  /** Addresses intentionally removed locally; async sync should not restore them implicitly */
+  deletedAddresses?: Record<string, number>;
 }
 
 /** User profile structure */
@@ -131,6 +172,578 @@ export interface UserProfile {
   nickname: string;
   avatar: string | null;
   signature: string;
+}
+
+function decodeOptionalBytes(value: unknown): number[] {
+  try {
+    return decodeBackendBytes(value);
+  } catch {
+    return [];
+  }
+}
+
+function normalizeHexString(value: unknown): string {
+  return String(value || '').replace(/^0x/i, '').toLowerCase();
+}
+
+function normalizeDeletedAddressesMap(value: unknown): Record<string, number> {
+  if (!value || typeof value !== 'object') {
+    return {};
+  }
+  const out: Record<string, number> = {};
+  for (const [rawAddress, rawTime] of Object.entries(value as Record<string, unknown>)) {
+    const address = String(rawAddress || '').toLowerCase();
+    if (!address) continue;
+    const ts = Number(rawTime || 0);
+    out[address] = Number.isFinite(ts) && ts > 0 ? ts : Date.now();
+  }
+  return out;
+}
+
+function hexToDecimalString(value: string): string {
+  const normalized = normalizeHexString(value);
+  if (!normalized) return '0';
+  return BigInt(`0x${normalized}`).toString(10);
+}
+
+function normalizeAddressValue(value: Partial<AddressValue> | Record<string, unknown> | undefined | null): AddressValue {
+  const totalValue = Number((value as any)?.totalValue ?? (value as any)?.TotalValue ?? 0);
+  const utxoValue = Number((value as any)?.utxoValue ?? (value as any)?.UTXOValue ?? totalValue);
+  const txCerValue = Number((value as any)?.txCerValue ?? (value as any)?.TXCerValue ?? 0);
+  return {
+    totalValue,
+    TotalValue: totalValue,
+    utxoValue,
+    txCerValue
+  };
+}
+
+function isRegistrationState(value: unknown): value is AddressRegistrationState {
+  return value === 'unknown' || value === 'pending' || value === 'registered' || value === 'failed';
+}
+
+function isEmptyPublicKeyEnvelope(value: PublicKeyEnvelope | null | undefined): boolean {
+  if (!value) return true;
+  const algorithm = String(value.Algorithm || '').trim();
+  if (!algorithm) return true;
+  return decodeOptionalBytes(value.PublicKey).length === 0;
+}
+
+function normalizeStoredPublicKey(
+  value: unknown,
+  fallbackPubXHex?: string,
+  fallbackPubYHex?: string
+): SignaturePublicKey | undefined {
+  const raw = (value && typeof value === 'object') ? value as Record<string, unknown> : null;
+  let pubXHex = normalizeHexString(raw?.XHex ?? fallbackPubXHex);
+  let pubYHex = normalizeHexString(raw?.YHex ?? fallbackPubYHex);
+
+  const x = raw?.X != null ? String(raw.X) : undefined;
+  const y = raw?.Y != null ? String(raw.Y) : undefined;
+
+  if ((!pubXHex || !pubYHex) && x && y) {
+    try {
+      const converted = convertPublicKeyToHex({
+        CurveName: String(raw?.CurveName || raw?.Curve || 'P256'),
+        X: x,
+        Y: y
+      } as SignaturePublicKey);
+      pubXHex = pubXHex || converted.x;
+      pubYHex = pubYHex || converted.y;
+    } catch {
+      // Ignore malformed legacy data and fall back to whatever is available.
+    }
+  }
+
+  if ((!x || !y) && pubXHex && pubYHex) {
+    return {
+      CurveName: String(raw?.CurveName || raw?.Curve || 'P256'),
+      X: x || hexToDecimalString(pubXHex),
+      Y: y || hexToDecimalString(pubYHex)
+    };
+  }
+
+  if (!x || !y) {
+    return undefined;
+  }
+
+  return {
+    CurveName: String(raw?.CurveName || raw?.Curve || 'P256'),
+    X: x,
+    Y: y
+  };
+}
+
+function reconcileAddressRootSeedDerivedData(
+  address: string,
+  current: Record<string, unknown>
+): Record<string, unknown> {
+  const normalizedAddress = String(address || '').toLowerCase();
+  const rootSeedHex = normalizeHexString(current.addressRootSeedHex);
+  if (!rootSeedHex) {
+    return current;
+  }
+
+  const candidateTypes = [0, 1, 2];
+  for (const candidateType of candidateTypes) {
+    const derived = deriveAddressKeypairFromAddressRootSeed(rootSeedHex, candidateType);
+    if (String(derived.address || '').toLowerCase() !== normalizedAddress) {
+      continue;
+    }
+    return {
+      ...current,
+      type: candidateType,
+      privHex: derived.privHex,
+      pubXHex: derived.pubXHex,
+      pubYHex: derived.pubYHex,
+      addressRootSeedHex: derived.addressRootSeedHex
+    };
+  }
+
+  return current;
+}
+
+export function getAccountPublicKeyHex(user: Partial<User> | null | undefined): { x: string; y: string } | null {
+  const pubXHex = normalizeHexString(user?.pubXHex || user?.keys?.pubXHex);
+  const pubYHex = normalizeHexString(user?.pubYHex || user?.keys?.pubYHex);
+  if (!pubXHex || !pubYHex) {
+    return null;
+  }
+  return { x: pubXHex, y: pubYHex };
+}
+
+export function getAccountSignPublicKeyV2(user: Partial<User> | null | undefined): PublicKeyEnvelope | null {
+  const accountPub = getAccountPublicKeyHex(user);
+  if (!accountPub) {
+    return null;
+  }
+  return publicKeyEnvelopeFromHex(accountPub.x, accountPub.y);
+}
+
+function getAddressEncryptedKeyId(accountId: string, address: string, accountAddress?: string): string {
+  const normalizedAddress = String(address || '').toLowerCase();
+  const normalizedMain = String(accountAddress || '').toLowerCase();
+  if (normalizedMain && normalizedAddress === normalizedMain) {
+    return accountId;
+  }
+  return `${accountId}_${normalizedAddress}`;
+}
+
+function hasLocalAddressKey(
+  accountId: string | undefined,
+  address: string,
+  addrData: Partial<AddressData>,
+  accountAddress?: string,
+  topLevelPrivHex?: string
+): { available: boolean; source: 'plain' | 'encrypted' | 'missing' } {
+  const normalizedPrivHex = normalizeHexString(addrData.privHex);
+  if (normalizedPrivHex) {
+    return { available: true, source: 'plain' };
+  }
+
+  if (topLevelPrivHex && String(address || '').toLowerCase() === String(accountAddress || '').toLowerCase()) {
+    return { available: true, source: 'plain' };
+  }
+
+  if (accountId) {
+    const keyId = getAddressEncryptedKeyId(accountId, address, accountAddress);
+    if (hasEncryptedKey(keyId)) {
+      return { available: true, source: 'encrypted' };
+    }
+  }
+
+  return { available: false, source: 'missing' };
+}
+
+function recoverAddressSeedState(
+  address: string,
+  addrData: Partial<AddressData>,
+  accountId?: string,
+  accountAddress?: string,
+  topLevelPrivHex?: string
+): {
+  seedAnchor?: number[];
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
+  seedLocalState: AddressSeedLocalState;
+  readOnly: boolean;
+  seedRepairRequired: boolean;
+} {
+  const normalizedAddress = String(address || '').toLowerCase();
+  const normalizedMain = String(accountAddress || '').toLowerCase();
+  const chainLength = Number(addrData.seedLocalState?.chainLength || DefaultSeedChainLength) || DefaultSeedChainLength;
+  const providedAnchor = decodeOptionalBytes(addrData.seedAnchor);
+  const rawStep = Number(addrData.seedChainStep ?? addrData.seedLocalState?.step ?? 0);
+  const providedStep = Number.isFinite(rawStep) && rawStep >= 0 ? rawStep : 0;
+  const normalizedPrivHex = normalizeHexString(
+    addrData.privHex || (normalizedMain && normalizedAddress === normalizedMain ? topLevelPrivHex : '')
+  );
+  const now = Date.now();
+  const existingLocalState = addrData.seedLocalState || null;
+
+  // Fast path: when the address already has a usable local seed state and the
+  // on-chain seed metadata hasn't changed, reuse it instead of recomputing the
+  // whole deterministic seed chain on every saveUser()/normalize pass.
+  if (
+    normalizedPrivHex &&
+    existingLocalState?.available &&
+    !addrData.seedRepairRequired &&
+    !addrData.readOnly &&
+    Number(existingLocalState.chainLength || 0) === chainLength &&
+    providedAnchor.length > 0 &&
+    providedStep > 0 &&
+    Number(existingLocalState.step || 0) === providedStep
+  ) {
+    return {
+      seedAnchor: [...providedAnchor],
+      seedChainStep: providedStep,
+      defaultSpendAlgorithm: String(addrData.defaultSpendAlgorithm || '').trim() || AlgorithmECDSAP256,
+      seedLocalState: {
+        ...existingLocalState,
+        mode: 'deterministic_p256',
+        chainLength,
+        step: providedStep,
+        source: existingLocalState.source || 'plain',
+        available: true
+      },
+      readOnly: false,
+      seedRepairRequired: false
+    };
+  }
+
+  if (normalizedPrivHex) {
+    try {
+      if (providedAnchor.length > 0 && providedStep >= 0 && providedStep <= chainLength) {
+        const recovered = recoverDeterministicSeedChainStateFromPrivateKey(
+          normalizedPrivHex,
+          chainLength,
+          providedStep,
+          providedAnchor
+        );
+        return {
+          seedAnchor: providedAnchor.length > 0 ? providedAnchor : undefined,
+          seedChainStep: providedStep,
+          defaultSpendAlgorithm: String(addrData.defaultSpendAlgorithm || '').trim() || AlgorithmECDSAP256,
+          seedLocalState: {
+            mode: 'deterministic_p256',
+            chainLength,
+            step: providedStep,
+            generation: recovered.generation,
+            source: 'plain',
+            available: true,
+            lastRecoveredAt: now
+          },
+          readOnly: false,
+          seedRepairRequired: false
+        };
+      }
+
+      const recovered = buildInitialSeedMetaFromPrivateKey(normalizedPrivHex);
+
+      return {
+        seedAnchor: providedAnchor.length > 0 ? providedAnchor : [...recovered.seedAnchor],
+        seedChainStep: providedStep > 0 ? providedStep : recovered.seedChainStep,
+        defaultSpendAlgorithm: String(addrData.defaultSpendAlgorithm || '').trim() || recovered.defaultSpendAlgorithm,
+        seedLocalState: {
+          mode: 'deterministic_p256',
+          chainLength,
+          step: providedStep > 0 ? providedStep : recovered.seedChainStep,
+          generation: recovered.state.generation,
+          source: 'plain',
+          available: true,
+          lastRecoveredAt: now
+        },
+        readOnly: false,
+        seedRepairRequired: false
+      };
+    } catch (error) {
+      console.warn(`[Storage] Failed to recover seed state for ${normalizedAddress}:`, error);
+      const fallback = buildInitialSeedMetaFromPrivateKey(normalizedPrivHex);
+      return {
+        seedAnchor: providedAnchor.length > 0 ? providedAnchor : [...fallback.seedAnchor],
+        seedChainStep: providedStep > 0 ? providedStep : fallback.seedChainStep,
+        defaultSpendAlgorithm: String(addrData.defaultSpendAlgorithm || '').trim() || fallback.defaultSpendAlgorithm,
+        seedLocalState: {
+          mode: 'deterministic_p256',
+          chainLength,
+          step: providedStep > 0 ? providedStep : fallback.seedChainStep,
+          generation: fallback.state.generation,
+          source: 'plain',
+          available: true,
+          lastRecoveredAt: now
+        },
+        readOnly: false,
+        seedRepairRequired: false
+      };
+    }
+  }
+
+  const localKey = hasLocalAddressKey(accountId, normalizedAddress, addrData, accountAddress, topLevelPrivHex);
+  const defaultSpendAlgorithm = String(addrData.defaultSpendAlgorithm || '').trim() || (providedAnchor.length > 0 ? AlgorithmECDSAP256 : '');
+  const hasRemoteSeedMeta = providedAnchor.length > 0 && providedStep > 0;
+
+  return {
+    seedAnchor: providedAnchor.length > 0 ? providedAnchor : undefined,
+    seedChainStep: providedStep > 0 ? providedStep : undefined,
+    defaultSpendAlgorithm: defaultSpendAlgorithm || undefined,
+    seedLocalState: {
+      mode: 'deterministic_p256',
+      chainLength,
+      step: providedStep > 0 ? providedStep : chainLength,
+      source: localKey.source,
+      available: localKey.available,
+      requiresUnlock: localKey.source === 'encrypted'
+    },
+    readOnly: hasRemoteSeedMeta && !localKey.available,
+    seedRepairRequired: hasRemoteSeedMeta && !localKey.available
+  };
+}
+
+export function hasAddressProtocolMetadata(addrData: Partial<AddressData> | null | undefined): boolean {
+  if (!addrData) {
+    return false;
+  }
+  return (
+    !isEmptyPublicKeyEnvelope(addrData.signPublicKeyV2 || undefined) &&
+    decodeOptionalBytes(addrData.seedAnchor).length > 0 &&
+    Number(addrData.seedChainStep || 0) > 0 &&
+    !!String(addrData.defaultSpendAlgorithm || '').trim()
+  );
+}
+
+export function getAddressProtocolIssues(address: string, addrData: Partial<AddressData> | null | undefined): string[] {
+  if (!addrData) {
+    return [`${address}: missing local address metadata`];
+  }
+  const issues: string[] = [];
+  if (!addrData.pubXHex || !addrData.pubYHex) {
+    issues.push(`${address}: missing address public key`);
+  }
+  if (isEmptyPublicKeyEnvelope(addrData.signPublicKeyV2 || undefined)) {
+    issues.push(`${address}: missing SignPublicKeyV2`);
+  }
+  if (decodeOptionalBytes(addrData.seedAnchor).length === 0) {
+    issues.push(`${address}: missing SeedAnchor`);
+  }
+  if (Number(addrData.seedChainStep || 0) <= 0) {
+    issues.push(`${address}: invalid SeedChainStep`);
+  }
+  if (!String(addrData.defaultSpendAlgorithm || '').trim()) {
+    issues.push(`${address}: missing DefaultSpendAlgorithm`);
+  }
+  if (addrData.seedRepairRequired) {
+    issues.push(`${address}: local seed state missing`);
+  }
+  if (addrData.readOnly) {
+    issues.push(`${address}: address is read-only`);
+  }
+  return issues;
+}
+
+export function normalizeAddressDataForStorage(
+  address: string,
+  addrData: Partial<AddressData> | null | undefined,
+  context: {
+    accountId?: string;
+    accountAddress?: string;
+    accountPubXHex?: string;
+    accountPubYHex?: string;
+    topLevelPrivHex?: string;
+    syncTime?: number;
+  } = {}
+): AddressData {
+  const current = reconcileAddressRootSeedDerivedData(
+    address,
+    (addrData || {}) as Record<string, unknown>
+  );
+  const pubXHex = normalizeHexString(current.pubXHex);
+  const pubYHex = normalizeHexString(current.pubYHex);
+  const publicKeyNew = normalizeStoredPublicKey(current.publicKeyNew ?? current.PublicKeyNew, pubXHex, pubYHex);
+  let normalizedPubXHex = pubXHex;
+  let normalizedPubYHex = pubYHex;
+
+  if ((!normalizedPubXHex || !normalizedPubYHex) && publicKeyNew) {
+    try {
+      const converted = convertPublicKeyToHex(publicKeyNew);
+      normalizedPubXHex = normalizedPubXHex || converted.x;
+      normalizedPubYHex = normalizedPubYHex || converted.y;
+    } catch {
+      // Ignore malformed legacy public key encodings.
+    }
+  }
+
+  const protocolState = recoverAddressSeedState(
+    address,
+    current as Partial<AddressData>,
+    context.accountId,
+    context.accountAddress,
+    context.topLevelPrivHex
+  );
+  const accountSignPublicKeyV2 = (context.accountPubXHex && context.accountPubYHex)
+    ? publicKeyEnvelopeFromHex(context.accountPubXHex, context.accountPubYHex)
+    : null;
+  const existingSignPublicKeyV2 = current.signPublicKeyV2 as PublicKeyEnvelope | undefined;
+  const signPublicKeyV2 = !isEmptyPublicKeyEnvelope(existingSignPublicKeyV2)
+    ? existingSignPublicKeyV2
+    : accountSignPublicKeyV2;
+  const syncTime = Number(current.lastProtocolSyncAt || context.syncTime || 0) || undefined;
+
+  let registrationState: AddressRegistrationState = 'unknown';
+  if (isRegistrationState(current.registrationState)) {
+    registrationState = current.registrationState;
+  } else if (current.registrationError) {
+    registrationState = 'failed';
+  }
+
+  return {
+    type: Number(current.type ?? current.Type ?? 0),
+    utxos: ((current.utxos ?? current.UTXO) as Record<string, UTXOData>) || {},
+    txCers: ((current.txCers ?? current.TXCers) as Record<string, number>) || {},
+    value: normalizeAddressValue((current.value ?? current.Value) as Partial<AddressValue>),
+    estInterest: Number(current.estInterest ?? current.EstInterest ?? current.Interest ?? current.gas ?? 0),
+    gas: Number(current.gas ?? current.estInterest ?? current.EstInterest ?? current.Interest ?? 0),
+    origin: current.origin ? String(current.origin) : undefined,
+    privHex: normalizeHexString(current.privHex) || undefined,
+    pubXHex: normalizedPubXHex || undefined,
+    pubYHex: normalizedPubYHex || undefined,
+    addressRootSeedHex: normalizeHexString(current.addressRootSeedHex) || undefined,
+    locked: Boolean(current.locked) || (String(current.origin || '') === 'external' && !protocolState.seedLocalState.available),
+    publicKeyNew: publicKeyNew || undefined,
+    lastHeight: Number(current.lastHeight ?? current.LastHeight ?? 0) || undefined,
+    signPublicKeyV2: signPublicKeyV2 || undefined,
+    seedAnchor: protocolState.seedAnchor && protocolState.seedAnchor.length > 0 ? protocolState.seedAnchor : undefined,
+    seedChainStep: protocolState.seedChainStep,
+    defaultSpendAlgorithm: protocolState.defaultSpendAlgorithm,
+    registrationState,
+    registrationError: registrationState === 'registered' ? undefined : (current.registrationError ? String(current.registrationError) : undefined),
+    seedRepairRequired: Boolean(current.seedRepairRequired) || protocolState.seedRepairRequired,
+    readOnly: Boolean(current.readOnly) || protocolState.readOnly,
+    lastProtocolSyncAt: syncTime,
+    seedLocalState: protocolState.seedLocalState,
+    pendingSeedStep: Number(current.pendingSeedStep || 0) || undefined,
+    pendingNextSeedStep: Number(current.pendingNextSeedStep || 0) || undefined,
+    pendingSeedTxId: current.pendingSeedTxId ? String(current.pendingSeedTxId) : undefined,
+    pendingSeedAt: Number(current.pendingSeedAt || 0) || undefined
+  };
+}
+
+export function normalizeUserAccount(user: User | null): User | null {
+  if (!user) {
+    return null;
+  }
+
+  const normalized = JSON.parse(JSON.stringify(user)) as User;
+  normalized.deletedAddresses = normalizeDeletedAddressesMap(normalized.deletedAddresses);
+  normalized.keys = normalized.keys || { privHex: '', pubXHex: '', pubYHex: '' };
+  normalized.wallet = normalized.wallet || {
+    addressMsg: {},
+    totalTXCers: {},
+    totalValue: 0,
+    valueDivision: { 0: 0, 1: 0, 2: 0 },
+    updateTime: Date.now(),
+    updateBlock: 0
+  };
+  normalized.wallet.addressMsg = normalized.wallet.addressMsg || {};
+  normalized.wallet.totalTXCers = normalized.wallet.totalTXCers || {};
+  normalized.wallet.valueDivision = {
+    0: 0,
+    1: 0,
+    2: 0,
+    ...(normalized.wallet.ValueDivision || normalized.wallet.valueDivision || {})
+  };
+  normalized.wallet.totalValue = Number(normalized.wallet.totalValue ?? normalized.wallet.TotalValue ?? 0);
+  normalized.wallet.TotalValue = normalized.wallet.totalValue;
+
+  const accountPub = getAccountPublicKeyHex(normalized);
+  const normalizedAddressMsg: Record<string, AddressData> = {};
+  for (const [rawAddress, data] of Object.entries(normalized.wallet.addressMsg)) {
+    const address = String(rawAddress || '').toLowerCase();
+    if (!address) {
+      continue;
+    }
+    if (normalized.deletedAddresses?.[address]) {
+      continue;
+    }
+    normalizedAddressMsg[address] = normalizeAddressDataForStorage(address, data, {
+      accountId: normalized.accountId,
+      accountAddress: normalized.address,
+      accountPubXHex: accountPub?.x,
+      accountPubYHex: accountPub?.y,
+      topLevelPrivHex: normalized.privHex || normalized.keys?.privHex
+    });
+  }
+  normalized.wallet.addressMsg = normalizedAddressMsg;
+  return normalized;
+}
+
+export function mergeBackendWalletData(
+  user: User,
+  walletData: {
+    Value?: number;
+    TotalValue?: number;
+    ValueDivision?: Record<number, number>;
+    SubAddressMsg?: Record<string, unknown>;
+  } | null | undefined,
+  options: { syncTime?: number } = {}
+): User {
+  const normalized = normalizeUserAccount(user) as User;
+  const syncTime = options.syncTime || Date.now();
+  const accountPub = getAccountPublicKeyHex(normalized);
+  const subAddressMsg = walletData?.SubAddressMsg || {};
+  const isRetailMode = !normalized.isInGroup && !(normalized.orgNumber || normalized.guarGroup?.groupID);
+  const deletedAddresses = normalized.deletedAddresses || {};
+
+  normalized.wallet.totalValue = Number(walletData?.Value ?? walletData?.TotalValue ?? normalized.wallet.totalValue ?? 0);
+  normalized.wallet.TotalValue = normalized.wallet.totalValue;
+  if (walletData?.ValueDivision) {
+    normalized.wallet.valueDivision = {
+      0: 0,
+      1: 0,
+      2: 0,
+      ...walletData.ValueDivision
+    };
+  }
+
+  for (const [rawAddress, backendAddress] of Object.entries(subAddressMsg)) {
+    const address = String(rawAddress || '').toLowerCase();
+    if (!address) {
+      continue;
+    }
+    if (deletedAddresses[address]) {
+      continue;
+    }
+    const existing = normalized.wallet.addressMsg[address];
+    const merged = normalizeAddressDataForStorage(address, {
+      ...(existing || {}),
+      ...(backendAddress as Record<string, unknown>),
+      origin: existing?.origin || (existing?.privHex ? existing.origin : 'external'),
+      locked: existing?.locked ?? (!existing?.privHex),
+      registrationState: 'registered',
+      registrationError: undefined,
+      lastProtocolSyncAt: syncTime
+    }, {
+      accountId: normalized.accountId,
+      accountAddress: normalized.address,
+      accountPubXHex: accountPub?.x,
+      accountPubYHex: accountPub?.y,
+      topLevelPrivHex: normalized.privHex || normalized.keys?.privHex,
+      syncTime
+    });
+    if (
+      merged.pendingNextSeedStep &&
+      merged.seedChainStep &&
+      Number(merged.seedChainStep) === Number(merged.pendingNextSeedStep)
+    ) {
+      merged.pendingSeedStep = undefined;
+      merged.pendingNextSeedStep = undefined;
+      merged.pendingSeedTxId = undefined;
+      merged.pendingSeedAt = undefined;
+    }
+    normalized.wallet.addressMsg[address] = merged;
+  }
+
+  normalized.wallet.updateTime = syncTime;
+  return normalizeUserAccount(normalized) as User;
 }
 
 /** Guarantor choice structure - stores the user's organization selection */
@@ -182,6 +795,11 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   }
   if (basic.mainAddressRegistered !== undefined) {
     acc.mainAddressRegistered = basic.mainAddressRegistered;
+  }
+  if ((basic as any).deletedAddresses !== undefined) {
+    acc.deletedAddresses = normalizeDeletedAddressesMap((basic as any).deletedAddresses);
+  } else {
+    acc.deletedAddresses = normalizeDeletedAddressesMap(acc.deletedAddresses);
   }
   if (basic.txHistory !== undefined) {
     acc.txHistory = Array.isArray(basic.txHistory) ? [...basic.txHistory] : basic.txHistory;
@@ -235,7 +853,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
     }
   }
 
-  return acc as User;
+  return normalizeUserAccount(acc as User) as User;
 }
 
 // ========================================
@@ -338,7 +956,7 @@ function readUserFromStorage(): User | null {
     const key = getUserStorageKey(activeId);
     const rawAcc = localStorage.getItem(key);
     if (rawAcc) {
-      return JSON.parse(rawAcc) as User;
+      return normalizeUserAccount(JSON.parse(rawAcc) as User);
     }
   } catch (e) {
     console.warn('Failed to read user data from storage', e);
@@ -382,7 +1000,7 @@ function migrateLegacyUser(): User | null {
         }
 
         console.info('[Storage] Legacy data migration completed');
-        return user;
+        return normalizeUserAccount(user);
       }
     }
 
@@ -396,7 +1014,7 @@ function migrateLegacyUser(): User | null {
         localStorage.setItem(newKey, JSON.stringify(acc));
         localStorage.removeItem('walletUser');
         setActiveAccountId(acc.accountId);
-        return acc;
+        return normalizeUserAccount(acc);
       }
     }
   } catch (e) {
@@ -441,7 +1059,7 @@ function writeUserToStorage(user: User | null): void {
  * The blockchain StoragePoint (UTXO data) is the only source of truth for permanent balances.
  */
 export function initUserStateFromStorage(): User | null {
-  const user = readUserFromStorage();
+  const user = normalizeUserAccount(readUserFromStorage());
 
   // Clear stale TXCer data - TXCers should only be received via real-time SSE
   // This prevents "ghost" TXCers from reappearing after page refresh
@@ -475,7 +1093,7 @@ export function initUserStateFromStorage(): User | null {
  * This is intended to be called as a Store change side effect.
  */
 export function persistUserToStorage(user: User | null): void {
-  writeUserToStorage(user);
+  writeUserToStorage(normalizeUserAccount(user));
 }
 
 /**

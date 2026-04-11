@@ -415,7 +415,13 @@ function handleBackClick(): void {
 async function handleNextClick(): Promise<void> {
   // Import auth service dynamically to avoid circular dependencies
   const { userReOnline } = await import('../services/auth.js');
-  const { loadUser, saveUser, saveGuarChoice, clearGuarChoice } = await import('../utils/storage.js');
+  const {
+    loadUser,
+    saveUser,
+    saveGuarChoice,
+    clearGuarChoice,
+    mergeBackendWalletData
+  } = await import('../utils/storage.js');
   
   const user = loadUser();
   if (!user || !user.accountId) {
@@ -444,11 +450,11 @@ async function handleNextClick(): Promise<void> {
     }
     
     // Get private key (try encrypted first, fallback to plaintext)
-    let privHex = '';
-    try {
-      const { getDecryptedPrivateKey } = await import('../utils/keyEncryptionUI.js');
-      privHex = await getDecryptedPrivateKey(user.accountId);
-    } catch (e) {
+	    let privHex = '';
+	    try {
+	      const { getDecryptedPrivateKey } = await import('../utils/keyEncryptionUI.js');
+	      privHex = (await getDecryptedPrivateKey(user.accountId)) || '';
+	    } catch (e) {
       // Fallback to legacy plaintext key
       privHex = user.privHex || '';
     }
@@ -490,57 +496,12 @@ async function handleNextClick(): Promise<void> {
       txHistory: []
     };
     
-    // Merge wallet data from backend
-    if (result.UserWalletData && result.UserWalletData.SubAddressMsg) {
-      // Initialize wallet if not exists
-      if (!updatedUser.wallet) {
-        updatedUser.wallet = {
-          addressMsg: {},
-          value: 0
-        };
-      }
-      
-      // Merge backend address data
-      for (const [addr, addrData] of Object.entries(result.UserWalletData.SubAddressMsg)) {
-        if (!updatedUser.wallet.addressMsg[addr]) {
-          // 新地址：标记为外部导入且未解锁
-          updatedUser.wallet.addressMsg[addr] = {
-            type: (addrData as any).Type || 0,
-            utxos: (addrData as any).UTXO || {},
-            txCers: (addrData as any).TXCers || {},
-            value: { 
-              totalValue: (addrData as any).Value?.TotalValue || 0, 
-              utxoValue: (addrData as any).Value?.UTXOValue || 0, 
-              txCerValue: (addrData as any).Value?.TXCerValue || 0 
-            },
-            estInterest: (addrData as any).EstInterest || 0,
-            origin: 'external', // 标记为外部导入
-            locked: true, // 标记为未解锁（没有私钥）
-            publicKeyNew: (addrData as any).PublicKeyNew || null // 保存公钥信息
-          };
-        } else {
-          // 已存在的地址：合并数据但保留私钥
-          Object.assign(updatedUser.wallet.addressMsg[addr], {
-            type: (addrData as any).Type || updatedUser.wallet.addressMsg[addr].type,
-            utxos: (addrData as any).UTXO || updatedUser.wallet.addressMsg[addr].utxos,
-            txCers: (addrData as any).TXCers || updatedUser.wallet.addressMsg[addr].txCers,
-            value: { 
-              totalValue: (addrData as any).Value?.TotalValue || 0, 
-              utxoValue: (addrData as any).Value?.UTXOValue || 0, 
-              txCerValue: (addrData as any).Value?.TXCerValue || 0 
-            },
-            estInterest: (addrData as any).EstInterest || updatedUser.wallet.addressMsg[addr].estInterest,
-            publicKeyNew: (addrData as any).PublicKeyNew || updatedUser.wallet.addressMsg[addr].publicKeyNew
-          });
-        }
-      }
-      
-      // Update total value
-      updatedUser.wallet.value = result.UserWalletData.Value || 0;
-    }
+    const mergedUser = mergeBackendWalletData(updatedUser as any, result.UserWalletData, {
+      syncTime: Date.now()
+    });
     
     // Save updated user data
-    saveUser(updatedUser);
+    saveUser(mergedUser);
 
     if (result.IsInGroup && groupInfo) {
       saveGuarChoice({

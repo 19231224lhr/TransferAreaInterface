@@ -43,7 +43,12 @@ export interface ThemeNamespace {
 export interface AccountNamespace {
   newUser: () => Promise<any>;
   importFromPrivHex: (privHex: string) => Promise<any>;
-  addNewSubWallet: (type?: number) => Promise<void>;
+  addNewSubWallet: (type?: number) => Promise<{
+    success: boolean;
+    address?: string;
+    error?: string;
+    cancelled?: boolean;
+  }>;
   handleCreate: () => Promise<void>;
 }
 
@@ -250,6 +255,7 @@ export interface PagesNamespace {
   resetInquiryState: () => Promise<void>;
   resetCreatingFlag: () => Promise<void>;
   resetImportState: () => Promise<void>;
+  resetWalletRefreshFlag: () => Promise<void>;
   handleMainRoute: () => Promise<void>;
   updateGroupDetailDisplay: () => Promise<void>;
 }

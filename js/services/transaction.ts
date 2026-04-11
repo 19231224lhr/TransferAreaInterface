@@ -64,6 +64,9 @@ export interface BillMsg {
   PublicKey?: { XHex: string; YHex: string };
   Gas?: number;
   ToInterest?: number;
+  SeedAnchor?: number[] | string;
+  SeedChainStep?: number;
+  DefaultSpendAlgorithm?: string;
 }
 
 /** Build transaction info structure */

@@ -14,12 +14,22 @@
 
 import { t } from '../i18n/index.js';
 import { IS_DEV } from '../config/constants';
-import { saveUser, getJoinedGroup, toAccount, User } from '../utils/storage';
+import {
+  loadUser,
+  saveUser,
+  persistUserToStorage,
+  getJoinedGroup,
+  toAccount,
+  User,
+  getAccountSignPublicKeyV2,
+  hasAddressProtocolMetadata
+} from '../utils/storage';
+import { formatAddressRootSeedForExport, isSupportedAddressRecoveryMaterial } from '../utils/addressRootSeed';
 import { store, selectUser, setUser } from '../utils/store.js';
 import { readAddressInterest, copyToClipboard } from '../utils/helpers.js';
 import { getActionModalElements, showConfirmModal, showModalTip, showUnifiedLoading, hideUnifiedOverlay } from '../ui/modal';
 import { showMiniToast, showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast.js';
-import { importFromPrivHex } from './account';
+import { importAddressMaterial, importFromPrivHex } from './account';
 import { initRecipientCards, initAdvancedOptions } from './recipient.js';
 import { escapeHtml } from '../utils/security';
 import { getCoinName, getCoinClass, getCoinInfo } from '../config/constants';
@@ -80,6 +90,23 @@ interface AddressMetadata {
   pubXHex?: string;
   /** Public key Y coordinate hex */
   pubYHex?: string;
+  addressRootSeedHex?: string;
+  publicKeyNew?: any;
+  lastHeight?: number;
+  signPublicKeyV2?: any;
+  seedAnchor?: number[] | string;
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
+  registrationState?: string;
+  registrationError?: string;
+  seedRepairRequired?: boolean;
+  readOnly?: boolean;
+  lastProtocolSyncAt?: number;
+  seedLocalState?: any;
+  pendingSeedStep?: number;
+  pendingNextSeedStep?: number;
+  pendingSeedTxId?: string;
+  pendingSeedAt?: number;
 }
 
 /**
@@ -113,6 +140,84 @@ let __addrMode: 'create' | 'import' = 'create';
 let __walletExpanded = false;
 let __srcAddrExpanded = false;
 
+function getAddressProtocolBadge(meta: AddressMetadata): {
+  label: string;
+  className: string;
+  detail: string;
+  selectable: boolean;
+} {
+  const user = loadUser();
+  const isRetail = !(user?.orgNumber || user?.guarGroup?.groupID || user?.isInGroup);
+
+  if (meta?.readOnly || meta?.seedRepairRequired) {
+    return {
+      label: '待修复',
+      className: 'is-warning',
+      detail: '缺少本地 seed 私有状态，当前不可转出',
+      selectable: false
+    };
+  }
+  if (meta?.pendingSeedStep) {
+    return {
+      label: '推进中',
+      className: 'is-info',
+      detail: `等待交易确认并推进 seed step ${meta.pendingSeedStep} -> ${meta.pendingNextSeedStep || meta.pendingSeedStep - 1}`,
+      selectable: false
+    };
+  }
+  if (meta?.registrationState === 'failed') {
+    return {
+      label: '注册失败',
+      className: 'is-danger',
+      detail: meta.registrationError || '地址注册失败，暂不可用',
+      selectable: false
+    };
+  }
+  if (meta?.registrationState === 'pending') {
+    return {
+      label: '注册中',
+      className: 'is-info',
+      detail: '地址注册尚未完成',
+      selectable: false
+    };
+  }
+  if (isRetail && meta?.registrationState !== 'registered') {
+    return {
+      label: '待注册',
+      className: 'is-muted',
+      detail: '该地址会在进入主钱包页面后统一执行注册。',
+      selectable: true
+    };
+  }
+  if (meta?.lastProtocolSyncAt || meta?.registrationState === 'registered') {
+    return {
+      label: '已同步',
+      className: 'is-ok',
+      detail: '地址协议状态已同步',
+      selectable: true
+    };
+  }
+  return {
+    label: '未同步',
+    className: 'is-muted',
+    detail: '地址协议状态尚未同步',
+    selectable: true
+  };
+}
+
+function formatRegistrationState(meta: AddressMetadata): string {
+  switch (meta?.registrationState) {
+    case 'registered':
+      return t('wallet.registrationRegistered', '已注册');
+    case 'pending':
+      return t('wallet.registrationPending', '注册中');
+    case 'failed':
+      return t('wallet.registrationFailed', '注册失败');
+    default:
+      return t('wallet.registrationUnknown', '未知');
+  }
+}
+
 /**
  * Pending import data for preview modal
  */
@@ -122,6 +227,7 @@ interface PendingImportData {
   pubXHex: string;
   pubYHex: string;
   coinType: number;
+  addressRootSeedHex?: string;
 }
 
 let __pendingImport: PendingImportData | null = null;
@@ -436,6 +542,7 @@ export function renderWallet(): void {
     const coinType = getCoinName(typeId0);
     const coinClass = getCoinClass(typeId0);
     const shortAddr = a.length > 18 ? a.slice(0, 10) + '...' + a.slice(-6) : a;
+    const protocolBadge = getAddressProtocolBadge(meta as AddressMetadata);
 
     // 获取锁定 UTXO 信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
@@ -449,6 +556,11 @@ export function renderWallet(): void {
     const hasTXCers = txCerIds.length > 0;
     const txCerBalance = Object.values(txCers).reduce((sum, val) => sum + (val as number), 0);
     const txCerCount = txCerIds.length;
+    const totalTXCers = u.wallet?.totalTXCers || {};
+    const txCerReadyCount = txCerIds.filter((id) => {
+      const txCer = totalTXCers[id];
+      return !!txCer?.UserSignatureV2;
+    }).length;
 
     // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用）
     const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
@@ -480,7 +592,10 @@ export function renderWallet(): void {
       <div class="addr-card-summary" data-action="toggleAddrCard" data-addr="${a}">
         <div class="addr-card-avatar coin-icon coin-icon--${coinClass}">${coinType.charAt(0)}</div>
         <div class="addr-card-main">
-          <span class="addr-card-hash" title="${a}">${shortAddr}</span>
+          <span class="addr-card-hash" title="${a}">
+            ${shortAddr}
+            <span class="addr-protocol-badge ${protocolBadge.className}" title="${protocolBadge.detail}">${protocolBadge.label}</span>
+          </span>
           <span class="addr-card-balance">
             ${String(availableBalance)} ${coinType}
             ${hasLockedUtxos ? viewHtml`
@@ -569,6 +684,18 @@ export function renderWallet(): void {
             <span class="addr-detail-label">GAS</span>
             <span class="addr-detail-value gas">${(Number(gas0) || 0).toFixed(1)}</span>
           </div>
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">协议状态</span>
+            <span class="addr-detail-value" title="${protocolBadge.detail}">${protocolBadge.label}</span>
+          </div>
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">${t('wallet.seedStep', 'Seed Step')}</span>
+            <span class="addr-detail-value">${meta?.seedChainStep ?? '-'}</span>
+          </div>
+          <div class="addr-detail-row">
+            <span class="addr-detail-label">${t('wallet.registrationStatus', '注册状态')}</span>
+            <span class="addr-detail-value">${formatRegistrationState(meta as AddressMetadata)}</span>
+          </div>
           ${hasTXCers ? viewHtml`
             <div class="txcer-breakdown">
               <div class="txcer-header">
@@ -579,16 +706,18 @@ export function renderWallet(): void {
                   </svg>
                   TXCer（待转换）
                 </span>
-                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType}</span>
+                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType} / V2 ${txCerReadyCount}</span>
               </div>
               <div class="txcer-list">
                 ${txCerIds.map(id => {
       const value = txCers[id] as number;
       const locked = isTXCerLocked(id);
+      const txCer = totalTXCers[id];
+      const txCerState = txCer?.UserSignatureV2 ? 'V2可用' : '旧缓存';
       return viewHtml`
                     <div class="txcer-item">
                       <span class="txcer-id" title="${id}">${id.slice(0, 8)}...${id.slice(-6)}</span>
-                      <span class="txcer-value">${value.toFixed(4)}${locked ? ' (锁定)' : ''}</span>
+                      <span class="txcer-value">${value.toFixed(4)}${locked ? ' (锁定)' : ''} / ${txCerState}</span>
                     </div>
                   `;
     })}
@@ -617,6 +746,33 @@ export function renderWallet(): void {
     `;
 
     renderInto(item, template);
+
+    const receiveBtn = item.querySelector('.btn-receive') as HTMLButtonElement | null;
+    if (receiveBtn) {
+      receiveBtn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleShowReceiveAddress(a);
+      };
+    }
+
+    const exportBtn = item.querySelector('.btn-export') as HTMLButtonElement | null;
+    if (exportBtn) {
+      exportBtn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleExportPrivateKey(a);
+      };
+    }
+
+    const deleteBtn = item.querySelector('.btn-delete') as HTMLButtonElement | null;
+    if (deleteBtn) {
+      deleteBtn.onclick = (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void handleDeleteAddress(a);
+      };
+    }
 
     // Append to fragment instead of directly to DOM
     fragment.appendChild(item);
@@ -703,6 +859,10 @@ function addAddressOperationsMenu(container: HTMLElement, address: string): void
  * If user is NOT in an organization, it will just delete locally.
  */
 export async function handleDeleteAddress(address: string): Promise<void> {
+  // Export/recovery material uses the shared unified overlay.
+  // Ensure no stale overlay state blocks subsequent delete actions.
+  hideUnifiedOverlay();
+
   // Close any open ops menus
   closeAllOpsMenus();
 
@@ -716,13 +876,25 @@ export async function handleDeleteAddress(address: string): Promise<void> {
     )?.[1];
   const balance = addrData?.value?.TotalValue ?? 0;
   const coinType = addrData?.type === 1 ? 'BTC' : addrData?.type === 2 ? 'ETH' : 'PGC';
+  const group = getJoinedGroup();
+  const isInOrg = !!(group && group.groupID);
+  const canSyncUnbind = !!(
+    isInOrg &&
+    addrData &&
+    addrData.pubXHex &&
+    addrData.pubYHex &&
+    hasAddressProtocolMetadata(addrData as any)
+  );
+  const deleteModeHint = canSyncUnbind
+    ? '该操作会同步通知后端解绑地址，并删除本地记录。'
+    : '该操作只会删除本地记录，不会向后端发起解绑。';
 
   // Build confirmation text with balance warning if needed
   let confirmText = '';
   if (balance > 0) {
-    confirmText = t('wallet.deleteHasBalanceWarning', { balance, coinType });
+    confirmText = `${t('wallet.deleteHasBalanceWarning', { balance, coinType })}\n\n${deleteModeHint}`;
   } else {
-    confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}`;
+    confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}\n\n${deleteModeHint}`;
   }
 
   // Use unified confirm modal with DANGER style
@@ -735,6 +907,40 @@ export async function handleDeleteAddress(address: string): Promise<void> {
   );
 
   if (!confirmed) return;
+
+  const doLocalDelete = (currentUser: User, syncDeleted: boolean): void => {
+    const u = deepClone(currentUser);
+    const isMain = (u.address && u.address.toLowerCase() === key);
+    u.deletedAddresses = {
+      ...(u.deletedAddresses || {}),
+      [key]: Date.now()
+    };
+
+    if (u.wallet?.addressMsg) {
+      u.wallet.addressMsg = Object.fromEntries(
+        Object.entries(u.wallet.addressMsg).filter(([k]) => String(k).toLowerCase() !== key)
+      );
+    }
+
+    if (isMain) {
+      u.address = '';
+    }
+
+    setUser(u);
+    persistUserToStorage(u);
+
+    renderWallet();
+    try { updateWalletBrief(); } catch { }
+    try { refreshSrcAddrList(); } catch { }
+    try { rebuildAddrList(); } catch { }
+
+    showSuccessToast(
+      syncDeleted
+        ? '已完成后端解绑并删除本地地址记录'
+        : '已删除本地地址记录（未同步后端解绑）',
+      t('wallet.deleteSuccess', '删除成功')
+    );
+  };
 
   const doDel = async () => {
     const current = getCurrentUser();
@@ -749,29 +955,11 @@ export async function handleDeleteAddress(address: string): Promise<void> {
         ([k]) => String(k).toLowerCase() === key
       )?.[1];
 
-    // Check if user is in a guarantor organization
-    const group = getJoinedGroup();
-    const isInOrg = !!(group && group.groupID);
-
-    if (isInOrg && addressData) {
+    if (canSyncUnbind && addressData) {
       // User is in organization - need to call backend API first
       const pubXHex = addressData.pubXHex;
       const pubYHex = addressData.pubYHex;
       const addressType = Number(addressData.type || 0);
-
-      if (!pubXHex || !pubYHex) {
-        // No public key info - show error
-        const { modal: am, titleEl: at, textEl: ax, okEl: ok1 } = getActionModalElements();
-        if (at) at.textContent = t('wallet.deleteFailed', '删除失败');
-        if (ax) {
-          ax.classList.add('tip--error');
-          ax.textContent = t('error.addressPublicKeyMissing', 'Address public key missing. Unable to unbind.');
-        }
-        if (am) am.classList.remove('hidden');
-        const h2 = () => { am?.classList.add('hidden'); ok1?.removeEventListener('click', h2); };
-        ok1?.addEventListener('click', h2);
-        return;
-      }
 
       // Show loading animation
       const { showUnifiedLoading, hideUnifiedOverlay, showUnifiedError } = await import('../ui/modal.js');
@@ -780,7 +968,7 @@ export async function handleDeleteAddress(address: string): Promise<void> {
       try {
         // Call backend unbind API
         const { unbindAddressOnBackend } = await import('./address');
-        const result = await unbindAddressOnBackend(address, pubXHex, pubYHex, addressType);
+        const result = await unbindAddressOnBackend(address, pubXHex as string, pubYHex as string, addressType);
 
         hideUnifiedOverlay();
 
@@ -795,8 +983,18 @@ export async function handleDeleteAddress(address: string): Promise<void> {
             return;
           }
 
-          // Backend failed - show error toast, don't delete locally
-          showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errorMsg}`);
+          const fallbackConfirmed = await showConfirmModal(
+            t('wallet.deleteBackendSyncFailed', '后端解绑失败'),
+            `${errorMsg}\n\n是否仅删除本地记录？该操作不会同步后端解绑，后续重新登录或同步时该地址仍可能再次出现。`,
+            t('wallet.deleteLocalOnly', '仅删除本地'),
+            t('common.cancel', '取消'),
+            true
+          );
+          if (!fallbackConfirmed) {
+            showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errorMsg}`);
+            return;
+          }
+          doLocalDelete(current, false);
           return;
         }
 
@@ -807,40 +1005,23 @@ export async function handleDeleteAddress(address: string): Promise<void> {
         hideUnifiedOverlay();
         console.error('[Wallet] Unbind address error:', error);
         const errMsg = error instanceof Error ? error.message : t('error.unknownError', 'Unknown error');
-        showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errMsg}`);
+        const fallbackConfirmed = await showConfirmModal(
+          t('wallet.deleteBackendSyncFailed', '后端解绑失败'),
+          `${errMsg}\n\n是否仅删除本地记录？该操作不会同步后端解绑，后续重新登录或同步时该地址仍可能再次出现。`,
+          t('wallet.deleteLocalOnly', '仅删除本地'),
+          t('common.cancel', '取消'),
+          true
+        );
+        if (!fallbackConfirmed) {
+          showErrorToast(`${t('wallet.deleteFailed', 'Delete Failed')}: ${errMsg}`);
+          return;
+        }
+        doLocalDelete(current, false);
         return;
       }
     }
 
-    // Proceed with local deletion (either not in org, or backend succeeded)
-    const u = deepClone(current);
-    const isMain = (u.address && u.address.toLowerCase() === key);
-
-    if (u.wallet?.addressMsg) {
-      u.wallet.addressMsg = Object.fromEntries(
-        Object.entries(u.wallet.addressMsg).filter(([k]) => String(k).toLowerCase() !== key)
-      );
-    }
-
-    if (isMain) {
-      u.address = '';
-    }
-
-    // Single Source of Truth: Update Store, let subscriptions handle UI updates
-    setUser(u);
-    saveUser(u);
-
-    // Address deletion requires full re-render since DOM structure changes
-    // This is an exception where we call renderWallet directly because:
-    // 1. We're removing elements from DOM, not just updating values
-    // 2. Store subscription can't know which specific card to remove
-    renderWallet();
-
-    // Show success toast (supports dark mode automatically via CSS)
-    showSuccessToast(
-      t('wallet.deleteSuccessDesc', '已删除该地址及其相关本地数据'),
-      t('wallet.deleteSuccess', '删除成功')
-    );
+    doLocalDelete(current, canSyncUnbind);
   };
 
   await doDel();
@@ -918,7 +1099,8 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
   }
 
   // Step 2: Get the private key
-  let priv = '';
+  let exportValue = '';
+  let exportNotice = '';
   const map = u.wallet?.addressMsg || {};
   let found = map[address] || map[key] || null;
 
@@ -932,96 +1114,92 @@ export async function handleExportPrivateKey(address: string): Promise<void> {
   }
 
   // AddressMetadata interface includes privHex field
-  if (found && found.privHex) {
-    priv = found.privHex;
+  if (found && found.addressRootSeedHex) {
+    exportValue = formatAddressRootSeedForExport(found.addressRootSeedHex, Number(found.type ?? 0));
+    exportNotice = t('wallet.exportRootSeedNotice', '推荐导出：这是该地址的 AddressRootSeed 恢复材料。它是当前架构下更优先的长期恢复入口。');
+  } else if (found && found.privHex) {
+    exportValue = found.privHex;
+    exportNotice = t('wallet.exportRootKeyNotice', '这是该地址的长期根私钥。系统会结合链上 SeedAnchor 与 SeedChainStep 恢复后续 seed-chain 状态，因此这里不直接展示 seed 明文。');
   } else if (u.address && String(u.address).toLowerCase() === key) {
-    priv = (u.keys?.privHex) || u.privHex || '';
+    exportValue = (u.keys?.privHex) || u.privHex || '';
+    exportNotice = t('wallet.exportAccountKeyNotice', '这是账户身份私钥，用于登录和账户级签名，不是地址级恢复材料。');
+  }
+  const addressMeta = found as AddressMetadata | null;
+
+  hideUnifiedOverlay();
+
+  const detailModal = document.getElementById('detailModal') as HTMLElement | null;
+  const detailTitle = document.getElementById('detailModalTitle') as HTMLElement | null;
+  const detailContent = document.getElementById('detailModalContent') as HTMLElement | null;
+  const detailClose = document.getElementById('detailModalClose') as HTMLButtonElement | null;
+
+  if (!detailModal || !detailTitle || !detailContent || !detailClose) {
+    showErrorToast(t('error.unknownError', 'Unknown error'));
+    return;
   }
 
-  // Step 3: Display the private key modal
-  const { modal, titleEl: title, textEl: text, okEl: ok } = getActionModalElements();
+  const closeDetailModal = () => {
+    detailModal.classList.add('hidden');
+    detailModal.onclick = null;
+    detailClose.onclick = null;
+    renderInto(detailContent, viewHtml``);
+  };
 
-  const keyRow = document.getElementById(DOM_IDS.successKeyRow);
-  const keyCode = document.getElementById(DOM_IDS.successKeyCode);
-  const copyBtn = document.getElementById(DOM_IDS.successCopyBtn);
-  const successEl = document.getElementById(DOM_IDS.unifiedSuccess);
+  if (exportValue) {
+    const stepText = addressMeta?.seedChainStep ? `Seed Step: ${addressMeta.seedChainStep}` : '-';
+    const registrationText = addressMeta?.registrationState ? formatRegistrationState(addressMeta) : '-';
+    detailTitle.textContent = t('wallet.exportPrivateKey');
+    renderInto(detailContent, viewHtml`
+      <div class="recovery-export">
+        <p class="tip recovery-export__notice">${exportNotice}</p>
+        <div class="recovery-export__meta">
+          <div class="recovery-export__meta-row">
+            <span>${t('wallet.seedStep', 'Seed Step')}</span>
+            <strong class="recovery-export__meta-value">${stepText}</strong>
+          </div>
+          <div class="recovery-export__meta-row">
+            <span>${t('wallet.registrationStatus', '注册状态')}</span>
+            <strong class="recovery-export__meta-value">${registrationText}</strong>
+          </div>
+        </div>
+        <div class="recovery-export__material">
+          <code class="recovery-export__code">${exportValue}</code>
+          <button id="detailCopyRecoveryBtn" class="btn secondary recovery-export__copy" type="button">${t('common.copy', '复制')}</button>
+        </div>
+      </div>
+    `);
 
-  if (priv) {
-    if (title) title.textContent = t('wallet.exportPrivateKey');
-    // 隐藏普通文本，显示私钥
-    if (text) {
-      text.classList.add('hidden');
-      text.classList.remove('tip--error');
-    }
-
-    // 显示私钥
-    if (keyRow) keyRow.classList.remove('hidden');
-    if (keyCode) keyCode.textContent = priv;
-
-    if (copyBtn) {
-      copyBtn.classList.remove('copied');
-
-      copyBtn.onclick = async () => {
-        const ok = await copyToClipboard(priv);
-        if (!ok) {
+    const copyRecoveryBtn = detailContent.querySelector('#detailCopyRecoveryBtn') as HTMLButtonElement | null;
+    if (copyRecoveryBtn) {
+      copyRecoveryBtn.onclick = async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const copied = await copyToClipboard(exportValue);
+        if (!copied) {
           showErrorToast(t('toast.copyFailed', 'Copy failed'));
           return;
         }
-        copyBtn.classList.add('copied');
         showSuccessToast(t('wallet.copied', 'Copied'));
-        setTimeout(() => {
-          copyBtn.classList.remove('copied');
-        }, 2000);
       };
     }
   } else {
-    if (title) title.textContent = t('wallet.exportFailed');
-    if (text) {
-      text.classList.remove('hidden');
-      text.classList.add('tip--error');
-      text.textContent = t('wallet.noPrivateKey');
-    }
-    if (keyRow) keyRow.classList.add('hidden');
+    detailTitle.textContent = t('wallet.exportFailed');
+    renderInto(detailContent, viewHtml`
+      <p class="tip tip--error recovery-export__notice">${t('wallet.noPrivateKey')}</p>
+    `);
   }
 
-  // Apply danger mode styling for private key display
-  if (successEl) successEl.classList.add('danger-mode');
-
-  const successIcon = document.getElementById(DOM_IDS.unifiedSuccessIcon);
-  const errorIcon = document.getElementById(DOM_IDS.unifiedErrorIcon);
-  const warningIcon = document.getElementById(DOM_IDS.unifiedWarningIcon);
-
-  if (successIcon) successIcon.classList.add('hidden');
-  if (errorIcon) errorIcon.classList.add('hidden');
-  if (warningIcon) warningIcon.classList.remove('hidden');
-
-  if (ok) {
-    ok.classList.remove('unified-btn--primary');
-    ok.classList.add('unified-btn--danger');
-  }
-  if (modal) modal.classList.remove('hidden');
-
-  const handler = () => {
-    modal?.classList.add('hidden');
-    ok?.removeEventListener('click', handler);
-    // 重置状态
-    if (keyRow) keyRow.classList.add('hidden');
-    if (text) text.classList.remove('hidden');
-    if (copyBtn) {
-      copyBtn.classList.remove('copied');
-      copyBtn.onclick = null;
-    }
-    // Clean up danger mode
-    if (successEl) successEl.classList.remove('danger-mode');
-    if (successIcon) successIcon.classList.remove('hidden');
-    if (warningIcon) warningIcon.classList.add('hidden');
-
-    if (ok) {
-      ok.classList.remove('unified-btn--danger');
-      ok.classList.add('unified-btn--primary');
+  detailModal.classList.remove('hidden');
+  detailClose.onclick = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    closeDetailModal();
+  };
+  detailModal.onclick = (event) => {
+    if (event.target === detailModal) {
+      closeDetailModal();
     }
   };
-  ok?.addEventListener('click', handler);
 }
 
 /**
@@ -1271,11 +1449,15 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       // Keep TXCer tooltip/header in sync (locks affect available)
       const txcerTooltip = card.querySelector('.txcer-tooltip');
       if (txcerTooltip) {
-        txcerTooltip.textContent = `TXCer: ${txCerIds.length} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)}`;
+        const totalTXCers = (getCurrentUser()?.wallet?.totalTXCers || {}) as Record<string, any>;
+        const readyCount = txCerIds.filter((id) => !!totalTXCers[id]?.UserSignatureV2).length;
+        txcerTooltip.textContent = `TXCer: ${txCerIds.length} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)} / V2 ${readyCount}`;
       }
       const txcerHeaderValue = card.querySelector('.txcer-header-value');
       if (txcerHeaderValue) {
-        txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance.toFixed(4)} ${coinType}`;
+        const totalTXCers = (getCurrentUser()?.wallet?.totalTXCers || {}) as Record<string, any>;
+        const readyCount = txCerIds.filter((id) => !!totalTXCers[id]?.UserSignatureV2).length;
+        txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance.toFixed(4)} ${coinType} / V2 ${readyCount}`;
       }
 
       // 直接更新详情
@@ -1485,7 +1667,7 @@ async function handleImportPreviewConfirm(): Promise<void> {
     return;
   }
 
-  const { privHex, address, pubXHex, pubYHex, coinType } = __pendingImport;
+    const { privHex, address, pubXHex, pubYHex, coinType, addressRootSeedHex } = __pendingImport;
 
   hideImportPreviewModal();
 
@@ -1523,14 +1705,23 @@ async function handleImportPreviewConfirm(): Promise<void> {
     }
 
     // Check if user is in organization - if so, sync with backend first
+    const normPriv = (privHex || '').replace(/^0x/i, '');
     const inOrg = isUserInOrganization();
     let registerError: string | null = null;
+    let backendRegistered = false;
 
     if (inOrg) {
       console.debug('[Wallet] User is in organization, syncing with backend...');
 
       hideUnifiedOverlay();
-      const result = await createNewAddressOnBackend(address, pubXHex, pubYHex, coinType);
+      const result = await createNewAddressOnBackend(
+        address,
+        pubXHex,
+        pubYHex,
+        coinType,
+        normPriv,
+        addressRootSeedHex || ''
+      );
       showUnifiedLoading(t('walletModal.importing', '导入中...'));
 
       if (!result.success) {
@@ -1553,6 +1744,9 @@ async function handleImportPreviewConfirm(): Promise<void> {
         }
 
         console.warn('[Wallet] Address already registered on backend, continuing import');
+        backendRegistered = true;
+      } else {
+        backendRegistered = true;
       }
 
       console.info('[Wallet] Address synced with backend');
@@ -1583,7 +1777,15 @@ async function handleImportPreviewConfirm(): Promise<void> {
     }
 
     // Proceed with local import only if registration (or check) passed
-    await importAddressInPlaceWithData(privHex, address, pubXHex, pubYHex, coinType);
+    await importAddressInPlaceWithData(
+      privHex,
+      address,
+      pubXHex,
+      pubYHex,
+      coinType,
+      addressRootSeedHex,
+      backendRegistered
+    );
 
     hideUnifiedOverlay();
     showSuccessToast(t('toast.importSuccessDesc'), t('toast.importSuccess'));
@@ -1614,7 +1816,9 @@ async function importAddressInPlaceWithData(
   address: string,
   pubXHex: string,
   pubYHex: string,
-  coinType: number
+  coinType: number,
+  addressRootSeedHex?: string,
+  markRegistered: boolean = false
 ): Promise<void> {
   const u2 = getCurrentUser();
   if (!u2?.accountId) {
@@ -1651,6 +1855,15 @@ async function importAddressInPlaceWithData(
   addrMeta.privHex = normPriv;
   addrMeta.pubXHex = pubXHex;
   addrMeta.pubYHex = pubYHex;
+  addrMeta.addressRootSeedHex = addressRootSeedHex || '';
+  if (markRegistered) {
+    addrMeta.registrationState = 'registered';
+    addrMeta.registrationError = undefined;
+    addrMeta.lastProtocolSyncAt = Date.now();
+  }
+  if ((acc as any).deletedAddresses?.[addr]) {
+    delete (acc as any).deletedAddresses[addr];
+  }
 
   saveUser(acc);
 
@@ -1718,7 +1931,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
   if (ov) ov.classList.remove('hidden');
 
   try {
-    const data = await importFromPrivHex(priv);
+    const data = await importAddressMaterial(priv);
     const acc = toAccount({ accountId: u2.accountId, address: u2.address }, u2);
     const addr = (data.address || '').toLowerCase();
 
@@ -1738,10 +1951,19 @@ async function importAddressInPlace(priv: string): Promise<void> {
       return;
     }
 
+    const normPriv = (data.privHex || priv).replace(/^0x/i, '');
     const inOrg = isUserInOrganization();
+    let backendRegistered = false;
     if (inOrg) {
       if (ov) ov.classList.add('hidden');
-      const result = await createNewAddressOnBackend(addr, data.pubXHex || '', data.pubYHex || '', 0);
+      const result = await createNewAddressOnBackend(
+        addr,
+        data.pubXHex || '',
+        data.pubYHex || '',
+        Number((data as any).addressType ?? 0),
+        normPriv,
+        (data as any).addressRootSeedHex || ''
+      );
       if (ov) ov.classList.remove('hidden');
 
       if (!result.success) {
@@ -1758,12 +1980,14 @@ async function importAddressInPlace(priv: string): Promise<void> {
         }
 
         console.warn('[Wallet] Address already registered on backend, continuing import');
+        backendRegistered = true;
+      } else {
+        backendRegistered = true;
       }
     }
 
-    const normPriv = (data.privHex || priv).replace(/^0x/i, '');
-    const existing = acc.wallet.addressMsg[addr] || {
-      type: 0,
+      const existing = acc.wallet.addressMsg[addr] || {
+      type: Number((data as any).addressType ?? 0),
       utxos: {},
       txCers: {},
       value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
@@ -1783,11 +2007,20 @@ async function importAddressInPlace(priv: string): Promise<void> {
     if (!addrMeta.txCers) {
       addrMeta.txCers = {};
     }
-    addrMeta.type = 0;
+    addrMeta.type = Number((data as any).addressType ?? 0);
     addrMeta.origin = 'imported';
     addrMeta.privHex = normPriv;
     addrMeta.pubXHex = data.pubXHex || '';
     addrMeta.pubYHex = data.pubYHex || '';
+    addrMeta.addressRootSeedHex = (data as any).addressRootSeedHex || '';
+    if (backendRegistered) {
+      addrMeta.registrationState = 'registered';
+      addrMeta.registrationError = undefined;
+      addrMeta.lastProtocolSyncAt = Date.now();
+    }
+    if ((acc as any).deletedAddresses?.[addr]) {
+      delete (acc as any).deletedAddresses[addr];
+    }
 
     saveUser(acc);
 
@@ -1832,19 +2065,47 @@ async function importAddressInPlace(priv: string): Promise<void> {
  */
 export async function handleAddrModalOk(): Promise<void> {
   if (__addrMode === 'create') {
-    hideAddrModal();
     if (typeof window.PanguPay?.account?.addNewSubWallet === 'function') {
       const typeSelect = document.getElementById(DOM_IDS.addrTypeSelect) as HTMLInputElement | null;
       const rawType = typeSelect?.value ?? '0';
       const parsedType = Number.parseInt(rawType, 10);
       const addressType = [0, 1, 2].includes(parsedType) ? parsedType : 0;
       const beforeCount = Object.keys(getCurrentUser()?.wallet?.addressMsg || {}).length;
-      await window.PanguPay.account.addNewSubWallet(addressType);
-      const afterCount = Object.keys(getCurrentUser()?.wallet?.addressMsg || {}).length;
-      if (afterCount > beforeCount) {
-        window.dispatchEvent(new CustomEvent('pangu_address_created', {
-          detail: { type: addressType, count: afterCount }
-        }));
+      const addrOkBtn = document.getElementById(DOM_IDS.addrOkBtn) as HTMLButtonElement | null;
+
+      if (addrOkBtn) {
+        addrOkBtn.disabled = true;
+      }
+
+      try {
+        const result = await window.PanguPay.account.addNewSubWallet(addressType);
+        const afterCount = Object.keys(getCurrentUser()?.wallet?.addressMsg || {}).length;
+
+        if (result?.success && afterCount > beforeCount) {
+          hideAddrModal();
+          window.dispatchEvent(new CustomEvent('pangu_address_created', {
+            detail: { type: addressType, count: afterCount, address: result.address || '' }
+          }));
+          return;
+        }
+
+        if (result?.success && afterCount <= beforeCount) {
+          showErrorToast(
+            t('address.createFailedLocalPersist', '新地址未写入本地状态，请重试并检查控制台日志。'),
+            t('address.createFailed', '创建地址失败')
+          );
+          return;
+        }
+
+        if (result?.cancelled) {
+          return;
+        }
+
+        return;
+      } finally {
+        if (addrOkBtn) {
+          addrOkBtn.disabled = false;
+        }
       }
     }
   } else {
@@ -1852,14 +2113,13 @@ export async function handleAddrModalOk(): Promise<void> {
     const v = input?.value.trim() || '';
 
     if (!v) {
-      showErrorToast(t('walletModal.pleaseEnterPrivateKey'), t('toast.importFailed'));
+      showErrorToast(t('walletModal.pleaseEnterRecoveryMaterial'), t('toast.importFailed'));
       input?.focus();
       return;
     }
 
-    const normalized = v.replace(/^0x/i, '');
-    if (!/^[0-9a-fA-F]{64}$/.test(normalized)) {
-      showErrorToast(t('walletModal.privateKeyFormatError'), t('toast.importFailed'));
+    if (!isSupportedAddressRecoveryMaterial(v)) {
+      showErrorToast(t('walletModal.recoveryMaterialFormatError'), t('toast.importFailed'));
       input?.focus();
       return;
     }
@@ -1868,7 +2128,7 @@ export async function handleAddrModalOk(): Promise<void> {
 
     // Parse the private key to get address info for preview
     try {
-      const data = await importFromPrivHex(v);
+      const data = await importAddressMaterial(v);
       const addr = (data.address || '').toLowerCase();
 
       if (!addr) {
@@ -1889,11 +2149,12 @@ export async function handleAddrModalOk(): Promise<void> {
 
       // Store pending import data and show preview modal
       __pendingImport = {
-        privHex: v,
+        privHex: data.privHex || '',
         address: addr,
         pubXHex: data.pubXHex || '',
         pubYHex: data.pubYHex || '',
-        coinType: 0 // Default to PGC
+        coinType: Number((data as any).addressType ?? 0),
+        addressRootSeedHex: (data as any).addressRootSeedHex || ''
       };
 
       hideAddrModal();
@@ -2140,19 +2401,24 @@ export function rebuildAddrList(): void {
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
-    const coinInfo = getCoinInfo(tId);
-    const color = coinInfo.className;
-    const coinName = coinInfo.name;
-    const coinLetter = coinName.charAt(0);
-    const shortAddr = a;
+	    const coinInfo = getCoinInfo(tId);
+	    const color = coinInfo.className;
+	    const coinName = coinInfo.name;
+	    const coinLetter = coinName.charAt(0);
+	    const shortAddr = a;
+	    const protocolBadge = getAddressProtocolBadge(meta as AddressMetadata);
+	    const showProtocolBadge = protocolBadge.className !== 'is-ok' && protocolBadge.label !== '推进中';
 
-    const label = document.createElement('label');
-    label.className = `src-addr-item item-type-${color}`;
-    label.dataset.addr = a;
+	    const label = document.createElement('label');
+	    label.className = `src-addr-item item-type-${color} ${protocolBadge.selectable ? '' : 'is-disabled'}`.trim();
+	    label.dataset.addr = a;
+	    if (!showProtocolBadge && protocolBadge.detail) {
+	      label.title = protocolBadge.detail;
+	    }
 
-    // Use lit-html for safe and efficient rendering
+	    // Use lit-html for safe and efficient rendering
     const template = viewHtml`
-      <input type="checkbox" name="srcAddr" value="${a}">
+      <input type="checkbox" name="srcAddr" value="${a}" ?disabled="${!protocolBadge.selectable}">
       <div class="item-backdrop"></div>
       <div class="item-content">
         <div class="item-left">
@@ -2160,6 +2426,9 @@ export function rebuildAddrList(): void {
           <div class="addr-info">
             <span class="addr-text" title="${a}">${shortAddr}</span>
             <span class="coin-name-tiny">${coinName}</span>
+            ${showProtocolBadge ? viewHtml`
+              <span class="src-addr-status ${protocolBadge.className}" title="${protocolBadge.detail}">${protocolBadge.label}</span>
+            ` : ''}
             ${hasLockedUtxos ? viewHtml`
               <span class="src-addr-locked-info">
                 <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2">
@@ -2230,7 +2499,7 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
   if (srcAddrs.length === 1) {
     const cb = checkboxes[0] as HTMLInputElement;
     const label = labels[0];
-    if (cb && label) {
+    if (cb && label && !cb.disabled) {
       cb.checked = true;
       label.classList.add('selected');
     }
@@ -2239,6 +2508,8 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
 
   const addrsWithBalance = srcAddrs.filter(addr => {
     const meta = walletMap[addr];
+    const protocolBadge = getAddressProtocolBadge(meta as AddressMetadata);
+    if (!protocolBadge.selectable) return false;
     const utxoAmt = Number(meta?.value?.utxoValue || 0);
     const lockedBalance = getLockedBalanceByAddress(addr);
     const unlockedUtxo = Math.max(0, utxoAmt - lockedBalance);
@@ -2259,7 +2530,7 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
     labels.forEach((label, idx) => {
       if ((label as HTMLElement).dataset.addr === targetAddr) {
         const cb = checkboxes[idx] as HTMLInputElement;
-        if (cb) {
+        if (cb && !cb.disabled) {
           cb.checked = true;
           label.classList.add('selected');
         }
@@ -2622,7 +2893,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
 
   try {
     // Import the query function dynamically to avoid circular dependencies
-    const { queryAddressBalances, convertUtxosForStorage, calculateTotalBalance } = await import('./accountQuery');
+    const { queryAddressBalances, queryAddressGroupInfo, convertUtxosForStorage, calculateTotalBalance } = await import('./accountQuery');
 
     console.info('[Wallet] Refreshing balances for', addresses.length, 'addresses');
 
@@ -2687,6 +2958,15 @@ export async function refreshWalletBalances(): Promise<boolean> {
     }
 
     const hasJoinedGroup = !!getJoinedGroup()?.groupID;
+    let addressGroupInfoMap = new Map<string, any>();
+    if (!hasJoinedGroup) {
+      const groupResult = await queryAddressGroupInfo(addresses);
+      if (groupResult.success) {
+        addressGroupInfoMap = new Map(
+          groupResult.data.map((item) => [String(item.address || '').toLowerCase(), item])
+        );
+      }
+    }
     const incomingRecords: Array<{
       id: string;
       type: 'receive';
@@ -2736,6 +3016,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
       }
     }
 
+    const accountSignPublicKeyV2 = getAccountSignPublicKeyV2(u as any);
     let updatedCount = 0;
 
     for (const balanceInfo of balances) {
@@ -2767,6 +3048,40 @@ export async function refreshWalletBalances(): Promise<boolean> {
         (meta as any).EstInterest = balanceInfo.interest;
         meta.estInterest = balanceInfo.interest;
         meta.gas = balanceInfo.interest;
+        meta.lastHeight = balanceInfo.lastHeight;
+        meta.lastProtocolSyncAt = Date.now();
+        if (balanceInfo.publicKey) {
+          meta.publicKeyNew = meta.publicKeyNew || {
+            CurveName: balanceInfo.publicKey.curveName,
+            X: balanceInfo.publicKey.x,
+            Y: balanceInfo.publicKey.y
+          };
+        }
+        if (balanceInfo.seedAnchor) {
+          meta.seedAnchor = balanceInfo.seedAnchor;
+        }
+        if (balanceInfo.seedChainStep) {
+          meta.seedChainStep = balanceInfo.seedChainStep;
+          if (meta.pendingNextSeedStep && Number(meta.pendingNextSeedStep) === Number(balanceInfo.seedChainStep)) {
+            delete meta.pendingSeedStep;
+            delete meta.pendingNextSeedStep;
+            delete meta.pendingSeedTxId;
+            delete meta.pendingSeedAt;
+          }
+        }
+        if (balanceInfo.defaultSpendAlgorithm) {
+          meta.defaultSpendAlgorithm = balanceInfo.defaultSpendAlgorithm;
+        }
+        if (!meta.signPublicKeyV2 && accountSignPublicKeyV2) {
+          meta.signPublicKeyV2 = accountSignPublicKeyV2;
+        }
+        if (!hasJoinedGroup) {
+          const groupInfo = addressGroupInfoMap.get(addr);
+          if (groupInfo?.exists && groupInfo?.isRetail) {
+            meta.registrationState = 'registered';
+            meta.registrationError = undefined;
+          }
+        }
 
         // Update type
         // Update type (Preserve local type if set to non-PGC, as backend might return default 0)

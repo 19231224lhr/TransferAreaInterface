@@ -7,7 +7,15 @@
 
 import { apiClient, ApiRequestError } from './api';
 import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
-import { loadUser, saveUser } from '../utils/storage';
+import {
+  loadUser,
+  saveUser,
+  getAccountPublicKeyHex,
+  getAccountSignPublicKeyV2,
+  getAddressProtocolIssues,
+  hasAddressProtocolMetadata,
+  normalizeAddressDataForStorage
+} from '../utils/storage';
 import { getDecryptedPrivateKey, getDecryptedPrivateKeyWithPrompt } from '../utils/keyEncryptionUI';
 import { t } from '../i18n/index.js';
 
@@ -22,7 +30,8 @@ import {
   bigIntToHex,
   getPublicKeyHexFromPrivate,
   type PublicKeyNew as SigPublicKeyNew,
-  type EcdsaSignature as SigEcdsaSignature
+  type EcdsaSignature as SigEcdsaSignature,
+  type PublicKeyEnvelope as SigPublicKeyEnvelope
 } from '../utils/signature';
 
 // ============================================================================
@@ -48,8 +57,13 @@ export interface AddressData {
   PublicKeyNew: PublicKeyNew | SigPublicKeyNew;
 }
 
-/** AddressMsg mapping: address -> AddressData */
-export type AddressMsg = Record<string, { AddressData: AddressData }>;
+/** AddressMsg mapping: address -> FlowAddressData */
+export type AddressMsg = Record<string, {
+  AddressData: AddressData;
+  SeedAnchor: number[] | string;
+  SeedChainStep: number;
+  DefaultSpendAlgorithm: string;
+}>;
 
 /** Flow apply request body (Go: FlowApply) */
 export interface FlowApplyRequest {
@@ -58,6 +72,7 @@ export interface FlowApplyRequest {
   UserPeerID: string;       // P2P peer ID (empty for HTTP)
   GuarGroupID: string;      // Target organization ID
   UserPublicKey: PublicKeyNew | SigPublicKeyNew | { CurveName: string; X: null; Y: null };  // User's account public key (can be zero value for leave)
+  SignPublicKeyV2: SigPublicKeyEnvelope;
   AddressMsg: AddressMsg | null;   // Address info (required for join, null for leave - Go map zero value is nil)
   TimeStamp: number;        // Custom timestamp (seconds since 2020-01-01)
   UserSig?: EcdsaSignature | SigEcdsaSignature;  // Account private key signature (optional, added after signing)
@@ -141,6 +156,58 @@ function normalizeGroupInfo(groupId: string, raw: GuarGroupTable): GroupInfo {
     guarTable: raw.GuarTable,
     createTime: raw.CreateTime
   };
+}
+
+function buildFlowAddressMsg(user: ReturnType<typeof loadUser>): { addressMsg: AddressMsg; errors: string[] } {
+  const addressMsg: AddressMsg = {};
+  const errors: string[] = [];
+
+  if (!user?.wallet?.addressMsg) {
+    return { addressMsg, errors };
+  }
+
+  const accountPub = getAccountPublicKeyHex(user);
+  for (const [address, data] of Object.entries(user.wallet.addressMsg)) {
+    const normalized = normalizeAddressDataForStorage(address, data as any, {
+      accountId: user.accountId,
+      accountAddress: user.address,
+      accountPubXHex: accountPub?.x,
+      accountPubYHex: accountPub?.y,
+      topLevelPrivHex: user.privHex || user.keys?.privHex,
+      syncTime: Date.now()
+    });
+
+    const issues = getAddressProtocolIssues(address, normalized);
+    if (!hasAddressProtocolMetadata(normalized) || issues.length > 0) {
+      errors.push(...issues);
+      continue;
+    }
+    if (!normalized.publicKeyNew || !normalized.seedAnchor || !normalized.seedChainStep || !normalized.defaultSpendAlgorithm) {
+      errors.push(`${address}: protocol metadata incomplete`);
+      continue;
+    }
+
+    addressMsg[address] = {
+      AddressData: {
+        PublicKeyNew: normalized.publicKeyNew
+      },
+      SeedAnchor: normalized.seedAnchor,
+      SeedChainStep: normalized.seedChainStep,
+      DefaultSpendAlgorithm: normalized.defaultSpendAlgorithm
+    };
+  }
+
+  return { addressMsg, errors };
+}
+
+function formatFlowAddressErrors(errors: string[]): string {
+  const unique = Array.from(new Set(errors.filter(Boolean)));
+  if (unique.length === 0) {
+    return t('join.protocolCheckFailed', '地址协议检查失败');
+  }
+  const preview = unique.slice(0, 5).map((item) => `- ${item}`).join('\n');
+  const suffix = unique.length > 5 ? `\n... 另有 ${unique.length - 5} 项` : '';
+  return `${t('join.protocolCheckFailed', '以下地址未通过协议检查')}:\n${preview}${suffix}`;
 }
 
 // ============================================================================
@@ -393,7 +460,7 @@ export function signStruct(
 ): SigEcdsaSignature {
   console.debug('[Group] 🔐 Calling signStruct with excludeFields:', excludeFields);
   const signature = signStructCore(data, privateKeyHex, excludeFields);
-  console.debug('[Group] ✓ Signature generated:', { R: signature.R.toString(), S: signature.S.toString() });
+  console.debug('[Group] ✓ Signature generated:', { R: String(signature.R ?? ''), S: String(signature.S ?? '') });
   return signature;
 }
 
@@ -563,6 +630,11 @@ export async function joinGuarGroup(
       return { success: false, error: t('error.publicKeyIncomplete') };
     }
 
+    const signPublicKeyV2 = getAccountSignPublicKeyV2(user);
+    if (!signPublicKeyV2) {
+      return { success: false, error: t('error.publicKeyIncomplete') };
+    }
+
     // Get decrypted private key with custom prompt for joining group
     const privHex = await getDecryptedPrivateKeyWithPrompt(
       user.accountId,
@@ -575,30 +647,20 @@ export async function joinGuarGroup(
       return { success: false, error: 'USER_CANCELLED' };
     }
 
-    // 2. Build AddressMsg from user's sub-addresses only
-    // ⚠️ IMPORTANT: user.address is the account address (not a wallet address)
-    // Only wallet.addressMsg contains actual usable wallet addresses
-    const addressMsg: AddressMsg = {};
+    // 2. Build AddressMsg from wallet addresses with full protocol metadata.
+    const { addressMsg, errors } = buildFlowAddressMsg(user);
 
-    // Add sub-addresses from wallet (these are the actual usable addresses)
-    if (user.wallet?.addressMsg) {
-      for (const [addr, data] of Object.entries(user.wallet.addressMsg)) {
-        if (data.pubXHex && data.pubYHex) {
-          addressMsg[addr] = {
-            AddressData: {
-              PublicKeyNew: convertPublicKeyToBackendFormat(data.pubXHex, data.pubYHex)
-            }
-          };
-        }
-      }
-    }
-
-    if (Object.keys(addressMsg).length === 0) {
-      return {
-        success: false,
-        error: t('join.noSubAddressDesc', '加入担保组织前需要至少一个钱包子地址。请先在"我的钱包"页面创建子地址。')
-      };
-    }
+	    if (Object.keys(addressMsg).length === 0) {
+	      return {
+	        success: false,
+	        error: errors.length > 0
+	          ? formatFlowAddressErrors(errors)
+	          : t('join.noSubAddressDesc', '加入担保组织前需要至少一个钱包子地址。请先在"我的钱包"页面创建子地址。')
+	      };
+	    }
+	    if (errors.length > 0) {
+	      return { success: false, error: formatFlowAddressErrors(errors) };
+	    }
 
     // 3. Build request body (without signature first)
     const timestamp = getTimestamp();
@@ -608,6 +670,7 @@ export async function joinGuarGroup(
       UserPeerID: '', // Empty for HTTP calls
       GuarGroupID: groupId,
       UserPublicKey: convertPublicKeyToBackendFormat(pubXHex, pubYHex),
+      SignPublicKeyV2: signPublicKeyV2,
       AddressMsg: addressMsg,
       TimeStamp: timestamp
       // Note: UserSig will be added after signing
@@ -713,6 +776,11 @@ export async function leaveGuarGroup(
       return { success: false, error: t('error.publicKeyIncomplete') };
     }
 
+    const signPublicKeyV2 = getAccountSignPublicKeyV2(user);
+    if (!signPublicKeyV2) {
+      return { success: false, error: t('error.publicKeyIncomplete') };
+    }
+
     // Get decrypted private key with custom prompt for leaving group
     const privHex = await getDecryptedPrivateKeyWithPrompt(
       user.accountId,
@@ -738,6 +806,7 @@ export async function leaveGuarGroup(
       UserPeerID: '',
       GuarGroupID: groupId,
       UserPublicKey: userPublicKey,
+      SignPublicKeyV2: signPublicKeyV2,
       AddressMsg: {},  // ⚠️ 退出时必须是空对象！
       TimeStamp: timestamp
     };

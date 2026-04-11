@@ -22,7 +22,7 @@ import { store, selectUser } from '../utils/store.js';
 import { showSuccessToast, showMiniToast, showErrorToast, showStatusToast } from '../utils/toast.js';
 import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
-import { renderWallet, refreshSrcAddrList, updateWalletBrief } from './wallet';
+import { renderWallet, refreshSrcAddrList, updateWalletBrief, updateTotalGasBadge } from './wallet';
 import { UTXOData, TxCertificate } from '../types/blockchain';
 import { accrueWalletInterest, normalizeInterestFields } from '../utils/interestAccrual.js';
 import { queryAddressBalances } from './accountQuery';
@@ -190,6 +190,15 @@ let isPollingStarted = false;
 /** Flag to track if AssignNode connected toast has been shown this session */
 let hasShownAssignNodeConnectedToast = false;
 
+/** Canonical interest sync timer (ComNode query-address) */
+let interestSyncTimer: ReturnType<typeof setInterval> | null = null;
+
+/** Prevent overlapping canonical interest sync requests */
+let isInterestSyncing = false;
+
+/** Background interest sync interval (ms) */
+const INTEREST_SYNC_INTERVAL = 10000;
+
 // ============================================================================
 // Helper Functions
 // ============================================================================
@@ -199,6 +208,82 @@ let hasShownAssignNodeConnectedToast = false;
  */
 function getCurrentUser(): User | null {
   return (selectUser(store.getState()) as User | null) || null;
+}
+
+async function syncCanonicalInterests(force = false): Promise<void> {
+  if (isInterestSyncing) {
+    return;
+  }
+
+  const user = getCurrentUser();
+  const addresses = Object.keys(user?.wallet?.addressMsg || {});
+  if (!user?.accountId || addresses.length === 0) {
+    return;
+  }
+
+  if (!force && typeof document !== 'undefined' && document.hidden) {
+    return;
+  }
+
+  isInterestSyncing = true;
+
+  try {
+    const result = await queryAddressBalances(addresses);
+    if (!result.success) {
+      return;
+    }
+
+    const wallet = user.wallet as any;
+    const { changed } = applyComNodeInterests(wallet, result.data as any);
+    if (!changed) {
+      return;
+    }
+
+    const syncAt = Date.now();
+    for (const balance of result.data) {
+      const normalizedAddr = String(balance.address || '').toLowerCase();
+      const meta = wallet?.addressMsg?.[normalizedAddr];
+      if (!meta) continue;
+      (meta as any).lastProtocolSyncAt = syncAt;
+    }
+
+    const latestUser = getCurrentUser();
+    if (latestUser) {
+      latestUser.wallet = user.wallet;
+      saveUser(latestUser);
+      updateTotalGasBadge(latestUser);
+    } else {
+      saveUser(user);
+      updateTotalGasBadge(user);
+    }
+
+    renderWallet();
+    refreshSrcAddrList();
+    updateWalletBrief();
+  } catch (error) {
+    console.debug('[AccountPolling] Canonical interest sync skipped:', error);
+  } finally {
+    isInterestSyncing = false;
+  }
+}
+
+function startInterestSyncPolling(): void {
+  if (interestSyncTimer) {
+    return;
+  }
+
+  void syncCanonicalInterests(true);
+  interestSyncTimer = setInterval(() => {
+    void syncCanonicalInterests(false);
+  }, INTEREST_SYNC_INTERVAL);
+}
+
+function stopInterestSyncPolling(): void {
+  if (interestSyncTimer) {
+    clearInterval(interestSyncTimer);
+    interestSyncTimer = null;
+  }
+  isInterestSyncing = false;
 }
 
 /**
@@ -535,6 +620,22 @@ async function processAccountUpdate(update: AccountUpdateInfo): Promise<void> {
 
         // 添加新 UTXO（使用前端格式 ID）
         addrData.utxos[utxoId] = inUtxo.UTXOData;
+        const incomingOutput = inUtxo.UTXOData?.UTXO?.TXOutputs?.[inUtxo.UTXOData?.Position?.IndexZ ?? 0];
+        if (incomingOutput?.SeedAnchor) {
+          (addrData as any).seedAnchor = incomingOutput.SeedAnchor;
+        }
+        if (incomingOutput?.SeedChainStep) {
+          (addrData as any).seedChainStep = incomingOutput.SeedChainStep;
+          if ((addrData as any).pendingNextSeedStep && Number((addrData as any).pendingNextSeedStep) === Number(incomingOutput.SeedChainStep)) {
+            delete (addrData as any).pendingSeedStep;
+            delete (addrData as any).pendingNextSeedStep;
+            delete (addrData as any).pendingSeedTxId;
+            delete (addrData as any).pendingSeedAt;
+          }
+        }
+        if (incomingOutput?.DefaultSpendAlgorithm) {
+          (addrData as any).defaultSpendAlgorithm = incomingOutput.DefaultSpendAlgorithm;
+        }
         hasChanges = true;
 
         console.info(`[AccountPolling] Added new UTXO: ${utxoId}, value: ${inUtxo.UTXOData.Value}, type: ${inUtxo.UTXOData.Type}`);
@@ -1083,16 +1184,21 @@ function stopSSESync(): void {
 * 仅对已加入担保组织的用户启用
 */
 export function startAccountPolling(): void {
+  const user = getCurrentUser();
+  if (!user?.accountId) {
+    console.info('[AccountPolling] No user logged in, polling not started');
+    stopInterestSyncPolling();
+    return;
+  }
+
+  // Canonical interest/GAS sync should run for any logged-in wallet page,
+  // regardless of whether AssignNode polling is available.
+  startInterestSyncPolling();
+
   // 检查是否已启动 (SSE 也会设置 isPollingStarted 标志)
   if (isPollingStarted) {
     console.debug('[AccountPolling] Already started (checking connection...)');
     // 如果 SSE 断了，这里也可以尝试重连，但 startSSESync 内部有检查
-  }
-
-  const user = getCurrentUser();
-  if (!user?.accountId) {
-    console.info('[AccountPolling] No user logged in, polling not started');
-    return;
   }
   if (user.isInGroup === false || !user.orgNumber) {
     console.info('[AccountPolling] User not in organization, polling not started');
@@ -1124,6 +1230,7 @@ export function startAccountPolling(): void {
 * 停止账户更新
 */
 export function stopAccountPolling(): void {
+  stopInterestSyncPolling();
   stopSSESync();
 
   if (pollingTimer) {

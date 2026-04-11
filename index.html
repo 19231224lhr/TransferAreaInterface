@@ -34,17 +34,19 @@
     .detail-content {
       max-height: 60vh;
       overflow-y: auto;
-      background: #f8fafc;
+      background: linear-gradient(135deg, rgba(248, 250, 252, 0.95), rgba(241, 245, 249, 0.92));
       padding: 16px;
-      border-radius: 8px;
-      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      border: 1px solid rgba(226, 232, 240, 0.9);
       margin-bottom: 24px;
+      color: var(--color-text-primary, #0f172a);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65);
     }
 
     .detail-row {
       display: flex;
       margin-bottom: 8px;
-      border-bottom: 1px dashed #e2e8f0;
+      border-bottom: 1px dashed rgba(226, 232, 240, 0.9);
       padding-bottom: 8px;
     }
 
@@ -57,14 +59,14 @@
     .detail-label {
       width: 120px;
       flex-shrink: 0;
-      color: #64748b;
+      color: var(--color-text-secondary, #64748b);
       font-size: 13px;
       font-weight: 500;
     }
 
     .detail-val {
       flex: 1;
-      color: #334155;
+      color: var(--color-text-primary, #334155);
       font-family: 'JetBrains Mono', 'Fira Code', monospace;
       font-size: 13px;
       word-break: break-all;
@@ -72,10 +74,95 @@
 
     .detail-sub {
       margin-top: 4px;
-      background: #fff;
+      background: rgba(255, 255, 255, 0.92);
       padding: 8px;
       border-radius: 4px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .recovery-export {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .recovery-export__notice {
+      margin: 0;
+      padding: 0;
+    }
+
+    .recovery-export__meta {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(226, 232, 240, 0.9);
+    }
+
+    .recovery-export__meta-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--color-text-secondary, #64748b);
+    }
+
+    .recovery-export__meta-value {
+      color: var(--color-text-primary, #0f172a);
+      font-weight: 700;
+    }
+
+    .recovery-export__material {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .recovery-export__code {
+      flex: 1;
+      display: block;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(15, 23, 42, 0.06);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      color: var(--color-text-primary, #0f172a);
+      word-break: break-all;
+      font-size: 12px;
+      line-height: 1.6;
+      font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    }
+
+    .recovery-export__copy {
+      flex-shrink: 0;
+      min-width: 84px;
+    }
+
+    [data-theme="dark"] .detail-content {
+      background: linear-gradient(135deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.92));
+      border-color: rgba(71, 85, 105, 0.9);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    }
+
+    [data-theme="dark"] .detail-row {
+      border-bottom-color: rgba(71, 85, 105, 0.7);
+    }
+
+    [data-theme="dark"] .detail-sub {
+      background: rgba(15, 23, 42, 0.75);
+      border-color: rgba(71, 85, 105, 0.85);
+    }
+
+    [data-theme="dark"] .recovery-export__meta {
+      background: rgba(15, 23, 42, 0.56);
+      border-color: rgba(71, 85, 105, 0.85);
+    }
+
+    [data-theme="dark"] .recovery-export__code {
+      background: rgba(2, 6, 23, 0.72);
+      border-color: rgba(71, 85, 105, 0.85);
+      color: var(--color-text-primary, #e2e8f0);
     }
   </style>
 </head>
@@ -510,8 +597,8 @@
         </div>
         <div id="addrImportBox" class="result hidden">
           <div class="form">
-            <div class="form-row"><label data-i18n="walletModal.privateKeyLabel">私钥</label><input id="addrPrivHex"
-                class="input" type="text" data-i18n-placeholder="entry.enterPrivateKeyHex" placeholder="请输入私钥 Hex" />
+            <div class="form-row"><label id="addrImportLabel" data-i18n="walletModal.privateKeyLabel">私钥</label><input id="addrPrivHex"
+                class="input" type="text" data-i18n-placeholder="walletModal.recoveryMaterialPlaceholder" placeholder="请输入 arsk_... 或兼容的 64 位私钥" />
             </div>
           </div>
           <p id="addrError" class="tip tip--error hidden"></p>
@@ -552,10 +639,10 @@
     </div>
     <div id="detailModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog" style="max-width: 600px; width: 90%;">
-        <h3 id="detailModalTitle">璇︾粏淇℃伅</h3>
+        <h3 id="detailModalTitle" data-i18n="modal.detailTitle">详细信息</h3>
         <div id="detailModalContent" class="detail-content"></div>
         <div class="actions">
-          <button id="detailModalClose" class="btn primary">鍏抽棴</button>
+          <button id="detailModalClose" class="btn primary" data-i18n="common.close">关闭</button>
         </div>
       </div>
     </div>

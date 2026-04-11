@@ -24,8 +24,8 @@ export interface UserReOnlineMsg {
   FromPeerID: string;  // HTTP users must use empty string ""
   Address: string[];   // List of user's addresses
   Sig: {
-    R: bigint | null;
-    S: bigint | null;
+    R: bigint | string | null;
+    S: bigint | string | null;
   };
 }
 
@@ -57,9 +57,25 @@ export interface GuarGroupTable {
  */
 export interface UserWalletData {
   Value: number;
-  TXCers: Record<string, any>;
-  UTXOs: Record<string, any>;
-  SubAddressMsg: Record<string, any>;
+  TotalValue?: number;
+  ValueDivision?: Record<number, number>;
+  SubAddressMsg: Record<string, {
+    PublicKeyNew?: PublicKeyNew;
+    Value?: {
+      TotalValue?: number;
+      UTXOValue?: number;
+      TXCerValue?: number;
+    };
+    Type?: number;
+    UTXO?: Record<string, any>;
+    TXCers?: Record<string, number>;
+    EstInterest?: number;
+    LastHeight?: number;
+    SeedAnchor?: number[] | string;
+    SeedChainStep?: number;
+    DefaultSpendAlgorithm?: string;
+  }>;
+  AccountPublicKey?: PublicKeyNew;
 }
 
 /**

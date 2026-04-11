@@ -9,17 +9,29 @@
 
 import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
 import { ApiRequestError } from './api';
-import { loadUser, getJoinedGroup, saveUser } from '../utils/storage';
+import {
+  loadUser,
+  getJoinedGroup,
+  saveUser,
+  getAccountPublicKeyHex,
+  getAddressProtocolIssues,
+  hasAddressProtocolMetadata,
+  normalizeAddressDataForStorage
+} from '../utils/storage';
 import { getDecryptedPrivateKeyWithPrompt } from '../utils/keyEncryptionUI';
 import { t } from '../i18n/index.js';
 import { buildAssignNodeUrl, signStruct, type GroupInfo, getTimestamp } from './group';
 import { getComNodeURL } from './comNodeEndpoint';
 import { showErrorToast, showInfoToast } from '../utils/toast.js';
 import {
+  AlgorithmECDSAP256,
+  hashBackendJson,
+  signHashEnvelope,
   serializeForBackend,
-  convertHexToPublicKey,
   type PublicKeyNew,
-  type EcdsaSignature
+  type EcdsaSignature,
+  type SignatureEnvelope,
+  type PublicKeyEnvelope
 } from '../utils/signature';
 
 // ============================================================================
@@ -45,6 +57,10 @@ export interface UserNewAddressInfo {
   PublicKeyNew: PublicKeyNew;   // Public key for this address (P-256)
   UserID: string;               // 8-digit user ID
   Type: number;                 // Address type (0=PGC, 1=BTC, 2=ETH)
+  SignPublicKeyV2: PublicKeyEnvelope;
+  SeedAnchor: number[] | string;
+  SeedChainStep: number;
+  DefaultSpendAlgorithm: string;
   Sig?: EcdsaSignature;         // User signature (added after signing)
 }
 
@@ -65,6 +81,11 @@ export interface RegisterAddressRequest {
   GroupID: string;
   TimeStamp: number;
   Type: number;  // 币种类型：0=PGC, 1=BTC, 2=ETH
+  SeedAnchor: number[] | string;
+  SeedChainStep: number;
+  DefaultSpendAlgorithm: string;
+  SignPublicKeyV2: PublicKeyEnvelope;
+  AddressOwnershipSig: SignatureEnvelope;
   Sig?: EcdsaSignature;
 }
 
@@ -84,6 +105,83 @@ export type AddressResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
+function buildNormalizedAddressMeta(
+  address: string,
+  partialAddress: Record<string, unknown>
+) {
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    return { error: t('error.userNotLoggedIn') } as const;
+  }
+
+  const accountPub = getAccountPublicKeyHex(user);
+  if (!accountPub) {
+    return { error: t('error.publicKeyIncomplete', '账户公钥不完整') } as const;
+  }
+
+  const normalized = normalizeAddressDataForStorage(address, partialAddress as any, {
+    accountId: user.accountId,
+    accountAddress: user.address,
+    accountPubXHex: accountPub.x,
+    accountPubYHex: accountPub.y,
+    topLevelPrivHex: user.privHex || user.keys?.privHex,
+    syncTime: Date.now()
+  });
+
+  const issues = getAddressProtocolIssues(address, normalized);
+  if (issues.length > 0 && !hasAddressProtocolMetadata(normalized)) {
+    return { error: issues[0] } as const;
+  }
+
+  return { user, normalized } as const;
+}
+
+function persistAddressState(
+  address: string,
+  partialAddress: Record<string, unknown>
+): void {
+  const user = loadUser();
+  if (!user || !user.accountId) {
+    return;
+  }
+
+  const normalizedAddress = String(address || '').toLowerCase();
+  const current = user.wallet?.addressMsg?.[normalizedAddress] || {};
+  const next = buildNormalizedAddressMeta(normalizedAddress, {
+    ...current,
+    ...partialAddress
+  });
+
+  if ('error' in next) {
+    return;
+  }
+
+  if (!user.wallet) {
+    user.wallet = {
+      addressMsg: {},
+      totalTXCers: {},
+      totalValue: 0,
+      valueDivision: { 0: 0, 1: 0, 2: 0 },
+      updateTime: Date.now(),
+      updateBlock: 0
+    };
+  }
+  user.wallet.addressMsg[normalizedAddress] = next.normalized as any;
+  saveUser(user);
+}
+
+function updateRegistrationState(
+  address: string,
+  state: 'pending' | 'registered' | 'failed',
+  error?: string
+): void {
+  persistAddressState(address, {
+    registrationState: state,
+    registrationError: state === 'registered' ? undefined : error,
+    lastProtocolSyncAt: Date.now()
+  });
+}
+
 // ============================================================================
 // Public API Functions
 // ============================================================================
@@ -93,7 +191,9 @@ async function sendNewAddressRequestWithPriv(
   pubXHex: string,
   pubYHex: string,
   addressType: number,
-  accountPrivHex: string
+  accountPrivHex: string,
+  addressPrivHex?: string,
+  addressRootSeedHex?: string
 ): Promise<AddressResult<NewAddressResponse>> {
   try {
     const user = loadUser();
@@ -117,11 +217,33 @@ async function sendNewAddressRequestWithPriv(
       return { success: false, error: t('error.invalidPrivateKey', 'Invalid private key') };
     }
 
+    const normalizedAddress = newAddress.toLowerCase();
+    const meta = buildNormalizedAddressMeta(normalizedAddress, {
+      type: addressType,
+      pubXHex,
+      pubYHex,
+      privHex: addressPrivHex || user.wallet?.addressMsg?.[normalizedAddress]?.privHex,
+      addressRootSeedHex: addressRootSeedHex || user.wallet?.addressMsg?.[normalizedAddress]?.addressRootSeedHex,
+      origin: user.wallet?.addressMsg?.[normalizedAddress]?.origin || 'created'
+    });
+    if ('error' in meta) {
+      return { success: false, error: meta.error || t('error.unknownError') };
+    }
+
+    if (!meta.normalized.publicKeyNew || !meta.normalized.signPublicKeyV2 || !meta.normalized.seedAnchor || !meta.normalized.seedChainStep || !meta.normalized.defaultSpendAlgorithm) {
+      const issues = getAddressProtocolIssues(normalizedAddress, meta.normalized);
+      return { success: false, error: issues[0] || 'address protocol metadata incomplete' };
+    }
+
     const requestBody: UserNewAddressInfo = {
       NewAddress: newAddress,
-      PublicKeyNew: convertHexToPublicKey(pubXHex, pubYHex),
+      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
       UserID: user.accountId,
-      Type: addressType
+      Type: addressType,
+      SignPublicKeyV2: meta.normalized.signPublicKeyV2,
+      SeedAnchor: meta.normalized.seedAnchor,
+      SeedChainStep: meta.normalized.seedChainStep,
+      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm
     };
 
     console.debug('[Address] Building new-address request:', {
@@ -189,6 +311,15 @@ async function sendNewAddressRequestWithPriv(
       };
     }
 
+    persistAddressState(normalizedAddress, {
+      ...meta.normalized,
+      addressRootSeedHex: addressRootSeedHex || meta.normalized.addressRootSeedHex,
+      registrationState: 'registered',
+      registrationError: undefined,
+      lastProtocolSyncAt: Date.now(),
+      readOnly: false,
+      seedRepairRequired: false
+    });
     console.info('[Address] Address created successfully on backend');
     return { success: true, data: responseData };
 
@@ -229,7 +360,9 @@ export async function createNewAddressOnBackend(
   newAddress: string,
   pubXHex: string,
   pubYHex: string,
-  addressType: number = 0
+  addressType: number = 0,
+  addressPrivHex?: string,
+  addressRootSeedHex?: string
 ): Promise<AddressResult<NewAddressResponse>> {
   try {
     const user = loadUser();
@@ -259,7 +392,7 @@ export async function createNewAddressOnBackend(
       return { success: false, error: 'USER_CANCELLED' };
     }
 
-    return await sendNewAddressRequestWithPriv(newAddress, pubXHex, pubYHex, addressType, privHex);
+    return await sendNewAddressRequestWithPriv(newAddress, pubXHex, pubYHex, addressType, privHex, addressPrivHex, addressRootSeedHex);
   } catch (error) {
     console.error('[Address] Create address error:', error);
 
@@ -285,12 +418,14 @@ export async function createNewAddressOnBackendWithPriv(
   pubXHex: string,
   pubYHex: string,
   addressType: number,
-  accountPrivHex: string
+  accountPrivHex: string,
+  addressPrivHex?: string,
+  addressRootSeedHex?: string
 ): Promise<AddressResult<NewAddressResponse>> {
   if (!accountPrivHex) {
     return { success: false, error: t('error.invalidPrivateKey', 'Invalid private key') };
   }
-  return await sendNewAddressRequestWithPriv(newAddress, pubXHex, pubYHex, addressType, accountPrivHex);
+  return await sendNewAddressRequestWithPriv(newAddress, pubXHex, pubYHex, addressType, accountPrivHex, addressPrivHex, addressRootSeedHex);
 }
 
 function isAddressRegistrationReady(): boolean {
@@ -331,25 +466,65 @@ export async function registerAddressOnComNode(
       return { success: false, error: t('error.invalidPrivateKey', 'Invalid private key') };
     }
 
+    const normalizedAddress = address.toLowerCase();
+    const meta = buildNormalizedAddressMeta(normalizedAddress, {
+      type: addressType,
+      pubXHex,
+      pubYHex,
+      privHex,
+      origin: loadUser()?.wallet?.addressMsg?.[normalizedAddress]?.origin || 'imported'
+    });
+    if ('error' in meta) {
+      return { success: false, error: meta.error || t('error.unknownError') };
+    }
+    if (!meta.normalized.publicKeyNew || !meta.normalized.signPublicKeyV2 || !meta.normalized.seedAnchor || !meta.normalized.seedChainStep || !meta.normalized.defaultSpendAlgorithm) {
+      const issues = getAddressProtocolIssues(normalizedAddress, meta.normalized);
+      return { success: false, error: issues[0] || 'address protocol metadata incomplete' };
+    }
+
     const comNodeURL = await getComNodeURL(false, false);
     if (!comNodeURL) {
       return { success: false, error: t('comNode.notRegistered', 'ComNode not available') };
     }
 
-    const requestBody: RegisterAddressRequest = {
-      Address: address.toLowerCase(),
-      PublicKeyNew: convertHexToPublicKey(pubXHex, pubYHex),
+    const ownershipPayload = {
+      Address: normalizedAddress,
+      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
       GroupID: groupID,
       TimeStamp: getTimestamp(),
-      Type: addressType
+      Type: addressType,
+      SeedAnchor: meta.normalized.seedAnchor,
+      SeedChainStep: meta.normalized.seedChainStep,
+      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm,
+      SignPublicKeyV2: meta.normalized.signPublicKeyV2
+    };
+    const addressOwnershipSig = signHashEnvelope(
+      AlgorithmECDSAP256,
+      hashBackendJson(ownershipPayload),
+      privHex
+    );
+
+    const requestBody: RegisterAddressRequest = {
+      Address: normalizedAddress,
+      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
+      GroupID: groupID,
+      TimeStamp: ownershipPayload.TimeStamp,
+      Type: addressType,
+      SeedAnchor: meta.normalized.seedAnchor,
+      SeedChainStep: meta.normalized.seedChainStep,
+      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm,
+      SignPublicKeyV2: meta.normalized.signPublicKeyV2,
+      AddressOwnershipSig: addressOwnershipSig
     };
 
     const signature = signStruct(
       requestBody as unknown as Record<string, unknown>,
       privHex,
-      ['Sig']
+      ['Sig', 'AddressOwnershipSig']
     );
     requestBody.Sig = signature;
+
+    updateRegistrationState(normalizedAddress, 'pending');
 
     const apiUrl = `${comNodeURL}${API_ENDPOINTS.COM_REGISTER_ADDRESS}`;
     const response = await fetch(apiUrl, {
@@ -376,14 +551,28 @@ export async function registerAddressOnComNode(
     }
 
     if (!response.ok) {
+      updateRegistrationState(
+        normalizedAddress,
+        'failed',
+        responseData.message || responseData.error || `${t('error.networkError')}: HTTP ${response.status}`
+      );
       return {
         success: false,
         error: responseData.message || responseData.error || `${t('error.networkError')}: HTTP ${response.status}`
       };
     }
 
+    persistAddressState(normalizedAddress, {
+      ...meta.normalized,
+      registrationState: 'registered',
+      registrationError: undefined,
+      readOnly: false,
+      seedRepairRequired: false,
+      lastProtocolSyncAt: Date.now()
+    });
     return { success: true, data: responseData };
   } catch (error) {
+    updateRegistrationState(address.toLowerCase(), 'failed', error instanceof Error ? error.message : t('error.unknownError'));
     return {
       success: false,
       error: error instanceof Error ? error.message : t('error.unknownError')
@@ -407,12 +596,14 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
   const addressMap = user.wallet?.addressMsg || {};
   const addresses = Object.keys(addressMap);
   const errors: string[] = [];
+  let allSucceeded = true;
+
+  if (addresses.length === 0) {
+    saveUser({ accountId: user.accountId, mainAddressRegistered: true });
+    return;
+  }
 
   try {
-    if (addresses.length === 0) {
-      return;
-    }
-
     if (isUserInOrganization()) {
       const accountPriv = await getDecryptedPrivateKeyWithPrompt(
         user.accountId,
@@ -421,6 +612,7 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
       );
 
       if (!accountPriv) {
+        allSucceeded = false;
         showInfoToast(t('common.operationCancelled', 'Operation cancelled'));
         return;
       }
@@ -430,6 +622,9 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
         const pubXHex = meta?.pubXHex || '';
         const pubYHex = meta?.pubYHex || '';
         const addressType = Number(meta?.type ?? 0);
+        if (meta?.readOnly || meta?.seedRepairRequired) {
+          continue;
+        }
         if (!pubXHex || !pubYHex) {
           continue;
         }
@@ -439,10 +634,12 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
           pubXHex,
           pubYHex,
           addressType,
-          accountPriv
+          accountPriv,
+          meta?.privHex || ''
         );
 
         if (!result.success) {
+          allSucceeded = false;
           errors.push(result.error);
         }
       }
@@ -452,7 +649,14 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
         const pubXHex = meta?.pubXHex || '';
         const pubYHex = meta?.pubYHex || '';
         const privHex = meta?.privHex || '';
+        if (meta?.readOnly || meta?.seedRepairRequired) {
+          continue;
+        }
         if (!pubXHex || !pubYHex || !privHex) {
+          allSucceeded = false;
+          continue;
+        }
+        if (meta?.registrationState === 'registered') {
           continue;
         }
 
@@ -466,12 +670,16 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
         );
 
         if (!result.success) {
+          allSucceeded = false;
           errors.push(result.error);
         }
       }
     }
   } finally {
-    saveUser({ accountId: user.accountId, mainAddressRegistered: true });
+    saveUser({
+      accountId: user.accountId,
+      mainAddressRegistered: allSucceeded && errors.length === 0
+    });
   }
 
   if (errors.length > 0) {
@@ -516,6 +724,10 @@ export interface UserAddressBindingMsg {
   PublicKey: PublicKeyNew;      // Address public key (P-256)
   Type: number;                 // Address type (0=PGC, 1=BTC, 2=ETH)
   TimeStamp: number;            // Request timestamp (Unix seconds)
+  SignPublicKeyV2: PublicKeyEnvelope;
+  SeedAnchor: number[] | string;
+  SeedChainStep: number;
+  DefaultSpendAlgorithm: string;
   Sig?: EcdsaSignature;         // User signature (added after signing)
 }
 
@@ -592,15 +804,37 @@ export async function unbindAddressOnBackend(
       return { success: false, error: 'USER_CANCELLED' };
     }
 
+    const normalizedAddress = address.toLowerCase();
+    const meta = buildNormalizedAddressMeta(normalizedAddress, {
+      ...(user.wallet?.addressMsg?.[normalizedAddress] || {}),
+      type: addressType,
+      pubXHex,
+      pubYHex
+    });
+    if ('error' in meta) {
+      return { success: false, error: meta.error || t('error.unknownError') };
+    }
+    if (!meta.normalized.publicKeyNew || !meta.normalized.signPublicKeyV2 || !meta.normalized.seedAnchor || !meta.normalized.seedChainStep || !meta.normalized.defaultSpendAlgorithm) {
+      const issues = getAddressProtocolIssues(normalizedAddress, meta.normalized);
+      return {
+        success: false,
+        error: issues[0] || t('error.addressProtocolIncomplete', '地址协议状态不完整，无法同步解绑')
+      };
+    }
+
     // 4. Build request body (without signature first)
-    const timestamp = Math.floor(Date.now() / 1000);
+    const timestamp = getTimestamp();
     const requestBody: UserAddressBindingMsg = {
       Op: 0, // 0 = unbind
       UserID: user.accountId,
-      Address: address,
-      PublicKey: convertHexToPublicKey(pubXHex, pubYHex),
+      Address: normalizedAddress,
+      PublicKey: meta.normalized.publicKeyNew as PublicKeyNew,
       Type: addressType,
-      TimeStamp: timestamp
+      TimeStamp: timestamp,
+      SignPublicKeyV2: meta.normalized.signPublicKeyV2,
+      SeedAnchor: meta.normalized.seedAnchor,
+      SeedChainStep: meta.normalized.seedChainStep,
+      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm
       // Note: Sig will be added after signing
     };
 

@@ -30,6 +30,10 @@ export function resetFirstMainPageVisit() {
   isFirstMainPageVisit = true;
 }
 
+export function resetWalletRefreshFlag() {
+  resetFirstMainPageVisit();
+}
+
 /**
  * Handle main route initialization
  * Processes any pending organization choice and renders wallet

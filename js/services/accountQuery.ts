@@ -74,6 +74,12 @@ export interface PointAddressData {
   UTXO: Record<string, QueryUTXOData>;
   /** Last update block height */
   LastHeight: number;
+  /** Current seed anchor */
+  SeedAnchor?: number[] | string;
+  /** Current seed chain step */
+  SeedChainStep?: number;
+  /** Default spend algorithm */
+  DefaultSpendAlgorithm?: string;
 }
 
 /**
@@ -109,6 +115,9 @@ export interface AddressBalanceInfo {
     x: string;
     y: string;
   };
+  seedAnchor?: number[] | string;
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
   lastHeight: number;
   exists: boolean;
 }
@@ -145,6 +154,9 @@ function normalizeAddressData(address: string, data: PointAddressData): AddressB
       x: String(data.PublicKeyNew?.X || '0'),
       y: String(data.PublicKeyNew?.Y || '0')
     },
+    seedAnchor: data.SeedAnchor,
+    seedChainStep: Number(data.SeedChainStep || 0) || undefined,
+    defaultSpendAlgorithm: data.DefaultSpendAlgorithm || undefined,
     lastHeight: data.LastHeight || 0,
     exists
   };
@@ -546,6 +558,9 @@ export interface AddressGroupInfo {
   GroupID: string;        // "0" = not exist, "1" = retail, other = group ID
   PublicKey: PublicKeyNew;
   Type: number;           // 币种类型：0=PGC, 1=BTC, 2=ETH
+  SeedAnchor?: number[] | string;
+  SeedChainStep?: number;
+  DefaultSpendAlgorithm?: string;
 }
 
 /**
@@ -571,6 +586,9 @@ export interface NormalizedAddressGroupInfo {
     y: string;
   } | null;
   type: number;  // 币种类型：0=PGC, 1=BTC, 2=ETH
+  seedAnchor?: number[] | string;
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
 }
 
 /**
@@ -681,7 +699,10 @@ function normalizeAddressGroupData(address: string, data: AddressGroupInfo): Nor
     isRetail,
     isInGroup,
     publicKey,
-    type: data.Type ?? 0  // 默认为 PGC (0)
+    type: data.Type ?? 0,  // 默认为 PGC (0)
+    seedAnchor: data.SeedAnchor,
+    seedChainStep: Number(data.SeedChainStep || 0) || undefined,
+    defaultSpendAlgorithm: data.DefaultSpendAlgorithm || undefined
   };
 }
 
@@ -864,7 +885,8 @@ export async function querySingleAddressGroup(
         exists: false,
         isRetail: false,
         isInGroup: false,
-        publicKey: null
+        publicKey: null,
+        type: 0
       }
     };
   }

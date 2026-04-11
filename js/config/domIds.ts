@@ -84,6 +84,7 @@ export const DOM_IDS = {
   downloadSpeed: 'downloadSpeed',
   entryBackBtn: 'entryBackBtn',
   entryNextBtn: 'entryNextBtn',
+  entryUsableAddressCount: 'entryUsableAddressCount',
   extraGasPGC: 'extraGasPGC',
   groupBackBtn: 'groupBackBtn',
   groupDetailAggre: 'groupDetailAggre',

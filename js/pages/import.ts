@@ -11,7 +11,7 @@
  */
 
 import { loadUser, saveUser, toAccount } from '../utils/storage';
-import { importFromPrivHex } from '../services/account';
+import { importAddressMaterial, importFromPrivHex } from '../services/account';
 import { showErrorToast, showToast, showSuccessToast } from '../utils/toast.js';
 import { showUnifiedLoading, showUnifiedSuccess, hideUnifiedOverlay } from '../ui/modal';
 import { t } from '../i18n/index.js';
@@ -27,6 +27,7 @@ import {
   runParallelAnimations,
   type ReactiveState
 } from '../utils/reactive';
+import { isSupportedAddressRecoveryMaterial } from '../utils/addressRootSeed';
 import {
   querySingleAddressGroup,
   isInGuarGroup
@@ -136,6 +137,50 @@ let pendingUser: ReturnType<typeof toAccount> | null = null;
 // 事件清理函数数组
 let eventCleanups: (() => void)[] = [];
 
+function updateImportModePresentation(mode: ImportMode): void {
+  const brandTitle = document.getElementById('importBrandTitle');
+  const brandDesc = document.getElementById('importBrandDesc');
+  const headerTitle = document.getElementById('importHeaderTitle');
+  const headerDesc = document.getElementById('importHeaderDesc');
+  const scopeNotice = document.getElementById('importScopeNotice');
+  const submitLabel = document.getElementById('importSubmitLabel');
+  const inputLabel = document.getElementById('importInputLabel');
+  const inputEl = document.getElementById('importPrivHex') as HTMLInputElement | null;
+  const formatHint = document.getElementById('importFormatHint');
+  const securityTip = document.getElementById('importSecurityTip');
+
+  if (mode === 'wallet') {
+    if (brandTitle) brandTitle.textContent = t('import.wallet.title') || '导入钱包地址';
+    if (brandDesc) brandDesc.textContent = t('import.wallet.description') || '通过地址恢复材料恢复钱包地址，并重建本地 seed-chain 状态。';
+    if (headerTitle) headerTitle.textContent = t('import.wallet.headerTitle') || '导入钱包地址';
+    if (headerDesc) headerDesc.textContent = t('import.wallet.headerDesc') || '输入地址恢复材料以恢复该地址的控制权，并同步 seed-chain 状态。';
+    if (scopeNotice) scopeNotice.textContent = t('import.wallet.scopeNotice') || '推荐输入 AddressRootSeed 恢复材料（arsk_...）；老地址也兼容 64 位私钥。';
+    if (submitLabel) submitLabel.textContent = t('import.wallet.submit') || '导入钱包地址';
+    if (inputLabel) inputLabel.textContent = t('import.wallet.inputLabel') || '地址恢复材料';
+    if (inputEl) {
+      inputEl.placeholder = t('import.wallet.inputPlaceholder') || '请输入 arsk_... 或兼容的 64 位私钥';
+      inputEl.setAttribute('data-i18n-placeholder', 'import.wallet.inputPlaceholder');
+    }
+    if (formatHint) formatHint.textContent = t('import.wallet.formatHint') || '推荐输入 arsk_...；也兼容旧的 64 位私钥。';
+    if (securityTip) securityTip.textContent = t('import.wallet.securityTip') || '请在安全环境中输入地址恢复材料。恢复材料仅保存在本地浏览器中。';
+    return;
+  }
+
+  if (brandTitle) brandTitle.textContent = t('import.account.title') || (t('import.title') || '导入账户');
+  if (brandDesc) brandDesc.textContent = t('import.account.description') || (t('import.description') || '通过私钥恢复您的账户身份');
+  if (headerTitle) headerTitle.textContent = t('import.account.headerTitle') || (t('import.importWallet') || '导入账户');
+  if (headerDesc) headerDesc.textContent = t('import.account.headerDesc') || (t('import.importWalletDesc') || '输入您的账户私钥以恢复身份和钱包数据');
+  if (scopeNotice) scopeNotice.textContent = t('import.account.scopeNotice') || '这里导入的是账户身份私钥。进入钱包后，你仍可以继续创建或导入地址。';
+  if (submitLabel) submitLabel.textContent = t('import.account.submit') || (t('import.importWallet') || '导入账户');
+  if (inputLabel) inputLabel.textContent = t('login.privateKeyHex') || '私钥（Hex）';
+  if (inputEl) {
+    inputEl.placeholder = t('import.enterPrivateKey') || '请输入 64 位十六进制私钥';
+    inputEl.setAttribute('data-i18n-placeholder', 'import.enterPrivateKey');
+  }
+  if (formatHint) formatHint.textContent = t('import.formatHint') || '支持带 0x 前缀或纯 64 位十六进制格式';
+  if (securityTip) securityTip.textContent = t('import.securityTip') || '请确保在安全的环境中输入私钥，私钥将仅存储在本地浏览器中';
+}
+
 // ============================================================================
 // Address Organization Check
 // ============================================================================
@@ -150,6 +195,13 @@ let eventCleanups: (() => void)[] = [];
 async function checkAddressOrganization(address: string): Promise<{
   groupID: string;
   groupInfo: GroupInfo | null;
+  exists: boolean;
+  isRetail: boolean;
+  isInGroup: boolean;
+  type?: number;
+  seedAnchor?: number[] | string;
+  seedChainStep?: number;
+  defaultSpendAlgorithm?: string;
 } | null> {
   try {
     console.info(`[Import] 🔍 Checking if address ${address} belongs to an organization...`);
@@ -163,9 +215,24 @@ async function checkAddressOrganization(address: string): Promise<{
 
     const addressInfo = result.data;
 
-    if (!isInGuarGroup(addressInfo.groupID)) {
-      console.info(`[Import] ✓ Address is not in any organization (GroupID: ${addressInfo.groupID})`);
+    if (!addressInfo.exists) {
+      console.info(`[Import] ✓ Address is not registered on backend`);
       return null;
+    }
+
+    if (!isInGuarGroup(addressInfo.groupID)) {
+      console.info(`[Import] ✓ Address is registered outside guarantor group flow (GroupID: ${addressInfo.groupID})`);
+      return {
+        groupID: addressInfo.groupID,
+        groupInfo: null,
+        exists: true,
+        isRetail: !!addressInfo.isRetail,
+        isInGroup: false,
+        type: addressInfo.type,
+        seedAnchor: addressInfo.seedAnchor,
+        seedChainStep: addressInfo.seedChainStep,
+        defaultSpendAlgorithm: addressInfo.defaultSpendAlgorithm
+      };
     }
 
     console.info(`[Import] ✓ Address belongs to organization: ${addressInfo.groupID}`);
@@ -177,14 +244,28 @@ async function checkAddressOrganization(address: string): Promise<{
       console.info(`[Import] ✓ Got organization info:`, groupResult.data);
       return {
         groupID: addressInfo.groupID,
-        groupInfo: groupResult.data
+        groupInfo: groupResult.data,
+        exists: true,
+        isRetail: !!addressInfo.isRetail,
+        isInGroup: true,
+        type: addressInfo.type,
+        seedAnchor: addressInfo.seedAnchor,
+        seedChainStep: addressInfo.seedChainStep,
+        defaultSpendAlgorithm: addressInfo.defaultSpendAlgorithm
       };
     } else {
       console.warn(`[Import] ⚠️ Failed to query organization info:`, groupResult.error);
       // Still return the groupID even if we couldn't get full info
       return {
         groupID: addressInfo.groupID,
-        groupInfo: null
+        groupInfo: null,
+        exists: true,
+        isRetail: !!addressInfo.isRetail,
+        isInGroup: true,
+        type: addressInfo.type,
+        seedAnchor: addressInfo.seedAnchor,
+        seedChainStep: addressInfo.seedChainStep,
+        defaultSpendAlgorithm: addressInfo.defaultSpendAlgorithm
       };
     }
   } catch (error) {
@@ -386,8 +467,9 @@ async function handleImport(): Promise<void> {
   const inputEl = document.getElementById(DOM_IDS.importPrivHex) as HTMLInputElement | null;
   const priv = inputEl?.value.trim() || '';
 
-  // 验证私钥
-  const validationError = quickValidate(priv, ['required', 'privateKey']);
+  const validationError = mode === 'wallet'
+    ? (priv ? '' : (t('modal.pleaseEnterPrivateKey') || '请输入恢复材料'))
+    : quickValidate(priv, ['required', 'privateKey']);
   if (validationError) {
     showErrorToast(validationError, t('modal.inputError'));
     if (inputEl) {
@@ -426,7 +508,9 @@ async function handleImport(): Promise<void> {
     }
 
     const t0 = Date.now();
-    const data = await importFromPrivHex(priv);
+    const data = mode === 'wallet'
+      ? await importAddressMaterial(priv)
+      : await importFromPrivHex(priv);
     const elapsed = Date.now() - t0;
     if (elapsed < 1000) await wait(1000 - elapsed);
 
@@ -449,6 +533,7 @@ async function handleImport(): Promise<void> {
 
     const addr = (data.address || '').toLowerCase();
     let acc: ReturnType<typeof toAccount>;
+    let importedAddressStatus: Awaited<ReturnType<typeof checkAddressOrganization>> = null;
 
     if (mode === 'account') {
       // --- 账户模式逻辑 ---
@@ -501,14 +586,17 @@ async function handleImport(): Promise<void> {
         handleImportError(importBtn, loadingId, t('toast.addressExists'));
         return;
       }
+
+      importedAddressStatus = await checkAddressOrganization(addr);
     }
 
     // 共同的构建逻辑：添加地址到 wallet.addressMsg
     if (addr && acc.wallet?.addressMsg) {
       // 如果已存在则不覆盖（上面已经由于 exists check return 了），这里是添加新地址
       if (!acc.wallet.addressMsg[addr]) {
+        const resolvedAddressType = Number((data as any).addressType ?? importedAddressStatus?.type ?? 0);
         acc.wallet.addressMsg[addr] = {
-          type: 0,
+          type: resolvedAddressType,
           utxos: {},
           txCers: {},
           value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
@@ -516,8 +604,25 @@ async function handleImport(): Promise<void> {
           origin: 'imported',
           privHex: data.privHex || normalized,
           pubXHex: data.pubXHex || '',
-          pubYHex: data.pubYHex || ''
+          pubYHex: data.pubYHex || '',
+          addressRootSeedHex: (data as any).addressRootSeedHex || ''
         };
+      }
+
+      const addrMeta = acc.wallet.addressMsg[addr] as any;
+      if (importedAddressStatus?.exists) {
+        addrMeta.registrationState = 'registered';
+        addrMeta.registrationError = undefined;
+        addrMeta.lastProtocolSyncAt = Date.now();
+        if (importedAddressStatus.seedAnchor) {
+          addrMeta.seedAnchor = importedAddressStatus.seedAnchor;
+        }
+        if (importedAddressStatus.seedChainStep) {
+          addrMeta.seedChainStep = importedAddressStatus.seedChainStep;
+        }
+        if (importedAddressStatus.defaultSpendAlgorithm) {
+          addrMeta.defaultSpendAlgorithm = importedAddressStatus.defaultSpendAlgorithm;
+        }
       }
     }
 
@@ -542,18 +647,14 @@ async function handleImport(): Promise<void> {
     });
 
     // 检查组织信息 (Informational Toast)
-    if (addr) {
-      checkAddressOrganization(addr).then(orgInfo => {
-        if (orgInfo) {
-          showToast(
-            t('import.addressBelongsToOrgHint', { groupID: orgInfo.groupID }) ||
-            `已属组织 ${orgInfo.groupID}`,
-            'info',
-            '',
-            3000
-          );
-        }
-      });
+    if (addr && importedAddressStatus?.isInGroup) {
+      showToast(
+        t('import.addressBelongsToOrgHint', { groupID: importedAddressStatus.groupID }) ||
+        `已属组织 ${importedAddressStatus.groupID}`,
+        'info',
+        '',
+        3000
+      );
     }
 
   } catch (err) {
@@ -608,6 +709,7 @@ export function resetImportState(mode: ImportMode = 'account'): void {
   // 重置响应式状态
   pageState?.reset();
   pageState?.set({ mode });
+  updateImportModePresentation(mode);
 
   // 重置导入按钮模式
   const importBtn = document.getElementById(DOM_IDS.importBtn) as HTMLButtonElement | null;
@@ -749,12 +851,25 @@ export function initImportPage(): void {
   pageState = createReactiveState(initialState, stateBindings);
 
   // 重置页面状态
-  resetImportState('account');
+  const route = (window.location.hash || '').replace(/^#/, '');
+  resetImportState(route === '/wallet-import' ? 'wallet' : 'account');
 
   // 设置表单验证
+  const isWalletImport = route === '/wallet-import';
   addInlineValidation('#importPrivHex', [
-    { validator: 'required', message: t('modal.pleaseEnterPrivateKey') || '请输入私钥' },
-    { validator: 'privateKey', message: t('modal.privateKeyFormatError') || '私钥格式错误，需要64位十六进制' }
+    {
+      validator: 'required',
+      message: isWalletImport
+        ? (t('import.wallet.requiredMaterial') || '请输入地址恢复材料')
+        : (t('modal.pleaseEnterPrivateKey') || '请输入私钥')
+    },
+    isWalletImport
+      ? {
+        validator: (value: string) => isSupportedAddressRecoveryMaterial(value)
+          ? null
+          : (t('import.wallet.inputFormatError') || '请输入地址恢复材料（arsk_...）或兼容的64位私钥')
+      }
+      : { validator: 'privateKey', message: t('modal.privateKeyFormatError') || '私钥格式错误，需要64位十六进制' }
   ], { showOnInput: true, debounceMs: 200 });
 
   // 绑定事件

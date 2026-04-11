@@ -14,6 +14,7 @@ import {
 } from '../utils/reactive';
 import { html, nothing, renderInto, type TemplateResult } from '../utils/view';
 import { DOM_IDS, idSelector } from '../config/domIds';
+import { humanizeErrorMessage } from '../utils/errorHumanizer';
 
 // ============================================================================
 // Types
@@ -181,6 +182,11 @@ export function showUnifiedLoading(text?: string): void {
   if (textEl) {
     textEl.textContent = text || t('common.processing') || '处理中...';
   }
+  const overlay = document.getElementById(DOM_IDS.actionOverlay);
+  if (overlay) {
+    overlay.classList.remove('hidden');
+    overlay.style.pointerEvents = 'auto';
+  }
 
   updateModalUI('loading');
 }
@@ -275,7 +281,7 @@ export function showUnifiedError(
   text?: string,
   onOk?: () => void
 ): void {
-  showUnifiedSuccess(title, text, onOk, undefined, true);
+  showUnifiedSuccess(title, humanizeErrorMessage(text || ''), onOk, undefined, true);
 }
 
 /**
@@ -290,7 +296,10 @@ export function hideUnifiedOverlay(): void {
   });
 
   const overlay = document.getElementById(DOM_IDS.actionOverlay);
-  if (overlay) overlay.classList.add('hidden');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    overlay.style.pointerEvents = 'none';
+  }
 
   resetModalState();
 }
@@ -317,6 +326,10 @@ export function getActionModalElements(): {
   const success = document.getElementById(DOM_IDS.unifiedSuccess);
   if (loading) loading.classList.add('hidden');
   if (success) success.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.pointerEvents = 'auto';
+  }
 
   if (cancelEl) {
     cancelEl.classList.add('hidden');
@@ -394,7 +407,10 @@ export function showModalTip(title: string, content?: string | TemplateResult, i
       renderInto(textEl, content);
     }
   }
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.pointerEvents = 'auto';
+  }
 
   // Apply danger styling to OK button
   if (okEl) {

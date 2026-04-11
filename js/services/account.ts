@@ -20,6 +20,7 @@ import { ec as EC } from 'elliptic';
 import { sha256 } from 'js-sha256';
 import { publicKeyEnvelopeFromHex, convertHexToPublicKey, AlgorithmECDSAP256 } from '../utils/signature';
 import { buildInitialSeedMetaFromPrivateKey } from '../utils/seedChain';
+import { deriveAddressKeypairFromAddressRootSeed, generateAddressRootSeedHex, parseAddressRecoveryMaterial } from '../utils/addressRootSeed';
 
 // ========================================
 // Type Definitions
@@ -45,6 +46,13 @@ export interface AddressMetadata {
   privHex?: string;
   pubXHex?: string;
   pubYHex?: string;
+}
+
+export interface AddSubWalletResult {
+  success: boolean;
+  address?: string;
+  error?: string;
+  cancelled?: boolean;
 }
 
 // ========================================
@@ -280,6 +288,88 @@ export async function importFromPrivHex(privHex: string): Promise<AccountData> {
   }
   return await importLocallyFromPrivHex(privHex);
 }
+const SUPPORTED_ADDRESS_TYPES = [0, 1, 2] as const;
+
+async function inferAddressTypeFromRootSeed(rootSeedHex: string): Promise<number> {
+  const candidates = SUPPORTED_ADDRESS_TYPES.map((type) => ({
+    type,
+    ...deriveAddressKeypairFromAddressRootSeed(rootSeedHex, type)
+  }));
+
+  const user = loadUser();
+  if (user) {
+    const localMatches = candidates.filter((candidate) => {
+      const normalizedAddress = String(candidate.address || '').toLowerCase();
+      if (!normalizedAddress) return false;
+      return (user.address && String(user.address).toLowerCase() == normalizedAddress) || !!user.wallet?.addressMsg?.[normalizedAddress];
+    });
+
+    if (localMatches.length == 1) {
+      return localMatches[0].type;
+    }
+    if (localMatches.length > 1) {
+      throw new Error(t('import.addressRecoveryTypeAmbiguous', 'This recovery material matches multiple local addresses. Please use the latest exported material.'));
+    }
+  }
+
+  try {
+    const { queryAddressGroupInfo } = await import('./accountQuery');
+    const result = await queryAddressGroupInfo(candidates.map((candidate) => candidate.address));
+    if (result.success) {
+      const remoteMatches = candidates.filter((candidate) =>
+        result.data.some((info) => String(info.address || '').toLowerCase() == String(candidate.address || '').toLowerCase() && info.exists)
+      );
+      if (remoteMatches.length == 1) {
+        return remoteMatches[0].type;
+      }
+      if (remoteMatches.length > 1) {
+        throw new Error(t('import.addressRecoveryTypeAmbiguous', 'This recovery material matches multiple registered addresses. Please use the latest exported material.'));
+      }
+    }
+  } catch (error) {
+    console.warn('[Account] Failed to infer address type from backend:', error);
+  }
+
+  throw new Error(t('import.addressRecoveryTypeRequired', 'This recovery material can derive multiple coin-type addresses. Please use the latest exported material or choose the address type explicitly.'));
+}
+
+export async function importAddressMaterial(secret: string, addressType?: number | null): Promise<AccountData & {
+  addressRootSeedHex?: string;
+  materialKind: 'root_seed' | 'private_key';
+  addressType: number;
+}> {
+  const parsed = parseAddressRecoveryMaterial(secret);
+  if (parsed.kind === 'root_seed') {
+    let resolvedAddressType: number;
+    if (typeof parsed.addressType === 'number') {
+      resolvedAddressType = parsed.addressType;
+    } else if (typeof addressType === 'number' && SUPPORTED_ADDRESS_TYPES.includes(addressType as 0 | 1 | 2)) {
+      resolvedAddressType = addressType;
+    } else {
+      resolvedAddressType = await inferAddressTypeFromRootSeed(parsed.hex);
+    }
+
+    const derived = deriveAddressKeypairFromAddressRootSeed(parsed.hex, resolvedAddressType);
+    const accountId = generate8DigitFromInputHex(derived.privHex);
+    return {
+      accountId,
+      address: derived.address,
+      privHex: derived.privHex,
+      pubXHex: derived.pubXHex,
+      pubYHex: derived.pubYHex,
+      addressRootSeedHex: derived.addressRootSeedHex,
+      materialKind: 'root_seed',
+      addressType: resolvedAddressType
+    };
+  }
+
+  const imported = await importFromPrivHex(parsed.hex);
+  return {
+    ...imported,
+    materialKind: 'private_key',
+    addressType: typeof addressType === 'number' && SUPPORTED_ADDRESS_TYPES.includes(addressType as 0 | 1 | 2) ? addressType : 0
+  };
+}
 
 /**
  * Add a new sub-wallet address to the current account
@@ -292,89 +382,91 @@ export async function importFromPrivHex(privHex: string): Promise<AccountData> {
  * 
  * @param addressType - Address type (0=PGC, 1=BTC, 2=ETH), defaults to 0
  */
-export async function addNewSubWallet(addressType: number = 0): Promise<void> {
+export async function addNewSubWallet(addressType: number = 0): Promise<AddSubWalletResult> {
   const u = loadUser();
   if (!u || !u.accountId) {
     alert(t('modal.pleaseLoginFirst'));
-    return;
+    return {
+      success: false,
+      error: t('modal.pleaseLoginFirst')
+    };
   }
-
   // Show unified loading component
   showUnifiedLoading(t('modal.addingWalletAddress'));
-
   try {
     const t0 = Date.now();
-
-    // Generate new keypair using elliptic library (works in non-HTTPS)
-    const ec = new EC('p256');
-    const keyPair = ec.genKeyPair();
-
-    // Get private key (ensure 64 hex chars with padding)
-    const privHex = keyPair.getPrivate('hex').padStart(64, '0');
-
-    // Get public key coordinates (ensure 64 hex chars each)
-    const pubPoint = keyPair.getPublic();
-    const pubXHex = pubPoint.getX().toString(16).padStart(64, '0');
-    const pubYHex = pubPoint.getY().toString(16).padStart(64, '0');
-
-    // Convert to bytes
-    const xBytes = hexToBytes(pubXHex);
-    const yBytes = hexToBytes(pubYHex);
-
-    // Create uncompressed public key: 0x04 || X || Y
-    const uncompressed = new Uint8Array(1 + 32 + 32);
-    uncompressed[0] = 0x04;
-    uncompressed.set(xBytes, 1);
-    uncompressed.set(yBytes, 33);
-
-    // Generate address using js-sha256 (works in non-HTTPS)
-    const shaHash = sha256.array(uncompressed);
-    const addr = bytesToHex(new Uint8Array(shaHash.slice(0, 20)));
-
+    const existingAddresses = new Set<string>([
+      String(u.address || '').toLowerCase(),
+      ...Object.keys(u.wallet?.addressMsg || {}).map((addr) => String(addr || '').toLowerCase())
+    ].filter(Boolean));
+    let addressRootSeedHex = '';
+    let privHex = '';
+    let pubXHex = '';
+    let pubYHex = '';
+    let addr = '';
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const candidateRootSeedHex = generateAddressRootSeedHex();
+      const derived = deriveAddressKeypairFromAddressRootSeed(candidateRootSeedHex, addressType);
+      const normalizedAddress = String(derived.address || '').toLowerCase();
+      if (!normalizedAddress || existingAddresses.has(normalizedAddress)) {
+        continue;
+      }
+      addressRootSeedHex = candidateRootSeedHex;
+      privHex = derived.privHex;
+      pubXHex = derived.pubXHex;
+      pubYHex = derived.pubYHex;
+      addr = normalizedAddress;
+      break;
+    }
+    if (!addr || !privHex || !pubXHex || !pubYHex || !addressRootSeedHex) {
+      throw new Error(t('address.createFailedCollision', 'Unable to generate a unique address. Please retry.'));
+    }
     console.info(`[Account] Generated new address: ${addr}`);
-
     // Import address service dynamically to avoid circular dependency
     const { createNewAddressOnBackend, isUserInOrganization, registerAddressOnComNode } = await import('./address');
-
     // If user is in organization, must sync with backend first
     const inOrg = isUserInOrganization();
     if (inOrg) {
       console.info('[Account] User is in organization, syncing address with backend...');
-
       // Hide loading temporarily to show password prompt if needed
       hideUnifiedOverlay();
-
-      const result = await createNewAddressOnBackend(addr, pubXHex, pubYHex, addressType);
-
+      const result = await createNewAddressOnBackend(addr, pubXHex, pubYHex, addressType, privHex, addressRootSeedHex);
       // Show loading again
       showUnifiedLoading(t('modal.addingWalletAddress'));
-
       if (!result.success) {
         // Check if user cancelled password input
         if (result.error === 'USER_CANCELLED') {
           console.info('[Account] User cancelled password input for new address');
           hideUnifiedOverlay();
-          showInfoToast(t('common.operationCancelled') || 'Êìç‰ΩúÂ∑≤ÂèñÊ∂?);
-          return; // Exit without saving locally
+          showInfoToast(t('common.operationCancelled') || 'Operation cancelled');
+          return {
+            success: false,
+            cancelled: true,
+            error: result.error
+          };
         }
-
         // Backend failed - do NOT save locally, show error
-        console.error('[Account] ‚ú?Backend sync failed:', result.error);
+        console.error('[Account] Backend sync failed:', result.error);
         hideUnifiedOverlay();
         showErrorToast(
-          t('address.createFailed', 'ÂàõÂª∫Âú∞ÂùÄÂ§±Ë¥•'),
+          t('address.createFailed', '¥¥Ω®µÿ÷∑ ß∞‹'),
           result.error || t('error.unknownError')
         );
-        return; // Exit without saving locally
+        return {
+          success: false,
+          error: result.error || t('error.unknownError')
+        };
       }
-
-      console.info('[Account] ‚ú?Address synced with backend successfully');
+      console.info('[Account] Address synced with backend successfully');
     } else {
       console.info('[Account] User not in organization, creating address locally only');
     }
-
     // Backend succeeded (or user not in org) - now save locally
-    const acc = toAccount({ accountId: u.accountId, address: u.address }, u);
+    const latestUser = loadUser();
+    if (!latestUser || !latestUser.accountId) {
+      throw new Error(t('modal.pleaseLoginFirst'));
+    }
+    const acc = toAccount({ accountId: latestUser.accountId, address: latestUser.address }, latestUser);
     acc.wallet.addressMsg[addr] = acc.wallet.addressMsg[addr] || {
       type: addressType,
       utxos: {},
@@ -388,12 +480,11 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
     addrData.privHex = privHex;
     addrData.pubXHex = pubXHex;
     addrData.pubYHex = pubYHex;
+    addrData.addressRootSeedHex = addressRootSeedHex;
     addrData.type = addressType;
-
     // Single Source of Truth: Update Store first, let subscriptions handle UI
     setUser(acc);
     saveUser(acc);
-
     if (!inOrg) {
       const registerResult = await registerAddressOnComNode(addr, pubXHex, pubYHex, privHex, '', addressType);
       if (!registerResult.success) {
@@ -403,13 +494,11 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
         );
       }
     }
-
     // Ensure minimum loading time for UX
     const elapsed = Date.now() - t0;
     if (elapsed < 800) {
       await wait(800 - elapsed);
     }
-
     // P0-1 Fix: Prompt user to encrypt the new sub-wallet private key
     // Note: Sub-wallet keys are stored per-address, encryption is optional
     try {
@@ -423,33 +512,35 @@ export async function addNewSubWallet(addressType: number = 0): Promise<void> {
       // Encryption is optional - don't block sub-wallet creation
       console.warn('Sub-wallet key encryption skipped:', encryptErr);
     }
-
     // New address requires full wallet re-render (DOM structure change)
     // This is an exception where we call renderWallet directly because:
     // 1. We're adding a new card to the DOM, not just updating values
     // 2. Store subscription can't determine the insertion position
     try { window.PanguPay?.wallet?.renderWallet?.(); } catch (_) { }
-
     // Show success (smooth transition from loading state)
     // No success callback needed - Store subscription handles all reactive updates
-    // Show success (smooth transition from loading state)
-    // No success callback needed - Store subscription handles all reactive updates
-    hideUnifiedOverlay(); // Ensure overlay is hidden before showing toast
+    hideUnifiedOverlay();
     showSuccessToast(
       t('modal.walletAddSuccessDesc'),
       t('modal.walletAddSuccess')
     );
-
+    return {
+      success: true,
+      address: addr
+    };
   } catch (e: any) {
     hideUnifiedOverlay();
     showErrorToast(
-      t('address.createFailed', 'ÂàõÂª∫Âú∞ÂùÄÂ§±Ë¥•'),
+      t('address.createFailed', '¥¥Ω®µÿ÷∑ ß∞‹'),
       e && e.message ? e.message : String(e)
     );
     console.error(e);
+    return {
+      success: false,
+      error: e && e.message ? e.message : String(e)
+    };
   }
 }
-
 /**
  * Handle account creation with UI updates
  * @param showToastNotification - Whether to show toast notification

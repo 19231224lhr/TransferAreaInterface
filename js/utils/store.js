@@ -15,7 +15,7 @@
 
 /**
  * @typedef {Object} AppState
- * @property {import('../types.js').User|null} user - Current user data
+ * @property {import('./storage.js').User|null} user - Current user data
  * @property {string} currentRoute - Current route path
  * @property {string} language - Current language code
  * @property {string} theme - Current theme ('light' | 'dark' | 'auto')
@@ -244,7 +244,7 @@ export const store = new Store(initialState);
 /**
  * Select user from state
  * @param {AppState} state
- * @returns {import('../types.js').User|null}
+ * @returns {import('./storage.js').User|null}
  */
 export const selectUser = (state) => state.user;
 
@@ -296,7 +296,7 @@ export const selectSelectedAddresses = (state) => state.transfer.selectedAddress
 
 /**
  * Set current user
- * @param {import('../types.js').User|null} user
+ * @param {import('./storage.js').User|null} user
  */
 export function setUser(user) {
   if (user) {

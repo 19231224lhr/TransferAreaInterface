@@ -53,7 +53,7 @@ export function initNamespace(): PanguPayNamespace {
       account: {
         newUser: async () => undefined,
         importFromPrivHex: async () => undefined,
-        addNewSubWallet: async () => { },
+        addNewSubWallet: async () => ({ success: false }),
         handleCreate: async () => { },
       },
 
@@ -260,6 +260,7 @@ export function initNamespace(): PanguPayNamespace {
         resetInquiryState: async () => { },
         resetCreatingFlag: async () => { },
         resetImportState: async () => { },
+        resetWalletRefreshFlag: async () => { },
         handleMainRoute: async () => { },
         updateGroupDetailDisplay: async () => { },
       },

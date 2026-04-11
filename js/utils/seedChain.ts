@@ -7,6 +7,7 @@ import {
   AlgorithmECDSAP256,
   PublicKeyEnvelope,
   SignatureEnvelope,
+  hexToBytes,
   decodeBackendBytes,
   normalizePrivateKeyHex,
   publicKeyEnvelopeFromPrivate,
@@ -73,7 +74,10 @@ export function deterministicMasterSeedFromPrivateKey(privateKeyHex: string, gen
   if (generation < 0) {
     throw new Error(`invalid generation ${generation}`);
   }
-  const scalarBytes = pad32(decodeBackendBytes(normalizePrivateKeyHex(privateKeyHex)));
+  // privateKeyHex is a hex-encoded scalar, not a backend byte string.
+  // Using decodeBackendBytes here would incorrectly try base64 first and produce
+  // a different deterministic seed-chain than the Go backend.
+  const scalarBytes = pad32(hexToBytes(normalizePrivateKeyHex(privateKeyHex)));
   const domain = Array.from(new TextEncoder().encode(`${deterministicSeedDomainTag}:${generation}:`));
   return hashBytes([...domain, ...scalarBytes]);
 }
