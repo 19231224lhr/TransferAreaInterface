@@ -140,15 +140,36 @@ npm run build
 
 ## ⚙️ 配置说明 (Configuration)
 
-本项目的运行时配置建议通过 `assets/runtime-config.js` 注入（部署后也可直接改 `dist/runtime-config.js`）：
+本项目的运行时配置建议通过 `assets/runtime-config.js` 注入（部署后也可直接改 `dist/runtime-config.js`）。
 
-*   `window.__PANGU_DEV__`
-    *   **true**: 开启开发模式。界面将显示辅助调试工具，包括“增加/清空地址”按钮、“查看账户结构体”开关等。
-    *   **false**: 生产模式。隐藏调试入口，仅保留核心用户功能。
-*   `window.__API_BASE_URL__`
-    *   后端 Gateway/BootNode 的基础地址（例如 `http://localhost:3001`）。优先级高于自动推断逻辑。
+当前推荐使用统一配置对象：
 
-对应实现：`js/config/constants.ts`（读取 `__PANGU_DEV__`）与 `js/config/api.ts`（计算 `API_BASE_URL`）。
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+日常切换只需要改：
+
+- `devMode: true`
+  - 本地联调
+- `devMode: false`
+  - 服务器部署
+
+兼容字段仍然保留：
+
+- `window.__PANGU_DEV__`
+- `window.__API_BASE_URL__`
+
+但不再建议作为主入口直接维护。
+
+对应实现：
+
+- `js/config/constants.ts`（读取 `__PANGU_RUNTIME__.devMode`）
+- `js/config/api.ts`（读取 `__PANGU_RUNTIME__` 并计算 `API_BASE_URL`）
 
 ---
 

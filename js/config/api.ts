@@ -19,9 +19,24 @@ import { IS_DEV } from './constants';
  * - IS_DEV = false → 生产模式，自动使用当前服务器地址 + 3001 端口
  */
 function getApiBaseUrl(): string {
+  const runtimeConfig = typeof window !== 'undefined' ? (window as any).__PANGU_RUNTIME__ : null;
+
   // 1. 优先使用手动注入的配置（如果有）
   if (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) {
     return (window as any).__API_BASE_URL__;
+  }
+
+  // 1.5 支持新的统一运行时配置对象
+  if (runtimeConfig && typeof runtimeConfig === 'object') {
+    const devMode = typeof runtimeConfig.devMode === 'boolean'
+      ? runtimeConfig.devMode
+      : (typeof runtimeConfig.devMode === 'string' ? runtimeConfig.devMode.toLowerCase() === 'true' : IS_DEV);
+    const devApiBaseUrl = String(runtimeConfig.devApiBaseUrl || '').trim();
+    const prodApiBaseUrl = String(runtimeConfig.prodApiBaseUrl || '').trim();
+    const selected = devMode ? devApiBaseUrl : prodApiBaseUrl;
+    if (selected) {
+      return selected;
+    }
   }
 
   // 2. 根据 IS_DEV 标志决定

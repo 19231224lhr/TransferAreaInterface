@@ -6,16 +6,31 @@
 
 ## 1. 后端地址与端口（前端真实实现）
 
-前端默认后端入口由 `js/config/api.ts` 决定：
+前端默认后端入口由 `js/config/api.ts` 决定。
 
-- 若存在 `window.__API_BASE_URL__`：优先使用（一般由 `assets/runtime-config.js` 注入）
-- 否则：
+当前推荐使用统一运行时配置对象：
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+实际行为：
+
+- 若存在 `window.__API_BASE_URL__`：优先使用
+- 否则若存在 `window.__PANGU_RUNTIME__`：
+  - `devMode = true` → `devApiBaseUrl`
+  - `devMode = false` → `prodApiBaseUrl`
+- 否则才 fallback 到旧逻辑：
   - `__PANGU_DEV__ = true` → `http://localhost:3001`
   - `__PANGU_DEV__ = false` → `${window.location.hostname}:3001`
 
 对应文件：
 - `assets/runtime-config.js`
-- `js/config/constants.ts`（读取 `__PANGU_DEV__`）
+- `js/config/constants.ts`（读取 `__PANGU_RUNTIME__.devMode`）
 - `js/config/api.ts`（计算 `API_BASE_URL`）
 
 ---

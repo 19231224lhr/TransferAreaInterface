@@ -7,9 +7,21 @@ This project usually has two parts:
 - Frontend: `TransferAreaInterface` (Vite + TypeScript, default port 3000)
 - Backend: `UTXO-Area` (Go, provides HTTP Gateway, default port 3001)
 
-Frontend default Gateway:
-- `http://localhost:3001`  
-Configured in: `TransferAreaInterface/js/config/api.ts` (can be overridden via `assets/runtime-config.js` using `window.__API_BASE_URL__`)
+Frontend runtime config is now recommended via:
+- `TransferAreaInterface/assets/runtime-config.js`
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+Daily switching only needs:
+
+- `devMode: true` for local integration
+- `devMode: false` for server deployment
 
 ---
 
@@ -79,12 +91,30 @@ Then open:
 ## 6. Fast Debug Paths
 
 ### 6.1 Where does the frontend send requests?
-Default base URL in `TransferAreaInterface/js/config/api.ts`:
-- `API_BASE_URL = http://localhost:3001` (dev mode)
+Default runtime override is now `window.__PANGU_RUNTIME__` in `TransferAreaInterface/assets/runtime-config.js`.
 
 If you need to point to a different backend temporarily:
-- prefer editing `TransferAreaInterface/assets/runtime-config.js`: `window.__API_BASE_URL__ = "http://<HOST>:3001"`
-- or inject `window.__API_BASE_URL__` before the app loads
+- prefer editing `TransferAreaInterface/assets/runtime-config.js`
+
+Local integration example:
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+Server deployment example:
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: false,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
 
 ### 6.2 Frontend logs
 Browser DevTools:

@@ -7,8 +7,20 @@
 - 前端：`TransferAreaInterface`（Vite + TS，默认端口 3000）
 - 后端：`UTXO-Area`（Go，提供 HTTP Gateway，默认端口 3001）
 
-前端默认会请求：`http://localhost:3001`  
-对应配置在：`TransferAreaInterface/js/config/api.ts`（也可以通过 `assets/runtime-config.js` 注入 `window.__API_BASE_URL__` 覆盖）
+前端运行时配置当前推荐写在：`TransferAreaInterface/assets/runtime-config.js`
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+日常切换只需要改：
+
+- `devMode: true`：本地联调
+- `devMode: false`：服务器部署
 
 ---
 
@@ -78,11 +90,29 @@ npm run dev
 ## 6. 常用排查路径（最快定位）
 
 ### 6.1 前端请求去哪了？
-默认在 `TransferAreaInterface/js/config/api.ts`：`API_BASE_URL = http://localhost:3001`（开发模式）
+默认优先读取 `TransferAreaInterface/assets/runtime-config.js` 里的 `window.__PANGU_RUNTIME__`。
 
 如果你需要临时改后端地址：
-- 推荐直接改 `TransferAreaInterface/assets/runtime-config.js`：`window.__API_BASE_URL__ = "http://<HOST>:3001"`
-- 或在应用加载前注入 `window.__API_BASE_URL__`
+- 推荐直接改 `TransferAreaInterface/assets/runtime-config.js`
+- 例如本地联调：
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
+
+- 例如服务器部署：
+
+```js
+window.__PANGU_RUNTIME__ = {
+  devMode: false,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
+```
 
 ### 6.2 看前端日志
 浏览器开发者工具：

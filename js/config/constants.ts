@@ -18,6 +18,16 @@ function getRuntimeDevFlag(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
+  const runtimeConfig = (window as any).__PANGU_RUNTIME__;
+  if (runtimeConfig && typeof runtimeConfig === 'object') {
+    const value = runtimeConfig.devMode;
+    if (typeof value === 'boolean') {
+      return value;
+    }
+    if (typeof value === 'string') {
+      return value.toLowerCase() === 'true';
+    }
+  }
   const runtime = (window as any).__PANGU_DEV__;
   if (typeof runtime === 'boolean') {
     return runtime;

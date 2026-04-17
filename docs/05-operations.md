@@ -27,18 +27,29 @@
 
 ---
 
-## 2. 配置：后端地址与开发开关
+## 2. 配置：本地联调 / 服务器部署切换
 
-推荐只改 `assets/runtime-config.js`：
+推荐只改 `assets/runtime-config.js` 里的一个主开关：
 
 ```js
-window.__API_BASE_URL__ = "http://localhost:3001";
-window.__PANGU_DEV__ = true;
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
 ```
 
 说明：
-- `__API_BASE_URL__` 用于指定 BootNode/Gateway
-- `__PANGU_DEV__` 控制开发功能入口是否展示（见 `js/config/constants.ts`）
+- `devMode: true`
+  - 本地联调
+- `devMode: false`
+  - 服务器部署
+- `devApiBaseUrl`
+  - 本地后端 Gateway 地址
+- `prodApiBaseUrl`
+  - 服务器后端 Gateway 地址
+
+兼容字段 `__API_BASE_URL__` 与 `__PANGU_DEV__` 仍然可用，但不再建议作为主入口直接维护。
 
 ---
 
@@ -56,7 +67,7 @@ window.__PANGU_DEV__ = true;
 ### 3.2 “无法连接到区块链节点 / 后端不可用”
 
 按优先级检查：
-1) `assets/runtime-config.js` 的 `__API_BASE_URL__` 是否正确  
+1) `assets/runtime-config.js` 的 `devMode` 与对应 API 地址是否正确  
 2) `http://<API_BASE_URL>/health` 是否可访问  
 3) ComNode 端点是否可用（前端会查询并缓存）  
    - 清缓存：删除 `localStorage.comNodeEndpoint` 或在 UI 中触发重新初始化（刷新主页面）

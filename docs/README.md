@@ -20,12 +20,20 @@
    - `npm run dev`
    - 打开 `http://localhost:3000`
 
-默认后端地址见 `js/config/api.ts`，也可以通过 `assets/runtime-config.js` 覆盖：
+默认后端地址见 `js/config/api.ts`，当前推荐通过 `assets/runtime-config.js` 的统一运行时配置覆盖：
 
 ```js
-window.__API_BASE_URL__ = 'http://<YOUR_HOST>:3001';
-window.__PANGU_DEV__ = true;
+window.__PANGU_RUNTIME__ = {
+  devMode: true,
+  devApiBaseUrl: 'http://127.0.0.1:3001',
+  prodApiBaseUrl: 'http://47.243.174.71:3001'
+};
 ```
+
+日常切换只需要改：
+
+- `devMode: true`：本地联调
+- `devMode: false`：服务器部署
 
 ---
 
