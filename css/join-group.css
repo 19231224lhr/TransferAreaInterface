@@ -462,8 +462,8 @@
   align-items: center;
   gap: 12px;
   padding: 16px 20px;
-  background: rgba(30, 41, 59, 0.4);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .join-org-detail:last-child {
@@ -471,13 +471,13 @@
 }
 
 .join-org-detail--full {
-  background: rgba(30, 41, 59, 0.3);
+  background: #f8fafc;
 }
 
 .join-org-detail .detail-icon {
   width: 40px;
   height: 40px;
-  background: rgba(59, 130, 246, 0.15);
+  background: #eff6ff;
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -488,7 +488,7 @@
 .join-org-detail .detail-icon svg {
   width: 18px;
   height: 18px;
-  color: #60a5fa;
+  color: #2563eb;
 }
 
 .join-org-detail .detail-content {
@@ -503,7 +503,7 @@
 .join-org-detail .detail-content label {
   font-size: 11px;
   font-weight: 600;
-  color: #94a3b8;
+  color: #64748b;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -511,12 +511,12 @@
 .join-org-detail .detail-content span {
   font-size: 15px;
   font-weight: 600;
-  color: #e2e8f0;
-  background: rgba(30, 41, 59, 0.6);
+  color: #1e293b;
+  background: #ffffff;
   padding: 10px 14px;
   border-radius: 8px;
   display: inline-block;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid #e2e8f0;
   word-break: break-all;
 }
 
@@ -538,12 +538,12 @@
   font-size: 12px;
   word-break: break-all;
   line-height: 1.5;
-  background: rgba(30, 41, 59, 0.6);
+  background: #ffffff;
   padding: 10px 14px;
   border-radius: 8px;
   display: inline-block;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  border: 1px solid #e2e8f0;
+  color: #1e293b;
 }
 
 /* 旧样式保留兼容 */

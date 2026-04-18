@@ -107,12 +107,8 @@ export function loadThemeSetting() {
     if (saved && (saved === 'light' || saved === 'dark')) {
       currentTheme = saved;
     } else {
-      // Detect system theme preference
-      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-        currentTheme = 'dark';
-      } else {
-        currentTheme = 'light';
-      }
+      // Default to light unless the user explicitly chose a theme.
+      currentTheme = 'light';
     }
     document.documentElement.setAttribute('data-theme', currentTheme);
 
