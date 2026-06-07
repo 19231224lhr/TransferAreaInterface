@@ -73,3 +73,43 @@ test('frontend wallet and send balances use lifecycle spendable TXCer value inst
   assertIncludes(wallet, 'getTXCerStatus(u, id)', 'wallet TXCer list must expose lifecycle state');
   assertIncludes(send, 'sumSpendableTXCerValue(txCerStatusUser', 'send source selection must ignore non-Active TXCers');
 });
+
+test('frontend TXCer spending attaches SettlementAuth before transaction signing and TXID calculation', () => {
+  const blockchain = read('js/types/blockchain.ts');
+  const signature = read('js/utils/signature.ts');
+  const settlementAuth = read('js/services/settlementAuth.ts');
+  const txHash = read('js/services/txHash.ts');
+  const txBuilder = read('js/services/txBuilder.ts');
+
+  for (const marker of ['export interface SettlementAuth', 'SourcePledgeAddress', 'SettlementAuth?: SettlementAuth']) {
+    assertIncludes(blockchain, marker, `blockchain types are missing ${marker}`);
+  }
+  assertIncludes(signature, "'ConsumeIntentHash'", 'ConsumeIntentHash must serialize as Go []byte/base64');
+
+  for (const marker of [
+    'zeroSettlementAuth',
+    'getSettlementIntentHash',
+    'buildSettlementAuth',
+    'attachSettlementAuths',
+    'SettlementAuth: buildSettlementAuth'
+  ]) {
+    assertIncludes(settlementAuth, marker, `settlementAuth helper module is missing ${marker}`);
+  }
+  assertIncludes(
+    txHash,
+    "obj.UserSignatureV2 = { Algorithm: '', Signature: null }",
+    'TXID hashing must exclude transaction UserSignatureV2'
+  );
+  assertIncludes(
+    txHash,
+    'TXInputsNormal: filteredInputs',
+    'TXID hashing must mirror Go GetTXHash canonical empty-slice behavior'
+  );
+
+  const attachIndex = txBuilder.indexOf('attachSettlementAuths(transaction, accountPrivKey);');
+  const signIndex = txBuilder.indexOf('transaction.UserSignatureV2 = signHashEnvelope', attachIndex);
+  const txidIndex = txBuilder.indexOf('transaction.TXID = calculateTXID(transaction)', signIndex);
+  assert.ok(attachIndex >= 0, 'transaction must attach SettlementAuths');
+  assert.ok(signIndex > attachIndex, 'transaction UserSignatureV2 must be signed after SettlementAuth is attached');
+  assert.ok(txidIndex > signIndex, 'TXID must be calculated after transaction UserSignatureV2 is signed');
+});

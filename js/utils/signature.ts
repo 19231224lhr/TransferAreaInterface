@@ -14,6 +14,7 @@ const BYTE_ARRAY_FIELDS = new Set([
   'Data',
   'SeedReveal',
   'SeedAnchor',
+  'ConsumeIntentHash',
   'Signature',
   'PublicKey'
 ]);
@@ -196,6 +197,22 @@ function applyExcludeZeroValue(obj: Record<string, unknown>, excludeFields: stri
     }
     if (field === 'SignPublicKeyV2' || field === 'SeedPublicKeyV2') {
       obj[field] = { Algorithm: '', PublicKey: null };
+      continue;
+    }
+    if (field === 'SettlementAuth') {
+      obj[field] = {
+        Version: 0,
+        TXCerID: '',
+        SourceTXID: '',
+        SourcePosition: { BlockHeight: 0, Index: 0, InIndex: 0 },
+        Value: 0,
+        FromGuarGroupID: '',
+        ToGuarGroupID: '',
+        PledgeAddress: '',
+        ConsumeIntentHash: null,
+        AuthTime: 0,
+        UserSignatureV2: { Algorithm: '', Signature: null }
+      };
       continue;
     }
     const current = obj[field];

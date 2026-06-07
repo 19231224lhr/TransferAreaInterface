@@ -59,6 +59,20 @@ export interface TXCerPosition {
   InIndex: number;
 }
 
+export interface SettlementAuth {
+  Version: number;
+  TXCerID: string;
+  SourceTXID: string;
+  SourcePosition: TXCerPosition;
+  Value: number;
+  FromGuarGroupID: string;
+  ToGuarGroupID: string;
+  PledgeAddress: string;
+  ConsumeIntentHash: number[] | string | null;
+  AuthTime: number;
+  UserSignatureV2: SignatureEnvelope;
+}
+
 export type TXCerLifecycleStatus =
   | 'Active'
   | 'PendingUse'
@@ -95,6 +109,7 @@ export interface TxCertificate {
   ToInterest: number;
   FromGuarGroupID: string;
   ToGuarGroupID: string;
+  SourcePledgeAddress?: string;
   ConstructionTime: number;
   Size?: number;
   TXID: string;
@@ -102,6 +117,7 @@ export interface TxCertificate {
   GuarGroupSignature: EcdsaSignature;
   UserSignature: EcdsaSignature;
   UserSignatureV2?: SignatureEnvelope;
+  SettlementAuth?: SettlementAuth;
 }
 
 export interface TXOutput {

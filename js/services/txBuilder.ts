@@ -45,6 +45,11 @@ import {
   signStruct,
   type PublicKeyNew as SignaturePublicKey
 } from '../utils/signature';
+import { attachSettlementAuths, zeroSettlementAuth } from './settlementAuth';
+import {
+  calculateTXID as calculateCanonicalTXID,
+  getTXHash as getCanonicalTXHash
+} from './txHash';
 import {
   DefaultSeedChainLength,
   buildSeedSpendArtifacts,
@@ -166,7 +171,7 @@ export interface Transaction extends BlockchainTransaction {
   UserSignature: EcdsaSignatureJSON;
   UserSignatureV2?: SignatureEnvelope;
   TXInputsNormal: TXInputNormal[];
-  TXInputsCertificate: any[];          // 快速转账填空数组
+  TXInputsCertificate: TxCertificate[];
   TXOutputs: TXOutput[];
   // Go: []byte -> base64 string in JSON
   Data: number[] | string;
@@ -396,20 +401,7 @@ export function getTXOutputHash(output: TXOutput): number[] {
  * @returns 32字节哈希值
  */
 export function getTXHash(tx: Transaction): number[] {
-  // 1. 过滤掉担保组织构造的 Input 和 Output
-  const filteredInputs = tx.TXInputsNormal.filter(input => !input.IsGuarMake);
-  const filteredOutputs = tx.TXOutputs.filter(output => !output.IsGuarMake);
-
-  // 2. 创建临时交易对象
-  const txForHash = {
-    ...tx,
-    TXInputsNormal: filteredInputs,
-    TXOutputs: filteredOutputs
-  };
-
-  const copy = JSON.parse(JSON.stringify(txForHash, bigintReplacer));
-  applyExcludeZeroValue(copy, ['TXID', 'Size', 'NewValue', 'UserSignature', 'TXType']);
-  return hashBackendJson(copy);
+  return getCanonicalTXHash(tx);
 }
 
 
@@ -423,15 +415,7 @@ export function getTXHash(tx: Transaction): number[] {
  * @returns TXID（16字符 hex）
  */
 export function calculateTXID(tx: Transaction): string {
-  const hash = getTXHash(tx);
-
-  // 取前8字节，转为十六进制
-  let txid = '';
-  for (let i = 0; i < 8; i++) {
-    txid += hash[i].toString(16).padStart(2, '0');
-  }
-
-  return txid;
+  return calculateCanonicalTXID(tx);
 }
 
 // ============================================================================
@@ -524,6 +508,7 @@ export function getTXCerHash(txCer: TxCertificate): number[] {
   // 将签名字段设为零值 {R: null, S: null}
   copy.GuarGroupSignature = { R: null, S: null };
   copy.UserSignature = { R: null, S: null };
+  copy.SettlementAuth = zeroSettlementAuth();
 
   // JSON 序列化，把 X/Y/R/S 的引号去掉
   let jsonStr = JSON.stringify(copy);
@@ -556,13 +541,14 @@ export function signTXCer(
     ...txCer,
     GuarGroupSignature: { R: null, S: null },
     UserSignature: { R: null, S: null },
-    UserSignatureV2: { Algorithm: '', Signature: null }
+    UserSignatureV2: { Algorithm: '', Signature: null },
+    SettlementAuth: zeroSettlementAuth()
   });
   signedTxCer.UserSignatureV2 = signHashEnvelope(AlgorithmECDSAP256, hash, accountPrivateKeyHex);
+  signedTxCer.SettlementAuth = zeroSettlementAuth();
 
   return signedTxCer;
 }
-
 
 // ============================================================================
 // 公钥工具函数
@@ -1627,6 +1613,8 @@ export async function buildTransaction(
     TXOutputs: txOutputs,
     Data: []
   };
+
+  attachSettlementAuths(transaction, accountPrivKey);
 
   transaction.UserSignatureV2 = signHashEnvelope(
     AlgorithmECDSAP256,
