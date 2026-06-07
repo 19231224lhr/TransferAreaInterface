@@ -160,6 +160,7 @@ function persistAddressState(
     user.wallet = {
       addressMsg: {},
       totalTXCers: {},
+      txCerStatuses: {},
       totalValue: 0,
       valueDivision: { 0: 0, 1: 0, 2: 0 },
       updateTime: Date.now(),

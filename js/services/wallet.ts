@@ -60,6 +60,7 @@ import {
   lockUTXOs
 } from '../utils/utxoLock';
 import { isTXCerLocked } from './txCerLockManager';
+import { getTXCerStatus, sumSpendableTXCerValue } from './txCerStatus';
 
 // ============================================================================
 // Types
@@ -562,12 +563,8 @@ export function renderWallet(): void {
       return !!txCer?.UserSignatureV2;
     }).length;
 
-    // 锁定中的 TXCer 不应计入“可用余额”（pending 交易占用）
-    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-      if (!isTXCerLocked(id)) return sum;
-      return sum + (Number((txCers as any)[id]) || 0);
-    }, 0);
-    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    const unlockedTxCerBalance = sumSpendableTXCerValue(u, txCers);
+    const lockedTxCerBalance = Math.max(0, txCerBalance - unlockedTxCerBalance);
 
     // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
     const totalBalance = amtCash0 + txCerBalance;
@@ -713,7 +710,8 @@ export function renderWallet(): void {
       const value = txCers[id] as number;
       const locked = isTXCerLocked(id);
       const txCer = totalTXCers[id];
-      const txCerState = txCer?.UserSignatureV2 ? 'V2可用' : '旧缓存';
+      const lifecycle = getTXCerStatus(u, id) || 'Unknown';
+      const txCerState = `${lifecycle}${txCer?.UserSignatureV2 ? ' / V2' : ' / 旧缓存'}`;
       return viewHtml`
                     <div class="txcer-item">
                       <span class="txcer-id" title="${id}">${id.slice(0, 8)}...${id.slice(-6)}</span>
@@ -1382,11 +1380,9 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   const txCers = found.txCers || {};
   const txCerIds = Object.keys(txCers);
   const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
-  const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-    if (!isTXCerLocked(id)) return sum;
-    return sum + (Number((txCers as any)[id]) || 0);
-  }, 0);
-  const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+  const currentUser = getCurrentUser();
+  const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
+  const lockedTxCerBalance = Math.max(0, txCerBalance - unlockedTxCerBalance);
   const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
   const totalBalance = utxoBalance + txCerBalance;
   const gas = Number(found.estInterest || found.gas || 0);
@@ -1451,7 +1447,7 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       if (txcerTooltip) {
         const totalTXCers = (getCurrentUser()?.wallet?.totalTXCers || {}) as Record<string, any>;
         const readyCount = txCerIds.filter((id) => !!totalTXCers[id]?.UserSignatureV2).length;
-        txcerTooltip.textContent = `TXCer: ${txCerIds.length} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)} / V2 ${readyCount}`;
+        txcerTooltip.textContent = `TXCer: ${txCerIds.length} active ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)} / V2 ${readyCount}`;
       }
       const txcerHeaderValue = card.querySelector('.txcer-header-value');
       if (txcerHeaderValue) {
@@ -1528,6 +1524,7 @@ function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc:
   let availablePGC = 0;
   let availableBTC = 0;
   let availableETH = 0;
+  const currentUser = getCurrentUser();
 
   for (const [address, meta] of Object.entries(addressMsg)) {
     if (!meta) continue;
@@ -1558,19 +1555,7 @@ function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc:
     const lockedBalance = getLockedBalanceByAddress(address);
     const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
 
-    const txCerIds = Object.keys(txCers);
-    let txCerBalance = 0;
-    if (txCerIds.length > 0) {
-      txCerBalance = Object.values(txCers).reduce<number>((sum, val) => sum + (Number(val) || 0), 0);
-    } else if (Number.isFinite(Number(rawTxCerValue))) {
-      txCerBalance = Number(rawTxCerValue || 0);
-    }
-
-    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-      if (!isTXCerLocked(id)) return sum;
-      return sum + (Number((txCers as any)[id]) || 0);
-    }, 0);
-    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
 
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
@@ -2390,13 +2375,8 @@ export function rebuildAddrList(): void {
 
     // 获取 TXCer 余额
     const txCers = meta.txCers || {};
-    const txCerIds = Object.keys(txCers);
-    const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
-    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-      if (!isTXCerLocked(id)) return sum;
-      return sum + (Number((txCers as any)[id]) || 0);
-    }, 0);
-    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    const currentUser = getCurrentUser();
+    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
 
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
@@ -2514,13 +2494,8 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
     const lockedBalance = getLockedBalanceByAddress(addr);
     const unlockedUtxo = Math.max(0, utxoAmt - lockedBalance);
     const txCers = meta?.txCers || {};
-    const txCerIds = Object.keys(txCers);
-    const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
-    const lockedTxCerBalance = txCerIds.reduce((sum, id) => {
-      if (!isTXCerLocked(id)) return sum;
-      return sum + (Number((txCers as any)[id]) || 0);
-    }, 0);
-    const unlockedTxCerBalance = Math.max(0, txCerBalance - lockedTxCerBalance);
+    const currentUser = getCurrentUser();
+    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
     const availableBalance = unlockedUtxo + unlockedTxCerBalance;
     return availableBalance > 0;
   });

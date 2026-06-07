@@ -33,6 +33,7 @@ import {
 } from '../types/blockchain';
 import { isUTXOLocked } from '../utils/utxoLock';
 import { isAccountPollingActive } from './accountPolling';
+import { isTXCerSpendable } from './txCerStatus';
 import {
   AlgorithmECDSAP256,
   decodeBackendBytes,
@@ -1150,7 +1151,7 @@ export async function buildTransaction(
       const totalTXCers = user.wallet?.totalTXCers || {};
       for (const [txCerId, value] of Object.entries(txCerIds)) {
         const txCer = totalTXCers[txCerId];
-        if (txCer && typeof value === 'number' && value > 0) {
+        if (txCer && typeof value === 'number' && value > 0 && isTXCerSpendable(user, txCerId)) {
           availableTXCers.push({ txCerId, txCer, address, value });
         }
       }

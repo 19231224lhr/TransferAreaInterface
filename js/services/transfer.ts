@@ -32,6 +32,7 @@ import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 import { buildAssignNodeUrl } from './group';
 import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
+import { isTXCerSpendable, sumSpendableTXCerValue } from './txCerStatus';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 import { isCapsuleAddress } from './capsule';
@@ -524,12 +525,16 @@ export function initTransferSubmit(): void {
           interface AddressCandidate { addr: string; balance: number; gas: number; }
           const candidates: AddressCandidate[] = [];
 
+          const txCerStatusUser = loadUser();
           for (const [addr, meta] of Object.entries(walletMap)) {
             const addrType = Number((meta as AddressData).type || 0);
             if (addrType !== targetType) continue;
 
-            const utxoVal = Number((meta as AddressData).value?.utxoValue || (meta as AddressData).value?.totalValue || 0);
-            const txCerVal = Object.values((meta as AddressData).txCers || {}).reduce((sum: number, v) => sum + Number(v || 0), 0);
+            const rawUtxoValue = (meta as AddressData).value?.utxoValue;
+            const utxoVal = Number.isFinite(Number(rawUtxoValue))
+              ? Number(rawUtxoValue)
+              : Object.values((meta as AddressData).utxos || {}).reduce((sum: number, utxo: any) => sum + Number(utxo?.Value || 0), 0);
+            const txCerVal = txCerStatusUser ? sumSpendableTXCerValue(txCerStatusUser, (meta as AddressData).txCers || {}) : 0;
             const availableBalance = utxoVal + txCerVal;
             const availableGas = readAddressInterest(meta as AddressData);
 
@@ -1167,7 +1172,7 @@ export function initTransferSubmit(): void {
         for (const addr of fromAddresses) {
           const addrData = walletData[addr];
           if (addrData?.txCers && Object.keys(addrData.txCers).length > 0) {
-            const txCerIds = Object.keys(addrData.txCers);
+            const txCerIds = Object.keys(addrData.txCers).filter(id => isTXCerSpendable(user, id));
             const lockedIds = lockTXCers(txCerIds, `构造交易 - 地址 ${addr.slice(0, 8)}...`);
             lockedTXCerIds.push(...lockedIds);
             console.log(`[构造交易] 锁定地址 ${addr.slice(0, 8)}... 的 ${lockedIds.length} 个 TXCer`);

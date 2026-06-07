@@ -21,7 +21,7 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
-import { UTXOData, TxCertificate, PublicKeyEnvelope } from '../types/blockchain';
+import { UTXOData, TxCertificate, PublicKeyEnvelope, TXCerStatusView } from '../types/blockchain';
 import {
   AlgorithmECDSAP256,
   convertPublicKeyToHex,
@@ -132,6 +132,7 @@ export interface TxHistoryRecord {
 export interface Wallet {
   addressMsg: Record<string, AddressData>;
   totalTXCers: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object (needed for signing)
+  txCerStatuses: Record<string, TXCerStatusView>; // TXCer ID -> authoritative AssignNode lifecycle status
   totalValue: number;
   TotalValue?: number;
   valueDivision: Record<number, number>;
@@ -638,6 +639,7 @@ export function normalizeUserAccount(user: User | null): User | null {
   normalized.wallet = normalized.wallet || {
     addressMsg: {},
     totalTXCers: {},
+    txCerStatuses: {},
     totalValue: 0,
     valueDivision: { 0: 0, 1: 0, 2: 0 },
     updateTime: Date.now(),
@@ -645,6 +647,7 @@ export function normalizeUserAccount(user: User | null): User | null {
   };
   normalized.wallet.addressMsg = normalized.wallet.addressMsg || {};
   normalized.wallet.totalTXCers = normalized.wallet.totalTXCers || {};
+  normalized.wallet.txCerStatuses = normalized.wallet.txCerStatuses || {};
   normalized.wallet.valueDivision = {
     0: 0,
     1: 0,
@@ -816,6 +819,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
   acc.wallet = acc.wallet || {
     addressMsg: {},
     totalTXCers: {},
+    txCerStatuses: {},
     totalValue: 0,
     valueDivision: { 0: 0, 1: 0, 2: 0 },
     updateTime: Date.now(),
@@ -1066,6 +1070,7 @@ export function initUserStateFromStorage(): User | null {
   if (user?.wallet) {
     // Clear totalTXCers at wallet level
     user.wallet.totalTXCers = {};
+    user.wallet.txCerStatuses = {};
 
     // Clear txCers from each address
     if (user.wallet.addressMsg) {
@@ -1123,6 +1128,7 @@ export function saveUser(user: Partial<User>): void {
       acc.wallet = {
         addressMsg: {},
         totalTXCers: {},
+        txCerStatuses: {},
         totalValue: 0,
         valueDivision: { 0: 0, 1: 0, 2: 0 },
         updateTime: Date.now(),

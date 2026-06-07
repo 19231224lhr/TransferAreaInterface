@@ -108,6 +108,9 @@ export const API_ENDPOINTS = {
   ASSIGN_GROUP_INFO: (groupId: string) => `/api/v1/${groupId}/assign/group-info`,
   ASSIGN_ACCOUNT_UPDATE: (groupId: string) => `/api/v1/${groupId}/assign/account-update`,
   ASSIGN_TXCER_CHANGE: (groupId: string) => `/api/v1/${groupId}/assign/txcer-change`,
+  ASSIGN_TXCER_STATUSES: (groupId: string) => `/api/v1/${groupId}/assign/txcer-statuses`,
+  ASSIGN_TXCER_STATUS: (groupId: string, txCerId: string) => `/api/v1/${groupId}/assign/txcer-status/${txCerId}`,
+  ASSIGN_TXCER_STATUS_CHANGE: (groupId: string) => `/api/v1/${groupId}/assign/txcer-status-change`,
   /** 跨组织TXCer轮询 - 接收从其他组织发送过来的TXCer */
   ASSIGN_CROSS_ORG_TXCER: (groupId: string) => `/api/v1/${groupId}/assign/poll-cross-org-txcers`,
 

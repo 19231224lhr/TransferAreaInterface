@@ -59,6 +59,35 @@ export interface TXCerPosition {
   InIndex: number;
 }
 
+export type TXCerLifecycleStatus =
+  | 'Active'
+  | 'PendingUse'
+  | 'Consumed'
+  | 'AwaitingExchange'
+  | 'Exchanged'
+  | 'ConvertedToUTXO'
+  | 'Invalid';
+
+export interface TXCerStatusView {
+  txCerID: string;
+  userID: string;
+  address: string;
+  status: TXCerLifecycleStatus;
+  previousStatus?: TXCerLifecycleStatus;
+  value: number;
+  sourceTXID?: string;
+  sourcePosition: TXCerPosition;
+  fromGuarGroupID?: string;
+  toGuarGroupID?: string;
+  pledgeAddress?: string;
+  consumeTXID?: string;
+  exchangeTXID?: string;
+  utxo?: string;
+  reason?: string;
+  blockHeight: number;
+  updatedAt: number;
+}
+
 export interface TxCertificate {
   TXCerID: string;
   ToAddress: string;

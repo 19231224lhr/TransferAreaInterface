@@ -23,11 +23,12 @@ import { showSuccessToast, showMiniToast, showErrorToast, showStatusToast } from
 import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
 import { renderWallet, refreshSrcAddrList, updateWalletBrief, updateTotalGasBadge } from './wallet';
-import { UTXOData, TxCertificate } from '../types/blockchain';
+import { UTXOData, TxCertificate, TXCerStatusView } from '../types/blockchain';
 import { accrueWalletInterest, normalizeInterestFields } from '../utils/interestAccrual.js';
 import { queryAddressBalances } from './accountQuery';
 import { applyComNodeInterests } from '../utils/interestSync.js';
 import { shouldBlockTXCerUpdate, cacheTXCerUpdate, unlockTXCers } from './txCerLockManager';
+import { applyTXCerStatus, markTXCerActive } from './txCerStatus';
 import { buildAssignNodeUrl } from './group';
 import { getCoinName } from '../config/constants';
 import { addTxHistoryRecords, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
@@ -97,6 +98,18 @@ interface TXCerChangeResponse {
   success: boolean;
   count: number;
   changes: TXCerChangeToUser[];
+}
+
+interface TXCerStatusResponse {
+  success: boolean;
+  count: number;
+  statuses: TXCerStatusView[];
+}
+
+interface TXCerStatusChangeResponse {
+  success: boolean;
+  count: number;
+  changes: TXCerStatusView[];
 }
 
 /**
@@ -824,6 +837,18 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
 
   switch (change.Status) {
     case 0:
+      applyTXCerStatus(user, {
+        txCerID: change.TXCerID,
+        userID: user.accountId,
+        address: '',
+        status: 'ConvertedToUTXO',
+        value: 0,
+        sourcePosition: { BlockHeight: 0, Index: 0, InIndex: 0 },
+        utxo: change.UTXO,
+        reason: 'legacy_txcer_change',
+        blockHeight: 0,
+        updatedAt: Date.now()
+      });
       // 前置交易已上链，TXCer 转换为 UTXO
       // 需要从 TXCer 列表中移除，UTXO 会通过 In 字段添加
       removeTXCerFromWallet(user, change.TXCerID);
@@ -836,6 +861,17 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
       break;
 
     case 1:
+      applyTXCerStatus(user, {
+        txCerID: change.TXCerID,
+        userID: user.accountId,
+        address: '',
+        status: 'Invalid',
+        value: 0,
+        sourcePosition: { BlockHeight: 0, Index: 0, InIndex: 0 },
+        reason: 'legacy_txcer_change',
+        blockHeight: 0,
+        updatedAt: Date.now()
+      });
       // 验证错误，TXCer 不能使用
       markTXCerAsInvalid(user, change.TXCerID);
       // 验证失败同样是终态：解锁并清理本地锁，避免永久锁定。
@@ -845,6 +881,7 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
 
 
     case 2:
+      markTXCerActive(user, change.TXCerID, '', user.wallet?.totalTXCers?.[change.TXCerID]?.Value || 0);
       // 解除怀疑，TXCer 可以正常使用
       markTXCerAsValid(user, change.TXCerID);
       showMiniToast(
@@ -1115,6 +1152,29 @@ function startSSESync(userId: string, group: any): void {
       }
     });
 
+    eventSource.addEventListener('txcer_status_change', (event) => {
+      try {
+        const user = getCurrentUser();
+        if (user) {
+          const data = parseBigIntJson<TXCerStatusView>(event.data);
+          processTXCerStatusChange(user, data);
+          recalculateTotalBalance(user);
+          const latestUser = getCurrentUser();
+          if (latestUser) {
+            latestUser.wallet = user.wallet;
+            saveUser(latestUser);
+          } else {
+            saveUser(user);
+          }
+          renderWallet();
+          refreshSrcAddrList();
+          updateWalletBrief();
+        }
+      } catch (e) {
+        console.error('[AccountSSE] Failed to parse txcer_status_change:', e);
+      }
+    });
+
     // 3. Cross-Org TXCer Events
     eventSource.addEventListener('cross_org_txcer', (event) => {
       try {
@@ -1269,6 +1329,13 @@ export function restartAccountPolling(): void {
   startAccountPolling();
 }
 
+function processTXCerStatusChange(user: User, view: TXCerStatusView): void {
+  applyTXCerStatus(user, view);
+  if (view.status === 'ConvertedToUTXO' || view.status === 'Exchanged' || view.status === 'Invalid') {
+    unlockTXCers([view.txCerID], false);
+  }
+}
+
 /**
 * 检查是否正在运行
 */
@@ -1301,6 +1368,57 @@ export async function triggerManualPoll(): Promise<void> {
 // ============================================================================
 // TXCer变动轮询 (TXCerChange)
 // ============================================================================
+
+async function syncTXCerStatuses(force = false): Promise<void> {
+  const user = getCurrentUser();
+  if (!user?.accountId) return;
+  const group = getJoinedGroup();
+  if (!group?.groupID) return;
+
+  try {
+    const endpoint = `${API_ENDPOINTS.ASSIGN_TXCER_STATUSES(group.groupID)}?userID=${user.accountId}`;
+    const response = await apiClient.get<TXCerStatusResponse>(endpoint, {
+      timeout: 5000,
+      retries: force ? 0 : 1,
+      silent: true,
+      useBigIntParsing: true
+    });
+    if (!response.success || !Array.isArray(response.statuses)) return;
+    for (const view of response.statuses) {
+      processTXCerStatusChange(user, view);
+    }
+    recalculateTotalBalance(user);
+    const latestUser = getCurrentUser();
+    if (latestUser) {
+      latestUser.wallet = user.wallet;
+      saveUser(latestUser);
+    } else {
+      saveUser(user);
+    }
+    renderWallet();
+    refreshSrcAddrList();
+    updateWalletBrief();
+  } catch (error) {
+    console.debug('[TXCerStatus] Full status sync skipped:', error);
+  }
+}
+
+async function pollTXCerStatusChanges(user: User, groupID: string): Promise<boolean> {
+  const endpoint = `${API_ENDPOINTS.ASSIGN_TXCER_STATUS_CHANGE(groupID)}?userID=${user.accountId}&limit=10&consume=true`;
+  const response = await apiClient.get<TXCerStatusChangeResponse>(endpoint, {
+    timeout: 5000,
+    retries: 0,
+    silent: true,
+    useBigIntParsing: true
+  });
+  if (!response.success || !Array.isArray(response.changes) || response.changes.length === 0) {
+    return false;
+  }
+  for (const view of response.changes) {
+    processTXCerStatusChange(user, view);
+  }
+  return true;
+}
 
 /**
  * 执行一次TXCer变动轮询
@@ -1341,32 +1459,39 @@ async function pollTXCerChanges(force = false): Promise<void> {
 
     txcerFailures = 0;
 
+    let hasChanges = false;
     if (response.success && response.count > 0) {
       console.info(`[TXCerChange] Received ${response.count} changes`);
-
-      let hasChanges = false;
 
       for (const change of response.changes) {
         processTXCerChange(user, change);
         hasChanges = true;
       }
+    }
 
-      if (hasChanges) {
-        recalculateTotalBalance(user);
-        
-        // IMPORTANT: 重新获取最新用户数据以包含 txHistory
-        const latestUser = getCurrentUser();
-        if (latestUser) {
-          latestUser.wallet = user.wallet;
-          saveUser(latestUser);
-        } else {
-          saveUser(user);
-        }
-        
-        renderWallet();
-        refreshSrcAddrList();
-        updateWalletBrief();
+    try {
+      if (await pollTXCerStatusChanges(user, group.groupID)) {
+        hasChanges = true;
       }
+    } catch (statusError) {
+      console.debug('[TXCerStatus] Incremental poll skipped:', statusError);
+    }
+
+    if (hasChanges) {
+      recalculateTotalBalance(user);
+
+      // IMPORTANT: 重新获取最新用户数据以包含 txHistory
+      const latestUser = getCurrentUser();
+      if (latestUser) {
+        latestUser.wallet = user.wallet;
+        saveUser(latestUser);
+      } else {
+        saveUser(user);
+      }
+
+      renderWallet();
+      refreshSrcAddrList();
+      updateWalletBrief();
     }
   } catch (error) {
     txcerFailures++;
@@ -1412,6 +1537,7 @@ export function startTXCerChangePolling(): void {
   console.info('[TXCerChange] Starting polling');
   txcerFailures = 0;
 
+  void syncTXCerStatuses(true);
   pollTXCerChanges(!isSSEActive());
   txCerPollingTimer = setInterval(pollTXCerChanges, TXCER_POLLING_INTERVAL);
 }
@@ -1605,6 +1731,7 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
     user.wallet.totalTXCers = {};
   }
   user.wallet.totalTXCers[txCerId] = TXCer;
+  markTXCerActive(user, txCerId, normalizedAddr, TXCer.Value);
 
   // 重新计算地址余额
   recalculateAddressBalance(addrData);
