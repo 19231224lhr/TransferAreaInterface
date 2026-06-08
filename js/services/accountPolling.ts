@@ -23,7 +23,7 @@ import { showSuccessToast, showMiniToast, showErrorToast, showStatusToast } from
 import { t } from '../i18n/index.js';
 import { unlockUTXOs } from '../utils/utxoLock';
 import { renderWallet, refreshSrcAddrList, updateWalletBrief, updateTotalGasBadge } from './wallet';
-import { UTXOData, TxCertificate, TXCerStatusView } from '../types/blockchain';
+import { UTXOData, TxCertificate, TXCerStatusView, TXCerIssueProof, TXCerIssuanceMetadata } from '../types/blockchain';
 import { accrueWalletInterest, normalizeInterestFields } from '../utils/interestAccrual.js';
 import { queryAddressBalances } from './accountQuery';
 import { applyComNodeInterests } from '../utils/interestSync.js';
@@ -80,6 +80,11 @@ interface TXCerChangeToUser {
 interface TXCerToUser {
   ToAddress: string;
   TXCer: TxCertificate;
+  IssuanceRecordID?: string;
+  IssuanceStatus?: string;
+  IssuanceProof?: TXCerIssueProof;
+  IssueBatchID?: string;
+  DeliveredAt?: number;
 }
 
 /**
@@ -1731,6 +1736,13 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
     user.wallet.totalTXCers = {};
   }
   user.wallet.totalTXCers[txCerId] = TXCer;
+  const issuanceMetadata = extractTXCerIssuanceMetadata(txCerToUser);
+  if (issuanceMetadata) {
+    if (!user.wallet.txCerIssuanceRecords) {
+      user.wallet.txCerIssuanceRecords = {};
+    }
+    user.wallet.txCerIssuanceRecords[txCerId] = issuanceMetadata;
+  }
   markTXCerActive(user, txCerId, normalizedAddr, TXCer.Value);
 
   // 重新计算地址余额
@@ -1742,6 +1754,19 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
   showSuccessToast(`📥 收到 TXCer: ${TXCer.Value.toFixed(4)} PGC`);
 
   return true;
+}
+
+function extractTXCerIssuanceMetadata(txCerToUser: TXCerToUser): TXCerIssuanceMetadata | null {
+  if (!txCerToUser.IssuanceRecordID) {
+    return null;
+  }
+  return {
+    issuanceRecordID: txCerToUser.IssuanceRecordID,
+    issuanceStatus: txCerToUser.IssuanceStatus,
+    issuanceProof: txCerToUser.IssuanceProof,
+    issueBatchID: txCerToUser.IssueBatchID || txCerToUser.IssuanceProof?.BatchID,
+    deliveredAt: txCerToUser.DeliveredAt
+  };
 }
 
 /**

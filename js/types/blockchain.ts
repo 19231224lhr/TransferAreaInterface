@@ -82,6 +82,38 @@ export type TXCerLifecycleStatus =
   | 'ConvertedToUTXO'
   | 'Invalid';
 
+export type TXCerIssuanceStatus =
+  | 'Prepared'
+  | 'Issued'
+  | 'RegisteredActive'
+  | 'Delivered'
+  | 'QueuedForBlock'
+  | 'BlockCommitted'
+  | 'Failed'
+  | 'Invalid';
+
+export interface TXCerIssueProofStep {
+  Hash: number[] | string | null;
+  Side: 'left' | 'right';
+}
+
+export interface TXCerIssueProof {
+  LeafHash?: number[] | string | null;
+  MerkleRoot?: number[] | string | null;
+  Steps?: TXCerIssueProofStep[];
+  BatchID?: string;
+  BatchSignature?: EcdsaSignature;
+  CertifierID?: string;
+}
+
+export interface TXCerIssuanceMetadata {
+  issuanceRecordID: string;
+  issuanceStatus?: TXCerIssuanceStatus | string;
+  issuanceProof?: TXCerIssueProof;
+  issueBatchID?: string;
+  deliveredAt?: number;
+}
+
 export interface TXCerStatusView {
   txCerID: string;
   userID: string;

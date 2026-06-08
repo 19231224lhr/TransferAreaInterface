@@ -161,6 +161,7 @@ function persistAddressState(
       addressMsg: {},
       totalTXCers: {},
       txCerStatuses: {},
+      txCerIssuanceRecords: {},
       totalValue: 0,
       valueDivision: { 0: 0, 1: 0, 2: 0 },
       updateTime: Date.now(),

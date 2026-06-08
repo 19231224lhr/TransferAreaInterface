@@ -21,7 +21,7 @@ import {
   GuarantorGroup
 } from '../config/constants';
 import { store, setUser, selectUser } from './store.js';
-import { UTXOData, TxCertificate, PublicKeyEnvelope, TXCerStatusView } from '../types/blockchain';
+import { UTXOData, TxCertificate, PublicKeyEnvelope, TXCerStatusView, TXCerIssuanceMetadata } from '../types/blockchain';
 import {
   AlgorithmECDSAP256,
   convertPublicKeyToHex,
@@ -133,6 +133,7 @@ export interface Wallet {
   addressMsg: Record<string, AddressData>;
   totalTXCers: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object (needed for signing)
   txCerStatuses: Record<string, TXCerStatusView>; // TXCer ID -> authoritative AssignNode lifecycle status
+  txCerIssuanceRecords: Record<string, TXCerIssuanceMetadata>; // TXCer ID -> CFAA issuance proof metadata
   totalValue: number;
   TotalValue?: number;
   valueDivision: Record<number, number>;
@@ -640,6 +641,7 @@ export function normalizeUserAccount(user: User | null): User | null {
     addressMsg: {},
     totalTXCers: {},
     txCerStatuses: {},
+    txCerIssuanceRecords: {},
     totalValue: 0,
     valueDivision: { 0: 0, 1: 0, 2: 0 },
     updateTime: Date.now(),
@@ -648,6 +650,7 @@ export function normalizeUserAccount(user: User | null): User | null {
   normalized.wallet.addressMsg = normalized.wallet.addressMsg || {};
   normalized.wallet.totalTXCers = normalized.wallet.totalTXCers || {};
   normalized.wallet.txCerStatuses = normalized.wallet.txCerStatuses || {};
+  normalized.wallet.txCerIssuanceRecords = normalized.wallet.txCerIssuanceRecords || {};
   normalized.wallet.valueDivision = {
     0: 0,
     1: 0,
@@ -820,6 +823,7 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
     addressMsg: {},
     totalTXCers: {},
     txCerStatuses: {},
+    txCerIssuanceRecords: {},
     totalValue: 0,
     valueDivision: { 0: 0, 1: 0, 2: 0 },
     updateTime: Date.now(),
@@ -1071,6 +1075,7 @@ export function initUserStateFromStorage(): User | null {
     // Clear totalTXCers at wallet level
     user.wallet.totalTXCers = {};
     user.wallet.txCerStatuses = {};
+    user.wallet.txCerIssuanceRecords = {};
 
     // Clear txCers from each address
     if (user.wallet.addressMsg) {
@@ -1129,6 +1134,7 @@ export function saveUser(user: Partial<User>): void {
         addressMsg: {},
         totalTXCers: {},
         txCerStatuses: {},
+        txCerIssuanceRecords: {},
         totalValue: 0,
         valueDivision: { 0: 0, 1: 0, 2: 0 },
         updateTime: Date.now(),
