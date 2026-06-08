@@ -111,11 +111,26 @@ export const API_ENDPOINTS = {
   ASSIGN_TXCER_STATUSES: (groupId: string) => `/api/v1/${groupId}/assign/txcer-statuses`,
   ASSIGN_TXCER_STATUS: (groupId: string, txCerId: string) => `/api/v1/${groupId}/assign/txcer-status/${txCerId}`,
   ASSIGN_TXCER_STATUS_CHANGE: (groupId: string) => `/api/v1/${groupId}/assign/txcer-status-change`,
+  ASSIGN_SCHEDULER_STATS: (groupId: string) => `/api/v1/${groupId}/assign/scheduler-stats`,
+  ASSIGN_SCHEDULER_DAG_RECORDS: (groupId: string) => `/api/v1/${groupId}/assign/scheduler-dag-records`,
+  ASSIGN_SCHEDULER_DAG_EVENTS: (groupId: string) => `/api/v1/${groupId}/assign/scheduler-dag-events`,
+  ASSIGN_AUDIT_EVENTS: (groupId: string) => `/api/v1/${groupId}/assign/audit-events`,
+  ASSIGN_CHALLENGES: (groupId: string) => `/api/v1/${groupId}/assign/challenges`,
+  ASSIGN_PENALTIES: (groupId: string) => `/api/v1/${groupId}/assign/penalties`,
+  ASSIGN_CERTIFIERS: (groupId: string) => `/api/v1/${groupId}/assign/certifiers`,
   /** 跨组织TXCer轮询 - 接收从其他组织发送过来的TXCer */
   ASSIGN_CROSS_ORG_TXCER: (groupId: string) => `/api/v1/${groupId}/assign/poll-cross-org-txcers`,
 
   // AggrNode endpoints (动态路由: /api/v1/{groupID}/aggr/*)
   AGGR_TXCER: (groupId: string) => `/api/v1/${groupId}/aggr/txcer`,
+  AGGR_TXCER_ISSUANCE_RECORDS: (groupId: string) => `/api/v1/${groupId}/aggr/txcer-issuance-records`,
+  AGGR_TXCER_ISSUANCE_RECORD: (groupId: string, recordId: string) => `/api/v1/${groupId}/aggr/txcer-issuance-record/${recordId}`,
+  AGGR_TXCER_ISSUANCE_BATCH: (groupId: string, batchId: string) => `/api/v1/${groupId}/aggr/txcer-issuance-batch/${batchId}`,
+  AGGR_AUDIT_EVENTS: (groupId: string) => `/api/v1/${groupId}/aggr/audit-events`,
+  AGGR_CHALLENGES: (groupId: string) => `/api/v1/${groupId}/aggr/challenges`,
+  AGGR_CERTIFIERS: (groupId: string) => `/api/v1/${groupId}/aggr/certifiers`,
+  AGGR_CERTIFIER_STATS: (groupId: string) => `/api/v1/${groupId}/aggr/certifier-stats`,
+  AGGR_CERTIFIER_PENDING_REQUESTS: (groupId: string) => `/api/v1/${groupId}/aggr/certifier-pending-requests`,
 
   // ComNode endpoints (static paths for committee-level operations)
   COM_HEALTH: '/api/v1/com/health',
@@ -125,6 +140,7 @@ export const API_ENDPOINTS = {
   COM_CAPSULE_GENERATE: '/api/v1/com/capsule/generate',
   COM_PUBLIC_KEY: '/api/v1/com/public-key',
   COM_SUBMIT_NOGUARGROUP_TX: '/api/v1/com/submit-noguargroup-tx',
+  COM_CHALLENGES: '/api/v1/com/challenges',
   COM_UTXO_CHANGE: (committeeId: string) => `/api/v1/${committeeId}/com/utxo-change`,
   ORG_PUBLIC_KEY: '/api/v1/org/publickey'
 } as const;

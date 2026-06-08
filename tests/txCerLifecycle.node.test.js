@@ -20,7 +20,11 @@ test('frontend syncs TXCer lifecycle through the new AssignNode endpoints while 
   for (const marker of [
     'ASSIGN_TXCER_STATUSES',
     'ASSIGN_TXCER_STATUS',
-    'ASSIGN_TXCER_STATUS_CHANGE'
+    'ASSIGN_TXCER_STATUS_CHANGE',
+    'ASSIGN_SCHEDULER_STATS',
+    'ASSIGN_SCHEDULER_DAG_RECORDS',
+    'ASSIGN_SCHEDULER_DAG_EVENTS',
+    'COM_CHALLENGES'
   ]) {
     assertIncludes(api, marker, `API config is missing ${marker}`);
   }
@@ -40,8 +44,8 @@ test('frontend full send flow treats only authoritative Active TXCers as spendab
 
   assertIncludes(
     txCerStatus,
-    "getTXCerStatus(user, txCerID) === 'Active' && !isTXCerLocked(txCerID)",
-    'spendable helper must require backend Active status plus local construction lock'
+    "proofStatus !== 'invalid'",
+    'spendable helper must reject TXCers with explicitly invalid CFAA proofs'
   );
   assertIncludes(
     txCerStatus,
@@ -72,6 +76,61 @@ test('frontend wallet and send balances use lifecycle spendable TXCer value inst
   assertIncludes(wallet, 'sumSpendableTXCerValue(u, txCers)', 'wallet balance must calculate available TXCer value from lifecycle cache');
   assertIncludes(wallet, 'getTXCerStatus(u, id)', 'wallet TXCer list must expose lifecycle state');
   assertIncludes(send, 'sumSpendableTXCerValue(txCerStatusUser', 'send source selection must ignore non-Active TXCers');
+});
+
+test('frontend startup cleanup preserves CFAA issuance metadata for audit history', () => {
+  const storage = read('js/utils/storage.ts');
+
+  assertIncludes(storage, 'CFAA issuance metadata is retained', 'storage comment should document retained issuance metadata');
+  assert.ok(!/user\.wallet\.txCerIssuanceRecords\s*=\s*\{\s*\}/.test(storage), 'startup cleanup must not delete issuance metadata');
+  assertIncludes(storage, 'user.wallet.totalTXCers = {};', 'startup cleanup should still clear spendable TXCer cache');
+  assertIncludes(storage, 'user.wallet.txCerStatuses = {};', 'startup cleanup should still resync lifecycle status from backend');
+});
+
+test('frontend exposes backend protocol diagnostics and certifier node query helpers', () => {
+  const api = read('js/config/api.ts');
+  const blockchain = read('js/types/blockchain.ts');
+  const issuance = read('js/services/txCerIssuance.ts');
+  const diagnostics = read('js/services/protocolDiagnostics.ts');
+
+  for (const marker of [
+    'AGGR_CERTIFIER_STATS',
+    'AGGR_CERTIFIER_PENDING_REQUESTS',
+    'ASSIGN_AUDIT_EVENTS',
+    'AGGR_AUDIT_EVENTS',
+    'ASSIGN_CHALLENGES',
+    'AGGR_CHALLENGES',
+    'ASSIGN_PENALTIES'
+  ]) {
+    assertIncludes(api, marker, `API config is missing ${marker}`);
+  }
+
+  for (const marker of [
+    'export interface TxTaskDAGEvent',
+    'export interface TxTaskDAGRecord',
+    'export interface SchedulerStatsResponse',
+    'export interface CertifierIssueBatchRequest'
+  ]) {
+    assertIncludes(blockchain, marker, `blockchain types are missing ${marker}`);
+  }
+
+  for (const marker of ['fetchAggrCertifierStats', 'fetchAggrCertifierPendingRequests']) {
+    assertIncludes(issuance, marker, `TXCer issuance service is missing ${marker}`);
+  }
+
+  for (const marker of [
+    'fetchAssignSchedulerStats',
+    'fetchAssignSchedulerDAGRecords',
+    'fetchAssignSchedulerDAGEvents',
+    'fetchAssignAuditEvents',
+    'fetchAggrAuditEvents',
+    'fetchAssignChallenges',
+    'fetchAggrChallenges',
+    'fetchComChallenges',
+    'fetchAssignPenalties'
+  ]) {
+    assertIncludes(diagnostics, marker, `protocol diagnostics service is missing ${marker}`);
+  }
 });
 
 test('frontend TXCer spending attaches SettlementAuth before transaction signing and TXID calculation', () => {

@@ -106,12 +106,173 @@ export interface TXCerIssueProof {
   CertifierID?: string;
 }
 
+export interface CertifierInfo {
+  certifierID?: string;
+  CertifierID?: string;
+  publicKey?: PublicKeyNew;
+  PublicKey?: PublicKeyNew;
+  status?: string;
+  Status?: string;
+  shardRule?: string;
+  ShardRule?: string;
+  peerID?: string;
+  PeerID?: string;
+  apiEndpoint?: string;
+  APIEndpoint?: string;
+  lastHeartbeat?: number;
+  LastHeartbeat?: number;
+  registeredAt?: number;
+  RegisteredAt?: number;
+  disabledAt?: number;
+  DisabledAt?: number;
+  revokedAt?: number;
+  RevokedAt?: number;
+  weight?: number;
+  Weight?: number;
+  shardIndex?: number;
+  ShardIndex?: number;
+  failureCount?: number;
+  FailureCount?: number;
+  issuedBatchCount?: number;
+  IssuedBatchCount?: number;
+  inFlightCount?: number;
+  InFlightCount?: number;
+}
+
+export interface TXCerIssuanceAck {
+  recordID?: string;
+  RecordID?: string;
+  txCerID?: string;
+  TXCerID?: string;
+  groupID?: string;
+  GroupID?: string;
+  userID?: string;
+  UserID?: string;
+  status?: TXCerIssuanceStatus | string;
+  Status?: TXCerIssuanceStatus | string;
+  assignNodeID?: string;
+  AssignNodeID?: string;
+  registeredAt?: number;
+  RegisteredAt?: number;
+  errorReason?: string;
+  ErrorReason?: string;
+  signature?: EcdsaSignature;
+  Signature?: EcdsaSignature;
+}
+
+export interface TXCerIssuanceView {
+  recordID?: string;
+  RecordID?: string;
+  issueKey?: string;
+  IssueKey?: string;
+  txID?: string;
+  TXID?: string;
+  outputIndex?: number;
+  OutputIndex?: number;
+  txCerID?: string;
+  TXCerID?: string;
+  userID?: string;
+  UserID?: string;
+  toAddress?: string;
+  ToAddress?: string;
+  value?: number;
+  Value?: number;
+  status?: TXCerIssuanceStatus | string;
+  Status?: TXCerIssuanceStatus | string;
+  batchID?: string;
+  BatchID?: string;
+  certifierID?: string;
+  CertifierID?: string;
+  guarGroupID?: string;
+  GuarGroupID?: string;
+  targetBlock?: number;
+  TargetBlock?: number;
+  guarTXIndex?: number;
+  GuarTXIndex?: number;
+  updatedAt?: number;
+  UpdatedAt?: number;
+  errorReason?: string;
+  ErrorReason?: string;
+  receiptID?: string;
+  ReceiptID?: string;
+}
+
+export interface TXCerIssuanceDetailView extends TXCerIssuanceView {
+  proof?: TXCerIssueProof;
+  Proof?: TXCerIssueProof;
+  ack?: TXCerIssuanceAck;
+  Ack?: TXCerIssuanceAck;
+}
+
+export type TXCerProofVerificationStatus = 'verified' | 'invalid' | 'missingProof' | 'unsupported';
+
+export interface AuditEvent {
+  EventID?: string;
+  EventType?: string;
+  SubjectID?: string;
+  ActorID?: string;
+  GroupID?: string;
+  PayloadHash?: number[] | string;
+  PreviousHash?: number[] | string;
+  EventHash?: number[] | string;
+  Timestamp?: number;
+  Signature?: EcdsaSignature;
+}
+
+export type ChallengeStatus = 'Open' | 'Resolved';
+
+export type ChallengeType =
+  | 'TXCerPendingUseTimeout'
+  | 'IssuanceAckTimeout'
+  | 'ExchangeConfirmTimeout';
+
+export interface ChallengeRecord {
+  ChallengeID?: string;
+  ChallengeType?: ChallengeType | string;
+  SubjectID?: string;
+  UserID?: string;
+  GroupID?: string;
+  Status?: ChallengeStatus | string;
+  Reason?: string;
+  CreatedAt?: number;
+  ResolvedAt?: number;
+}
+
+export interface CommitteeReceipt {
+  ReceiptID?: string;
+  SubjectType?: 'ExchangeRecord' | 'TXCerIssuanceBatch' | string;
+  SubjectID?: string;
+  GroupID?: string;
+  Signers?: string[];
+  Threshold?: number;
+  Decision?: 'Confirmed' | 'Rejected' | string;
+  Timestamp?: number;
+  AggregateHash?: number[] | string;
+  Signatures?: Record<string, EcdsaSignature>;
+}
+
+export type PenaltyStatus = 'PendingGovernance' | 'Approved' | 'Rejected';
+
+export interface PenaltyRecord {
+  PenaltyID?: string;
+  GroupID?: string;
+  Reason?: string;
+  RelatedTXCerID?: string;
+  RelatedChallengeID?: string;
+  Amount?: number;
+  Status?: PenaltyStatus | string;
+  CreatedAt?: number;
+}
+
 export interface TXCerIssuanceMetadata {
   issuanceRecordID: string;
   issuanceStatus?: TXCerIssuanceStatus | string;
   issuanceProof?: TXCerIssueProof;
   issueBatchID?: string;
   deliveredAt?: number;
+  proofStatus?: TXCerProofVerificationStatus;
+  proofCheckedAt?: number;
+  proofError?: string;
 }
 
 export interface TXCerStatusView {
@@ -132,6 +293,149 @@ export interface TXCerStatusView {
   reason?: string;
   blockHeight: number;
   updatedAt: number;
+}
+
+export type TxResourceKind = 'utxo' | 'txcer' | 'seed_step' | 'address' | 'pledge' | 'output';
+
+export type TxTaskStatus =
+  | 'queued'
+  | 'processing'
+  | 'pending_confirm'
+  | 'success'
+  | 'failed'
+  | 'rejected';
+
+export type TxTaskDAGEventType =
+  | 'submitted'
+  | 'queued'
+  | 'acquired'
+  | 'dispatched'
+  | 'guar_received'
+  | 'verify_started'
+  | 'verify_passed'
+  | 'verify_failed'
+  | 'aggr_confirmed'
+  | 'timeout'
+  | 'rejected'
+  | 'recovered';
+
+export interface TxResourceSet {
+  TXID?: string;
+  UserID?: string;
+  GroupID?: string;
+  HardKeys?: string[];
+  SoftKeys?: string[];
+  ReadKeys?: string[];
+  WriteKeys?: string[];
+}
+
+export interface TxTaskDAGEnvelope {
+  TXID?: string;
+  AssignSeq?: number;
+  AssignEventID?: string;
+  GuarID?: string;
+  Dependencies?: string[];
+  HardKeys?: string[];
+  SoftKeys?: string[];
+  Status?: TxTaskStatus | string;
+  Signature?: EcdsaSignature;
+}
+
+export interface TxTask {
+  TXID?: string;
+  UserID?: string;
+  GroupID?: string;
+  TX?: Transaction;
+  UserNewTX?: UserNewTX;
+  GuarTX?: unknown;
+  SchedulerEnvelope?: TxTaskDAGEnvelope;
+  Resources?: TxResourceSet;
+  Gas?: number;
+  Height?: number;
+  ReceivedAt?: number;
+  Status?: TxTaskStatus | string;
+  Error?: string;
+}
+
+export interface TxTaskDAGEvent {
+  EventID?: string;
+  Seq?: number;
+  EventType?: TxTaskDAGEventType | string;
+  GroupID?: string;
+  NodeRole?: 'assign' | 'guar' | 'aggr' | string;
+  NodeID?: string;
+  SourceNodeRole?: string;
+  SourceNodeID?: string;
+  SourceEventID?: string;
+  SourceEventHash?: number[] | string;
+  SourceSignature?: EcdsaSignature;
+  TXID?: string;
+  UserID?: string;
+  GuarID?: string;
+  Task?: TxTask;
+  FromStatus?: TxTaskStatus | string;
+  ToStatus?: TxTaskStatus | string;
+  Dependencies?: string[];
+  BlockingResources?: string[];
+  ResourceOwners?: Record<string, string>;
+  Reason?: string;
+  Timestamp?: number;
+  PreviousHash?: number[] | string;
+  EventHash?: number[] | string;
+  Signature?: EcdsaSignature;
+}
+
+export interface TxTaskDAGRecord {
+  TXID?: string;
+  UserID?: string;
+  GroupID?: string;
+  GuarID?: string;
+  Task?: TxTask;
+  Status?: TxTaskStatus | string;
+  Dependencies?: string[];
+  BlockingResources?: string[];
+  ResourceOwners?: Record<string, string>;
+  HardKeys?: string[];
+  SoftKeys?: string[];
+  LastEventID?: string;
+  LastSeq?: number;
+  UpdatedAt?: number;
+  Error?: string;
+}
+
+export interface ResourceSchedulerStats {
+  mode?: string;
+  active_tasks?: number;
+  queued_tasks?: number;
+  pending_confirm_tasks?: number;
+  completed_tasks?: number;
+  rejected_hard_conflicts?: number;
+  soft_conflict_waits?: number;
+  average_wait_ms?: number;
+  average_execute_ms?: number;
+}
+
+export interface SchedulerStatsResponse {
+  success?: boolean;
+  mode?: string;
+  stats?: ResourceSchedulerStats;
+  dag_records?: number;
+  dag_events?: number;
+  last_seq?: number;
+  last_hash?: string;
+  recovered_tasks?: number;
+}
+
+export interface CertifierIssueBatchRequest {
+  RequestID?: string;
+  GroupID?: string;
+  CertifierID?: string;
+  AggregationNodeID?: string;
+  AggregationPeerID?: string;
+  Records?: TXCerIssuanceDetailView[];
+  Deadline?: number;
+  Timestamp?: number;
+  Signature?: EcdsaSignature;
 }
 
 export interface TxCertificate {

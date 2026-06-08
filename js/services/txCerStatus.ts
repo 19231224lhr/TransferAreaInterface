@@ -45,7 +45,8 @@ export function getTXCerStatus(user: User | null | undefined, txCerID: string): 
 }
 
 export function isTXCerSpendable(user: User | null | undefined, txCerID: string): boolean {
-  return getTXCerStatus(user, txCerID) === 'Active' && !isTXCerLocked(txCerID);
+  const proofStatus = user?.wallet?.txCerIssuanceRecords?.[txCerID]?.proofStatus;
+  return getTXCerStatus(user, txCerID) === 'Active' && proofStatus !== 'invalid' && !isTXCerLocked(txCerID);
 }
 
 export function sumSpendableTXCerValue(user: User, txCers: Record<string, number> | undefined): number {
@@ -70,8 +71,5 @@ export function removeTXCerFromSpendableStores(user: User, txCerID: string): voi
   }
   if (user.wallet?.totalTXCers && user.wallet.totalTXCers[txCerID] !== undefined) {
     delete user.wallet.totalTXCers[txCerID];
-  }
-  if (user.wallet?.txCerIssuanceRecords && user.wallet.txCerIssuanceRecords[txCerID] !== undefined) {
-    delete user.wallet.txCerIssuanceRecords[txCerID];
   }
 }

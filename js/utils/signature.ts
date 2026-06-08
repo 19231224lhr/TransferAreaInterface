@@ -15,6 +15,10 @@ const BYTE_ARRAY_FIELDS = new Set([
   'SeedReveal',
   'SeedAnchor',
   'ConsumeIntentHash',
+  'LeafHash',
+  'MerkleRoot',
+  'Hash',
+  'Root',
   'Signature',
   'PublicKey'
 ]);
@@ -187,7 +191,7 @@ function cloneForBackend(value: unknown, key?: string): unknown {
 
 function applyExcludeZeroValue(obj: Record<string, unknown>, excludeFields: string[]): void {
   for (const field of excludeFields) {
-    if (field === 'UserSig' || field === 'Sig' || field === 'GroupSig' || field === 'UserSignature' || field === 'InputSignature') {
+    if (field === 'UserSig' || field === 'Sig' || field === 'GroupSig' || field === 'UserSignature' || field === 'InputSignature' || field === 'Signature') {
       obj[field] = { R: null, S: null };
       continue;
     }

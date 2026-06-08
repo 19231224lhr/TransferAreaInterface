@@ -1065,6 +1065,7 @@ function writeUserToStorage(user: User | null): void {
  * IMPORTANT: TXCer data is NOT persisted because it is temporary state.
  * TXCers are received in real-time via SSE and will be converted to UTXOs.
  * The blockchain StoragePoint (UTXO data) is the only source of truth for permanent balances.
+ * CFAA issuance metadata is retained for audit/history and proof diagnostics.
  */
 export function initUserStateFromStorage(): User | null {
   const user = normalizeUserAccount(readUserFromStorage());
@@ -1075,7 +1076,6 @@ export function initUserStateFromStorage(): User | null {
     // Clear totalTXCers at wallet level
     user.wallet.totalTXCers = {};
     user.wallet.txCerStatuses = {};
-    user.wallet.txCerIssuanceRecords = {};
 
     // Clear txCers from each address
     if (user.wallet.addressMsg) {

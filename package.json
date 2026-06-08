@@ -13,7 +13,8 @@
     "postbuild": "node scripts/copy-sw.js",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/interestAccrual.node.test.js tests/txCerLifecycle.node.test.js tests/settlementAuthFixture.node.test.js"
+    "test": "node --test tests/interestAccrual.node.test.js tests/txCerLifecycle.node.test.js tests/settlementAuthFixture.node.test.js tests/txCerIssuanceProof.node.test.js",
+    "test:real-backend": "node scripts/check-real-backend-protocol.js"
   },
   "keywords": [],
   "author": "",
