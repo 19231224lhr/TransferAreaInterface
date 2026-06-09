@@ -7,7 +7,9 @@ const requireRealFlow = /^(1|true|yes)$/i.test(process.env.PANGU_REQUIRE_REAL_FL
 async function main() {
   const health = await getJSON('/health');
   assert.equal(health.status, 'ok', 'Gateway /health must return status=ok');
-  const { assignBase, aggrBase } = await resolveNodeEndpoints();
+  await resolveNodeEndpoints();
+  const assignBase = baseUrl;
+  const aggrBase = baseUrl;
 
   const aggrCertifiers = await getJSON(`/api/v1/${groupID}/aggr/certifiers`, aggrBase);
   assert.equal(aggrCertifiers.success, true, 'aggr certifiers query must succeed');

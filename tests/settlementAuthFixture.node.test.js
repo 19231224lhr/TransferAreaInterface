@@ -3,10 +3,51 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
-import { createRequire } from 'node:module';
+import { builtinModules, createRequire } from 'node:module';
 import * as esbuild from 'esbuild';
 
 const root = process.cwd();
+const requireFromRoot = createRequire(path.join(root, 'package.json'));
+const builtins = new Set([...builtinModules, ...builtinModules.map(name => `node:${name}`)]);
+
+function resolveWithExtensions(filePath) {
+  if (fs.existsSync(filePath)) {
+    const stat = fs.statSync(filePath);
+    if (stat.isFile()) {
+      return filePath;
+    }
+    if (stat.isDirectory()) {
+      const indexFile = path.join(filePath, 'index.js');
+      if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
+        return indexFile;
+      }
+    }
+  }
+  for (const ext of ['', '.ts', '.js', '.json']) {
+    const candidate = filePath.endsWith(ext) ? filePath : `${filePath}${ext}`;
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return filePath;
+}
+
+function localOnlyResolvePlugin() {
+  return {
+    name: 'local-only-resolve',
+    setup(build) {
+      build.onResolve({ filter: /^\./ }, args => ({
+        path: resolveWithExtensions(path.resolve(args.resolveDir || root, args.path))
+      }));
+      build.onResolve({ filter: /^[^./]/ }, args => {
+        if (builtins.has(args.path)) {
+          return { path: args.path, external: true };
+        }
+        return { path: requireFromRoot.resolve(args.path) };
+      });
+    }
+  };
+}
 
 async function generateFixtureFromTypeScript() {
   const source = `
@@ -128,7 +169,8 @@ async function generateFixtureFromTypeScript() {
     platform: 'node',
     format: 'cjs',
     write: false,
-    logLevel: 'silent'
+    logLevel: 'silent',
+    plugins: [localOnlyResolvePlugin()]
   });
 
   const sandbox = {

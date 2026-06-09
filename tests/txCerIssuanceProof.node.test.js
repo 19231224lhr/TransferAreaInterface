@@ -1,7 +1,53 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import fs from 'node:fs';
+import path from 'node:path';
+import { builtinModules, createRequire } from 'node:module';
 import * as esbuild from 'esbuild';
+
+const root = process.cwd();
+const requireFromRoot = createRequire(path.join(root, 'package.json'));
+const builtins = new Set([...builtinModules, ...builtinModules.map(name => `node:${name}`)]);
+
+function resolveWithExtensions(filePath) {
+  if (fs.existsSync(filePath)) {
+    const stat = fs.statSync(filePath);
+    if (stat.isFile()) {
+      return filePath;
+    }
+    if (stat.isDirectory()) {
+      const indexFile = path.join(filePath, 'index.js');
+      if (fs.existsSync(indexFile) && fs.statSync(indexFile).isFile()) {
+        return indexFile;
+      }
+    }
+  }
+  for (const ext of ['', '.ts', '.js', '.json']) {
+    const candidate = filePath.endsWith(ext) ? filePath : `${filePath}${ext}`;
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
+      return candidate;
+    }
+  }
+  return filePath;
+}
+
+function localOnlyResolvePlugin() {
+  return {
+    name: 'local-only-resolve',
+    setup(build) {
+      build.onResolve({ filter: /^\./ }, args => ({
+        path: resolveWithExtensions(path.resolve(args.resolveDir || root, args.path))
+      }));
+      build.onResolve({ filter: /^[^./]/ }, args => {
+        if (builtins.has(args.path)) {
+          return { path: args.path, external: true };
+        }
+        return { path: requireFromRoot.resolve(args.path) };
+      });
+    }
+  };
+}
 
 async function loadFixture() {
   const source = `
@@ -66,20 +112,22 @@ async function loadFixture() {
   const result = await esbuild.build({
     stdin: {
       contents: source,
-      resolveDir: process.cwd(),
+      resolveDir: root,
       loader: 'ts',
       sourcefile: 'txCerIssuanceProofFixture.ts'
     },
     bundle: true,
     write: false,
     platform: 'node',
-    format: 'esm',
-    target: 'es2022'
+    format: 'cjs',
+    target: 'es2022',
+    plugins: [localOnlyResolvePlugin()]
   });
   const context = {
     console,
     globalThis: {},
     Buffer,
+    require: createRequire(import.meta.url),
     crypto: globalThis.crypto
   };
   context.globalThis = context;
