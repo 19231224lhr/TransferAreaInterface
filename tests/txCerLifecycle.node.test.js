@@ -94,6 +94,10 @@ test('frontend exposes backend protocol diagnostics and certifier node query hel
   const diagnostics = read('js/services/protocolDiagnostics.ts');
 
   for (const marker of [
+    'COMMITTEE_QC_STATUS',
+    'COMMITTEE_QC_PROPOSALS',
+    'COMMITTEE_QC_QCS',
+    'COMMITTEE_QC_FINALIZED_BLOCK',
     'AGGR_CERTIFIER_STATS',
     'AGGR_CERTIFIER_PENDING_REQUESTS',
     'ASSIGN_AUDIT_EVENTS',
@@ -109,7 +113,9 @@ test('frontend exposes backend protocol diagnostics and certifier node query hel
     'export interface TxTaskDAGEvent',
     'export interface TxTaskDAGRecord',
     'export interface SchedulerStatsResponse',
-    'export interface CertifierIssueBatchRequest'
+    'export interface CertifierIssueBatchRequest',
+    'export interface CommitteeQCStatus',
+    'export interface CommitteeQC'
   ]) {
     assertIncludes(blockchain, marker, `blockchain types are missing ${marker}`);
   }
@@ -120,6 +126,10 @@ test('frontend exposes backend protocol diagnostics and certifier node query hel
 
   for (const marker of [
     'fetchAssignSchedulerStats',
+    'fetchCommitteeQCStatus',
+    'fetchCommitteeQCProposals',
+    'fetchCommitteeQCs',
+    'fetchCommitteeQCFinalizedBlock',
     'fetchAssignSchedulerDAGRecords',
     'fetchAssignSchedulerDAGEvents',
     'fetchAssignAuditEvents',

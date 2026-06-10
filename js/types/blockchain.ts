@@ -251,6 +251,82 @@ export interface CommitteeReceipt {
   Signatures?: Record<string, EcdsaSignature>;
 }
 
+export type CommitteeProposalType =
+  | 'MasterBlock'
+  | 'ExchangeRecord'
+  | 'TXCerIssuanceBatch'
+  | 'PenaltyDecision'
+  | string;
+
+export type CommitteeStep = 'Prevote' | 'Precommit' | string;
+
+export interface CommitteeProposal {
+  ProposalID?: string;
+  Height?: number;
+  Round?: number;
+  ProposalType?: CommitteeProposalType;
+  ProposalHash?: number[] | string;
+  PayloadHash?: number[] | string;
+  StateRoot?: number[] | string;
+  ValidatorSetID?: string;
+  ProposerID?: string;
+  GroupID?: string;
+  Timestamp?: number;
+  Signature?: EcdsaSignature;
+}
+
+export interface CommitteeQC {
+  QCID?: string;
+  Height?: number;
+  Round?: number;
+  Step?: CommitteeStep;
+  ProposalType?: CommitteeProposalType;
+  ProposalHash?: number[] | string;
+  StateRoot?: number[] | string;
+  ValidatorSetID?: string;
+  GroupID?: string;
+  Threshold?: number;
+  Signers?: string[];
+  Signatures?: Record<string, EcdsaSignature>;
+  CreatedAt?: number;
+  Proposal?: CommitteeProposal;
+}
+
+export interface CommitteeQCStatus {
+  enabled?: boolean;
+  height?: number;
+  validatorSetID?: string;
+  validatorCount?: number;
+  threshold?: number;
+  finalityProfile?: string;
+  finalizedHeight?: number;
+  latestPrevoteQC?: string;
+  latestPrecommitQC?: string;
+  finalized?: Record<string, string>;
+  proposalCount?: number;
+  qcCount?: number;
+  localVoteLocks?: Record<string, string>;
+  experimental3Node?: boolean;
+}
+
+export interface CommitteeQCStatusResponse {
+  success?: boolean;
+  status?: CommitteeQCStatus;
+}
+
+export interface CommitteeQCListResponse {
+  success?: boolean;
+  count?: number;
+  proposals?: CommitteeProposal[];
+  qcs?: CommitteeQC[];
+}
+
+export interface CommitteeQCFinalizedBlockResponse {
+  success?: boolean;
+  block?: unknown;
+  qc?: CommitteeQC;
+}
+
 export type PenaltyStatus = 'PendingGovernance' | 'Approved' | 'Rejected';
 
 export interface PenaltyRecord {

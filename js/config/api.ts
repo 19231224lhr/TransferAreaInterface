@@ -95,6 +95,10 @@ export const API_ENDPOINTS = {
   GROUPS_LIST: '/api/v1/groups',  // 列出所有担保组织
   GROUP_INFO: (groupId: string) => `/api/v1/groups/${groupId}`,  // 查询指定组织详情
   COMMITTEE_ENDPOINT: '/api/v1/committee/endpoint',  // 查询 ComNode 端点
+  COMMITTEE_QC_STATUS: '/api/v1/committee/qc/status',
+  COMMITTEE_QC_PROPOSALS: '/api/v1/committee/qc/proposals',
+  COMMITTEE_QC_QCS: '/api/v1/committee/qc/qcs',
+  COMMITTEE_QC_FINALIZED_BLOCK: (height: number | string) => `/api/v1/committee/qc/finalized-block/${height}`,
 
   // AssignNode endpoints (动态路由: /api/v1/{groupID}/assign/*)
   ASSIGN_HEALTH: (groupId: string) => `/api/v1/${groupId}/assign/health`,

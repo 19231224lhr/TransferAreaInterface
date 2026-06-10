@@ -2,6 +2,11 @@ import { API_ENDPOINTS } from '../config/api';
 import type {
   AuditEvent,
   ChallengeRecord,
+  CommitteeQC,
+  CommitteeQCFinalizedBlockResponse,
+  CommitteeQCListResponse,
+  CommitteeQCStatusResponse,
+  CommitteeProposal,
   PenaltyRecord,
   SchedulerStatsResponse,
   TxTaskDAGEvent,
@@ -60,6 +65,36 @@ export interface AuditEventQuery {
 export interface ChallengeQuery {
   userID?: string;
   status?: string;
+}
+
+export async function fetchCommitteeQCStatus(): Promise<CommitteeQCStatusResponse> {
+  return apiClient.get<CommitteeQCStatusResponse>(
+    API_ENDPOINTS.COMMITTEE_QC_STATUS,
+    { silent: true, useBigIntParsing: true }
+  );
+}
+
+export async function fetchCommitteeQCProposals(height: number, round?: number): Promise<CommitteeProposal[]> {
+  const response = await apiClient.get<CommitteeQCListResponse>(
+    withQuery(API_ENDPOINTS.COMMITTEE_QC_PROPOSALS, { height, round }),
+    { silent: true, useBigIntParsing: true }
+  );
+  return response.proposals || [];
+}
+
+export async function fetchCommitteeQCs(height: number, type?: string): Promise<CommitteeQC[]> {
+  const response = await apiClient.get<CommitteeQCListResponse>(
+    withQuery(API_ENDPOINTS.COMMITTEE_QC_QCS, { height, type }),
+    { silent: true, useBigIntParsing: true }
+  );
+  return response.qcs || [];
+}
+
+export async function fetchCommitteeQCFinalizedBlock(height: number): Promise<CommitteeQCFinalizedBlockResponse> {
+  return apiClient.get<CommitteeQCFinalizedBlockResponse>(
+    API_ENDPOINTS.COMMITTEE_QC_FINALIZED_BLOCK(height),
+    { silent: true, useBigIntParsing: true }
+  );
 }
 
 export async function fetchAssignSchedulerStats(groupID: string): Promise<SchedulerStatsResponse> {

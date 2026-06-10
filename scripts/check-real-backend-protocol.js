@@ -11,6 +11,26 @@ async function main() {
   const assignBase = baseUrl;
   const aggrBase = baseUrl;
 
+  const qcStatusReply = await getJSON('/api/v1/committee/qc/status');
+  assert.equal(qcStatusReply.success, true, 'committee QC status query must succeed');
+  assert.equal(typeof qcStatusReply.status, 'object', 'committee QC status must include status object');
+  assert.equal(qcStatusReply.status.enabled, true, 'committee QC must be enabled by default on the real backend');
+  assert.equal(typeof qcStatusReply.status.threshold, 'number', 'committee QC status must include numeric threshold');
+  assert.ok(qcStatusReply.status.finalityProfile, 'committee QC status must include finalityProfile');
+  const finalizedHeight = Number(qcStatusReply.status.finalizedHeight || 0);
+  if (finalizedHeight > 0) {
+    const proposals = await getJSON(`/api/v1/committee/qc/proposals?height=${finalizedHeight}`);
+    assert.equal(proposals.success, true, 'committee QC proposals query must succeed for finalized height');
+    assert.ok(Array.isArray(proposals.proposals), 'committee QC proposals must be an array');
+    const qcs = await getJSON(`/api/v1/committee/qc/qcs?height=${finalizedHeight}`);
+    assert.equal(qcs.success, true, 'committee QC qcs query must succeed for finalized height');
+    assert.ok(Array.isArray(qcs.qcs), 'committee QC qcs must be an array');
+    const finalizedBlock = await getJSON(`/api/v1/committee/qc/finalized-block/${finalizedHeight}`);
+    assert.equal(finalizedBlock.success, true, 'committee QC finalized block query must succeed');
+    assert.ok(finalizedBlock.block, 'committee QC finalized block response must include block');
+    assert.ok(finalizedBlock.qc, 'committee QC finalized block response must include qc');
+  }
+
   const aggrCertifiers = await getJSON(`/api/v1/${groupID}/aggr/certifiers`, aggrBase);
   assert.equal(aggrCertifiers.success, true, 'aggr certifiers query must succeed');
   assert.ok(Array.isArray(aggrCertifiers.certifiers), 'aggr certifiers must be an array');
