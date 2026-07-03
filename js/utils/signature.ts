@@ -32,6 +32,24 @@ const SORTED_MAP_FIELDS = new Set([
   'Addresstogroup'
 ]);
 
+const AMOUNT_FIELDS = new Set([
+  'Value',
+  'NewValue',
+  'ToValue',
+  'ToInterest',
+  'Gas',
+  'Output',
+  'TotalGas',
+  'TotalValue',
+  'UTXOValue',
+  'TXCerValue',
+  'PledgeAmount',
+  'PledgeValue',
+  'CoverageLimit',
+  'Outstanding',
+  'Amount'
+]);
+
 export interface PublicKeyNew {
   CurveName: string;
   X: bigint | string;
@@ -162,9 +180,28 @@ function bigintReplacer(_key: string, value: unknown): unknown {
   return value;
 }
 
+function amountToBackendString(value: number | string | bigint): string {
+  if (typeof value === 'bigint') return value.toString(10);
+  if (typeof value === 'string') return value.trim() || '0';
+  if (!Number.isFinite(value)) return '0';
+  const fixed = value.toFixed(8);
+  return fixed.replace(/\.?0+$/, '') || '0';
+}
+
+function ratioToBackendString(value: number | string | bigint): string {
+  if (typeof value === 'bigint') return value.toString(10);
+  if (typeof value === 'string') return value.trim() || '0';
+  if (!Number.isFinite(value)) return '0';
+  const fixed = Math.max(0, Math.min(1, value)).toFixed(8);
+  return fixed.replace(/\.?0+$/, '') || '0';
+}
+
 function cloneForBackend(value: unknown, key?: string): unknown {
   if (value === undefined) return undefined;
   if (value === null) return null;
+  if (AMOUNT_FIELDS.has(String(key || '')) && (typeof value === 'number' || typeof value === 'string' || typeof value === 'bigint')) {
+    return amountToBackendString(value);
+  }
   if (typeof value === 'bigint') return value.toString(10);
   if (value instanceof Uint8Array) {
     return BYTE_ARRAY_FIELDS.has(String(key || '')) ? bytesToBase64(value) : Array.from(value);
@@ -184,7 +221,11 @@ function cloneForBackend(value: unknown, key?: string): unknown {
 
   const output: Record<string, unknown> = {};
   for (const [childKey, childValue] of sortedEntries) {
-    output[childKey] = cloneForBackend(childValue, childKey);
+    output[childKey] = (key === 'ValueDivision' || key === 'NewValueDiv') && (typeof childValue === 'number' || typeof childValue === 'string' || typeof childValue === 'bigint')
+      ? amountToBackendString(childValue)
+      : key === 'BackAssign' && (typeof childValue === 'number' || typeof childValue === 'string' || typeof childValue === 'bigint')
+        ? ratioToBackendString(childValue)
+      : cloneForBackend(childValue, childKey);
   }
   return output;
 }

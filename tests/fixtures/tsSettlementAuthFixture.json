@@ -4,22 +4,22 @@
     "PublicKey": "BGsX0fLhLEJH+Lzm5WOkQPJ3A32BLeszoPShOUXYmMKWT+NC4v4af5uO5+tKfA+eFivOM1drMV7Oy7ZAaDe/UfU="
   },
   "transaction": {
-    "TXID": "48f2eea74c75e9e9",
+    "TXID": "31970f1a718b5aa8",
     "Size": 0,
     "Version": 1,
     "GuarantorGroup": "group-target",
     "TXType": 1,
-    "Value": 12.5,
+    "Value": "12.5",
     "ValueDivision": {
-      "0": 12.5
+      "0": "12.5"
     },
-    "NewValue": 0,
+    "NewValue": "0",
     "NewValueDiv": {},
     "InterestAssign": {
-      "Gas": 0,
-      "Output": 0,
+      "Gas": "0",
+      "Output": "0",
       "BackAssign": {
-        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": 1
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa": "1"
       }
     },
     "UserSignature": {
@@ -28,15 +28,15 @@
     },
     "UserSignatureV2": {
       "Algorithm": "ecdsa_p256",
-      "Signature": "MEQCIAblDueQzCw+zSahzBi8YiVh3o0NLlOFEuE66ooRMDWJAiBp5JQl4k1kw0+t8LI17GZi4oC5DxwLLthO/227Cimkvg=="
+      "Signature": "MEUCID6zMbQuZuVgrZ9KqxTvapvBRjWe+w3OT3a+7Bo0xuItAiEAmtaoueTblNgJsAGUTk40pOgtcGSP4bMwY0jQjnCGdNs="
     },
     "TXInputsNormal": [],
     "TXInputsCertificate": [
       {
         "TXCerID": "tsfixtxcer000001",
         "ToAddress": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "Value": 12.5,
-        "ToInterest": 0,
+        "Value": "12.5",
+        "ToInterest": "0",
         "FromGuarGroupID": "group-source",
         "ToGuarGroupID": "group-target",
         "SourcePledgeAddress": "pledge-source-address",
@@ -58,7 +58,7 @@
         },
         "UserSignatureV2": {
           "Algorithm": "ecdsa_p256",
-          "Signature": "MEQCIFFTwv2YZFmPozQd/j3BCPKokiWGeDdA43olnbqiX/KaAiAwHAGmdap9MHqyXPL3KLXSghRVsUzwba+uiNLklGcITQ=="
+          "Signature": "MEUCIQDXFHGSb3bTAXXXJRty6K+pzEl5+utKfd4ZiaExmTmNpwIgYckOqZhOw9pXZ/OjW2vXtClMrhCO4q94z9Ea8W+Xwfw="
         },
         "SettlementAuth": {
           "Version": 1,
@@ -69,15 +69,15 @@
             "Index": 1,
             "InIndex": 0
           },
-          "Value": 12.5,
+          "Value": "12.5",
           "FromGuarGroupID": "group-source",
           "ToGuarGroupID": "group-target",
           "PledgeAddress": "pledge-source-address",
-          "ConsumeIntentHash": "kbhsiXJWFup5dpCcAXE4GRX/NU0UYrVcTUZfON0LNY8=",
+          "ConsumeIntentHash": "ule+nxfBP5pyHLbUtQZxoU64+MLIOmfHEkHlkwE6fFo=",
           "AuthTime": 1700000000,
           "UserSignatureV2": {
             "Algorithm": "ecdsa_p256",
-            "Signature": "MEUCIAXsXE4VJmC7fa5mwEC/786RMkCWSjPcR+14BQagMBhHAiEAmeCz2i1fADkYzNeTAFTAfo7X5h24DvIhYQS0tJLR40w="
+            "Signature": "MEQCIDeb2PhbHJclUPQuDl9I0PW7nzSEggkIwgxYaeT4j0UjAiAmo7DtQ674+/WbO6EW6OiCSTVcysi4PsquvE1fqRuUUg=="
           }
         }
       }
@@ -85,14 +85,14 @@
     "TXOutputs": [
       {
         "ToAddress": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-        "ToValue": 12.5,
+        "ToValue": "12.5",
         "ToGuarGroupID": "group-target",
         "ToPublicKey": {
           "CurveName": "P256",
           "X": 0,
           "Y": 0
         },
-        "ToInterest": 0,
+        "ToInterest": "0",
         "Type": 0,
         "ToPeerID": "",
         "IsPayForGas": false,

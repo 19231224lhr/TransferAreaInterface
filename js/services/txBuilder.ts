@@ -2091,7 +2091,7 @@ export interface LegacyBuildTXInfo {
   InterestAssign: {
     Gas: number;
     Output: number;
-    BackAssign: Record<string, number>;
+    BackAssign: Record<string, number | string>;
   };
 }
 
