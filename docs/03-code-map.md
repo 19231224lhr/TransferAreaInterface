@@ -1,101 +1,133 @@
-# 03. 代码地图（目录结构与改动入口）
+# 03. 前端代码地图
 
-本章用于“快速定位”：当你要改某个功能时，应该先打开哪些文件。
-
----
-
-## 1. 顶层目录
-
-- `index.html`：页面骨架 + `runtime-config.js` 注入 + 入口脚本 `/js/app.js`
-- `assets/`
-  - `assets/templates/pages/*.html`：所有页面模板（运行时以 `/templates/pages/...` 形式被加载）
-  - `assets/runtime-config.js`：运行时配置（后端地址/开发开关）
-- `js/`：应用核心（TS/JS 混合）
-- `css/`：样式
-- `tests/`：少量测试（利息、同步等）
+本文档用于快速定位正式前端代码。
 
 ---
 
-## 2. 页面系统（“一个页面由什么组成”）
+## 1. 顶层结构
 
-一页通常由三部分组成：
-
-1) **模板**：`assets/templates/pages/<page>.html`  
-2) **配置注册**：`js/config/pageTemplates.ts`（`id/containerId/templatePath`）  
-3) **页面逻辑模块**：`js/pages/<page>.{ts,js}`（导出 init/处理函数）
-
-路由分发：`js/router.ts`（hash 路由，负责模板加载 + 懒加载页面模块）
-
----
-
-## 3. 核心模块索引（按业务）
-
-### 3.1 组织（担保组织/委员会）
-
-- 组织查询/加入/退出：`js/services/group.ts`
-- 加入组织页面：`js/pages/joinGroup.ts`（含 inquiry 动画）
-- 组织详情/退出：`js/pages/groupDetail.js`
-- ComNode 端点发现与缓存：`js/services/comNodeEndpoint.ts`
-
-### 3.2 钱包（地址/余额/卡片 UI）
-
-- 钱包渲染与交互：`js/services/wallet.ts`
-- 地址管理：`js/services/address.ts`
-- 钱包结构体/详情弹窗：`js/ui/walletStruct.js`、`js/services/walletStruct.js`
-
-### 3.3 转账（构造/提交/历史）
-
-- 交易构造与提交入口：`js/services/transfer.ts`
-- 交易构造细节（Inputs/Outputs/TXID/签名）：`js/services/txBuilder.ts`
-- 交易历史：`js/services/txHistory.ts`、`js/pages/history.js`
-- 参数校验与防注入：`js/utils/security.ts`
-
-### 3.4 UTXO / TXCer（同步与锁）
-
-- 账户同步（SSE + 轮询）：`js/services/accountPolling.ts`
-- ComNode 查询（地址余额/UTXO/归属）：`js/services/accountQuery.ts`
-- UTXO 锁：`js/utils/utxoLock.ts`
-- TXCer 锁（避免竞态）：`js/services/txCerLockManager.ts`
-
-### 3.5 胶囊地址（Capsule）
-
-- 生成/缓存/验签解码：`js/services/capsule.ts`
-- Base58Check：`js/utils/base58.ts`
+| 路径 | 职责 |
+| --- | --- |
+| `index.html` | 页面骨架、runtime config 注入、入口脚本 |
+| `assets/runtime-config.js` | 后端地址和运行模式覆盖 |
+| `assets/templates/pages/` | 页面模板 |
+| `js/app.js` | 应用启动 |
+| `js/router.ts` | hash 路由、模板加载、页面懒加载 |
+| `js/config/` | API、页面模板、常量 |
+| `js/services/` | 业务服务层 |
+| `js/pages/` | 页面逻辑 |
+| `js/types/` | 后端协议类型 |
+| `js/utils/` | 存储、签名、安全、锁、toast 等 |
+| `docs/site/` | 应用内用户文档 |
 
 ---
 
-## 4. 基础设施（跨业务）
+## 2. 后端协议相关入口
 
-### 4.1 API 配置与端点
+| 功能 | 文件 |
+| --- | --- |
+| API endpoint | `js/config/api.ts` |
+| HTTP client | `js/services/api.ts` |
+| 后端类型 | `js/types/blockchain.ts` |
+| Go 签名序列化 | `js/utils/signature.ts` |
+| 本地持久化 | `js/utils/storage.ts` |
 
-- Base URL 与端点常量：`js/config/api.ts`
-- HTTP 客户端封装：`js/services/api.ts`
-
-### 4.2 签名/序列化（与 Go 后端对齐）
-
-- 签名与 JSON 数字字面量处理：`js/utils/signature.ts`
-
-### 4.3 i18n / 主题 / 体验增强
-
-- i18n：`js/i18n/*`
-- 主题：`js/ui/theme.js`
-- 全局 Toast：`js/utils/toast.js`
-- 全局 Loading：`js/utils/loading.ts`
-- Service Worker：`js/utils/serviceWorker.ts`、`sw.js`
+新增后端接口时，必须先同步 `js/config/api.ts` 和 `js/types/blockchain.ts`。
 
 ---
 
-## 5. 常见改动任务：从哪下手
+## 3. 交易构造链路
 
-- 新增一个页面：
-  1) 新增模板 `assets/templates/pages/<x>.html`
-  2) 在 `js/config/pageTemplates.ts` 注册
-  3) 新增 `js/pages/<x>.ts` 并在 `js/router.ts` 注册懒加载
-- 新增一个后端接口：
-  1) 在 `js/config/api.ts` 添加 endpoint 常量
-  2) 在对应 `js/services/<domain>.ts` 封装调用（必要时开启 BigInt 解析）
-- 调整签名/序列化：
-  - 只改 `js/utils/signature.ts`（并确保与后端验签完全一致）
-- 调整“TXCer 锁定”体验：
-  - 只改 `js/services/txCerLockManager.ts` + `js/services/wallet.ts` 的展示逻辑
+入口：
 
+- `js/services/transfer.ts`
+- `js/services/txBuilder.ts`
+
+`txBuilder.ts` 负责：
+
+- 查询收款地址元数据。
+- 选择 UTXO 和 TXCer。
+- 构造 seed-chain 输入。
+- 构造输出 seed 元数据。
+- 附加 SettlementAuth。
+- 签 `UserNewTX`。
+- 提交 `/assign/submit-tx` 或 `/com/submit-noguargroup-tx`。
+
+相关文件：
+
+- `js/services/settlementAuth.ts`
+- `js/services/txCerStatus.ts`
+- `js/services/txCerLockManager.ts`
+- `js/utils/utxoLock.ts`
+
+---
+
+## 4. TXCer 和 CFAA
+
+| 功能 | 文件 |
+| --- | --- |
+| TXCer lifecycle 状态 | `js/services/txCerStatus.ts` |
+| TXCer 本地构造锁 | `js/services/txCerLockManager.ts` |
+| issuance 查询 | `js/services/txCerIssuance.ts` |
+| Merkle proof 验证 | `js/services/txCerIssuanceProof.ts` |
+| 账户轮询/SSE | `js/services/accountPolling.ts` |
+
+可消费 TXCer 的条件：
+
+```text
+后端 lifecycle == Active
+&& 本地未锁定
+&& issuance proofStatus !== invalid
+```
+
+不要再只通过本地 `txCers` 是否存在判断可用性。
+
+---
+
+## 5. 诊断和高级协议
+
+| 功能 | 文件 |
+| --- | --- |
+| CommitteeQC 查询 | `js/services/protocolDiagnostics.ts` |
+| Scheduler DAG 查询 | `js/config/api.ts`、`js/types/blockchain.ts` |
+| Certifier registry | `js/services/txCerIssuance.ts` |
+| Audit / Challenge / Penalty 类型 | `js/types/blockchain.ts` |
+
+这些接口主要用于诊断和开发，不要求全部在主 UI 暴露。
+
+---
+
+## 6. 页面系统
+
+新增页面步骤：
+
+1. 新增模板：`assets/templates/pages/<page>.html`
+2. 注册模板：`js/config/pageTemplates.ts`
+3. 新增逻辑：`js/pages/<page>.ts`
+4. 注册路由：`js/router.ts`
+
+主页面：
+
+- `js/pages/main.js`
+- `js/services/wallet.ts`
+- `js/services/address.ts`
+- `js/services/group.ts`
+
+---
+
+## 7. 和插件同步维护的文件
+
+前端文件与插件文件大致对应：
+
+| 前端 | 插件 |
+| --- | --- |
+| `js/config/api.ts` | `src/core/api.ts` |
+| `js/types/blockchain.ts` | `src/core/blockchain.ts` |
+| `js/services/txBuilder.ts` | `src/core/txBuilder.ts` |
+| `js/services/settlementAuth.ts` | `src/core/settlementAuth.ts` |
+| `js/services/txCerStatus.ts` | `src/core/txCerStatus.ts` |
+| `js/services/txCerIssuance.ts` | `src/core/txCerIssuance.ts` |
+| `js/services/txCerIssuanceProof.ts` | `src/core/txCerIssuanceProof.ts` |
+| `js/utils/signature.ts` | `src/core/signature.ts` |
+
+修改协议层时不要只改一端。
