@@ -32,6 +32,7 @@ import { applyTXCerStatus, markTXCerActive } from './txCerStatus';
 import { buildAssignNodeUrl } from './group';
 import { getCoinName } from '../config/constants';
 import { addTxHistoryRecords, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
+import { toAmountNumber } from '../utils/amount';
 
 // ============================================================================
 // Types (匹配后端 Go 结构体)
@@ -886,7 +887,7 @@ function processTXCerChange(user: User, change: TXCerChangeToUser): void {
 
 
     case 2:
-      markTXCerActive(user, change.TXCerID, '', user.wallet?.totalTXCers?.[change.TXCerID]?.Value || 0);
+      markTXCerActive(user, change.TXCerID, '', toAmountNumber(user.wallet?.totalTXCers?.[change.TXCerID]?.Value || 0));
       // 解除怀疑，TXCer 可以正常使用
       markTXCerAsValid(user, change.TXCerID);
       showMiniToast(
@@ -1001,14 +1002,14 @@ function recalculateAddressBalance(addrData: any): void {
   // 计算 UTXO 余额
   if (addrData.utxos) {
     for (const utxo of Object.values(addrData.utxos) as UTXOData[]) {
-      utxoValue += utxo.Value || 0;
+      utxoValue += toAmountNumber(utxo.Value || 0);
     }
   }
 
   // 计算 TXCer 余额
   if (addrData.txCers) {
-    for (const value of Object.values(addrData.txCers) as number[]) {
-      txCerValue += value || 0;
+    for (const value of Object.values(addrData.txCers)) {
+      txCerValue += toAmountNumber(value as any);
     }
   }
 
@@ -1029,7 +1030,7 @@ function recalculateTotalBalance(user: User): void {
 
   for (const addrData of Object.values(user.wallet.addressMsg)) {
     const type = addrData.type || 0;
-    const value = addrData.value?.totalValue || addrData.value?.TotalValue || 0;
+    const value = toAmountNumber(addrData.value?.totalValue || addrData.value?.TotalValue || 0);
 
     if (valueDivision[type] !== undefined) {
       valueDivision[type] += value;
@@ -1729,7 +1730,7 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
   }
 
   // 存储 TXCer 金额到地址的 txCers 字段
-  addrData.txCers[txCerId] = TXCer.Value;
+  addrData.txCers[txCerId] = toAmountNumber(TXCer.Value);
 
   // 初始化并存储完整 TXCer 到 totalTXCers
   if (!user.wallet.totalTXCers) {
@@ -1743,7 +1744,7 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
     }
     user.wallet.txCerIssuanceRecords[txCerId] = issuanceMetadata;
   }
-  markTXCerActive(user, txCerId, normalizedAddr, TXCer.Value);
+  markTXCerActive(user, txCerId, normalizedAddr, toAmountNumber(TXCer.Value));
 
   // 重新计算地址余额
   recalculateAddressBalance(addrData);
@@ -1751,7 +1752,7 @@ function processTXCerToUser(user: User, txCerToUser: TXCerToUser): boolean {
   console.info(`[CrossOrgTXCer] TXCer ${txCerId.slice(0, 8)}... stored successfully`);
 
   // 显示 TXCer 接收提示
-  showSuccessToast(`📥 收到 TXCer: ${TXCer.Value.toFixed(4)} PGC`);
+  showSuccessToast(`📥 收到 TXCer: ${toAmountNumber(TXCer.Value).toFixed(4)} PGC`);
 
   return true;
 }

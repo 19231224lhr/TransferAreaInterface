@@ -1,5 +1,6 @@
 import type { SettlementAuth, SignatureEnvelope, Transaction, TxCertificate } from '../types/blockchain';
 import { AlgorithmECDSAP256, getTimestamp, hashBackendJson, signHashEnvelope } from '../utils/signature';
+import { toAmountNumber } from '../utils/amount';
 
 function emptySignatureEnvelope(): SignatureEnvelope {
   return { Algorithm: '', Signature: null };
@@ -75,7 +76,7 @@ function assertTXCerSettlementReady(txCer: TxCertificate): void {
   if (!txCer.TXCerID) missing.push('TXCerID');
   if (!txCer.TXID) missing.push('TXID');
   if (!txCer.TxCerPosition) missing.push('TxCerPosition');
-  if (typeof txCer.Value !== 'number' || txCer.Value <= 0) missing.push('Value');
+  if (toAmountNumber(txCer.Value) <= 0) missing.push('Value');
   if (!txCer.FromGuarGroupID) missing.push('FromGuarGroupID');
   if (!txCer.ToGuarGroupID) missing.push('ToGuarGroupID');
   if (!txCer.SourcePledgeAddress) missing.push('SourcePledgeAddress');

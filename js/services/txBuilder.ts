@@ -29,7 +29,8 @@ import {
   UserNewTX as BlockchainUserNewTX,
   InterestAssign as BlockchainInterestAssign,
   SubATX as BlockchainSubATX,
-  AggregateGTX as BlockchainAggregateGTX
+  AggregateGTX as BlockchainAggregateGTX,
+  ProtocolAmount
 } from '../types/blockchain';
 import { isUTXOLocked } from '../utils/utxoLock';
 import { isAccountPollingActive } from './accountPolling';
@@ -45,6 +46,7 @@ import {
   signStruct,
   type PublicKeyNew as SignaturePublicKey
 } from '../utils/signature';
+import { toAmountNumber, toAmountRecordWire, toAmountWire } from '../utils/amount';
 import { attachSettlementAuths, zeroSettlementAuth } from './settlementAuth';
 import {
   calculateTXID as calculateCanonicalTXID,
@@ -745,7 +747,7 @@ function buildSeedSweepSelection(
   }> = [];
 
   for (const [candidateKey, candidateData] of Object.entries(addrData.utxos || {})) {
-    if (!candidateData || candidateData.Value <= 0) {
+    if (!candidateData || toAmountNumber(candidateData.Value) <= 0) {
       continue;
     }
     const candidateOutput = getReferencedOutputForUTXO(candidateData);
@@ -912,7 +914,7 @@ function selectUTXOs(
         continue;
       }
 
-      if (utxoData.Value <= 0) {
+      if (toAmountNumber(utxoData.Value) <= 0) {
         console.log(`  - UTXO ${utxoKey}: 金额为0或负数 (${utxoData.Value})`);
         continue;
       }
@@ -943,7 +945,7 @@ function selectUTXOs(
         if (consumedKeys.has(item.utxoKey)) continue;
         selected.push(item);
         consumedKeys.add(item.utxoKey);
-        collected[item.coinType] += item.utxoData.Value;
+        collected[item.coinType] += toAmountNumber(item.utxoData.Value);
       }
 
       // 检查是否已满足需求
@@ -1013,7 +1015,7 @@ function selectUTXOsPartial(
     for (const [utxoKey, utxoData] of Object.entries(utxos)) {
       if (consumedKeys.has(utxoKey)) continue;
       if (isUtxoLockedAnyFormat(utxoKey)) continue;
-      if (!utxoData || utxoData.Value <= 0) continue;
+      if (!utxoData || toAmountNumber(utxoData.Value) <= 0) continue;
       if (!utxoData.UTXO || !utxoData.UTXO.TXOutputs?.length) continue;
 
       const sweepGroup = buildSeedSweepSelection(address, utxoKey, utxoData, walletData);
@@ -1022,7 +1024,7 @@ function selectUTXOsPartial(
         if (consumedKeys.has(item.utxoKey)) continue;
         selected.push(item);
         consumedKeys.add(item.utxoKey);
-        collected[item.coinType] += item.utxoData.Value;
+        collected[item.coinType] += toAmountNumber(item.utxoData.Value);
       }
       if (collected[coinType] >= needed) break;
     }
@@ -1184,10 +1186,10 @@ export async function buildTransaction(
     // 校验主币种是否足够（UTXO+TXCer）
     let mainCollected = 0;
     for (const { utxoData, coinType } of selectedUTXOs) {
-      if (coinType === 0) mainCollected += utxoData.Value;
+      if (coinType === 0) mainCollected += toAmountNumber(utxoData.Value);
     }
     let txCerCollected = 0;
-    for (const { txCer } of selectedTXCers) txCerCollected += txCer.Value;
+    for (const { txCer } of selectedTXCers) txCerCollected += toAmountNumber(txCer.Value);
     const stillNeed = mainCurrencyNeeded - (mainCollected + txCerCollected);
     if (stillNeed > 0.00000001) {
       throw new Error(`余额不足：UTXO + TXCer 仍然缺少 ${stillNeed.toFixed(4)} 主货币`);
@@ -1231,7 +1233,7 @@ export async function buildTransaction(
       let utxoCollected = 0;
       for (const { utxoData, coinType } of selectedUTXOs) {
         if (coinType === 0) {
-          utxoCollected += utxoData.Value;
+          utxoCollected += toAmountNumber(utxoData.Value);
         }
       }
 
@@ -1260,11 +1262,11 @@ export async function buildTransaction(
   // 计算各币种收集的总额（包含 TXCer）
   const collectedAmounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
   for (const { utxoData, coinType } of selectedUTXOs) {
-    collectedAmounts[coinType] += utxoData.Value;
+    collectedAmounts[coinType] += toAmountNumber(utxoData.Value);
   }
   // TXCer 只能是主货币
   for (const { txCer } of selectedTXCers) {
-    collectedAmounts[0] += txCer.Value;
+    collectedAmounts[0] += toAmountNumber(txCer.Value);
   }
   console.log('[交易构造] 收集金额（含TXCer）:', collectedAmounts);
 
@@ -1312,10 +1314,10 @@ export async function buildTransaction(
     }
     txOutputs.push({
       ToAddress: recipient.address,
-      ToValue: recipient.amount,
+      ToValue: toAmountWire(recipient.amount),
       ToGuarGroupID: recipient.guarGroupID,
       ToPublicKey: convertHexToPublicKey(recipient.publicKeyX, recipient.publicKeyY) as unknown as PublicKeyNewJSON,
-      ToInterest: recipient.interest || 0,
+      ToInterest: toAmountWire(recipient.interest || 0),
       Type: recipient.coinType,
       ToPeerID: '',
       IsPayForGas: false,
@@ -1356,10 +1358,10 @@ export async function buildTransaction(
 
       txOutputs.push({
         ToAddress: changeAddr,
-        ToValue: change,
+        ToValue: toAmountWire(change),
         ToGuarGroupID: guarGroupID,
         ToPublicKey: convertHexToPublicKey(changePubX, changePubY) as unknown as PublicKeyNewJSON,
-        ToInterest: 0,
+        ToInterest: toAmountWire(0),
         Type: coinType,
         ToPeerID: '',
         IsPayForGas: false,
@@ -1378,10 +1380,10 @@ export async function buildTransaction(
     console.log('[交易构造] 创建额外 Gas 输出, 金额:', howMuchPayForGas);
     txOutputs.push({
       ToAddress: '',
-      ToValue: howMuchPayForGas,
+      ToValue: toAmountWire(howMuchPayForGas),
       ToGuarGroupID: '',
       ToPublicKey: hexToPublicKeyJSON('', ''),  // 使用空字符串生成零值公钥（与其他输出格式一致）
-      ToInterest: 0,
+      ToInterest: toAmountWire(0),
       Type: 0, // PGC
       ToPeerID: '',
       IsPayForGas: true,  // 关键标记：标识此输出用于支付 Gas
@@ -1491,10 +1493,10 @@ export async function buildTransaction(
 
     const outputForHash: TXOutput = {
       ToAddress: referencedOutput.ToAddress || '',
-      ToValue: referencedOutput.ToValue || 0,
+      ToValue: toAmountWire(referencedOutput.ToValue || 0),
       ToGuarGroupID: referencedOutput.ToGuarGroupID || '',
       ToPublicKey: toPublicKey,
-      ToInterest: referencedOutput.ToInterest || 0,
+      ToInterest: toAmountWire(referencedOutput.ToInterest || 0),
       Type: referencedOutput.Type ?? referencedOutput.ToCoinType ?? 0,
       ToPeerID: referencedOutput.ToPeerID || '',
       IsPayForGas: referencedOutput.IsPayForGas || false,
@@ -1597,13 +1599,13 @@ export async function buildTransaction(
     Version: 1.0,
     GuarantorGroup: guarGroupID,
     TXType: isCrossChain ? 6 : txType,  // 6=跨链, 0=普通转账, 1=使用了TXCer
-    Value: totalValue,
-    ValueDivision: cleanValueDivision,
-    NewValue: 0,
+    Value: toAmountWire(totalValue),
+    ValueDivision: toAmountRecordWire(cleanValueDivision),
+    NewValue: toAmountWire(0),
     NewValueDiv: {},
     InterestAssign: {
-      Gas: gas,
-      Output: recipients.reduce((sum, r) => sum + (r.interest || 0), 0),
+      Gas: toAmountWire(gas),
+      Output: toAmountWire(recipients.reduce((sum, r) => sum + (r.interest || 0), 0)),
       BackAssign: backAssign
     },
     UserSignature: { R: null, S: null },
@@ -1622,7 +1624,7 @@ export async function buildTransaction(
       ...transaction,
       TXID: '',
       Size: 0,
-      NewValue: 0,
+      NewValue: toAmountWire(0),
       UserSignature: { R: null, S: null },
       UserSignatureV2: { Algorithm: '', Signature: null },
       TXType: 0
@@ -2069,14 +2071,14 @@ export async function submitTransaction(
  * 旧版 BuildTXInfo 格式（兼容现有代码）
  */
 export interface LegacyBuildTXInfo {
-  Value?: number;
-  ValueDivision: Record<number, number>;
+  Value?: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
   Bill: Record<string, {
     MoneyType: number;
-    Value: number;
+    Value: ProtocolAmount;
     GuarGroupID?: string;
     PublicKey?: { XHex: string; YHex: string };
-    ToInterest?: number;
+    ToInterest?: ProtocolAmount;
     SeedAnchor?: number[] | string;
     SeedChainStep?: number;
     DefaultSpendAlgorithm?: string;
@@ -2085,12 +2087,12 @@ export interface LegacyBuildTXInfo {
   PriUseTXCer: boolean;
   ChangeAddress: Record<number, string>;
   IsPledgeTX: boolean;
-  HowMuchPayForGas: number;
+  HowMuchPayForGas: ProtocolAmount;
   IsCrossChainTX: boolean;
   Data?: string | Uint8Array;
   InterestAssign: {
-    Gas: number;
-    Output: number;
+    Gas: ProtocolAmount;
+    Output: ProtocolAmount;
     BackAssign: Record<string, number | string>;
   };
 }
@@ -2107,12 +2109,12 @@ export function convertLegacyBuildInfo(buildInfo: LegacyBuildTXInfo): BuildTrans
   for (const [address, bill] of Object.entries(buildInfo.Bill)) {
     recipients.push({
       address,
-      amount: bill.Value,
+      amount: toAmountNumber(bill.Value),
       coinType: bill.MoneyType,
       publicKeyX: bill.PublicKey?.XHex || '',
       publicKeyY: bill.PublicKey?.YHex || '',
       guarGroupID: bill.GuarGroupID || '',
-      interest: bill.ToInterest || 0,
+      interest: toAmountNumber(bill.ToInterest || 0),
       seedAnchor: bill.SeedAnchor,
       seedChainStep: bill.SeedChainStep,
       defaultSpendAlgorithm: bill.DefaultSpendAlgorithm
@@ -2123,9 +2125,9 @@ export function convertLegacyBuildInfo(buildInfo: LegacyBuildTXInfo): BuildTrans
     fromAddresses: buildInfo.UserAddress,
     recipients,
     changeAddresses: buildInfo.ChangeAddress,
-    gas: buildInfo.InterestAssign.Gas,
+    gas: toAmountNumber(buildInfo.InterestAssign.Gas),
     isCrossChain: buildInfo.IsCrossChainTX,
-    howMuchPayForGas: buildInfo.HowMuchPayForGas || 0,
+    howMuchPayForGas: toAmountNumber(buildInfo.HowMuchPayForGas || 0),
     preferTXCer: !!buildInfo.PriUseTXCer
   };
 }
@@ -2162,10 +2164,10 @@ export async function buildTransactionFromLegacy(
 export interface SubATXForSubmit extends BlockchainSubATX {
   Version: number;
   GuarantorGroup: string;
-  Value: number;
-  ValueDivision: Record<number, number>;
-  NewValue: number;
-  NewValueDiv: Record<number, number>;
+  Value: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
+  NewValue: ProtocolAmount;
+  NewValueDiv: Record<number, ProtocolAmount>;
   TXInputsNormal: TXInputNormal[];
   TXInputsCertificate: any[];
   TXOutputs: TXOutput[];
@@ -2337,7 +2339,7 @@ export async function buildNormalTransaction(
 
   const collectedAmounts: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
   for (const { utxoData, coinType } of selectedUTXOs) {
-    collectedAmounts[coinType] += utxoData.Value;
+    collectedAmounts[coinType] += toAmountNumber(utxoData.Value);
   }
 
   console.log('[普通转账] 选择了', selectedUTXOs.length, '个 UTXO');
@@ -2434,10 +2436,10 @@ export async function buildNormalTransaction(
     }
     const output: TXOutput = {
       ToAddress: recipient.address,
-      ToValue: recipient.amount,
+      ToValue: toAmountWire(recipient.amount),
       ToGuarGroupID: recipient.guarGroupID || '',
       ToPublicKey: convertHexToPublicKey(recipient.publicKeyX, recipient.publicKeyY) as unknown as PublicKeyNewJSON,
-      ToInterest: recipient.interest || 0,
+      ToInterest: toAmountWire(recipient.interest || 0),
       Type: recipient.coinType,
       ToPeerID: '',
       IsPayForGas: false,
@@ -2461,12 +2463,12 @@ export async function buildNormalTransaction(
 
       const output: TXOutput = {
         ToAddress: changeAddr,
-        ToValue: changeAmount,
+        ToValue: toAmountWire(changeAmount),
         ToGuarGroupID: '',
         ToPublicKey: changeAddrData
           ? (convertHexToPublicKey(changeAddrData.pubXHex || '', changeAddrData.pubYHex || '') as unknown as PublicKeyNewJSON)
           : { CurveName: 'P256', X: '0', Y: '0' },
-        ToInterest: 0,
+        ToInterest: toAmountWire(0),
         Type: coinType,
         ToPeerID: '',
         IsPayForGas: false,
@@ -2484,10 +2486,10 @@ export async function buildNormalTransaction(
   if (howMuchPayForGas > 0) {
     const gasOutput: TXOutput = {
       ToAddress: '',
-      ToValue: howMuchPayForGas,
+      ToValue: toAmountWire(howMuchPayForGas),
       ToGuarGroupID: '',
       ToPublicKey: { CurveName: 'P256', X: '0', Y: '0' },
-      ToInterest: 0,
+      ToInterest: toAmountWire(0),
       Type: 0,
       ToPeerID: '',
       IsPayForGas: true,
@@ -2508,8 +2510,8 @@ export async function buildNormalTransaction(
   }
 
   const interestAssign: InterestAssign = {
-    Gas: gas,
-    Output: 0,
+    Gas: toAmountWire(gas),
+    Output: toAmountWire(0),
     BackAssign: backAssign
   };
 
@@ -2528,9 +2530,9 @@ export async function buildNormalTransaction(
     Version: 1.0,
     GuarantorGroup: '',  // 散户没有担保组织
     TXType: 8,           // 散户交易类型
-    Value: Object.values(valueDivision).reduce((a, b) => a + b, 0),
-    ValueDivision: valueDivision,
-    NewValue: 0,
+    Value: toAmountWire(Object.values(valueDivision).reduce((a, b) => a + b, 0)),
+    ValueDivision: toAmountRecordWire(valueDivision),
+    NewValue: toAmountWire(0),
     NewValueDiv: {},
     InterestAssign: interestAssign,
     UserSignature: { R: null, S: null },
@@ -2547,7 +2549,7 @@ export async function buildNormalTransaction(
       ...tx,
       TXID: '',
       Size: 0,
-      NewValue: 0,
+      NewValue: toAmountWire(0),
       UserSignature: { R: null, S: null },
       UserSignatureV2: { Algorithm: '', Signature: null },
       TXType: 0

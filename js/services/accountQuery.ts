@@ -11,9 +11,10 @@
 
 import { ApiRequestError, isNetworkError, isTimeoutError } from './api';
 import { t } from '../i18n/index.js';
-import { UTXOData } from '../types/blockchain';
+import { ProtocolAmount, UTXOData } from '../types/blockchain';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { showToast } from '../utils/toast';
+import { toAmountNumber, toAmountWire } from '../utils/amount';
 
 // ============================================================================
 // Types
@@ -45,7 +46,7 @@ export interface QueryTxPosition {
  */
 export interface QueryUTXOData {
   UTXO?: any;           // Source transaction (SubATX), optional for simplified queries
-  Value: number;        // Transfer amount
+  Value: ProtocolAmount; // Transfer amount
   Type: number;         // Currency type: 0=PGC, 1=BTC, 2=ETH
   Time?: number;        // Construction timestamp
   Position?: QueryTxPosition;  // Position information (Blocknum, IndexX, IndexY, IndexZ)
@@ -57,7 +58,7 @@ export interface QueryUTXOData {
  */
 export interface PointAddressData {
   /** Address total balance */
-  Value: number;
+  Value: ProtocolAmount;
   /** Currency type: 0=PGC, 1=BTC, 2=ETH */
   Type: number;
   /** Address total interest (real-time calculated) */
@@ -137,13 +138,14 @@ export type QueryResult<T> =
  * Normalize backend address data to frontend format
  */
 function normalizeAddressData(address: string, data: PointAddressData): AddressBalanceInfo {
-  const exists = data.Value > 0 || data.Interest > 0 || data.LastHeight > 0 || Object.keys(data.UTXO || {}).length > 0;
+  const value = toAmountNumber(data.Value || 0);
+  const exists = value > 0 || data.Interest > 0 || data.LastHeight > 0 || Object.keys(data.UTXO || {}).length > 0;
 
   return {
     address,
-    balance: data.Value || 0,
+    balance: value,
     interest: data.Interest || 0,
-    totalAssets: (data.Value || 0) + (data.Interest || 0),
+    totalAssets: value + (data.Interest || 0),
     type: data.Type || 0,
     groupID: data.GroupID || '',
     isInGroup: !!(data.GroupID && data.GroupID !== '' && data.GroupID !== '1'),
@@ -264,16 +266,16 @@ function convertToStorageUTXO(utxoKey: string, queryUtxo: QueryUTXOData, address
       TXInputsCertificate: [],
       TXOutputs: [{
         ToAddress: address,
-        ToValue: queryUtxo.Value,
+        ToValue: toAmountWire(queryUtxo.Value),
         ToGuarGroupID: '',
         ToPublicKey: { Curve: 'P256' },
-        ToInterest: 0,
+        ToInterest: toAmountWire(0),
         Type: queryUtxo.Type,
         ToCoinType: queryUtxo.Type,
         IsCrossChain: false,
         IsGuarMake: false
       }],
-      InterestAssign: { Gas: 0, Output: 0, BackAssign: {} },
+      InterestAssign: { Gas: toAmountWire(0), Output: toAmountWire(0), BackAssign: {} },
       ExTXCerID: [],
       Data: []
     },

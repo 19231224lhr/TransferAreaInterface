@@ -1,3 +1,8 @@
+import type { AmountInput } from '../utils/amount';
+import { isAmountLike } from '../utils/amount';
+
+export type ProtocolAmount = AmountInput;
+
 /**
  * Blockchain core type definitions aligned with the current Go backend.
  */
@@ -64,7 +69,7 @@ export interface SettlementAuth {
   TXCerID: string;
   SourceTXID: string;
   SourcePosition: TXCerPosition;
-  Value: number;
+  Value: ProtocolAmount;
   FromGuarGroupID: string;
   ToGuarGroupID: string;
   PledgeAddress: string;
@@ -175,8 +180,8 @@ export interface TXCerIssuanceView {
   UserID?: string;
   toAddress?: string;
   ToAddress?: string;
-  value?: number;
-  Value?: number;
+  value?: ProtocolAmount;
+  Value?: ProtocolAmount;
   status?: TXCerIssuanceStatus | string;
   Status?: TXCerIssuanceStatus | string;
   batchID?: string;
@@ -426,7 +431,7 @@ export interface TxTask {
   GuarTX?: unknown;
   SchedulerEnvelope?: TxTaskDAGEnvelope;
   Resources?: TxResourceSet;
-  Gas?: number;
+  Gas?: ProtocolAmount;
   Height?: number;
   ReceivedAt?: number;
   Status?: TxTaskStatus | string;
@@ -517,8 +522,8 @@ export interface CertifierIssueBatchRequest {
 export interface TxCertificate {
   TXCerID: string;
   ToAddress: string;
-  Value: number;
-  ToInterest: number;
+  Value: ProtocolAmount;
+  ToInterest: ProtocolAmount;
   FromGuarGroupID: string;
   ToGuarGroupID: string;
   SourcePledgeAddress?: string;
@@ -534,10 +539,10 @@ export interface TxCertificate {
 
 export interface TXOutput {
   ToAddress: string;
-  ToValue: number;
+  ToValue: ProtocolAmount;
   ToGuarGroupID: string;
   ToPublicKey: PublicKeyNew;
-  ToInterest: number;
+  ToInterest: ProtocolAmount;
   Type?: number;
   ToCoinType?: number;
   ToPeerID?: string;
@@ -551,8 +556,8 @@ export interface TXOutput {
 }
 
 export interface InterestAssign {
-  Gas: number;
-  Output: number;
+  Gas: ProtocolAmount;
+  Output: ProtocolAmount;
   BackAssign: Record<string, number | string>;
 }
 
@@ -575,7 +580,7 @@ export interface AggregateGTX {
   GuarantorGroupID: string;
   GuarantorGroupSig: EcdsaSignature | NullableEcdsaSignature;
   TXNum: number;
-  TotalGas: number;
+  TotalGas: ProtocolAmount;
   TXHash: string;
   TXSize: number;
   Version: number;
@@ -588,10 +593,10 @@ export interface Transaction {
   Version: number;
   GuarantorGroup: string;
   TXType: number;
-  Value: number;
-  ValueDivision: Record<number, number>;
-  NewValue: number;
-  NewValueDiv: Record<number, number>;
+  Value: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
+  NewValue: ProtocolAmount;
+  NewValueDiv: Record<number, ProtocolAmount>;
   InterestAssign: InterestAssign;
   UserSignature: EcdsaSignature;
   UserSignatureV2?: SignatureEnvelope;
@@ -603,7 +608,7 @@ export interface Transaction {
 
 export interface UTXOData {
   UTXO: SubATX;
-  Value: number;
+  Value: ProtocolAmount;
   Type: number;
   Time: number;
   Position: TxPosition;
@@ -614,21 +619,21 @@ export interface UTXOData {
 
 export interface BillMsg {
   MoneyType: number;
-  Value: number;
+  Value: ProtocolAmount;
   GuarGroupID: string;
   PublicKey: PublicKeyNew;
-  ToInterest: number;
+  ToInterest: ProtocolAmount;
 }
 
 export interface BuildTXInfo {
-  Value: number;
-  ValueDivision: Record<number, number>;
+  Value: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
   Bill: Record<string, BillMsg>;
   UserAddress: string[];
   PriUseTXCer: boolean;
   ChangeAddress: Record<number, string>;
   IsPledgeTX: boolean;
-  HowMuchPayForGas: number;
+  HowMuchPayForGas: ProtocolAmount;
   IsCrossChainTX: boolean;
   Data: number[] | string;
   InterestAssign: InterestAssign;
@@ -645,7 +650,7 @@ export function isUTXOData(obj: unknown): obj is UTXOData {
   if (typeof obj !== 'object' || obj === null) return false;
   const utxo = obj as Partial<UTXOData>;
   return (
-    typeof utxo.Value === 'number' &&
+    isAmountLike(utxo.Value) &&
     typeof utxo.Type === 'number' &&
     typeof utxo.Time === 'number' &&
     typeof utxo.IsTXCerUTXO === 'boolean' &&
@@ -659,7 +664,7 @@ export function isTXOutput(obj: unknown): obj is TXOutput {
   const output = obj as Partial<TXOutput>;
   return (
     typeof output.ToAddress === 'string' &&
-    typeof output.ToValue === 'number' &&
+    isAmountLike(output.ToValue) &&
     typeof output.IsCrossChain === 'boolean'
   );
 }
@@ -670,7 +675,7 @@ export function isTransaction(obj: unknown): obj is Transaction {
   return (
     typeof tx.TXID === 'string' &&
     typeof tx.TXType === 'number' &&
-    typeof tx.Value === 'number' &&
+    isAmountLike(tx.Value) &&
     Array.isArray(tx.TXOutputs)
   );
 }

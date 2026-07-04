@@ -11,8 +11,10 @@ import {
   TXOutput as BlockchainTXOutput,
   InterestAssign as BlockchainInterestAssign,
   EcdsaSignature,
+  ProtocolAmount,
   UTXOData
 } from '../types/blockchain';
+import { toAmountNumber, toAmountRecordWire, toAmountWire } from '../utils/amount';
 
 // ========================================
 // Type Definitions
@@ -45,8 +47,8 @@ export interface Transaction {
   TXID: string;
   Size: number;
   TXType: number;
-  Value: number;
-  ValueDivision: Record<number, number>;
+  Value: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
   GuarantorGroup: string;
   TXInputsNormal: TXInputNormal[];       // Strict type instead of any[]
   TXInputsCertificate: TxCertificate[];  // Strict type instead of any[]
@@ -59,11 +61,11 @@ export interface Transaction {
 /** Bill message structure */
 export interface BillMsg {
   MoneyType: number;
-  Value: number;
+  Value: ProtocolAmount;
   GuarGroupID?: string;
   PublicKey?: { XHex: string; YHex: string };
-  Gas?: number;
-  ToInterest?: number;
+  Gas?: ProtocolAmount;
+  ToInterest?: ProtocolAmount;
   SeedAnchor?: number[] | string;
   SeedChainStep?: number;
   DefaultSpendAlgorithm?: string;
@@ -71,14 +73,14 @@ export interface BillMsg {
 
 /** Build transaction info structure */
 export interface BuildTXInfo {
-  Value?: number;
-  ValueDivision: Record<number, number>;
+  Value?: ProtocolAmount;
+  ValueDivision: Record<number, ProtocolAmount>;
   Bill: Record<string, BillMsg>;
   UserAddress: string[];
   PriUseTXCer: boolean;
   ChangeAddress: Record<number, string>;
   IsPledgeTX: boolean;
-  HowMuchPayForGas: number;
+  HowMuchPayForGas: ProtocolAmount;
   IsCrossChainTX: boolean;
   Data?: string | Uint8Array;
   InterestAssign: InterestAssign;
@@ -361,8 +363,9 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     }
 
     // Check balance
-    for (const [typeIdStr, needed] of Object.entries(buildTXInfo.ValueDivision)) {
+    for (const [typeIdStr, neededRaw] of Object.entries(buildTXInfo.ValueDivision)) {
       const typeId = Number(typeIdStr);
+      const needed = toAmountNumber(neededRaw);
       if (needed > totalMoney[typeId]) {
         throw new Error('insufficient account balance');
       }
@@ -371,15 +374,15 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     // Check bill amounts
     const usedMoney: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
     for (const bill of Object.values(buildTXInfo.Bill)) {
-      usedMoney[bill.MoneyType] += bill.Value;
+      usedMoney[bill.MoneyType] += toAmountNumber(bill.Value);
     }
-    if (buildTXInfo.HowMuchPayForGas > 0) {
-      usedMoney[0] += buildTXInfo.HowMuchPayForGas;
+    if (toAmountNumber(buildTXInfo.HowMuchPayForGas) > 0) {
+      usedMoney[0] += toAmountNumber(buildTXInfo.HowMuchPayForGas);
     }
 
     for (const [typeIdStr, used] of Object.entries(usedMoney)) {
       const typeId = Number(typeIdStr);
-      const needed = buildTXInfo.ValueDivision[typeId] || 0;
+      const needed = toAmountNumber(buildTXInfo.ValueDivision[typeId] || 0);
       if (Math.abs(used - needed) > 1e-8) {
         throw new Error('the bill is incorrect');
       }
@@ -391,13 +394,17 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
       TXID: '',
       Size: 0,
       TXType: 0,
-      Value: 0.0,
-      ValueDivision: buildTXInfo.ValueDivision,
+      Value: toAmountWire(0),
+      ValueDivision: toAmountRecordWire(buildTXInfo.ValueDivision),
       GuarantorGroup: guarGroup,
       TXInputsNormal: [],
       TXInputsCertificate: [],
       TXOutputs: [],
-      InterestAssign: buildTXInfo.InterestAssign,
+      InterestAssign: {
+        Gas: toAmountWire(buildTXInfo.InterestAssign?.Gas || 0),
+        Output: toAmountWire(buildTXInfo.InterestAssign?.Output || 0),
+        BackAssign: buildTXInfo.InterestAssign?.BackAssign || {}
+      },
       UserSignature: { R: null, S: null },
       Data: buildTXInfo.Data || ''
     };
@@ -421,14 +428,14 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     for (const [address, bill] of Object.entries(buildTXInfo.Bill)) {
       const output: TXOutput = {
         ToAddress: address,
-        ToValue: bill.Value,
+        ToValue: toAmountWire(bill.Value),
         ToGuarGroupID: bill.GuarGroupID || '',
         ToPublicKey: {
           Curve: 'P256',
           XHex: bill.PublicKey?.XHex || '',
           YHex: bill.PublicKey?.YHex || ''
         },
-        ToInterest: Number(bill.ToInterest || 0),
+        ToInterest: toAmountWire(bill.ToInterest || 0),
         ToCoinType: bill.MoneyType,
         IsCrossChain: isCrossChain,
         IsGuarMake: false
@@ -442,13 +449,13 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     }
 
     // Explicit gas output (matches backend: IsPayForGas output)
-    if (Number(buildTXInfo.HowMuchPayForGas || 0) > 0) {
+    if (toAmountNumber(buildTXInfo.HowMuchPayForGas || 0) > 0) {
       const gasOutput: TXOutput = {
         ToAddress: '',
-        ToValue: Number(buildTXInfo.HowMuchPayForGas || 0),
+        ToValue: toAmountWire(buildTXInfo.HowMuchPayForGas || 0),
         ToGuarGroupID: '',
         ToPublicKey: { Curve: 'P256', XHex: '', YHex: '' },
-        ToInterest: 0,
+        ToInterest: toAmountWire(0),
         ToCoinType: 0,
         IsPayForGas: true,
         IsCrossChain: false,
@@ -463,7 +470,7 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     const epsilon = 1e-8;
     for (const [typeIdStr, targetRaw] of Object.entries(buildTXInfo.ValueDivision || {})) {
       const typeId = Number(typeIdStr);
-      const target = Number(targetRaw || 0);
+      const target = toAmountNumber(targetRaw || 0);
       if (!Number.isFinite(target) || target <= 0) continue;
 
       let collected = 0;
@@ -484,7 +491,7 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
           const utxoType = Number(utxo.Type ?? addrType);
           if (utxoType !== typeId) continue;
 
-          const v = Number(utxo.Value || 0);
+          const v = toAmountNumber(utxo.Value || 0);
           if (!Number.isFinite(v) || v <= 0) continue;
 
           const txid = String(utxo.UTXO?.TXID || utxo.TXID || '').trim() || String(utxoKey).split('_')[0] || '';
@@ -535,10 +542,10 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
         }
         const changeOutput: TXOutput = {
           ToAddress: changeAddr,
-          ToValue: collected - target,
+          ToValue: toAmountWire(collected - target),
           ToGuarGroupID: guarGroup,
           ToPublicKey: getAddressPublicKey(changeAddr),
-          ToInterest: 0,
+          ToInterest: toAmountWire(0),
           ToCoinType: typeId,
           IsPayForGas: false,
           IsCrossChain: false,
@@ -554,9 +561,9 @@ export async function buildNewTX(buildTXInfo: BuildTXInfo, userAccount: UserAcco
     let totalValue = 0;
     for (const [typeIdStr, amount] of Object.entries(buildTXInfo.ValueDivision || {})) {
       const typeId = Number(typeIdStr);
-      totalValue += Number(amount || 0) * exchangeRate(typeId);
+      totalValue += toAmountNumber(amount || 0) * exchangeRate(typeId);
     }
-    tx.Value = totalValue;
+    tx.Value = toAmountWire(totalValue);
 
     // TXID/Size must be computed after inputs/outputs are finalized
     tx.TXID = await getTXID(tx);

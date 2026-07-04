@@ -4,6 +4,7 @@
 
 import { ec as EC } from 'elliptic';
 import { sha256 } from 'js-sha256';
+import { toAmountWire } from './amount';
 
 const ec = new EC('p256');
 
@@ -181,11 +182,7 @@ function bigintReplacer(_key: string, value: unknown): unknown {
 }
 
 function amountToBackendString(value: number | string | bigint): string {
-  if (typeof value === 'bigint') return value.toString(10);
-  if (typeof value === 'string') return value.trim() || '0';
-  if (!Number.isFinite(value)) return '0';
-  const fixed = value.toFixed(8);
-  return fixed.replace(/\.?0+$/, '') || '0';
+  return toAmountWire(value);
 }
 
 function ratioToBackendString(value: number | string | bigint): string {

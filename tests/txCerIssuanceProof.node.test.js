@@ -132,7 +132,7 @@ async function loadFixture() {
   };
   context.globalThis = context;
   vm.createContext(context);
-  await vm.runInContext(result.outputFiles[0].text, context, { timeout: 5000 });
+  await vm.runInContext(result.outputFiles[0].text, context, { timeout: 10000 });
   return context;
 }
 

@@ -34,6 +34,7 @@ import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
 import { isTXCerSpendable, sumSpendableTXCerValue } from './txCerStatus';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
+import { toAmountNumber } from '../utils/amount';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 import { isCapsuleAddress } from './capsule';
 import { querySingleAddressGroup, type NormalizedAddressGroupInfo } from './accountQuery';
@@ -1199,20 +1200,20 @@ export function initTransferSubmit(): void {
             fromAddresses: build.UserAddress,
             recipients: Object.entries(build.Bill).map(([address, bill]) => ({
               address,
-              amount: bill.Value,
+              amount: toAmountNumber(bill.Value),
               coinType: bill.MoneyType,
               publicKeyX: bill.PublicKey?.XHex || '',
               publicKeyY: bill.PublicKey?.YHex || '',
               guarGroupID: bill.GuarGroupID || '',
-              interest: bill.ToInterest || 0,
+              interest: toAmountNumber(bill.ToInterest || 0),
               seedAnchor: bill.SeedAnchor,
               seedChainStep: bill.SeedChainStep,
               defaultSpendAlgorithm: bill.DefaultSpendAlgorithm
             })),
             changeAddresses: build.ChangeAddress,
-            gas: build.InterestAssign.Gas,
+            gas: toAmountNumber(build.InterestAssign.Gas),
             isCrossChain: false,
-            howMuchPayForGas: build.HowMuchPayForGas || 0,
+            howMuchPayForGas: toAmountNumber(build.HowMuchPayForGas || 0),
             preferTXCer: false
           };
 
