@@ -26,6 +26,7 @@ import { DOM_IDS, idSelector } from '../config/domIds';
 import { resetFirstMainPageVisit } from '../pages/main.js';
 import { resetAssignNodeConnectFlag, stopAccountPolling } from '../services/accountPolling';
 import { resetComNodeConnectFlag } from '../services/comNodeEndpoint';
+import type { AmountDecimal } from '../utils/amount';
 
 // ============================================================================
 // Types
@@ -39,7 +40,7 @@ interface UserInfo {
   address?: string;
   wallet?: {
     addressMsg?: Record<string, AddressInfo>;
-    valueDivision?: Record<number, number>;
+    valueDivision?: Record<number, AmountDecimal>;
   };
 }
 
@@ -49,12 +50,12 @@ interface UserInfo {
 interface AddressInfo {
   type?: number;
   utxos?: Record<string, import('../types/blockchain').UTXOData>;  // Strict UTXO type
-  txCers?: Record<string, number>;  // TXCer ID -> value mapping
+  txCers?: Record<string, AmountDecimal>;  // TXCer ID -> exact value mapping
   value?: {
-    totalValue?: number;
-    TotalValue?: number;
-    utxoValue?: number;
-    txCerValue?: number;
+    totalValue?: AmountDecimal;
+    TotalValue?: AmountDecimal;
+    utxoValue?: AmountDecimal;
+    txCerValue?: AmountDecimal;
   };
   estInterest?: number;
   origin?: string;

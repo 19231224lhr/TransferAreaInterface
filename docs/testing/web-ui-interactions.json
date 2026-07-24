@@ -1,0 +1,1642 @@
+{
+  "schemaVersion": 1,
+  "title": "TransferAreaInterface Web UI 交互清单",
+  "generatedAt": "2026-07-24",
+  "baseline": {
+    "repository": "TransferAreaInterface",
+    "branch": "experiment",
+    "head": "fb405cf384aae0a8b1ce02a17569fb3fa62d79d3",
+    "dirtyDiffHash": "b2d2ca9be4255c830d618039f66e88bfaebb28f3",
+    "protocolSource": "js/protocol-v2",
+    "backendProtocol": "gqnc-master-v2"
+  },
+  "coverage": {
+    "expectedRoutes": 15,
+    "documentedRoutes": 15,
+    "routeSource": "js/router.ts",
+    "templateSource": "assets/templates/pages",
+    "dynamicControlSources": [
+      "js/services/wallet.ts",
+      "js/services/recipient.js",
+      "js/services/transfer.ts",
+      "js/ui/header.ts",
+      "js/ui/modal.ts",
+      "js/ui/walletStruct.js",
+      "js/utils/screenLock.ts"
+    ]
+  },
+  "conventions": {
+    "stableSelector": "优先使用唯一 id；重复项使用 data-* 语义选择器。标记 unstable 的控件不得依赖屏幕坐标。",
+    "testData": "只引用临时 fixture 中的账户、地址、组织和金额；不得把密码或私钥写入本清单。",
+    "amount": "输入为十进制字符串，协议运算使用 bigint 最小单位；显示值不得回流到签名材料。",
+    "status": "TXCer 可支付以 Assign Active 为准；FastEvidence 失败时本地隔离；CFAA Pending/Unavailable 不阻塞快速可用。"
+  },
+  "pages": [
+    {
+      "page": "欢迎页",
+      "route": "/welcome",
+      "template": "assets/templates/pages/welcome.html",
+      "entryConditions": "无需登录；已有账户时显示“登录/进入主页”分栏，否则显示注册与登录入口。",
+      "initializer": "initWelcomePage / bindWelcomeHandlers",
+      "controls": [
+        {
+          "selector": "#registerAccountBtn",
+          "stable": true,
+          "type": "button",
+        "visibleText": "立即开始",
+          "placeholder": "",
+          "visibleWhen": "本地不存在已保存账户",
+          "disabledWhen": "初始化中",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleRegisterClick",
+          "callChain": ["routeTo('#/new')"],
+          "backend": [],
+          "localEffects": "仅切换路由",
+          "successFeedback": "进入新账户生成页",
+          "failureFeedback": "路由加载错误提示",
+          "next": "/new"
+        },
+        {
+          "selector": "#splitLoginBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "登录",
+          "placeholder": "",
+          "visibleWhen": "本地已有账户的分栏模式",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleSplitLoginClick",
+          "callChain": ["routeTo('#/login')"],
+          "backend": [],
+          "localEffects": "仅切换路由",
+          "successFeedback": "进入登录页",
+          "failureFeedback": "路由加载错误提示",
+          "next": "/login"
+        },
+        {
+          "selector": "#splitHomeBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "进入主页",
+          "placeholder": "",
+          "visibleWhen": "本地已有可用账户",
+          "disabledWhen": "账户数据不完整时不应显示",
+          "inputRules": "无",
+          "testDataSource": "本地账户",
+          "handler": "handleSplitHomeClick",
+          "callChain": ["routeTo('#/main')"],
+          "backend": [],
+          "localEffects": "进入主钱包后启动后台轮询",
+          "successFeedback": "显示钱包主页",
+          "failureFeedback": "路由或账户守卫错误",
+          "next": "/main"
+        },
+        {
+          "selector": "#loginAccountBtn",
+          "stable": true,
+          "type": "button",
+        "visibleText": "已有账户？登录",
+          "placeholder": "",
+          "visibleWhen": "标准欢迎页",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleLoginClick",
+          "callChain": ["routeTo('#/login')"],
+          "backend": [],
+          "localEffects": "仅切换路由",
+          "successFeedback": "进入登录页",
+          "failureFeedback": "路由加载错误提示",
+          "next": "/login"
+        }
+      ]
+    },
+    {
+      "page": "子钱包选择页",
+      "route": "/entry",
+      "template": "assets/templates/pages/entry.html",
+      "entryConditions": "已生成或导入主账户；登录恢复场景可能存在锁定子地址。",
+      "initializer": "initEntryPage",
+      "controls": [
+        {
+          "selector": "#entryBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleBackClick",
+          "callChain": ["history.back 或 routeTo 上一步"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回上一页",
+          "failureFeedback": "无",
+          "next": "来源页"
+        },
+        {
+          "selector": "#createWalletBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "创建子钱包",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "达到地址限制或处理中",
+          "inputRules": "后续弹窗选择币种",
+          "testDataSource": "临时账户",
+          "handler": "handleCreateWalletClick",
+          "callChain": ["open address modal", "addNewSubWallet", "sendNewAddressRequestWithPriv"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/new-address",
+              "condition": "已加入担保组织"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/com/register-address",
+              "condition": "散户地址授权"
+            }
+          ],
+          "localEffects": "创建并加密保存新地址；更新钱包地址表",
+          "successFeedback": "地址卡片出现并计入可用地址数",
+          "failureFeedback": "弹窗/Toast 显示注册或加密失败",
+          "next": "/entry"
+        },
+        {
+          "selector": "#importWalletBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "导入子钱包",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "处理中",
+          "inputRules": "进入子钱包导入模式",
+          "testDataSource": "临时 fixture 私钥，仅运行时输入",
+          "handler": "handleImportWalletClick",
+          "callChain": ["routeTo('#/wallet-import')"],
+          "backend": [],
+          "localEffects": "设置导入模式",
+          "successFeedback": "进入导入页",
+          "failureFeedback": "路由错误",
+          "next": "/wallet-import"
+        },
+        {
+          "selector": "[data-wallet-address]",
+          "stable": false,
+          "type": "dynamic card buttons",
+          "visibleText": "解锁 / 删除 / 复制地址",
+          "placeholder": "",
+          "visibleWhen": "地址列表非空",
+          "disabledWhen": "对应地址操作进行中",
+          "inputRules": "解锁需要钱包密码；删除需要确认",
+          "testDataSource": "当前账户地址",
+          "handler": "handleUnlockAddress / handleDeleteAddress / copy",
+          "callChain": ["decrypt address key 或 confirm delete", "mutate wallet"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/unbind-address",
+              "condition": "删除已绑定组织地址"
+            }
+          ],
+          "localEffects": "更新地址锁定状态或删除地址",
+          "successFeedback": "卡片状态更新",
+          "failureFeedback": "密码或解绑失败 Toast",
+          "next": "/entry"
+        },
+        {
+          "selector": "#briefToggleBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "展开/收起钱包摘要",
+          "placeholder": "",
+          "visibleWhen": "存在地址摘要",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "当前账户",
+          "handler": "handleToggleClick",
+          "callChain": ["toggle summary class"],
+          "backend": [],
+          "localEffects": "仅 DOM 状态",
+          "successFeedback": "摘要展开或收起",
+          "failureFeedback": "无",
+          "next": "/entry"
+        },
+        {
+          "selector": "#entryNextBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "下一步",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "没有可用地址；登录恢复时仍有锁定地址",
+          "inputRules": "至少一个可用子地址",
+          "testDataSource": "当前账户",
+          "handler": "handleNextClick → handleProceedOk",
+          "callChain": ["open #confirmProceedModal", "确认后 routeTo('#/join-group')"],
+          "backend": [],
+          "localEffects": "保存 onboarding 进度",
+          "successFeedback": "显示确认框，确认后进入组织页",
+          "failureFeedback": "锁定地址数量 Toast",
+          "next": "/join-group"
+        }
+      ]
+    },
+    {
+      "page": "登录页",
+      "route": "/login",
+      "template": "assets/templates/pages/login.html",
+      "entryConditions": "无需登录。",
+      "initializer": "initLoginPage",
+      "controls": [
+        {
+          "selector": "#loginPrivHex",
+          "stable": true,
+          "type": "password input",
+          "visibleText": "账户私钥",
+          "placeholder": "请输入您的私钥 Hex...",
+          "visibleWhen": "登录表单阶段",
+          "disabledWhen": "提交中",
+          "inputRules": "P-256 私钥十六进制；空格和 0x 前缀规范化",
+          "testDataSource": "临时 fixture 私钥，仅运行时输入",
+          "handler": "input validation",
+          "callChain": ["handleLoginClick", "importFromPrivHex"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/keys/from-priv",
+              "condition": "开发/本地账户恢复辅助接口"
+            }
+          ],
+          "localEffects": "不保存明文私钥；保存账户公钥和加密钱包",
+          "successFeedback": "展示恢复出的账户 ID 与地址",
+          "failureFeedback": "私钥格式/识别失败",
+          "next": "/login"
+        },
+        {
+          "selector": "#loginToggleVisibility",
+          "stable": true,
+          "type": "button",
+          "visibleText": "显示/隐藏私钥",
+          "placeholder": "",
+          "visibleWhen": "登录表单阶段",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleToggleVisibility",
+          "callChain": ["toggle input type"],
+          "backend": [],
+          "localEffects": "仅 DOM",
+          "successFeedback": "私钥可见性切换",
+          "failureFeedback": "无",
+          "next": "/login"
+        },
+        {
+          "selector": "#loginPassword, #loginConfirmPassword",
+          "stable": true,
+          "type": "password inputs",
+          "visibleText": "钱包密码 / 确认密码",
+          "placeholder": "请输入钱包密码... / 请再次输入密码...",
+          "visibleWhen": "登录并建立本地加密钱包",
+          "disabledWhen": "提交中",
+          "inputRules": "至少 6 位且两次一致",
+          "testDataSource": "临时测试密码，不写入文档",
+          "handler": "handlePasswordInput / handleConfirmPasswordInput",
+          "callChain": ["validate strength", "encrypt wallet"],
+          "backend": [],
+          "localEffects": "创建加密 keystore",
+          "successFeedback": "强度和匹配提示",
+          "failureFeedback": "密码过短或不一致",
+          "next": "/login"
+        },
+        {
+          "selector": "#loginPasswordToggle",
+          "stable": true,
+          "type": "button",
+          "visibleText": "显示/隐藏钱包密码",
+          "placeholder": "",
+          "visibleWhen": "密码阶段",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handlePasswordToggle",
+          "callChain": ["toggle password input type"],
+          "backend": [],
+          "localEffects": "仅 DOM",
+          "successFeedback": "可见性切换",
+          "failureFeedback": "无",
+          "next": "/login"
+        },
+        {
+          "selector": "#loginBtn",
+          "stable": true,
+          "type": "submit button",
+        "visibleText": "安全登录",
+          "placeholder": "",
+          "visibleWhen": "表单阶段",
+          "disabledWhen": "输入无效或提交中",
+          "inputRules": "私钥、密码、确认密码有效",
+          "testDataSource": "临时 fixture",
+          "handler": "handleLoginClick",
+          "callChain": ["importFromPrivHex", "encrypt/save account", "updateHeaderUser"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/keys/from-priv",
+              "condition": "账户恢复"
+            }
+          ],
+          "localEffects": "清理不同旧账户数据并保存新账户",
+          "successFeedback": "成功 Toast 和账户结果区",
+          "failureFeedback": "登录失败 Toast",
+          "next": "/login"
+        },
+        {
+          "selector": "#loginCancelBtn, #loginNextBtn",
+          "stable": true,
+          "type": "buttons",
+          "visibleText": "取消 / 下一步",
+          "placeholder": "",
+          "visibleWhen": "登录成功结果阶段",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "当前账户",
+          "handler": "handleCancelClick / handleNextClick",
+          "callChain": ["cancel: welcome", "next: entry"],
+          "backend": [],
+          "localEffects": "设置 entrySource=login",
+          "successFeedback": "路由切换",
+          "failureFeedback": "无",
+          "next": "/welcome 或 /entry"
+        }
+      ]
+    },
+    {
+      "page": "新账户生成页",
+      "route": "/new",
+      "template": "assets/templates/pages/new-user.html",
+      "entryConditions": "无需登录；由欢迎页注册进入。",
+      "initializer": "initNewUserPage / generateAndDisplayKeypair",
+      "controls": [
+        {
+          "selector": "#newBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "back handler",
+          "callChain": ["routeTo('#/welcome')"],
+          "backend": [],
+          "localEffects": "放弃当前未确认展示",
+          "successFeedback": "返回欢迎页",
+          "failureFeedback": "无",
+          "next": "/welcome"
+        },
+        {
+          "selector": "[data-copy='accountId'], [data-copy='address'], [data-copy='privHex'], [data-copy='pubX'], [data-copy='pubY']",
+          "stable": true,
+          "type": "copy buttons",
+          "visibleText": "复制",
+          "placeholder": "",
+          "visibleWhen": "密钥生成完成",
+          "disabledWhen": "字段为空",
+          "inputRules": "无",
+          "testDataSource": "刚生成的临时账户",
+          "handler": "copy handler",
+          "callChain": ["navigator.clipboard.writeText"],
+          "backend": [],
+          "localEffects": "剪贴板",
+          "successFeedback": "复制成功提示",
+          "failureFeedback": "剪贴板权限错误",
+          "next": "/new"
+        },
+        {
+          "selector": "#newNextBtn",
+          "stable": true,
+          "type": "button",
+        "visibleText": "下一步：加密账户私钥",
+          "placeholder": "",
+          "visibleWhen": "生成完成并确认备份",
+          "disabledWhen": "生成中",
+          "inputRules": "无",
+          "testDataSource": "生成账户",
+          "handler": "next handler",
+          "callChain": ["routeTo('#/set-password')"],
+          "backend": [],
+          "localEffects": "保留待加密账户材料于当前流程状态",
+          "successFeedback": "进入密码设置页",
+          "failureFeedback": "缺少账户材料提示",
+          "next": "/set-password"
+        }
+      ]
+    },
+    {
+      "page": "设置密码页",
+      "route": "/set-password",
+      "template": "assets/templates/pages/set-password.html",
+      "entryConditions": "新账户生成流程已存在待保存账户材料。",
+      "initializer": "initSetPasswordPage",
+      "controls": [
+        {
+          "selector": "#setpwdBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleBack",
+          "callChain": ["routeTo('#/new')"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回密钥页",
+          "failureFeedback": "无",
+          "next": "/new"
+        },
+        {
+          "selector": "#setpwdPassword, #setpwdConfirm",
+          "stable": true,
+          "type": "password inputs",
+          "visibleText": "钱包密码 / 确认密码",
+        "placeholder": "请输入密码（至少6位） / 请再次输入密码",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "至少 6 位且一致",
+          "testDataSource": "临时测试密码",
+          "handler": "handlePasswordInput / handleConfirmPasswordInput",
+          "callChain": ["strength/match validation"],
+          "backend": [],
+          "localEffects": "仅表单状态",
+          "successFeedback": "强度条和匹配提示",
+          "failureFeedback": "字段错误提示",
+          "next": "/set-password"
+        },
+        {
+          "selector": "#setpwdToggle",
+          "stable": true,
+          "type": "button",
+          "visibleText": "显示/隐藏密码",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleToggleVisibility",
+          "callChain": ["toggle input type"],
+          "backend": [],
+          "localEffects": "仅 DOM",
+          "successFeedback": "可见性切换",
+          "failureFeedback": "无",
+          "next": "/set-password"
+        },
+        {
+          "selector": "#setpwdSubmitBtn",
+          "stable": true,
+          "type": "submit button",
+        "visibleText": "确认并进入钱包管理",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "密码无效或保存中",
+          "inputRules": "密码有效",
+          "testDataSource": "临时账户",
+          "handler": "handleSubmit",
+          "callChain": ["encrypt private key/root seed", "saveUser", "routeTo('#/entry')"],
+          "backend": [],
+          "localEffects": "生成正式本地加密钱包数据",
+          "successFeedback": "成功 Toast",
+          "failureFeedback": "加密/保存错误",
+          "next": "/entry"
+        }
+      ]
+    },
+    {
+      "page": "主账户导入页",
+      "route": "/import",
+      "template": "assets/templates/pages/import.html",
+      "entryConditions": "无需登录；导入主账户模式。",
+      "initializer": "initImportPage(mode=account)",
+      "controls": [
+        {
+          "selector": "#importBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "导入中",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleBackClick",
+          "callChain": ["routeTo previous"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回来源页",
+          "failureFeedback": "无",
+          "next": "/welcome"
+        },
+        {
+          "selector": "#importPrivHex",
+          "stable": true,
+          "type": "password input",
+          "visibleText": "私钥",
+          "placeholder": "请输入私钥 Hex",
+          "visibleWhen": "表单阶段",
+          "disabledWhen": "导入中",
+          "inputRules": "P-256 私钥十六进制",
+          "testDataSource": "临时 fixture 私钥",
+          "handler": "input validation",
+          "callChain": ["handleImport", "importFromPrivHex"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/keys/from-priv",
+              "condition": "主账户导入"
+            }
+          ],
+          "localEffects": "导入成功后保存账户",
+          "successFeedback": "展示账户结果",
+          "failureFeedback": "格式或识别失败",
+          "next": "/import"
+        },
+        {
+          "selector": "#importToggleVisibility",
+          "stable": true,
+          "type": "button",
+          "visibleText": "显示/隐藏私钥",
+          "placeholder": "",
+          "visibleWhen": "表单阶段",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleToggleVisibility",
+          "callChain": ["toggle input type"],
+          "backend": [],
+          "localEffects": "仅 DOM",
+          "successFeedback": "可见性切换",
+          "failureFeedback": "无",
+          "next": "/import"
+        },
+        {
+          "selector": "#importBtn",
+          "stable": true,
+          "type": "submit button",
+          "visibleText": "导入",
+          "placeholder": "",
+          "visibleWhen": "表单阶段",
+          "disabledWhen": "输入为空或导入中",
+          "inputRules": "有效私钥",
+          "testDataSource": "临时 fixture",
+          "handler": "handleImport",
+          "callChain": ["checkAddressOrganization", "importFromPrivHex", "saveUser"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/keys/from-priv",
+              "condition": "恢复账户"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/com/query-address-group",
+              "condition": "识别地址所属组织"
+            }
+          ],
+          "localEffects": "保存导入账户及组织识别结果",
+          "successFeedback": "结果区和成功 Toast",
+          "failureFeedback": "导入失败 Toast",
+          "next": "/import"
+        },
+        {
+          "selector": "[data-copy='importPrivHexOut'], #importCancelBtn, #importNextBtn",
+          "stable": true,
+          "type": "result buttons",
+          "visibleText": "复制 / 取消 / 下一步",
+          "placeholder": "",
+          "visibleWhen": "导入成功结果阶段",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "导入结果",
+          "handler": "copy / handleCancelClick / handleNextClick",
+          "callChain": ["next → entry"],
+          "backend": [],
+          "localEffects": "设置 entrySource=import",
+          "successFeedback": "复制提示或页面跳转",
+          "failureFeedback": "剪贴板错误",
+          "next": "/entry"
+        }
+      ]
+    },
+    {
+      "page": "子钱包导入页",
+      "route": "/wallet-import",
+      "template": "assets/templates/pages/import.html",
+      "entryConditions": "已登录；从子钱包选择页或钱包地址管理进入。",
+      "initializer": "initImportPage(mode=wallet)",
+      "controls": [
+        {
+          "selector": "#importBackBtn, #importPrivHex, #importToggleVisibility, #importBtn",
+          "stable": true,
+          "type": "shared import controls",
+          "visibleText": "返回 / 私钥 / 显示 / 导入子钱包",
+          "placeholder": "请输入私钥 Hex",
+          "visibleWhen": "始终",
+          "disabledWhen": "导入中",
+          "inputRules": "有效子地址私钥且不得与现有地址冲突",
+          "testDataSource": "临时子地址 fixture",
+          "handler": "handleImport(mode=wallet)",
+          "callChain": ["derive address", "preview", "handleImportPreviewConfirm", "register address"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/new-address",
+              "condition": "组织内地址"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/com/register-address",
+              "condition": "散户地址"
+            }
+          ],
+          "localEffects": "原子加入钱包地址表",
+          "successFeedback": "导入预览与成功 Toast",
+          "failureFeedback": "重复地址/注册失败",
+          "next": "/entry 或 /main"
+        }
+      ]
+    },
+    {
+      "page": "钱包主页与发送页",
+      "route": "/main",
+      "template": "assets/templates/pages/wallet.html",
+      "entryConditions": "已登录且至少存在一个地址；是否加入组织决定可用转账模式。",
+      "initializer": "handleMainRoute",
+      "controls": [
+        {
+          "selector": "#refreshWalletBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "刷新",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "刷新中",
+          "inputRules": "无",
+          "testDataSource": "当前账户",
+          "handler": "refreshWalletBalances",
+          "callChain": ["query addresses", "account polling merge", "render wallet"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/com/query-address",
+              "condition": "查询权威地址状态"
+            },
+            {
+              "method": "GET",
+              "path": "/api/v1/{groupID}/assign/account-update?userID=...",
+              "condition": "组织账户增量"
+            }
+          ],
+          "localEffects": "原子合并 UTXO/TXCer/余额",
+          "successFeedback": "余额和地址卡片刷新",
+          "failureFeedback": "网络或账户查询 Toast",
+          "next": "/main"
+        },
+        {
+          "selector": "#openHistoryBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "历史",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "当前账户",
+          "handler": "routeTo history",
+          "callChain": ["routeTo('#/history')"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "进入历史页",
+          "failureFeedback": "无",
+          "next": "/history"
+        },
+        {
+          "selector": "#openCreateAddrBtn, #openImportAddrBtn",
+          "stable": true,
+          "type": "buttons",
+          "visibleText": "创建地址 / 导入地址",
+          "placeholder": "",
+          "visibleWhen": "钱包地址区域",
+          "disabledWhen": "地址操作中",
+          "inputRules": "创建选择币种；导入输入有效私钥",
+          "testDataSource": "临时账户",
+          "handler": "openCreateAddressModal / openImportAddressModal",
+          "callChain": ["#addrModal 或 /wallet-import", "register address"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/new-address",
+              "condition": "组织内"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/com/register-address",
+              "condition": "散户"
+            }
+          ],
+          "localEffects": "保存新地址",
+          "successFeedback": "地址列表增加",
+          "failureFeedback": "注册失败",
+          "next": "/main 或 /wallet-import"
+        },
+        {
+          "selector": ".transfer-mode-tab[data-mode]",
+          "stable": true,
+          "type": "segmented buttons",
+          "visibleText": "快速转账 / 跨链转账 / 质押交易",
+          "placeholder": "",
+          "visibleWhen": "发送面板",
+          "disabledWhen": "跨链/质押依赖组织和可用地址",
+          "inputRules": "quick、cross、pledge 三选一",
+          "testDataSource": "场景配置",
+          "handler": "initTransferModeTabs.applyMode",
+          "callChain": ["update #tfMode", "update recipient cards", "persist draft"],
+          "backend": [],
+          "localEffects": "更新发送草稿和显示区域",
+          "successFeedback": "模式标签高亮及字段切换",
+          "failureFeedback": "无组织时警告",
+          "next": "/main"
+        },
+        {
+          "selector": "#srcAddrList input[type='checkbox']",
+          "stable": false,
+          "type": "dynamic checkboxes",
+          "visibleText": "来源地址",
+          "placeholder": "",
+          "visibleWhen": "有可用地址",
+          "disabledWhen": "地址锁定、余额为零或币种不匹配",
+          "inputRules": "可多选；未选时单收款人场景可自动选币",
+          "testDataSource": "当前账户地址",
+          "handler": "source address change handler",
+          "callChain": ["recalculate availability", "updateTransferButtonState"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "地址卡片 selected",
+          "failureFeedback": "余额不足时发送前提示",
+          "next": "/main"
+        },
+        {
+          "selector": ".recipient-card [data-name='to']",
+          "stable": true,
+          "type": "repeatable text input",
+          "visibleText": "收款地址",
+          "placeholder": "输入收款方地址",
+          "visibleWhen": "至少一张收款卡",
+          "disabledWhen": "提交中",
+          "inputRules": "本地地址或胶囊地址；跨链仅 0x+40 hex；普通转账必须已注册",
+          "testDataSource": "Bob/Alice 临时 fixture 地址",
+          "handler": "recipient input / fetchAddrInfo",
+          "callChain": ["querySingleAddressGroup", "填充币种、公钥、组织和 seed 元数据"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/com/query-address-group",
+              "condition": "验证收款地址"
+            }
+          ],
+          "localEffects": "发送草稿与 verified data-*",
+          "successFeedback": "显示已验证状态并补齐字段",
+          "failureFeedback": "未注册、币种或 seed 元数据错误",
+          "next": "/main"
+        },
+        {
+          "selector": ".recipient-card [data-name='val']",
+          "stable": true,
+          "type": "repeatable amount input",
+          "visibleText": "金额",
+          "placeholder": "0.00",
+          "visibleWhen": "收款卡",
+          "disabledWhen": "提交中",
+          "inputRules": "大于 0、最多 8 位小数；跨链为整数",
+          "testDataSource": "测试场景金额字符串",
+          "handler": "recipient amount input",
+          "callChain": ["parseAmount", "updateTransferButtonState"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "总额更新",
+          "failureFeedback": "金额格式错误",
+          "next": "/main"
+        },
+        {
+          "selector": ".recipient-card [data-name='mt'], .recipient-card [data-name='pub'], .recipient-card [data-name='gid'], .recipient-card [data-name='gas']",
+          "stable": true,
+          "type": "repeatable coin/advanced controls",
+          "visibleText": "币种 / 公钥 / 组织 ID / 转账 Gas",
+          "placeholder": "由地址验证补齐或手动输入",
+          "visibleWhen": "高级选项或地址验证后",
+          "disabledWhen": "跨链模式禁用组织、公钥和转账 Gas",
+          "inputRules": "币种必须匹配地址；公钥为 P-256；组织 ID 合法；Gas 非负",
+          "testDataSource": "权威地址查询响应",
+          "handler": "recipient card handlers",
+          "callChain": ["applyModeToCard", "onTransferSubmit validation"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "字段状态更新",
+          "failureFeedback": "逐字段错误提示",
+          "next": "/main"
+        },
+        {
+          "selector": ".recipient-add, .recipient-remove, [data-action='toggle-advanced']",
+          "stable": false,
+          "type": "dynamic buttons",
+          "visibleText": "添加收款人 / 删除或清空 / 高级选项",
+          "placeholder": "",
+          "visibleWhen": "发送面板；跨链只允许一个收款人",
+          "disabledWhen": "提交中",
+          "inputRules": "普通转账可多收款人",
+          "testDataSource": "场景配置",
+          "handler": "addRecipientCard / remove / initAdvancedOptions",
+          "callChain": ["mutate recipient DOM", "persist draft"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "收款卡增删或展开",
+          "failureFeedback": "跨链数量限制",
+          "next": "/main"
+        },
+        {
+          "selector": "#extraGasPGC, #txGasInput",
+          "stable": true,
+          "type": "decimal text inputs",
+          "visibleText": "额外 Gas / 基础交易 Gas",
+          "placeholder": "0 / 1",
+          "visibleWhen": "高级选项",
+          "disabledWhen": "提交中",
+          "inputRules": "非负十进制字符串；协议路径转 bigint",
+          "testDataSource": "测试场景",
+          "handler": "input → draft",
+          "callChain": ["parseAmount", "onTransferSubmit"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "Gas 预算更新",
+          "failureFeedback": "Gas 参数错误",
+          "next": "/main"
+        },
+        {
+          "selector": "#chAddrPGC, #chAddrBTC, #chAddrETH",
+          "stable": true,
+          "type": "selects",
+          "visibleText": "找零地址",
+          "placeholder": "",
+          "visibleWhen": "对应币种存在可用来源地址",
+          "disabledWhen": "无匹配币种地址",
+          "inputRules": "找零地址币种必须匹配",
+          "testDataSource": "当前账户地址",
+          "handler": "change select handler",
+          "callChain": ["persist draft", "onTransferSubmit validation"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "选择状态更新",
+          "failureFeedback": "缺少找零地址",
+          "next": "/main"
+        },
+        {
+          "selector": "#useTXCerChk",
+          "stable": true,
+          "type": "checkbox",
+          "visibleText": "优先使用 TXCer",
+          "placeholder": "",
+          "visibleWhen": "快速转账且账户有可用 TXCer",
+          "disabledWhen": "无 TXCer 或非 quick 模式",
+          "inputRules": "布尔值",
+          "testDataSource": "纯 TXCer 再支付场景",
+          "handler": "TXCer preference handler",
+          "callChain": ["sync #useTXCer", "txBuilder select inputs"],
+          "backend": [],
+          "localEffects": "发送草稿",
+          "successFeedback": "选中状态",
+          "failureFeedback": "FastEvidence Failed 的 TXCer 不可选择",
+          "next": "/main"
+        },
+        {
+          "selector": "#tfSendBtn",
+          "stable": true,
+          "type": "submit button",
+          "visibleText": "构造并发送交易",
+          "placeholder": "",
+          "visibleWhen": "发送面板",
+          "disabledWhen": "输入不完整、余额不足、提交中",
+          "inputRules": "来源、收款、金额、找零、Gas 和协议证据全部有效",
+          "testDataSource": "A→B、B→A、混合场景 fixture",
+          "handler": "onTransferSubmit",
+          "callChain": ["validate", "buildTransaction", "protocol-v2 TXID", "submitTransaction", "lock inputs", "record history"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/submit-tx",
+              "condition": "组织内交易"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/com/submit-noguargroup-tx",
+              "condition": "无组织普通交易"
+            },
+            {
+              "method": "GET",
+              "path": "/api/v1/{groupID}/assign/tx-status/{txID}",
+              "condition": "提交后状态跟踪"
+            }
+          ],
+          "localEffects": "锁定所选 UTXO/TXCer、保存 64-hex TXID 和历史",
+          "successFeedback": "成功弹窗/Toast 与交易 ID",
+          "failureFeedback": "结构化校验或后端错误；恢复提交按钮",
+          "next": "/main"
+        },
+        {
+          "selector": "#woDetailBtn, #woExitBtn, #woJoinBtn, #noOrgWarnBtn",
+          "stable": true,
+          "type": "organization buttons",
+          "visibleText": "组织详情 / 退出组织 / 加入组织 / 未加入提示",
+          "placeholder": "",
+          "visibleWhen": "按当前组织状态切换",
+          "disabledWhen": "组织操作中",
+          "inputRules": "退出需要确认和钱包密码",
+          "testDataSource": "当前组织",
+          "handler": "route/detail/leave/no-org modal",
+          "callChain": ["group detail 或 join-group"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/flow-apply",
+              "condition": "加入/退出组织"
+            }
+          ],
+          "localEffects": "认证成功后更新 guarGroup",
+          "successFeedback": "组织卡片更新",
+          "failureFeedback": "组织操作失败 Toast",
+          "next": "/group-detail 或 /join-group"
+        },
+        {
+          "selector": "#walletStructToggle, [data-tx-detail]",
+          "stable": false,
+          "type": "button / clickable records",
+          "visibleText": "钱包结构 / 查看交易详情",
+          "placeholder": "",
+          "visibleWhen": "有钱包结构或交易记录",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "当前钱包",
+          "handler": "initWalletStructToggle / initTxDetailModal",
+          "callChain": ["toggle panel 或 render detail modal"],
+          "backend": [],
+          "localEffects": "仅 DOM",
+          "successFeedback": "结构或 JSON 详情显示",
+          "failureFeedback": "无",
+          "next": "/main"
+        }
+      ]
+    },
+    {
+      "page": "加入组织页",
+      "route": "/join-group",
+      "template": "assets/templates/pages/join-group.html",
+      "entryConditions": "已登录；通常已完成地址选择。",
+      "initializer": "initJoinGroupPage",
+      "controls": [
+        {
+          "selector": ".join-tab[data-tab]",
+          "stable": true,
+          "type": "tab buttons",
+          "visibleText": "推荐组织 / 搜索组织",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "组织操作中",
+          "inputRules": "recommend/search 二选一",
+          "testDataSource": "无",
+          "handler": "initJoinTabs",
+          "callChain": ["toggle panes"],
+          "backend": [],
+          "localEffects": "仅页面状态",
+          "successFeedback": "对应面板显示",
+          "failureFeedback": "无",
+          "next": "/join-group"
+        },
+        {
+          "selector": "#joinRecBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "加入推荐组织",
+          "placeholder": "",
+          "visibleWhen": "推荐组织加载成功",
+          "disabledWhen": "未加载、地址不完整或提交中",
+          "inputRules": "当前账户地址必须可生成签名申请",
+          "testDataSource": "推荐组/临时 fixture",
+          "handler": "handleJoinRecClick → handleJoinGroupWithAPI",
+          "callChain": ["checkUserAddressesOrganization", "joinGuarGroup", "saveOrganizationAndNavigate"],
+          "backend": [
+            {
+              "method": "GET",
+              "path": "/api/v1/groups",
+              "condition": "加载推荐"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/flow-apply",
+              "condition": "加入申请"
+            }
+          ],
+          "localEffects": "成功后保存组织和 Assign/Aggr endpoint",
+          "successFeedback": "加入成功并进入问询动画",
+          "failureFeedback": "地址、密码或后端申请错误",
+          "next": "/inquiry-main"
+        },
+        {
+          "selector": "#groupSearch",
+          "stable": true,
+          "type": "text input",
+          "visibleText": "组织编号",
+          "placeholder": "输入担保组织编号...",
+          "visibleWhen": "搜索标签",
+          "disabledWhen": "搜索中",
+          "inputRules": "非空组织 ID",
+          "testDataSource": "临时 fixture groupID",
+          "handler": "handleGroupSearchInput / keydown",
+          "callChain": ["doRealSearch"],
+          "backend": [
+            {
+              "method": "GET",
+              "path": "/api/v1/groups/{id}",
+              "condition": "查询组织"
+            }
+          ],
+          "localEffects": "搜索结果页面状态",
+          "successFeedback": "显示组织详情",
+          "failureFeedback": "未找到/网络错误",
+          "next": "/join-group"
+        },
+        {
+          "selector": "#groupSearchBtn, #joinSearchBtn",
+          "stable": true,
+          "type": "buttons",
+          "visibleText": "搜索 / 加入搜索结果",
+          "placeholder": "",
+          "visibleWhen": "搜索标签；加入按钮需结果存在",
+          "disabledWhen": "输入为空、无结果或处理中",
+          "inputRules": "有效 groupID",
+          "testDataSource": "临时 fixture",
+          "handler": "handleSearchBtnClick / handleJoinSearchClick",
+          "callChain": ["doRealSearch", "handleJoinGroupWithAPI"],
+          "backend": [
+            {
+              "method": "GET",
+              "path": "/api/v1/groups/{id}",
+              "condition": "搜索"
+            },
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/flow-apply",
+              "condition": "加入"
+            }
+          ],
+          "localEffects": "保存组织",
+          "successFeedback": "加入成功",
+          "failureFeedback": "搜索/申请错误",
+          "next": "/inquiry-main"
+        },
+        {
+          "selector": "#skipJoinBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "暂不加入",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "需二次确认",
+          "testDataSource": "无",
+          "handler": "skip handler → #confirmSkipModal",
+          "callChain": ["confirm skip", "save no-org onboarding", "route main"],
+          "backend": [],
+          "localEffects": "标记未加入组织",
+          "successFeedback": "进入主页并显示受限能力",
+          "failureFeedback": "取消时留在原页",
+          "next": "/main"
+        }
+      ]
+    },
+    {
+      "page": "组织问询动画",
+      "route": "/inquiry",
+      "template": "assets/templates/pages/inquiry.html",
+      "entryConditions": "组织加入或账户组织归属问询流程。",
+      "initializer": "runInquiryAnimation / joinGroup module",
+      "controls": [],
+      "automaticFlow": {
+        "steps": ["初始化", "连接网络", "验证账户"],
+        "backend": [
+          {
+            "method": "POST",
+            "path": "/api/v1/com/query-address-group"
+          }
+        ],
+        "success": "根据上下文进入 /join-group 或 /main",
+        "failure": "显示问询错误并停止自动跳转"
+      }
+    },
+    {
+      "page": "加入后问询动画",
+      "route": "/inquiry-main",
+      "template": "assets/templates/pages/inquiry.html",
+      "entryConditions": "加入组织申请成功。",
+      "initializer": "runInquiryAnimation / joinGroup module",
+      "controls": [],
+      "automaticFlow": {
+        "steps": ["初始化", "连接 Assign", "验证并刷新账户"],
+        "backend": [
+          {
+            "method": "GET",
+            "path": "/api/v1/{groupID}/assign/group-info"
+          },
+          {
+            "method": "GET",
+            "path": "/api/v1/{groupID}/assign/account-update?userID=..."
+          }
+        ],
+        "success": "进入 /main",
+        "failure": "显示连接或账户验证错误"
+      }
+    },
+    {
+      "page": "组织详情页",
+      "route": "/group-detail",
+      "template": "assets/templates/pages/group-detail.html",
+      "entryConditions": "已登录；可有或没有已加入组织。",
+      "initializer": "initGroupDetailPage",
+      "controls": [
+        {
+          "selector": ".group-tab[data-tab]",
+          "stable": true,
+          "type": "tab buttons",
+          "visibleText": "我的组织 / 搜索",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "myorg/search",
+          "testDataSource": "当前组织",
+          "handler": "switchTab",
+          "callChain": ["toggle panes"],
+          "backend": [],
+          "localEffects": "页面状态",
+          "successFeedback": "面板切换",
+          "failureFeedback": "无",
+          "next": "/group-detail"
+        },
+        {
+          "selector": ".info-copy-btn[data-copy]",
+          "stable": true,
+          "type": "copy buttons",
+          "visibleText": "复制节点/质押信息",
+          "placeholder": "",
+          "visibleWhen": "组织详情存在",
+          "disabledWhen": "字段为空",
+          "inputRules": "无",
+          "testDataSource": "当前组织",
+          "handler": "copy handler",
+          "callChain": ["clipboard"],
+          "backend": [],
+          "localEffects": "剪贴板",
+          "successFeedback": "复制成功",
+          "failureFeedback": "剪贴板错误",
+          "next": "/group-detail"
+        },
+        {
+          "selector": "#groupExitBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "退出组织",
+          "placeholder": "",
+          "visibleWhen": "已加入组织",
+          "disabledWhen": "退出中",
+          "inputRules": "需要钱包密码/签名并确认",
+          "testDataSource": "当前组织",
+          "handler": "handleLeaveOrg",
+          "callChain": ["leaveGuarGroup", "clearGuarChoice", "route main"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/flow-apply",
+              "condition": "退出申请"
+            }
+          ],
+          "localEffects": "认证后清除组织绑定",
+          "successFeedback": "退出成功和断开提示",
+          "failureFeedback": "取消/失败提示",
+          "next": "/main"
+        },
+        {
+          "selector": "#groupBackBtn, #groupEmptyBackBtn",
+          "stable": true,
+          "type": "buttons",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "对应有组织/空状态面板",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "back handler",
+          "callChain": ["routeTo('#/main')"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回主页",
+          "failureFeedback": "无",
+          "next": "/main"
+        },
+        {
+          "selector": "#groupJoinBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "加入组织",
+          "placeholder": "",
+          "visibleWhen": "搜索结果存在且未加入",
+          "disabledWhen": "无结果或提交中",
+          "inputRules": "有效组织结果",
+          "testDataSource": "临时 groupID",
+          "handler": "join handler",
+          "callChain": ["route/join service"],
+          "backend": [
+            {
+              "method": "POST",
+              "path": "/api/v1/{groupID}/assign/flow-apply",
+              "condition": "加入"
+            }
+          ],
+          "localEffects": "保存组织",
+          "successFeedback": "加入成功",
+          "failureFeedback": "申请错误",
+          "next": "/inquiry-main"
+        },
+        {
+          "selector": "#groupDetailSearch, #groupDetailSearchBtn",
+          "stable": true,
+          "type": "input + button",
+          "visibleText": "搜索组织",
+          "placeholder": "输入担保组织编号",
+          "visibleWhen": "搜索标签",
+          "disabledWhen": "输入为空或搜索中",
+          "inputRules": "非空 groupID",
+          "testDataSource": "临时 fixture",
+          "handler": "handleSearchInputChange / handleSearch",
+          "callChain": ["queryGroupInfoSafe"],
+          "backend": [
+            {
+              "method": "GET",
+              "path": "/api/v1/groups/{id}"
+            }
+          ],
+          "localEffects": "搜索结果",
+          "successFeedback": "详情卡显示",
+          "failureFeedback": "未找到/网络错误",
+          "next": "/group-detail"
+        }
+      ]
+    },
+    {
+      "page": "个人资料页",
+      "route": "/profile",
+      "template": "assets/templates/pages/profile.html",
+      "entryConditions": "路由当前允许无用户进入，但保存资料需要有效账户。",
+      "initializer": "initProfilePage",
+      "controls": [
+        {
+          "selector": "#profileBackBtn, #profileCancelBtn",
+          "stable": true,
+          "type": "buttons",
+          "visibleText": "返回 / 取消",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "handleBack / cancel",
+          "callChain": ["history.back 或 main"],
+          "backend": [],
+          "localEffects": "放弃未保存草稿",
+          "successFeedback": "返回",
+          "failureFeedback": "无",
+          "next": "来源页"
+        },
+        {
+          "selector": "#avatarUploadBtn, #avatarRemoveBtn, #avatarFileInput",
+          "stable": true,
+          "type": "buttons + file input",
+          "visibleText": "上传头像 / 移除头像",
+          "placeholder": "",
+          "visibleWhen": "始终；移除按钮需已有头像",
+          "disabledWhen": "保存中",
+          "inputRules": "JPEG/PNG/GIF/WebP；前端大小限制",
+          "testDataSource": "非敏感临时图片",
+          "handler": "handleAvatarUpload / handleAvatarRemove / handleAvatarFileChange",
+          "callChain": ["FileReader", "preview"],
+          "backend": [],
+          "localEffects": "资料草稿",
+          "successFeedback": "头像预览更新",
+          "failureFeedback": "文件类型/大小错误",
+          "next": "/profile"
+        },
+        {
+          "selector": "#nicknameInput, #signatureInput",
+          "stable": true,
+          "type": "text input + textarea",
+          "visibleText": "昵称 / 个性签名",
+          "placeholder": "请输入昵称 / 这个人很懒，还没有修改这里。",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "昵称最多 20 字；签名最多 50 字",
+          "testDataSource": "测试文案",
+          "handler": "input counters",
+          "callChain": ["profile draft"],
+          "backend": [],
+          "localEffects": "资料草稿",
+          "successFeedback": "计数更新",
+          "failureFeedback": "超长被浏览器限制",
+          "next": "/profile"
+        },
+        {
+          "selector": ".language-option[data-lang], .theme-option[data-theme], .performance-option[data-mode]",
+          "stable": true,
+          "type": "segmented buttons",
+          "visibleText": "中文/English；浅色/深色；高性能/节能",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "各组选一",
+          "testDataSource": "场景配置",
+          "handler": "handleLanguageSelect / handleThemeSelect / handlePerformanceSelect",
+          "callChain": ["update profile draft", "preview settings"],
+          "backend": [],
+          "localEffects": "设置草稿",
+          "successFeedback": "选项高亮",
+          "failureFeedback": "无",
+          "next": "/profile"
+        },
+        {
+          "selector": "#profileSaveBtn",
+          "stable": true,
+          "type": "submit button",
+          "visibleText": "保存",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "保存中",
+          "inputRules": "资料字段合法",
+          "testDataSource": "测试文案",
+          "handler": "handleSave",
+          "callChain": ["save profile/settings", "update header"],
+          "backend": [],
+          "localEffects": "localStorage 用户资料和显示设置",
+          "successFeedback": "保存成功 Toast",
+          "failureFeedback": "本地保存失败",
+          "next": "/profile 或来源页"
+        }
+      ]
+    },
+    {
+      "page": "交易历史页",
+      "route": "/history",
+      "template": "assets/templates/pages/history.html",
+      "entryConditions": "已登录。",
+      "initializer": "initHistoryPage",
+      "controls": [
+        {
+          "selector": "#historyBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "back handler",
+          "callChain": ["routeTo main"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回钱包主页",
+          "failureFeedback": "无",
+          "next": "/main"
+        },
+        {
+          "selector": ".history-filter-btn[data-period]",
+          "stable": true,
+          "type": "filter buttons",
+          "visibleText": "全部 / 今天 / 本周 / 本月",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "all/today/week/month",
+          "testDataSource": "本地交易历史",
+          "handler": "filterTransactions",
+          "callChain": ["renderTransactionList", "renderPagination"],
+          "backend": [],
+          "localEffects": "页面过滤状态",
+          "successFeedback": "列表和统计更新",
+          "failureFeedback": "无",
+          "next": "/history"
+        },
+        {
+          "selector": "[data-history-page], .history-item",
+          "stable": false,
+          "type": "dynamic pagination / clickable rows",
+          "visibleText": "页码 / 交易记录",
+          "placeholder": "",
+          "visibleWhen": "存在历史数据",
+          "disabledWhen": "无对应页",
+          "inputRules": "无",
+          "testDataSource": "本地 txHistory",
+          "handler": "renderPagination handlers / renderTransactionDetail",
+          "callChain": ["open transaction detail modal"],
+          "backend": [],
+          "localEffects": "页面状态",
+          "successFeedback": "翻页或详情弹窗",
+          "failureFeedback": "无",
+          "next": "/history"
+        }
+      ]
+    },
+    {
+      "page": "文档页",
+      "route": "/docs",
+      "template": "assets/templates/pages/docs.html",
+      "entryConditions": "无需登录。",
+      "initializer": "initDocsPage",
+      "controls": [
+        {
+          "selector": "#docsBackBtn",
+          "stable": true,
+          "type": "button",
+          "visibleText": "返回",
+          "placeholder": "",
+          "visibleWhen": "始终",
+          "disabledWhen": "否",
+          "inputRules": "无",
+          "testDataSource": "无",
+          "handler": "initDocsPage back handler",
+          "callChain": ["history.back when available", "otherwise #/welcome"],
+          "backend": [],
+          "localEffects": "无",
+          "successFeedback": "返回来源页",
+          "failureFeedback": "无历史时进入欢迎页",
+          "next": "来源页或 /welcome"
+        },
+        {
+          "selector": "[data-doc-path], .docs-sidebar a",
+          "stable": false,
+          "type": "dynamic links",
+          "visibleText": "文档目录项",
+          "placeholder": "",
+          "visibleWhen": "文档索引加载成功",
+          "disabledWhen": "否",
+          "inputRules": "只允许站内 docs/site 路径",
+          "testDataSource": "仓库文档",
+          "handler": "docs navigation handler",
+          "callChain": ["fetch markdown", "marked render"],
+          "backend": [
+            {
+              "method": "GET",
+              "path": "/docs/site/*.md",
+              "condition": "静态资源"
+            }
+          ],
+          "localEffects": "当前文档状态",
+          "successFeedback": "正文和目录更新",
+          "failureFeedback": "文档加载失败提示",
+          "next": "/docs"
+        }
+      ]
+    }
+  ],
+  "globalControls": [
+    {
+      "selector": "#userButton",
+      "stable": true,
+      "type": "button",
+      "visibleText": "用户信息",
+      "handler": "handleUserButtonClick",
+      "effects": "打开/关闭账户菜单"
+    },
+    {
+      "selector": "#menuAccountKeyBtn",
+      "stable": true,
+      "type": "button",
+      "visibleText": "查看账户密钥",
+      "handler": "showPrivateKeyInputModal",
+      "effects": "密码确认后临时展示密钥；不得记录到测试日志"
+    },
+    {
+      "selector": "#logoutBtn",
+      "stable": true,
+      "type": "button",
+      "visibleText": "退出登录",
+      "handler": "handleLogoutClick",
+      "effects": "停止轮询、清理会话、返回欢迎页"
+    },
+    {
+      "selector": "#unifiedCancelBtn, #unifiedOkBtn, #actionCancelBtn, #actionOkBtn",
+      "stable": true,
+      "type": "modal buttons",
+      "visibleText": "取消 / 确认",
+      "handler": "unified/action modal callbacks",
+      "effects": "完成对应确认"
+    },
+    {
+      "selector": "#successCopyBtn",
+      "stable": true,
+      "type": "button",
+      "visibleText": "复制成功结果",
+      "handler": "unified success copy callback",
+      "effects": "复制当前成功弹窗中允许复制的非敏感结果"
+    },
+    {
+      "selector": "#noOrgModalCancel, #noOrgModalOk, #confirmSkipCancel, #confirmSkipOk, #confirmExitCancel, #confirmExitOk, #confirmProceedCancel, #confirmProceedOk",
+      "stable": true,
+      "type": "confirmation buttons",
+      "visibleText": "取消 / 确认",
+      "handler": "page-specific confirmation callbacks",
+      "effects": "跳过组织、退出、继续 onboarding"
+    },
+    {
+      "selector": "#txDetailClose, #txDetailCopy, #txDetailOk",
+      "stable": true,
+      "type": "transaction detail modal buttons",
+      "visibleText": "关闭 / 复制 / 确认",
+      "handler": "walletStruct detail handlers",
+      "effects": "复制或关闭详情"
+    },
+    {
+      "selector": "#confirmGasCancel, #confirmGasOk, #confirmDelCancel, #confirmDelOk",
+      "stable": true,
+      "type": "confirmation buttons",
+      "visibleText": "取消 / 确认",
+      "handler": "Gas/delete modal callbacks",
+      "effects": "确认 Gas 预算或删除地址/记录"
+    },
+    {
+      "selector": "#addrTypeSelect, #addrPrivHex, #addrCancelBtn, #addrOkBtn",
+      "stable": true,
+      "type": "address modal controls",
+      "visibleText": "币种 / 私钥 / 取消 / 确认",
+      "handler": "address modal handlers",
+      "effects": "创建或导入地址"
+    },
+    {
+      "selector": "#importPreviewCancelBtn, #importPreviewConfirmBtn, #detailModalClose",
+      "stable": true,
+      "type": "modal buttons",
+      "visibleText": "取消 / 确认导入 / 关闭",
+      "handler": "wallet import preview/detail handlers",
+      "effects": "确认或取消地址导入"
+    },
+    {
+      "selector": "#screenLockPassword, #screenLockToggleVisibility, #screenLockUnlockBtn, #screenLockLogoutBtn",
+      "stable": true,
+      "type": "dynamic screen-lock controls",
+      "visibleText": "密码 / 显示 / 解锁 / 退出",
+      "handler": "screenLock handlers",
+      "effects": "恢复会话或退出"
+    }
+  ],
+  "knownIssues": [
+    {
+      "id": "WEB-UI-P2-002",
+      "priority": "P2",
+      "title": "多个动态控件缺少稳定选择器",
+      "source": "js/services/recipient.js, js/services/wallet.ts, js/pages/history.js",
+      "reproduction": "收款卡、来源地址、交易历史和钱包结构依赖 class/DOM 顺序。",
+      "impact": "真实浏览器测试容易退化为坐标或 nth-child 定位。",
+      "minimalSuggestion": "为重复项补 data-testid/data-action 和稳定业务 ID。"
+    },
+    {
+      "id": "WEB-BUILD-P2-005",
+      "priority": "P2",
+      "title": "Web 首屏静态资源和主业务包偏大",
+      "source": "npm run build: logo 3275.66 kB, css 517.51 kB, main 756.87 kB",
+      "reproduction": "在 TransferAreaInterface 执行 npm run build。",
+      "impact": "低速网络或冷缓存下会延长首次可交互时间，也会放大真实浏览器 E2E 的启动波动。",
+      "minimalSuggestion": "先压缩/替换 Logo，再按页面拆分 main chunk；不改变协议或业务语义。"
+    },
+    {
+      "id": "WEB-UI-NI-006",
+      "priority": "Not implemented",
+      "title": "普通 Web 页面未提供 GQNC 运维、治理和 Redemption Claim 入口",
+      "source": "js/router.ts RoutePath",
+      "reproduction": "检查 15 个路由。",
+      "impact": "后端能力存在但普通钱包无法操作或观察；当前阶段属于明确延期范围。",
+      "minimalSuggestion": "在后续运维/安全退出阶段单独设计角色受控页面。"
+    }
+  ]
+}

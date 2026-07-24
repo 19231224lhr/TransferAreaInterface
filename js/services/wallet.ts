@@ -51,26 +51,24 @@ import { updateTransferButtonState } from './transfer';
 import { addTxHistoryRecords, getTxHistory, hasOutgoingTx, normalizeHistoryTimestamp, updateTxHistoryByTxId } from './txHistory';
 import {
   getLockedUTXOsByAddress,
-  getLockedBalanceByAddress,
+  getLockedBalanceUnitsByAddress,
   isUTXOLocked,
   clearAllLockedUTXOs,
-  clearLockedUTXOsByAddress,
-  getLockedBalanceSummary,
-  getLockedUTXOInfo,
-  lockUTXOs
+  clearLockedUTXOsByAddress
 } from '../utils/utxoLock';
 import { isTXCerLocked } from './txCerLockManager';
-import { getTXCerStatus, sumSpendableTXCerValue } from './txCerStatus';
+import { getTXCerStatus, sumSpendableTXCerUnits } from './txCerStatus';
+import { formatAmount, parseAmount, type AmountDecimal } from '../utils/amount';
 
 // ============================================================================
 // Types
 // ============================================================================
 
 interface AddressValue {
-  totalValue?: number;
-  TotalValue?: number;
-  utxoValue?: number;
-  txCerValue?: number;
+  totalValue?: AmountDecimal;
+  TotalValue?: AmountDecimal;
+  utxoValue?: AmountDecimal;
+  txCerValue?: AmountDecimal;
 }
 
 /**
@@ -81,7 +79,7 @@ interface AddressMetadata {
   type?: number;
   value?: AddressValue;
   utxos?: Record<string, UTXOData>;  // Strict UTXO type
-  txCers?: Record<string, number>;   // TXCer ID -> value mapping
+  txCers?: Record<string, AmountDecimal>;   // TXCer ID -> exact value mapping
   estInterest?: number;
   gas?: number;
   origin?: string;
@@ -117,10 +115,10 @@ interface AddressMetadata {
 interface ExtendedWallet {
   addressMsg: Record<string, AddressMetadata>;
   totalTXCers?: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object
-  totalValue?: number;
-  TotalValue?: number;
-  valueDivision?: Record<number, number>;
-  ValueDivision?: Record<number, number>;
+  totalValue?: AmountDecimal;
+  TotalValue?: AmountDecimal;
+  valueDivision?: Record<number, AmountDecimal>;
+  ValueDivision?: Record<number, AmountDecimal>;
   updateTime?: number;
   updateBlock?: number;
   history?: Array<{ t: number; v: number }>;
@@ -529,7 +527,7 @@ export function renderWallet(): void {
     const meta = u.wallet?.addressMsg?.[a] || null;
 
     const typeId0 = Number(meta?.type ?? 0);
-    const amtCash0 = Number(meta?.value?.utxoValue || 0);
+    const amtCashUnits = parseAmount(meta?.value?.utxoValue || '0');
     const gas0 = readAddressInterest(meta);
 
     // Debug: Log gas values for comparison with transfer.ts
@@ -547,15 +545,15 @@ export function renderWallet(): void {
 
     // 获取锁定 UTXO 信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
-    const lockedBalance = getLockedBalanceByAddress(a);
+    const lockedBalanceUnits = getLockedBalanceUnitsByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
-    const unlockedUtxoBalance = Math.max(0, amtCash0 - lockedBalance);
+    const unlockedUtxoUnits = amtCashUnits > lockedBalanceUnits ? amtCashUnits - lockedBalanceUnits : 0n;
 
     // 获取 TXCer 信息（仅主货币地址的 TXCer）
     const txCers = meta?.txCers || {};
     const txCerIds = Object.keys(txCers);
     const hasTXCers = txCerIds.length > 0;
-    const txCerBalance = Object.values(txCers).reduce((sum, val) => sum + (val as number), 0);
+    const txCerBalanceUnits = Object.values(txCers).reduce((sum, val) => sum + parseAmount(val), 0n);
     const txCerCount = txCerIds.length;
     const totalTXCers = u.wallet?.totalTXCers || {};
     const txCerReadyCount = txCerIds.filter((id) => {
@@ -563,13 +561,18 @@ export function renderWallet(): void {
       return !!txCer?.UserSignatureV2;
     }).length;
 
-    const unlockedTxCerBalance = sumSpendableTXCerValue(u, txCers);
-    const lockedTxCerBalance = Math.max(0, txCerBalance - unlockedTxCerBalance);
+    const unlockedTxCerUnits = sumSpendableTXCerUnits(u, txCers);
+    const lockedTxCerUnits = txCerBalanceUnits > unlockedTxCerUnits ? txCerBalanceUnits - unlockedTxCerUnits : 0n;
 
     // 总余额 = 所有 UTXO（包括锁定） + TXCer（包括锁定）
-    const totalBalance = amtCash0 + txCerBalance;
+    const totalBalance = formatAmount(amtCashUnits + txCerBalanceUnits);
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
-    const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
+    const availableBalance = formatAmount(unlockedUtxoUnits + unlockedTxCerUnits);
+    const amtCash0 = formatAmount(amtCashUnits);
+    const lockedBalance = formatAmount(lockedBalanceUnits);
+    const txCerBalance = formatAmount(txCerBalanceUnits);
+    const unlockedTxCerBalance = formatAmount(unlockedTxCerUnits);
+    const lockedTxCerBalance = formatAmount(lockedTxCerUnits);
 
     // 如果有锁定的 UTXO，添加标记类
     if (hasLockedUtxos) {
@@ -610,7 +613,7 @@ export function renderWallet(): void {
                   <circle cx="12" cy="12" r="10"></circle>
                   <polyline points="12 6 12 12 16 14"></polyline>
                 </svg>
-                <span class="txcer-tooltip">TXCer: ${txCerCount} available ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)}</span>
+                <span class="txcer-tooltip">TXCer: ${txCerCount} available ${unlockedTxCerBalance} / total ${txCerBalance}</span>
               </span>
             ` : ''}
           </span>
@@ -634,7 +637,7 @@ export function renderWallet(): void {
               <span class="balance-label">${t('wallet.availableBalance')}</span>
               <span class="balance-value">${String(availableBalance)} ${coinType}</span>
             </div>
-            ${amtCash0 > 0 ? viewHtml`
+            ${amtCashUnits > 0n ? viewHtml`
               <div class="balance-row utxo">
                 <span class="balance-label">UTXO 余额</span>
                 <span class="balance-value">${String(amtCash0)} ${coinType}</span>
@@ -664,7 +667,7 @@ export function renderWallet(): void {
                 <span class="balance-value">${String(txCerBalance)} ${coinType}</span>
               </div>
             ` : ''}
-            ${hasTXCers && lockedTxCerBalance > 0 ? viewHtml`
+            ${hasTXCers && lockedTxCerUnits > 0n ? viewHtml`
               <div class="balance-row locked">
                 <span class="balance-label">
                   <svg class="lock-icon" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2">
@@ -703,19 +706,29 @@ export function renderWallet(): void {
                   </svg>
                   TXCer（待转换）
                 </span>
-                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance.toFixed(4)} ${coinType} / V2 ${txCerReadyCount}</span>
+                <span class="txcer-header-value">${txCerCount}个 / ${txCerBalance} ${coinType} / V2 ${txCerReadyCount}</span>
               </div>
               <div class="txcer-list">
                 ${txCerIds.map(id => {
-      const value = txCers[id] as number;
+      const exactValue = formatAmount(parseAmount(txCers[id] ?? '0'));
       const locked = isTXCerLocked(id);
       const txCer = totalTXCers[id];
+      const issuance = u.wallet.txCerIssuanceRecords?.[id];
+      const security = issuance?.security;
+      const shares = txCer?.ExposureShares || issuance?.issuanceRecord?.TXCer?.ExposureShares || [];
+      const sharesDetail = shares.map((share) =>
+        `${share.RootID}/${share.LeafID}: ${formatAmount(parseAmount(share.Amount))}`
+      ).join(' | ');
+      const evidenceError = security?.fastEvidenceError || security?.cfaaAuditError || issuance?.proofError || '';
       const lifecycle = getTXCerStatus(u, id) || 'Unknown';
       const txCerState = `${lifecycle}${txCer?.UserSignatureV2 ? ' / V2' : ' / 旧缓存'}`;
       return viewHtml`
                     <div class="txcer-item">
-                      <span class="txcer-id" title="${id}">${id.slice(0, 8)}...${id.slice(-6)}</span>
-                      <span class="txcer-value">${value.toFixed(4)}${locked ? ' (锁定)' : ''} / ${txCerState}</span>
+                      <span class="txcer-id txcer-full-id" title="${id}">${id}</span>
+                      <span class="txcer-value">${exactValue}${locked ? ' (锁定)' : ''} / ${txCerState}</span>
+                      <span class="txcer-security">FastEvidence: ${security?.fastEvidenceStatus || 'Pending'} / CFAA: ${security?.cfaaAuditStatus || 'Pending'} / ExposureShares: ${shares.length}</span>
+                      ${sharesDetail ? viewHtml`<span class="txcer-shares" title="${sharesDetail}">${sharesDetail}</span>` : ''}
+                      ${evidenceError ? viewHtml`<span class="txcer-evidence-error">${evidenceError}</span>` : ''}
                     </div>
                   `;
     })}
@@ -872,7 +885,7 @@ export async function handleDeleteAddress(address: string): Promise<void> {
     Object.entries(current?.wallet?.addressMsg || {}).find(
       ([k]) => String(k).toLowerCase() === key
     )?.[1];
-  const balance = addrData?.value?.TotalValue ?? 0;
+  const balance = addrData?.value?.TotalValue ?? '0';
   const coinType = addrData?.type === 1 ? 'BTC' : addrData?.type === 2 ? 'ETH' : 'PGC';
   const group = getJoinedGroup();
   const isInOrg = !!(group && group.groupID);
@@ -889,7 +902,7 @@ export async function handleDeleteAddress(address: string): Promise<void> {
 
   // Build confirmation text with balance warning if needed
   let confirmText = '';
-  if (balance > 0) {
+  if (parseAmount(balance) > 0n) {
     confirmText = `${t('wallet.deleteHasBalanceWarning', { balance, coinType })}\n\n${deleteModeHint}`;
   } else {
     confirmText = `${t('address.confirmDelete')} ${address} ${t('address.confirmDeleteDesc')}\n\n${deleteModeHint}`;
@@ -1324,24 +1337,24 @@ function restoreExpandedAddresses(addresses: string[]): void {
  * Recalculate wallet value division
  */
 function recalculateWalletValue(u: User): void {
-  const sumVD: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+  const sumUnits: Record<number, bigint> = { 0: 0n, 1: 0n, 2: 0n };
   Object.keys(u.wallet?.addressMsg || {}).forEach((addrK) => {
     const m = (u.wallet.addressMsg[addrK] || {}) as AddressMetadata;
     const t = Number(m.type || 0);
-    const val = Number(m.value?.totalValue || m.value?.TotalValue || 0);
-    if (sumVD[t] !== undefined) {
-      sumVD[t] += val;
-    }
+    const valueUnits = parseAmount(m.value?.totalValue || m.value?.TotalValue || '0');
+    sumUnits[t] = (sumUnits[t] || 0n) + valueUnits;
   });
+  const sumVD: Record<number, AmountDecimal> = Object.fromEntries(
+    Object.entries(sumUnits).map(([type, units]) => [Number(type), formatAmount(units)])
+  );
   u.wallet.valueDivision = sumVD;
   // Also set PascalCase version for backward compatibility with backend API
   const extWallet = u.wallet as ExtendedWallet;
   extWallet.ValueDivision = sumVD;
 
-  const pgcTotal = Number(sumVD[0] || 0);
-  const btcTotal = Number(sumVD[1] || 0);
-  const ethTotal = Number(sumVD[2] || 0);
-  const valueTotalPGC = pgcTotal + btcTotal * 1000000 + ethTotal * 1000;
+  const valueTotalPGC = formatAmount(
+    (sumUnits[0] || 0n) + (sumUnits[1] || 0n) * 1_000_000n + (sumUnits[2] || 0n) * 1_000n
+  );
   u.wallet.totalValue = valueTotalPGC;
   // Also set PascalCase version for backward compatibility
   extWallet.TotalValue = valueTotalPGC;
@@ -1358,9 +1371,9 @@ export function updateCurrencyDisplay(u: User): void {
   const walletETHEl = document.getElementById(DOM_IDS.walletETH);
   const totals = getAvailableTotals(u.wallet?.addressMsg || {});
 
-  if (walletPGCEl) walletPGCEl.textContent = totals.pgc.toLocaleString();
-  if (walletBTCEl) walletBTCEl.textContent = totals.btc.toLocaleString();
-  if (walletETHEl) walletETHEl.textContent = totals.eth.toLocaleString();
+  if (walletPGCEl) walletPGCEl.textContent = formatAmount(totals.pgc);
+  if (walletBTCEl) walletBTCEl.textContent = formatAmount(totals.btc);
+  if (walletETHEl) walletETHEl.textContent = formatAmount(totals.eth);
 
   // Update USDT display
   updateUSDTDisplay(u);
@@ -1374,17 +1387,22 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
   const key = String(address).toLowerCase();
   const typeId = Number(found.type ?? 0);
   const coinType = getCoinName(typeId);
-  const utxoBalance = Number(found.value?.utxoValue || 0);
-  const lockedBalance = getLockedBalanceByAddress(address);
-  const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
+  const utxoUnits = parseAmount(found.value?.utxoValue || '0');
+  const lockedUnits = getLockedBalanceUnitsByAddress(address);
+  const unlockedUtxoUnits = utxoUnits > lockedUnits ? utxoUnits - lockedUnits : 0n;
   const txCers = found.txCers || {};
   const txCerIds = Object.keys(txCers);
-  const txCerBalance = Object.values(txCers).reduce((sum: number, val) => sum + Number(val || 0), 0);
+  const txCerUnits = Object.values(txCers).reduce((sum, val) => sum + parseAmount(val || '0'), 0n);
   const currentUser = getCurrentUser();
-  const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
-  const lockedTxCerBalance = Math.max(0, txCerBalance - unlockedTxCerBalance);
-  const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
-  const totalBalance = utxoBalance + txCerBalance;
+  const unlockedTxCerUnits = currentUser ? sumSpendableTXCerUnits(currentUser, txCers) : 0n;
+  const lockedTxCerUnits = txCerUnits > unlockedTxCerUnits ? txCerUnits - unlockedTxCerUnits : 0n;
+  const utxoBalance = formatAmount(utxoUnits);
+  const lockedBalance = formatAmount(lockedUnits);
+  const txCerBalance = formatAmount(txCerUnits);
+  const unlockedTxCerBalance = formatAmount(unlockedTxCerUnits);
+  const lockedTxCerBalance = formatAmount(lockedTxCerUnits);
+  const availableBalance = formatAmount(unlockedUtxoUnits + unlockedTxCerUnits);
+  const totalBalance = formatAmount(utxoUnits + txCerUnits);
   const gas = Number(found.estInterest || found.gas || 0);
 
   const list = document.getElementById(DOM_IDS.walletAddrList);
@@ -1447,13 +1465,13 @@ function updateAddressCardDisplay(address: string, found: AddressMetadata): void
       if (txcerTooltip) {
         const totalTXCers = (getCurrentUser()?.wallet?.totalTXCers || {}) as Record<string, any>;
         const readyCount = txCerIds.filter((id) => !!totalTXCers[id]?.UserSignatureV2).length;
-        txcerTooltip.textContent = `TXCer: ${txCerIds.length} active ${unlockedTxCerBalance.toFixed(2)} / total ${txCerBalance.toFixed(2)} / V2 ${readyCount}`;
+        txcerTooltip.textContent = `TXCer: ${txCerIds.length} active ${unlockedTxCerBalance} / total ${txCerBalance} / V2 ${readyCount}`;
       }
       const txcerHeaderValue = card.querySelector('.txcer-header-value');
       if (txcerHeaderValue) {
         const totalTXCers = (getCurrentUser()?.wallet?.totalTXCers || {}) as Record<string, any>;
         const readyCount = txCerIds.filter((id) => !!totalTXCers[id]?.UserSignatureV2).length;
-        txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance.toFixed(4)} ${coinType} / V2 ${readyCount}`;
+        txcerHeaderValue.textContent = `${txCerIds.length} / ${txCerBalance} ${coinType} / V2 ${readyCount}`;
       }
 
       // 直接更新详情
@@ -1500,10 +1518,10 @@ function updateUSDTDisplay(u: User): void {
     const totals = getAvailableTotals(u.wallet.addressMsg || {});
 
     // Calculate total USDT value (PGC 1:1, BTC 100:1, ETH 10:1)
-    const usdt = Math.round(totals.pgc * 1 + totals.btc * 100 + totals.eth * 10);
+    const usdt = (totals.pgc || 0n) + (totals.btc || 0n) * 100n + (totals.eth || 0n) * 10n;
 
     scheduleBatchUpdate('usdt-display', () => {
-      usdtEl.textContent = usdt.toLocaleString();
+      usdtEl.textContent = formatAmount(usdt);
     });
 
     const bd = document.querySelector('.currency-breakdown');
@@ -1512,18 +1530,18 @@ function updateUSDTDisplay(u: User): void {
         const pgcV = bd.querySelector('.tag--pgc');
         const btcV = bd.querySelector('.tag--btc');
         const ethV = bd.querySelector('.tag--eth');
-        if (pgcV) pgcV.textContent = String(totals.pgc);
-        if (btcV) btcV.textContent = String(totals.btc);
-        if (ethV) ethV.textContent = String(totals.eth);
+        if (pgcV) pgcV.textContent = formatAmount(totals.pgc);
+        if (btcV) btcV.textContent = formatAmount(totals.btc);
+        if (ethV) ethV.textContent = formatAmount(totals.eth);
       });
     }
   }
 }
 
-function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc: number; btc: number; eth: number } {
-  let availablePGC = 0;
-  let availableBTC = 0;
-  let availableETH = 0;
+function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc: bigint; btc: bigint; eth: bigint } {
+  let availablePGC = 0n;
+  let availableBTC = 0n;
+  let availableETH = 0n;
   const currentUser = getCurrentUser();
 
   for (const [address, meta] of Object.entries(addressMsg)) {
@@ -1536,26 +1554,26 @@ function getAvailableTotals(addressMsg: Record<string, AddressMetadata>): { pgc:
     const rawTxCerValue = meta.value?.txCerValue;
     const rawTotalValue = meta.value?.totalValue ?? meta.value?.TotalValue;
 
-    let utxoBalance = 0;
+    let utxoBalance = 0n;
     if (Object.keys(utxos).length > 0) {
-      utxoBalance = Object.values(utxos).reduce<number>((sum, val) => {
+      utxoBalance = Object.values(utxos).reduce((sum, val) => {
         if (typeof val === 'object' && val !== null) {
-          return sum + (Number((val as any).Value) || 0);
+          return sum + parseAmount((val as any).Value || '0');
         }
-        return sum + (Number(val) || 0);
-      }, 0);
-    } else if (Number.isFinite(Number(rawUtxoValue))) {
-      utxoBalance = Number(rawUtxoValue || 0);
-    } else if (Number.isFinite(Number(rawTotalValue))) {
-      const total = Number(rawTotalValue || 0);
-      const txc = Number(rawTxCerValue || 0);
-      utxoBalance = Math.max(0, total - txc);
+        return sum + parseAmount(val || '0');
+      }, 0n);
+    } else if (rawUtxoValue != null) {
+      utxoBalance = parseAmount(rawUtxoValue);
+    } else if (rawTotalValue != null) {
+      const total = parseAmount(rawTotalValue);
+      const txc = parseAmount(rawTxCerValue || '0');
+      utxoBalance = total > txc ? total - txc : 0n;
     }
 
-    const lockedBalance = getLockedBalanceByAddress(address);
-    const unlockedUtxoBalance = Math.max(0, utxoBalance - lockedBalance);
+    const lockedBalance = getLockedBalanceUnitsByAddress(address);
+    const unlockedUtxoBalance = utxoBalance > lockedBalance ? utxoBalance - lockedBalance : 0n;
 
-    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
+    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerUnits(currentUser, txCers) : 0n;
 
     const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
 
@@ -1817,7 +1835,7 @@ async function importAddressInPlaceWithData(
     type: coinType,
     utxos: {},
     txCers: {},
-    value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+    value: { totalValue: '0', utxoValue: '0', txCerValue: '0' },
     estInterest: 0,
     origin: 'imported'
   };
@@ -1827,7 +1845,7 @@ async function importAddressInPlaceWithData(
   const normPriv = priv.replace(/^0x/i, '');
   const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
   if (!addrMeta.value) {
-    addrMeta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+    addrMeta.value = { totalValue: '0', utxoValue: '0', txCerValue: '0' };
   }
   if (!addrMeta.utxos) {
     addrMeta.utxos = {};
@@ -1975,7 +1993,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
       type: Number((data as any).addressType ?? 0),
       utxos: {},
       txCers: {},
-      value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+      value: { totalValue: '0', utxoValue: '0', txCerValue: '0' },
       estInterest: 0,
       origin: 'imported'
     };
@@ -1984,7 +2002,7 @@ async function importAddressInPlace(priv: string): Promise<void> {
 
     const addrMeta = acc.wallet.addressMsg[addr] as AddressMetadata;
     if (!addrMeta.value) {
-      addrMeta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+      addrMeta.value = { totalValue: '0', utxoValue: '0', txCerValue: '0' };
     }
     if (!addrMeta.utxos) {
       addrMeta.utxos = {};
@@ -2365,21 +2383,21 @@ export function rebuildAddrList(): void {
   displayAddresses.forEach(a => {
     const meta = walletMap[a] || {};
     const tId = Number(meta.type ?? 0);
-    const utxoAmt = Number(meta.value?.utxoValue || 0);
+    const utxoUnits = parseAmount(meta.value?.utxoValue || '0');
 
     // 获取锁定信息
     const lockedUtxos = getLockedUTXOsByAddress(a);
-    const lockedBalance = getLockedBalanceByAddress(a);
+    const lockedUnits = getLockedBalanceUnitsByAddress(a);
     const hasLockedUtxos = lockedUtxos.length > 0;
-    const unlockedUtxoBalance = Math.max(0, utxoAmt - lockedBalance);
+    const unlockedUtxoUnits = utxoUnits > lockedUnits ? utxoUnits - lockedUnits : 0n;
 
     // 获取 TXCer 余额
     const txCers = meta.txCers || {};
     const currentUser = getCurrentUser();
-    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
+    const unlockedTxCerUnits = currentUser ? sumSpendableTXCerUnits(currentUser, txCers) : 0n;
 
     // 可用余额 = 未锁定 UTXO + 未锁定 TXCer
-    const availableBalance = unlockedUtxoBalance + unlockedTxCerBalance;
+    const availableBalance = formatAmount(unlockedUtxoUnits + unlockedTxCerUnits);
 
 	    const coinInfo = getCoinInfo(tId);
 	    const color = coinInfo.className;
@@ -2490,14 +2508,14 @@ function autoSelectFromAddress(addrList: HTMLElement): void {
     const meta = walletMap[addr];
     const protocolBadge = getAddressProtocolBadge(meta as AddressMetadata);
     if (!protocolBadge.selectable) return false;
-    const utxoAmt = Number(meta?.value?.utxoValue || 0);
-    const lockedBalance = getLockedBalanceByAddress(addr);
-    const unlockedUtxo = Math.max(0, utxoAmt - lockedBalance);
+    const utxoUnits = parseAmount(meta?.value?.utxoValue || '0');
+    const lockedUnits = getLockedBalanceUnitsByAddress(addr);
+    const unlockedUtxo = utxoUnits > lockedUnits ? utxoUnits - lockedUnits : 0n;
     const txCers = meta?.txCers || {};
     const currentUser = getCurrentUser();
-    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerValue(currentUser, txCers) : 0;
+    const unlockedTxCerBalance = currentUser ? sumSpendableTXCerUnits(currentUser, txCers) : 0n;
     const availableBalance = unlockedUtxo + unlockedTxCerBalance;
-    return availableBalance > 0;
+    return availableBalance > 0n;
   });
 
   if (addrsWithBalance.length === 1) {
@@ -2947,13 +2965,13 @@ export async function refreshWalletBalances(): Promise<boolean> {
       type: 'receive';
       status: 'success';
       transferMode: 'normal' | 'cross';
-      amount: number;
+      amount: AmountDecimal;
       currency: string;
       from: string;
       to: string;
       timestamp: number;
       txHash: string;
-      gas: number;
+      gas: AmountDecimal;
       blockNumber?: number;
     }> = [];
 
@@ -2978,13 +2996,13 @@ export async function refreshWalletBalances(): Promise<boolean> {
             type: 'receive',
             status: 'success',
             transferMode: isCrossChain ? 'cross' : 'normal',
-            amount: Number(raw?.Value || 0) || 0,
+            amount: formatAmount(parseAmount(raw?.Value || '0')),
             currency: getCoinName(raw?.Type ?? balanceInfo.type ?? 0),
             from: fromAddr,
             to: addr,
             timestamp: normalizeHistoryTimestamp(raw?.Time),
             txHash: txId || key,
-            gas: 0,
+            gas: '0',
             blockNumber
           });
         }
@@ -3011,7 +3029,7 @@ export async function refreshWalletBalances(): Promise<boolean> {
 
         // Update balance
         if (!meta.value) {
-          meta.value = { totalValue: 0, utxoValue: 0, txCerValue: 0 };
+          meta.value = { totalValue: '0', utxoValue: '0', txCerValue: '0' };
         }
         meta.value.utxoValue = balanceInfo.balance;
         // totalValue should be balance only, NOT including interest/gas

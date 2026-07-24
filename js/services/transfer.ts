@@ -32,9 +32,9 @@ import { showPasswordPrompt } from '../utils/keyEncryptionUI';
 import { buildAssignNodeUrl } from './group';
 import { lockUTXOs, LockedUTXO } from '../utils/utxoLock';
 import { lockTXCers, unlockTXCers, markTXCersSubmitted, getLockedTXCerIdsByTxId } from './txCerLockManager';
-import { isTXCerSpendable, sumSpendableTXCerValue } from './txCerStatus';
+import { isTXCerSpendable, sumSpendableTXCerUnits } from './txCerStatus';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
-import { toAmountNumber } from '../utils/amount';
+import { AMOUNT_SCALE, formatAmount, isWholeAmount, parseAmount, toAmountNumber, type AmountDecimal } from '../utils/amount';
 import { addTxHistoryRecords, updateTxHistoryByTxId } from './txHistory';
 import { isCapsuleAddress } from './capsule';
 import { querySingleAddressGroup, type NormalizedAddressGroupInfo } from './accountQuery';
@@ -46,10 +46,10 @@ import { querySingleAddressGroup, type NormalizedAddressGroupInfo } from './acco
 /** Bill structure for transfer */
 export interface TransferBill {
   MoneyType: number;
-  Value: number;
+  Value: AmountDecimal;
   GuarGroupID: string;
   PublicKey: { Curve: string; XHex: string; YHex: string };
-  ToInterest: number;
+  ToInterest: AmountDecimal;
   SeedAnchor?: number[] | string;
   SeedChainStep?: number;
   DefaultSpendAlgorithm?: string;
@@ -64,8 +64,8 @@ interface WalletSnapshot {
 /** Address info for optimization */
 interface AddressInfo {
   addr: string;
-  bal: Record<number, number>;
-  totalRel: number;
+  bal: Record<number, bigint>;
+  totalRel: bigint;
 }
 
 // ========================================
@@ -77,6 +77,19 @@ interface AddressInfo {
  */
 function normalizeAddrInput(addr: string): string {
   return addr ? String(addr).trim().toLowerCase() : '';
+}
+
+function exactAddressBalanceUnits(user: User | null, meta: AddressData): bigint {
+  const utxoUnits = Object.values(meta.utxos || {}).reduce(
+    (sum, utxo) => sum + parseAmount(utxo?.Value || '0'),
+    0n
+  );
+  const txCerUnits = user ? sumSpendableTXCerUnits(user, meta.txCers || {}) : 0n;
+  return utxoUnits + txCerUnits;
+}
+
+function exactAddressGasUnits(meta: AddressData): bigint {
+  return parseAmount((meta.estInterest ?? meta.gas ?? '0') as string | number | bigint);
 }
 
 /**
@@ -110,7 +123,7 @@ function buildOutgoingHistoryRecords(
   const records: TxHistoryRecord[] = [];
   const timestamp = Date.now();
   const from = fromAddresses[0] || '';
-  const gas = Number(build.InterestAssign?.Gas || 0) || 0;
+  const gas = formatAmount(parseAmount(build.InterestAssign?.Gas || '0'));
   const txHash = txId || 'N/A';
   const baseId = txId || `temp_${timestamp}`;
   const fallbackMode: NonNullable<TxHistoryRecord['transferMode']> =
@@ -119,7 +132,7 @@ function buildOutgoingHistoryRecords(
   let idx = 0;
 
   for (const [to, bill] of Object.entries(build.Bill || {})) {
-    const amount = Number(bill.Value || 0) || 0;
+    const amount = formatAmount(parseAmount(bill.Value || '0'));
     records.push({
       id: `out_${baseId}_${idx}_${to}_${bill.MoneyType}`,
       type: 'send',
@@ -515,15 +528,17 @@ export function initTransferSubmit(): void {
         const verifiedType = toEl?.dataset?.verifiedType;
         const mtVal = mtEl?.dataset?.val;
         const targetType = verifiedType !== undefined ? Number(verifiedType) : (mtVal !== undefined ? Number(mtVal) : null);
-        const amount = Number(valEl?.value || 0);
+        let amount = 0n;
+        try {
+          amount = parseAmount(valEl?.value || '0');
+        } catch {
+          amount = 0n;
+        }
 
         // 只有当币种已确认且金额大于0时才尝试自动选择
-        if (targetType !== null && !isNaN(targetType) && amount > 0) {
-          const extraGas = Number(gasInput?.value || 0);
-          const txGas = Number(txGasInput?.value || 1);
-
+        if (targetType !== null && !isNaN(targetType) && amount > 0n) {
           // 获取所有匹配币种的地址
-          interface AddressCandidate { addr: string; balance: number; gas: number; }
+          interface AddressCandidate { addr: string; balance: bigint; }
           const candidates: AddressCandidate[] = [];
 
           const txCerStatusUser = loadUser();
@@ -531,24 +546,18 @@ export function initTransferSubmit(): void {
             const addrType = Number((meta as AddressData).type || 0);
             if (addrType !== targetType) continue;
 
-            const rawUtxoValue = (meta as AddressData).value?.utxoValue;
-            const utxoVal = Number.isFinite(Number(rawUtxoValue))
-              ? Number(rawUtxoValue)
-              : Object.values((meta as AddressData).utxos || {}).reduce((sum: number, utxo: any) => sum + Number(utxo?.Value || 0), 0);
-            const txCerVal = txCerStatusUser ? sumSpendableTXCerValue(txCerStatusUser, (meta as AddressData).txCers || {}) : 0;
-            const availableBalance = utxoVal + txCerVal;
-            const availableGas = readAddressInterest(meta as AddressData);
+            const availableBalance = exactAddressBalanceUnits(txCerStatusUser, meta as AddressData);
 
-            if (availableBalance > 0) {
-              candidates.push({ addr, balance: availableBalance, gas: availableGas });
+            if (availableBalance > 0n) {
+              candidates.push({ addr, balance: availableBalance });
             }
           }
 
           if (candidates.length > 0) {
-            candidates.sort((a, b) => b.balance - a.balance);
+            candidates.sort((a, b) => a.balance === b.balance ? a.addr.localeCompare(b.addr) : (a.balance > b.balance ? -1 : 1));
 
             let selectedAddrs: string[] = [];
-            let totalBalance = 0;
+            let totalBalance = 0n;
 
             // 策略1: 找单个满足需求的地址
             const singleMatch = candidates.find(c => c.balance >= amount);
@@ -564,7 +573,7 @@ export function initTransferSubmit(): void {
               }
             }
 
-            if (totalBalance >= amount - 1e-8) {
+            if (totalBalance >= amount) {
               // 自动选择这些地址
               const checkboxes = addrList!.querySelectorAll('input[type="checkbox"]');
               const labels = addrList!.querySelectorAll('label.src-addr-item');
@@ -630,8 +639,8 @@ export function initTransferSubmit(): void {
       if (chETH?.value) changeMap[2] = chETH.value;
 
       const bills: Record<string, TransferBill> = {};
-      const vd: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
-      let outInterest = 0;
+      const vd: Record<number, bigint> = { 0: 0n, 1: 0n, 2: 0n };
+      let outInterest = 0n;
       const addrTypeCache = new Map<string, NormalizedAddressGroupInfo>();
 
       for (const r of rows) {
@@ -648,12 +657,12 @@ export function initTransferSubmit(): void {
         const normalizedTo = normalizeAddrInput(isCapsule ? resolvedTo : to);
         const mtRaw = (mtEl && mtEl.dataset && mtEl.dataset.val) || '0';
         const mt = Number(mtRaw);
-        const val = Number((valEl && valEl.value) || 0);
+        const val = String((valEl && valEl.value) || '').trim();
         const gid = String((gidEl && gidEl.value) || '').trim();
         const comb = String((pubEl && pubEl.value) || '').trim();
         const parsedPub = parsePub(comb);
         const { x: px, y: py, ok: pubOk } = parsedPub;
-        const tInt = Number((gasEl && gasEl.value) || 0);
+        const tInt = String((gasEl && gasEl.value) || '0').trim();
 
         // Address validation using security.ts
         if (!to) {
@@ -768,7 +777,7 @@ export function initTransferSubmit(): void {
         }
 
         // Cross-chain specific: Amount must be integer
-        if (isCross && !Number.isInteger(val)) {
+        if (isCross && !isWholeAmount(val)) {
           showTxValidationError(t('tx.crossChainIntegerAmount') || '跨链金额必须为整数', valEl, t('tx.amountMustBeInteger') || '金额错误');
           return;
         }
@@ -790,11 +799,10 @@ export function initTransferSubmit(): void {
         }
 
         // Gas validation
-        if (!Number.isFinite(tInt)) {
-          showTxValidationError('Gas', gasEl, t('tx.gasParamError'));
-          return;
-        }
-        if (tInt < 0) {
+        let interestUnits = 0n;
+        try {
+          interestUnits = parseAmount(tInt || '0');
+        } catch {
           showTxValidationError('Gas', gasEl, t('tx.gasCannotBeNegative'));
           return;
         }
@@ -806,7 +814,7 @@ export function initTransferSubmit(): void {
         const effectivePx = isCross ? '' : px;
         const effectivePy = isCross ? '' : py;
         const effectiveGid = isCross ? '' : gid;
-        const effectiveInterest = isCross ? 0 : tInt;
+        const effectiveInterest = isCross ? '0' : formatAmount(interestUnits);
         const effectiveSeedAnchor = isCross ? undefined : resolvedRecipientInfo?.seedAnchor;
         const effectiveSeedChainStep = isCross ? undefined : resolvedRecipientInfo?.seedChainStep;
         const effectiveDefaultSpendAlgorithm = isCross ? undefined : resolvedRecipientInfo?.defaultSpendAlgorithm;
@@ -825,8 +833,8 @@ export function initTransferSubmit(): void {
             return;
           }
           // Merge duplicate recipients for the same address
-          existingBill.Value += val;
-          existingBill.ToInterest += Math.max(0, effectiveInterest || 0);
+          existingBill.Value = formatAmount(parseAmount(existingBill.Value) + parseAmount(val));
+          existingBill.ToInterest = formatAmount(parseAmount(existingBill.ToInterest) + parseAmount(effectiveInterest));
         } else {
           bills[normalizedTo] = {
             MoneyType: mt,
@@ -839,43 +847,47 @@ export function initTransferSubmit(): void {
             DefaultSpendAlgorithm: effectiveDefaultSpendAlgorithm
           };
         }
-        vd[mt] += val;
-        outInterest += Math.max(0, effectiveInterest || 0);
+        vd[mt] += parseAmount(val);
+        outInterest += parseAmount(effectiveInterest);
       }
 
-      const extraPGC = Number(gasInput?.value || 0);
-      if (!Number.isFinite(extraPGC) || extraPGC < 0) {
+      let extraPGC = 0n;
+      try {
+        extraPGC = parseAmount(gasInput?.value || '0');
+      } catch {
         showTxValidationError(t('wallet.extraGas'), gasInput, t('tx.gasParamError'));
         return;
       }
 
-      const interestGas = extraPGC > 0 ? extraPGC : 0;
+      const interestGas = extraPGC;
       vd[0] += extraPGC;
 
-      const baseTxGas = Number((txGasInput && txGasInput.value) ? txGasInput.value : 1);
-      if (!Number.isFinite(baseTxGas) || baseTxGas < 0) {
+      let baseTxGas = 0n;
+      try {
+        baseTxGas = parseAmount((txGasInput && txGasInput.value) ? txGasInput.value : '1');
+      } catch {
         showTxValidationError(t('wallet.txGas'), txGasInput, t('tx.gasParamError'));
         return;
       }
 
-      const typeBalances: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
-      let availableGas = 0; // 只计算已选择源地址的 Gas
+      const typeBalances: Record<number, bigint> = { 0: 0n, 1: 0n, 2: 0n };
+      let availableGas = 0n; // 只计算已选择源地址的 Gas
 
       sel.forEach((addr) => {
         const meta = getAddrMeta(addr);
         if (!meta) return;
         const type = Number(meta.type || 0);
-        const val = Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0);
+        const val = exactAddressBalanceUnits(loadUser(), meta);
         if (typeBalances[type] !== undefined) {
           typeBalances[type] += val;
         }
         // 累加选中地址的 Gas（interest）
-        availableGas += readAddressInterest(meta);
+        availableGas += exactAddressGasUnits(meta);
       });
 
       const ensureChangeAddrValid = (typeId: number): boolean => {
-        const need = vd[typeId] || 0;
-        if (need <= 0) return true;
+        const need = vd[typeId] || 0n;
+        if (need <= 0n) return true;
         const addr = changeMap[typeId];
         if (!addr) {
           const coinName = getCoinName(typeId);
@@ -895,8 +907,8 @@ export function initTransferSubmit(): void {
         return true;
       };
 
-      if (![0, 1, 2].every((t) => (typeBalances[t] || 0) + 1e-8 >= (vd[t] || 0))) {
-        const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0) + 1e-8 < (vd[t] || 0)) ?? 0;
+      if (![0, 1, 2].every((t) => (typeBalances[t] || 0n) >= (vd[t] || 0n))) {
+        const lackType = [0, 1, 2].find((t) => (typeBalances[t] || 0n) < (vd[t] || 0n)) ?? 0;
         const coinName = getCoinName(lackType);
         showTxValidationError(`${coinName} ${t('tx.insufficientBalance')}`, null, t('tx.insufficientBalance'));
         return;
@@ -926,8 +938,8 @@ export function initTransferSubmit(): void {
         })
       });
 
-      if (totalGasNeed > totalGasBudget + 1e-8) {
-        const msg = mintedGas > 0
+      if (totalGasNeed > totalGasBudget) {
+        const msg = mintedGas > 0n
           ? t('tx.insufficientGasWithMint')
           : t('tx.insufficientGasNoMint');
         console.warn('[Transfer] Gas insufficient:', {
@@ -940,7 +952,7 @@ export function initTransferSubmit(): void {
         return;
       }
 
-      const usedTypes = [0, 1, 2].filter((t) => (vd[t] || 0) > 0);
+      const usedTypes = [0, 1, 2].filter((t) => (vd[t] || 0n) > 0n);
       let finalSel = sel.slice();
       let removedAddrs: string[] = [];
 
@@ -948,34 +960,38 @@ export function initTransferSubmit(): void {
         const infos: AddressInfo[] = sel.map((addr) => {
           const meta = getAddrMeta(addr);
           const type = meta ? Number(meta.type || 0) : 0;
-          const val = meta ? Number(meta.value && (meta.value.totalValue || meta.value.TotalValue) || 0) : 0;
-          const bal: Record<number, number> = { 0: 0, 1: 0, 2: 0 };
+          const val = meta ? exactAddressBalanceUnits(loadUser(), meta) : 0n;
+          const bal: Record<number, bigint> = { 0: 0n, 1: 0n, 2: 0n };
           if (bal[type] !== undefined) bal[type] = val;
 
-          const totalRel = usedTypes.reduce((s, t) => s + bal[t] * (COIN_TO_PGC_RATES[t as CoinTypeId] || 1), 0);
+          const totalRel = usedTypes.reduce(
+            (s, t) => s + bal[t] * BigInt(COIN_TO_PGC_RATES[t as CoinTypeId] || 1),
+            0n
+          );
           return { addr, bal, totalRel };
         });
 
-        const candidates = infos.filter((info) => usedTypes.some((t) => info.bal[t] > 0));
+        const candidates = infos.filter((info) => usedTypes.some((t) => info.bal[t] > 0n));
         if (candidates.length) {
-          candidates.sort((a, b) => b.totalRel - a.totalRel);
-          const remain: Record<number, number> = {};
-          usedTypes.forEach((t) => { remain[t] = vd[t] || 0; });
+          candidates.sort((a, b) => a.totalRel === b.totalRel ? a.addr.localeCompare(b.addr) : (a.totalRel > b.totalRel ? -1 : 1));
+          const remain: Record<number, bigint> = {};
+          usedTypes.forEach((t) => { remain[t] = vd[t] || 0n; });
           const chosen: string[] = [];
 
           for (const info of candidates) {
-            if (usedTypes.every((t) => (remain[t] || 0) <= 0)) break;
-            const helps = usedTypes.some((t) => (remain[t] || 0) > 0 && info.bal[t] > 0);
+            if (usedTypes.every((t) => (remain[t] || 0n) <= 0n)) break;
+            const helps = usedTypes.some((t) => (remain[t] || 0n) > 0n && info.bal[t] > 0n);
             if (!helps) continue;
             chosen.push(info.addr);
             usedTypes.forEach((t) => {
-              if ((remain[t] || 0) > 0 && info.bal[t] > 0) {
-                remain[t] = Math.max(0, (remain[t] || 0) - info.bal[t]);
+              if ((remain[t] || 0n) > 0n && info.bal[t] > 0n) {
+                const next = (remain[t] || 0n) - info.bal[t];
+                remain[t] = next > 0n ? next : 0n;
               }
             });
           }
 
-          if (usedTypes.every((t) => (remain[t] || 0) <= 0)) {
+          if (usedTypes.every((t) => (remain[t] || 0n) <= 0n)) {
             const chosenSet = new Set(chosen);
             const optimizedSel = sel.filter((a) => chosenSet.has(a));
             const extra = sel.filter((a) => !chosenSet.has(a));
@@ -1004,10 +1020,10 @@ export function initTransferSubmit(): void {
         );
       }
 
-      if (extraPGC > 0) {
+      if (extraPGC > 0n) {
         // Use t() function's built-in parameter substitution
         // The translation string has {amount} placeholders that t() will replace
-        const exchangeDesc = t('transfer.exchangeGasDesc', { amount: String(extraPGC) });
+        const exchangeDesc = t('transfer.exchangeGasDesc', { amount: formatAmount(extraPGC) });
         const confirmed = await showConfirmModal(
           t('transfer.confirmExchangeGas'),
           exchangeDesc,
@@ -1020,22 +1036,25 @@ export function initTransferSubmit(): void {
       const backAssign: Record<string, number> = {};
       finalSel.forEach((a, i) => { backAssign[a] = i === 0 ? 1 : 0; });
 
-      const valueTotal = Object.keys(vd).reduce((s, k) => s + vd[Number(k)] * (COIN_TO_PGC_RATES[Number(k) as CoinTypeId] || 1), 0);
+      const valueTotal = Object.keys(vd).reduce(
+        (s, k) => s + vd[Number(k)] * BigInt(COIN_TO_PGC_RATES[Number(k) as CoinTypeId] || 1),
+        0n
+      );
       const wantsTXCer = String(useTXCer?.value) === 'true';
-      const needsMainCurrency = (vd[0] || 0) > 0 || extraPGC > 0;
+      const needsMainCurrency = (vd[0] || 0n) > 0n || extraPGC > 0n;
 
       const build: BuildTXInfo = {
-        Value: valueTotal,
-        ValueDivision: vd,
+        Value: formatAmount(valueTotal),
+        ValueDivision: Object.fromEntries(Object.entries(vd).map(([type, units]) => [Number(type), formatAmount(units)])),
         Bill: bills,
         UserAddress: finalSel,
         PriUseTXCer: wantsTXCer && needsMainCurrency,
         ChangeAddress: changeMap,
         IsPledgeTX: String(isPledge?.value) === 'true',
-        HowMuchPayForGas: extraPGC,
+        HowMuchPayForGas: formatAmount(extraPGC),
         IsCrossChainTX: isCross,
         Data: '',
-        InterestAssign: { Gas: baseTxGas, Output: outInterest, BackAssign: backAssign }
+        InterestAssign: { Gas: formatAmount(baseTxGas), Output: formatAmount(outInterest), BackAssign: backAssign }
       };
 
       if (isCross && finalSel.length !== 1) {
@@ -1169,12 +1188,17 @@ export function initTransferSubmit(): void {
 
       // 🔒 锁定可能使用的 TXCer（防止与轮询更新产生竞态条件）
       const lockedTXCerIds: string[] = [];
+      const txCerLockOwner = `draft:${checkpointId}`;
       try {
         for (const addr of fromAddresses) {
           const addrData = walletData[addr];
           if (addrData?.txCers && Object.keys(addrData.txCers).length > 0) {
             const txCerIds = Object.keys(addrData.txCers).filter(id => isTXCerSpendable(user, id));
-            const lockedIds = lockTXCers(txCerIds, `构造交易 - 地址 ${addr.slice(0, 8)}...`);
+            const lockedIds = lockTXCers(
+              txCerIds,
+              `构造交易 - 地址 ${addr.slice(0, 8)}...`,
+              txCerLockOwner
+            );
             lockedTXCerIds.push(...lockedIds);
             console.log(`[构造交易] 锁定地址 ${addr.slice(0, 8)}... 的 ${lockedIds.length} 个 TXCer`);
           }
@@ -1200,20 +1224,20 @@ export function initTransferSubmit(): void {
             fromAddresses: build.UserAddress,
             recipients: Object.entries(build.Bill).map(([address, bill]) => ({
               address,
-              amount: toAmountNumber(bill.Value),
+              amount: bill.Value,
               coinType: bill.MoneyType,
               publicKeyX: bill.PublicKey?.XHex || '',
               publicKeyY: bill.PublicKey?.YHex || '',
               guarGroupID: bill.GuarGroupID || '',
-              interest: toAmountNumber(bill.ToInterest || 0),
+              interest: bill.ToInterest || '0',
               seedAnchor: bill.SeedAnchor,
               seedChainStep: bill.SeedChainStep,
               defaultSpendAlgorithm: bill.DefaultSpendAlgorithm
             })),
             changeAddresses: build.ChangeAddress,
-            gas: toAmountNumber(build.InterestAssign.Gas),
+            gas: build.InterestAssign.Gas,
             isCrossChain: false,
-            howMuchPayForGas: toAmountNumber(build.HowMuchPayForGas || 0),
+            howMuchPayForGas: build.HowMuchPayForGas || '0',
             preferTXCer: false
           };
 
@@ -1222,7 +1246,7 @@ export function initTransferSubmit(): void {
           console.log('[构造交易] TXHash:', aggregateGTX.TXHash);
         } else {
           // ========== 担保交易模式：构建 UserNewTX ==========
-          userNewTX = await buildTransactionFromLegacy(build, user);
+          userNewTX = await buildTransactionFromLegacy(build, user, txCerLockOwner);
           console.log('[构造交易] 交易构造成功');
           console.log('[构造交易] TXID:', userNewTX.TX.TXID);
           console.log('[构造交易] TXType:', userNewTX.TX.TXType, userNewTX.TX.TXType === 1 ? '(使用了TXCer)' : '(仅UTXO)');
@@ -1282,15 +1306,17 @@ export function initTransferSubmit(): void {
       }
 
       // 计算转账总金额用于显示
-      const totalAmount = Object.values(bills).reduce((sum, bill) => sum + bill.Value, 0);
+      const totalAmount = formatAmount(
+        Object.values(bills).reduce((sum, bill) => sum + parseAmount(bill.Value), 0n)
+      );
       const recipientCount = Object.keys(bills).length;
 
       // 显示确认对话框
       const confirmMessage = t('transfer.confirmSendTxDesc', {
-        amount: totalAmount.toFixed(4),
+        amount: totalAmount,
         recipients: String(recipientCount),
         txid: displayTxId
-      }) || `确认发送交易？\n\n交易ID: ${displayTxId}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount.toFixed(4)}`;
+      }) || `确认发送交易？\n\n交易ID: ${displayTxId}\n收款方数量: ${recipientCount}\n总金额: ${totalAmount}`;
 
       const confirmed = await showConfirmModal(
         t('transfer.confirmSendTx') || '确认发送交易',
@@ -1478,7 +1504,7 @@ export function initTransferSubmit(): void {
                 }
 
                 // 获取 UTXO 的金额和类型
-                const value = Number(utxoData?.Value ?? 0) || 0;
+                const value = formatAmount(parseAmount(utxoData?.Value ?? '0'));
                 const type = Number(utxoData?.Type ?? resolvedAddrData?.type ?? 0) || 0;
 
                 if (!utxoData) {

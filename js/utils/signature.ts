@@ -5,6 +5,7 @@
 import { ec as EC } from 'elliptic';
 import { sha256 } from 'js-sha256';
 import { toAmountWire } from './amount';
+import { canonicalRatio } from '../protocol-v2/amount';
 
 const ec = new EC('p256');
 
@@ -186,11 +187,7 @@ function amountToBackendString(value: number | string | bigint): string {
 }
 
 function ratioToBackendString(value: number | string | bigint): string {
-  if (typeof value === 'bigint') return value.toString(10);
-  if (typeof value === 'string') return value.trim() || '0';
-  if (!Number.isFinite(value)) return '0';
-  const fixed = Math.max(0, Math.min(1, value)).toFixed(8);
-  return fixed.replace(/\.?0+$/, '') || '0';
+  return canonicalRatio(value);
 }
 
 function cloneForBackend(value: unknown, key?: string): unknown {

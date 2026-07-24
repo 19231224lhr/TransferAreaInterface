@@ -314,6 +314,19 @@ export function initDocsPage(): void {
   const card = document.getElementById('docsCard');
   if (!card) return;
 
+  const backBtn = card.querySelector<HTMLButtonElement>('#docsBackBtn');
+  if (backBtn) {
+    globalEventManager.removeAll(backBtn);
+    globalEventManager.add(backBtn, 'click', (ev: Event) => {
+      ev.preventDefault();
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.location.hash = '#/welcome';
+      }
+    });
+  }
+
   const navEl = card.querySelector<HTMLElement>('#docsNav');
   if (navEl) {
     // Rebind on each visit; listeners are cleaned up on navigation.

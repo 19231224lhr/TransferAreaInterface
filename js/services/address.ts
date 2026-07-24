@@ -12,11 +12,11 @@ import { ApiRequestError } from './api';
 import {
   loadUser,
   getJoinedGroup,
-  saveUser,
   getAccountPublicKeyHex,
   getAddressProtocolIssues,
   hasAddressProtocolMetadata,
-  normalizeAddressDataForStorage
+  normalizeAddressDataForStorage,
+  mutateUser
 } from '../utils/storage';
 import { getDecryptedPrivateKeyWithPrompt } from '../utils/keyEncryptionUI';
 import { t } from '../i18n/index.js';
@@ -33,6 +33,11 @@ import {
   type SignatureEnvelope,
   type PublicKeyEnvelope
 } from '../utils/signature';
+import {
+  buildAssignAddressRegistrationMaterial,
+  buildRetailAddressOwnershipMaterial,
+  buildRetailAddressRegistrationRequest
+} from '../protocol-v2';
 
 // ============================================================================
 // Types
@@ -86,7 +91,6 @@ export interface RegisterAddressRequest {
   DefaultSpendAlgorithm: string;
   SignPublicKeyV2: PublicKeyEnvelope;
   AddressOwnershipSig: SignatureEnvelope;
-  Sig?: EcdsaSignature;
 }
 
 /**
@@ -136,48 +140,31 @@ function buildNormalizedAddressMeta(
   return { user, normalized } as const;
 }
 
-function persistAddressState(
+async function persistAddressState(
   address: string,
   partialAddress: Record<string, unknown>
-): void {
+): Promise<void> {
   const user = loadUser();
   if (!user || !user.accountId) {
     return;
   }
 
   const normalizedAddress = String(address || '').toLowerCase();
-  const current = user.wallet?.addressMsg?.[normalizedAddress] || {};
-  const next = buildNormalizedAddressMeta(normalizedAddress, {
-    ...current,
-    ...partialAddress
+  await mutateUser(user.accountId, (latest) => {
+    const current = latest.wallet?.addressMsg?.[normalizedAddress] || {};
+    const next = buildNormalizedAddressMeta(normalizedAddress, { ...current, ...partialAddress });
+    if ('error' in next) throw new Error(next.error);
+    latest.wallet.addressMsg[normalizedAddress] = next.normalized as any;
+    return latest;
   });
-
-  if ('error' in next) {
-    return;
-  }
-
-  if (!user.wallet) {
-    user.wallet = {
-      addressMsg: {},
-      totalTXCers: {},
-      txCerStatuses: {},
-      txCerIssuanceRecords: {},
-      totalValue: 0,
-      valueDivision: { 0: 0, 1: 0, 2: 0 },
-      updateTime: Date.now(),
-      updateBlock: 0
-    };
-  }
-  user.wallet.addressMsg[normalizedAddress] = next.normalized as any;
-  saveUser(user);
 }
 
-function updateRegistrationState(
+async function updateRegistrationState(
   address: string,
   state: 'pending' | 'registered' | 'failed',
   error?: string
-): void {
-  persistAddressState(address, {
+): Promise<void> {
+  await persistAddressState(address, {
     registrationState: state,
     registrationError: state === 'registered' ? undefined : error,
     lastProtocolSyncAt: Date.now()
@@ -237,16 +224,16 @@ async function sendNewAddressRequestWithPriv(
       return { success: false, error: issues[0] || 'address protocol metadata incomplete' };
     }
 
-    const requestBody: UserNewAddressInfo = {
-      NewAddress: newAddress,
-      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
-      UserID: user.accountId,
-      Type: addressType,
-      SignPublicKeyV2: meta.normalized.signPublicKeyV2,
-      SeedAnchor: meta.normalized.seedAnchor,
-      SeedChainStep: meta.normalized.seedChainStep,
-      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm
-    };
+    const requestBody = buildAssignAddressRegistrationMaterial({
+      address: newAddress,
+      publicKeyNew: meta.normalized.publicKeyNew,
+      userID: user.accountId,
+      type: addressType,
+      signPublicKeyV2: meta.normalized.signPublicKeyV2,
+      seedAnchor: meta.normalized.seedAnchor,
+      seedChainStep: meta.normalized.seedChainStep,
+      defaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm
+    }) as UserNewAddressInfo;
 
     console.debug('[Address] Building new-address request:', {
       NewAddress: newAddress,
@@ -313,7 +300,7 @@ async function sendNewAddressRequestWithPriv(
       };
     }
 
-    persistAddressState(normalizedAddress, {
+    await persistAddressState(normalizedAddress, {
       ...meta.normalized,
       addressRootSeedHex: addressRootSeedHex || meta.normalized.addressRootSeedHex,
       registrationState: 'registered',
@@ -489,44 +476,28 @@ export async function registerAddressOnComNode(
       return { success: false, error: t('comNode.notRegistered', 'ComNode not available') };
     }
 
-    const ownershipPayload = {
-      Address: normalizedAddress,
-      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
-      GroupID: groupID,
-      TimeStamp: getTimestamp(),
-      Type: addressType,
-      SeedAnchor: meta.normalized.seedAnchor,
-      SeedChainStep: meta.normalized.seedChainStep,
-      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm,
-      SignPublicKeyV2: meta.normalized.signPublicKeyV2
-    };
+    const ownershipPayload = buildRetailAddressOwnershipMaterial({
+      address: normalizedAddress,
+      publicKeyNew: meta.normalized.publicKeyNew,
+      timestamp: getTimestamp(),
+      type: addressType,
+      seedAnchor: meta.normalized.seedAnchor,
+      seedChainStep: meta.normalized.seedChainStep,
+      defaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm,
+      signPublicKeyV2: meta.normalized.signPublicKeyV2
+    });
     const addressOwnershipSig = signHashEnvelope(
       AlgorithmECDSAP256,
       hashBackendJson(ownershipPayload),
       privHex
     );
 
-    const requestBody: RegisterAddressRequest = {
-      Address: normalizedAddress,
-      PublicKeyNew: meta.normalized.publicKeyNew as PublicKeyNew,
-      GroupID: groupID,
-      TimeStamp: ownershipPayload.TimeStamp,
-      Type: addressType,
-      SeedAnchor: meta.normalized.seedAnchor,
-      SeedChainStep: meta.normalized.seedChainStep,
-      DefaultSpendAlgorithm: meta.normalized.defaultSpendAlgorithm,
-      SignPublicKeyV2: meta.normalized.signPublicKeyV2,
-      AddressOwnershipSig: addressOwnershipSig
-    };
+    const requestBody = buildRetailAddressRegistrationRequest(
+      ownershipPayload,
+      addressOwnershipSig
+    ) as RegisterAddressRequest;
 
-    const signature = signStruct(
-      requestBody as unknown as Record<string, unknown>,
-      privHex,
-      ['Sig', 'AddressOwnershipSig']
-    );
-    requestBody.Sig = signature;
-
-    updateRegistrationState(normalizedAddress, 'pending');
+    await updateRegistrationState(normalizedAddress, 'pending');
 
     const apiUrl = `${comNodeURL}${API_ENDPOINTS.COM_REGISTER_ADDRESS}`;
     const response = await fetch(apiUrl, {
@@ -553,7 +524,7 @@ export async function registerAddressOnComNode(
     }
 
     if (!response.ok) {
-      updateRegistrationState(
+      await updateRegistrationState(
         normalizedAddress,
         'failed',
         responseData.message || responseData.error || `${t('error.networkError')}: HTTP ${response.status}`
@@ -564,7 +535,7 @@ export async function registerAddressOnComNode(
       };
     }
 
-    persistAddressState(normalizedAddress, {
+    await persistAddressState(normalizedAddress, {
       ...meta.normalized,
       registrationState: 'registered',
       registrationError: undefined,
@@ -574,7 +545,7 @@ export async function registerAddressOnComNode(
     });
     return { success: true, data: responseData };
   } catch (error) {
-    updateRegistrationState(address.toLowerCase(), 'failed', error instanceof Error ? error.message : t('error.unknownError'));
+    await updateRegistrationState(address.toLowerCase(), 'failed', error instanceof Error ? error.message : t('error.unknownError'));
     return {
       success: false,
       error: error instanceof Error ? error.message : t('error.unknownError')
@@ -601,7 +572,7 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
   let allSucceeded = true;
 
   if (addresses.length === 0) {
-    saveUser({ accountId: user.accountId, mainAddressRegistered: true });
+    await mutateUser(user.accountId, (latest) => ({ ...latest, mainAddressRegistered: true }));
     return;
   }
 
@@ -678,10 +649,10 @@ export async function registerAddressesOnMainEntry(): Promise<void> {
       }
     }
   } finally {
-    saveUser({
-      accountId: user.accountId,
+    await mutateUser(user.accountId, (latest) => ({
+      ...latest,
       mainAddressRegistered: allSucceeded && errors.length === 0
-    });
+    }));
   }
 
   if (errors.length > 0) {

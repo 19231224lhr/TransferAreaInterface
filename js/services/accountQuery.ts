@@ -14,7 +14,7 @@ import { t } from '../i18n/index.js';
 import { ProtocolAmount, UTXOData } from '../types/blockchain';
 import { getComNodeURL, clearComNodeCache } from './comNodeEndpoint';
 import { showToast } from '../utils/toast';
-import { toAmountNumber, toAmountWire } from '../utils/amount';
+import { parseAmount, toAmountNumber, toAmountWire, type AmountDecimal } from '../utils/amount';
 
 // ============================================================================
 // Types
@@ -103,7 +103,7 @@ export interface QueryAddressResponse {
  */
 export interface AddressBalanceInfo {
   address: string;
-  balance: number;
+  balance: AmountDecimal;
   interest: number;
   totalAssets: number;
   type: number;
@@ -138,14 +138,14 @@ export type QueryResult<T> =
  * Normalize backend address data to frontend format
  */
 function normalizeAddressData(address: string, data: PointAddressData): AddressBalanceInfo {
-  const value = toAmountNumber(data.Value || 0);
-  const exists = value > 0 || data.Interest > 0 || data.LastHeight > 0 || Object.keys(data.UTXO || {}).length > 0;
+  const value = toAmountWire(data.Value || '0');
+  const exists = parseAmount(value) > 0n || data.Interest > 0 || data.LastHeight > 0 || Object.keys(data.UTXO || {}).length > 0;
 
   return {
     address,
     balance: value,
     interest: data.Interest || 0,
-    totalAssets: value + (data.Interest || 0),
+    totalAssets: toAmountNumber(value) + (data.Interest || 0),
     type: data.Type || 0,
     groupID: data.GroupID || '',
     isInGroup: !!(data.GroupID && data.GroupID !== '' && data.GroupID !== '1'),
@@ -470,7 +470,7 @@ export async function querySingleAddress(
       success: true,
       data: {
         address: normalizedAddr,
-        balance: 0,
+        balance: '0',
         interest: 0,
         totalAssets: 0,
         type: 0,
@@ -505,12 +505,13 @@ export function calculateTotalBalance(balances: AddressBalanceInfo[]): {
   let totalInterest = 0;
 
   for (const balance of balances) {
-    totalBalance += balance.balance;
+    const displayBalance = toAmountNumber(balance.balance);
+    totalBalance += displayBalance;
     totalInterest += balance.interest;
 
     const type = balance.type || 0;
     if (byType[type] !== undefined) {
-      byType[type] += balance.balance;
+      byType[type] += displayBalance;
     }
   }
 

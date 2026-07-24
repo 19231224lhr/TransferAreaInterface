@@ -1,5 +1,14 @@
 import type { AmountInput } from '../utils/amount';
 import { isAmountLike } from '../utils/amount';
+import type {
+  ExposureShareV2,
+  FastLiabilityReceiptV2,
+  TXCerFastEvidenceV2,
+  TXCerIssuanceAckV2,
+  TXCerIssuanceRecordV2,
+  TXCerIssueProofV2
+} from '../protocol-v2/types';
+import type { TXCerAuthoritySnapshot, TXCerSecurityState } from '../protocol-v2/security';
 
 export type ProtocolAmount = AmountInput;
 
@@ -149,6 +158,8 @@ export interface TXCerIssuanceAck {
   RecordID?: string;
   txCerID?: string;
   TXCerID?: string;
+  evidenceHash?: number[] | string | null;
+  EvidenceHash?: number[] | string | null;
   groupID?: string;
   GroupID?: string;
   userID?: string;
@@ -200,6 +211,18 @@ export interface TXCerIssuanceView {
   ErrorReason?: string;
   receiptID?: string;
   ReceiptID?: string;
+  exposureSharesHash?: number[] | string | null;
+  ExposureSharesHash?: number[] | string | null;
+  liabilityReceiptHash?: number[] | string | null;
+  LiabilityReceiptHash?: number[] | string | null;
+  rootExposureIDs?: string[];
+  RootExposureIDs?: string[];
+  liabilityDeltaID?: string;
+  LiabilityDeltaID?: string;
+  fastEvidenceVersion?: string;
+  FastEvidenceVersion?: string;
+  auditStatus?: string;
+  AuditStatus?: string;
 }
 
 export interface TXCerIssuanceDetailView extends TXCerIssuanceView {
@@ -207,6 +230,12 @@ export interface TXCerIssuanceDetailView extends TXCerIssuanceView {
   Proof?: TXCerIssueProof;
   ack?: TXCerIssuanceAck;
   Ack?: TXCerIssuanceAck;
+  liabilityReceipt?: FastLiabilityReceiptV2;
+  LiabilityReceipt?: FastLiabilityReceiptV2;
+  fastEvidence?: TXCerFastEvidenceV2;
+  FastEvidence?: TXCerFastEvidenceV2;
+  txCer?: TxCertificate;
+  TXCer?: TxCertificate;
 }
 
 export type TXCerProofVerificationStatus = 'verified' | 'invalid' | 'missingProof' | 'unsupported';
@@ -256,82 +285,6 @@ export interface CommitteeReceipt {
   Signatures?: Record<string, EcdsaSignature>;
 }
 
-export type CommitteeProposalType =
-  | 'MasterBlock'
-  | 'ExchangeRecord'
-  | 'TXCerIssuanceBatch'
-  | 'PenaltyDecision'
-  | string;
-
-export type CommitteeStep = 'Prevote' | 'Precommit' | string;
-
-export interface CommitteeProposal {
-  ProposalID?: string;
-  Height?: number;
-  Round?: number;
-  ProposalType?: CommitteeProposalType;
-  ProposalHash?: number[] | string;
-  PayloadHash?: number[] | string;
-  StateRoot?: number[] | string;
-  ValidatorSetID?: string;
-  ProposerID?: string;
-  GroupID?: string;
-  Timestamp?: number;
-  Signature?: EcdsaSignature;
-}
-
-export interface CommitteeQC {
-  QCID?: string;
-  Height?: number;
-  Round?: number;
-  Step?: CommitteeStep;
-  ProposalType?: CommitteeProposalType;
-  ProposalHash?: number[] | string;
-  StateRoot?: number[] | string;
-  ValidatorSetID?: string;
-  GroupID?: string;
-  Threshold?: number;
-  Signers?: string[];
-  Signatures?: Record<string, EcdsaSignature>;
-  CreatedAt?: number;
-  Proposal?: CommitteeProposal;
-}
-
-export interface CommitteeQCStatus {
-  enabled?: boolean;
-  height?: number;
-  validatorSetID?: string;
-  validatorCount?: number;
-  threshold?: number;
-  finalityProfile?: string;
-  finalizedHeight?: number;
-  latestPrevoteQC?: string;
-  latestPrecommitQC?: string;
-  finalized?: Record<string, string>;
-  proposalCount?: number;
-  qcCount?: number;
-  localVoteLocks?: Record<string, string>;
-  experimental3Node?: boolean;
-}
-
-export interface CommitteeQCStatusResponse {
-  success?: boolean;
-  status?: CommitteeQCStatus;
-}
-
-export interface CommitteeQCListResponse {
-  success?: boolean;
-  count?: number;
-  proposals?: CommitteeProposal[];
-  qcs?: CommitteeQC[];
-}
-
-export interface CommitteeQCFinalizedBlockResponse {
-  success?: boolean;
-  block?: unknown;
-  qc?: CommitteeQC;
-}
-
 export type PenaltyStatus = 'PendingGovernance' | 'Approved' | 'Rejected';
 
 export interface PenaltyRecord {
@@ -346,15 +299,25 @@ export interface PenaltyRecord {
 }
 
 export interface TXCerIssuanceMetadata {
+  txCer?: TxCertificate;
+  lifecycleStatus?: TXCerLifecycleStatus | string;
   issuanceRecordID: string;
   issuanceStatus?: TXCerIssuanceStatus | string;
-  issuanceProof?: TXCerIssueProof;
+  issuanceProof?: TXCerIssueProofV2;
   issueBatchID?: string;
   deliveredAt?: number;
   proofStatus?: TXCerProofVerificationStatus;
   proofCheckedAt?: number;
   proofError?: string;
+  issuanceRecord?: TXCerIssuanceRecordV2;
+  fastEvidence?: TXCerFastEvidenceV2;
+  assignAck?: TXCerIssuanceAckV2;
+  liabilityReceipt?: FastLiabilityReceiptV2;
+  authoritySnapshot?: TXCerAuthoritySnapshot;
+  security?: TXCerSecurityState;
 }
+
+export interface TXCerClientRecord extends TXCerIssuanceMetadata {}
 
 export interface TXCerStatusView {
   txCerID: string;
@@ -362,7 +325,7 @@ export interface TXCerStatusView {
   address: string;
   status: TXCerLifecycleStatus;
   previousStatus?: TXCerLifecycleStatus;
-  value: number;
+  value: ProtocolAmount;
   sourceTXID?: string;
   sourcePosition: TXCerPosition;
   fromGuarGroupID?: string;
@@ -529,6 +492,7 @@ export interface TxCertificate {
   SourcePledgeAddress?: string;
   ConstructionTime: number;
   Size?: number;
+  ExposureShares?: ExposureShareV2[];
   TXID: string;
   TxCerPosition: TXCerPosition;
   GuarGroupSignature: EcdsaSignature;

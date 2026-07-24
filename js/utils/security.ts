@@ -57,6 +57,8 @@ export const PRIVATE_KEY_HEX_LENGTH: number = 64;
 /** Maximum decimal places for transfer amounts */
 export const MAX_AMOUNT_DECIMALS: number = 8;
 
+import { compareAmounts, formatAmount, parseAmount, type AmountDecimal, type AmountInput } from './amount';
+
 // ========================================
 // Type Definitions
 // ========================================
@@ -70,8 +72,8 @@ export interface ValidationResult<T = string> {
 
 /** Amount validation options */
 export interface AmountValidationOptions {
-  min?: number;
-  max?: number;
+  min?: AmountInput;
+  max?: AmountInput;
   decimals?: number;
 }
 
@@ -197,39 +199,38 @@ export function createElement(
  * Validate transfer amount with detailed error messages
  */
 export function validateTransferAmount(
-  amount: string | number | null | undefined,
+  amount: AmountInput | null | undefined,
   options: AmountValidationOptions = {}
-): ValidationResult<number> {
-  const { min = 0, max = Number.MAX_SAFE_INTEGER, decimals = MAX_AMOUNT_DECIMALS } = options;
+): ValidationResult<AmountDecimal> {
+  const { min = '0', max, decimals = MAX_AMOUNT_DECIMALS } = options;
 
   // Handle empty input
   if (amount === '' || amount === null || amount === undefined) {
     return { valid: false, error: t('validation.amountRequired') || '请输入金额' };
   }
 
-  // Convert to number
-  const num = typeof amount === 'number' ? amount : parseFloat(String(amount).trim());
-
-  // Check if valid number
-  if (!Number.isFinite(num)) {
+  let canonical: AmountDecimal;
+  try {
+    canonical = formatAmount(parseAmount(amount));
+  } catch {
     return { valid: false, error: t('validation.amountInvalid') || '无效的金额' };
   }
 
   // Check minimum (use <= to ensure amount must be > min)
-  if (num <= min) {
-    if (min === 0 || min <= 0.00000001) {
+  if (compareAmounts(canonical, min) <= 0) {
+    if (compareAmounts(min, '0.00000001') <= 0) {
       return { valid: false, error: t('validation.amountPositive') || '金额必须大于0' };
     }
-    return { valid: false, error: t('validation.amountMin', { min: String(min) }) };
+    return { valid: false, error: t('validation.amountMin', { min: formatAmount(parseAmount(min)) }) };
   }
 
   // Check maximum (safety check)
-  if (num > max) {
+  if (max !== undefined && compareAmounts(canonical, max) > 0) {
     return { valid: false, error: t('validation.amountTooLarge') || '金额超出安全范围' };
   }
 
   // Check decimal places
-  const strAmount = String(amount);
+  const strAmount = canonical;
   const decimalPart = strAmount.split('.')[1];
   if (decimalPart && decimalPart.length > decimals) {
     return {
@@ -238,7 +239,7 @@ export function validateTransferAmount(
     };
   }
 
-  return { valid: true, value: num };
+  return { valid: true, value: canonical };
 }
 
 /**

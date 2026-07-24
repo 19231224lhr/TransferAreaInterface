@@ -13,8 +13,12 @@
     "postbuild": "node scripts/copy-sw.js",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/interestAccrual.node.test.js tests/txCerLifecycle.node.test.js tests/settlementAuthFixture.node.test.js tests/txCerIssuanceProof.node.test.js",
-    "test:real-backend": "node scripts/check-real-backend-protocol.js"
+    "check:api": "node scripts/check-api-routes.js",
+    "test": "node --test tests/interestAccrual.node.test.js tests/txCerLifecycle.node.test.js tests/protocolV2.node.test.js tests/exactAmountPaths.node.test.js tests/serializedMutation.node.test.js tests/losslessTXCerDelivery.node.test.js tests/liabilityAuthoritySnapshot.node.test.js tests/realBrowserFlow.node.test.js",
+    "sync:protocol-v2": "node scripts/sync-protocol-v2.js",
+    "generate:protocol-v2-client-signature": "node scripts/generate-protocol-v2-client-signature.js",
+    "test:real-backend": "node scripts/check-real-backend-protocol.js",
+    "test:real-browser": "node scripts/check-real-browser-flow.js"
   },
   "keywords": [],
   "author": "",

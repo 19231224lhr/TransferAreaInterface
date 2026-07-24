@@ -188,7 +188,7 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            <img class="avatar-img hidden" src="" alt="????">
+            <img class="avatar-img hidden" src="" alt="用户头像">
           </div>
           <span id="userLabel" class="user-label" data-i18n="common.notLoggedIn">未登录</span>
           <svg class="user-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -204,11 +204,11 @@
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
                 <circle cx="12" cy="7" r="4" />
               </svg>
-              <img class="avatar-img hidden" src="" alt="????">
+              <img class="avatar-img hidden" src="" alt="用户头像">
             </div>
             <div class="menu-header-info">
               <span class="menu-header-title" id="menuHeaderTitle">Amiya</span>
-              <span class="menu-header-sub" id="menuHeaderSub">杩欎釜浜哄緢鎳掞紝杩樻病鏈変慨鏀硅繖閲屻€</span>
+              <span class="menu-header-sub" id="menuHeaderSub">这个人很懒，还没有填写个人简介。</span>
             </div>
             <svg class="menu-header-settings" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
               stroke-linecap="round" stroke-linejoin="round">
@@ -232,7 +232,7 @@
                 <span class="menu-card-label" data-i18n="header.accountId">账户 ID</span>
                 <code id="menuAccountId" class="menu-card-value"></code>
               </div>
-              <button class="menu-card-action-btn" id="menuAccountKeyBtn" title="????">
+              <button class="menu-card-action-btn" id="menuAccountKeyBtn" title="查看账户密钥">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path
                     d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" />
@@ -384,7 +384,7 @@
               <div class="loader-logo-glow"></div>
             </div>
           </div>
-          <span id="actionOverlayText" class="overlay-loader-text">姝ｅ湪澶勭悊...</span>
+          <span id="actionOverlayText" class="overlay-loader-text" data-i18n="common.processing">正在处理...</span>
         </div>
         <!-- 鎴愬姛鐘舵€?-->
         <div class="unified-success hidden" id="unifiedSuccess">
@@ -404,11 +404,11 @@
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             </svg>
           </div>
-          <h3 class="success-title" id="unifiedTitle">鎿嶄綔鎴愬姛</h3>
+          <h3 class="success-title" id="unifiedTitle">操作成功</h3>
           <div class="success-content-wrapper" id="successContentWrapper">
             <div class="success-key-row hidden" id="successKeyRow">
               <code class="success-key-code" id="successKeyCode"></code>
-              <button class="success-copy-btn" id="successCopyBtn" title="????">
+              <button class="success-copy-btn" id="successCopyBtn" title="复制">
                 <svg class="copy-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                   <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
@@ -482,18 +482,18 @@
     </div>
     <div id="confirmExitModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>??????</h3>
-        <p class="tip">????????????????</p>
+        <h3>确认退出</h3>
+        <p class="tip">确定要退出当前账户吗？</p>
         <div class="actions">
-          <button id="confirmExitCancel" class="btn secondary">鍙栨秷</button>
-          <button id="confirmExitOk" class="btn primary">??</button>
+          <button id="confirmExitCancel" class="btn secondary">取消</button>
+          <button id="confirmExitOk" class="btn primary">确认</button>
         </div>
       </div>
     </div>
     <div id="confirmProceedModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
         <h3 data-i18n="modal.confirmSubAddress">确认导入子地址</h3>
-        <p id="confirmProceedText" class="tip">???????0???????????</p>
+        <p id="confirmProceedText" class="tip">当前子地址数：0，是否确认继续下一步？</p>
         <div class="actions">
           <button id="confirmProceedCancel" class="btn secondary" data-i18n="modal.cancel">取消</button>
           <button id="confirmProceedOk" class="btn primary" data-i18n="modal.confirm">确认</button>
@@ -502,8 +502,8 @@
     </div>
     <div id="actionModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 id="actionTitle">鎿嶄綔鎴愬姛</h3>
-        <p id="actionText" class="tip">宸插畬鎴愭湰娆℃搷浣</p>
+        <h3 id="actionTitle">操作成功</h3>
+        <p id="actionText" class="tip">已完成本次操作</p>
         <div class="actions">
           <button id="actionCancelBtn" class="btn secondary hidden" data-i18n="modal.cancel">取消</button>
           <button id="actionOkBtn" class="btn primary" data-i18n="modal.ok">好的</button>
@@ -514,8 +514,8 @@
     <div id="txDetailModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog tx-detail-dialog">
         <div class="tx-detail-header">
-          <h3 id="txDetailTitle">浜ゆ槗缁撴瀯浣</h3>
-          <button id="txDetailClose" class="tx-detail-close" type="button" aria-label="??">
+          <h3 id="txDetailTitle">交易结构体</h3>
+          <button id="txDetailClose" class="tx-detail-close" type="button" aria-label="关闭">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -531,29 +531,29 @@
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
               <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
             </svg>
-            <span>????</span>
+            <span>复制</span>
           </button>
-          <button id="txDetailOk" class="tx-detail-btn tx-detail-btn--ok" type="button">??</button>
+          <button id="txDetailOk" class="tx-detail-btn tx-detail-btn--ok" type="button">确定</button>
         </div>
       </div>
     </div>
     <div id="confirmGasModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3 id="confirmGasTitle">???? Gas</h3>
+        <h3 id="confirmGasTitle">确认 Gas</h3>
         <p id="confirmGasText" class="tip"></p>
         <div class="actions actions--split">
-          <button id="confirmGasCancel" class="btn secondary">??</button>
-          <button id="confirmGasOk" class="btn primary">??</button>
+          <button id="confirmGasCancel" class="btn secondary">取消</button>
+          <button id="confirmGasOk" class="btn primary">确认</button>
         </div>
       </div>
     </div>
     <div id="confirmDelModal" class="modal hidden" role="dialog" aria-modal="true">
       <div class="dialog">
-        <h3>??????</h3>
-        <p id="confirmDelText" class="tip">??????????????</p>
+        <h3>确认删除</h3>
+        <p id="confirmDelText" class="tip">确定要删除该地址及其本地数据吗？</p>
         <div class="actions">
-          <button id="confirmDelCancel" class="btn secondary">??</button>
-          <button id="confirmDelOk" class="btn danger">??</button>
+          <button id="confirmDelCancel" class="btn secondary">取消</button>
+          <button id="confirmDelOk" class="btn danger">删除</button>
         </div>
       </div>
     </div>

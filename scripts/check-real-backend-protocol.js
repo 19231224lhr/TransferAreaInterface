@@ -7,28 +7,29 @@ const requireRealFlow = /^(1|true|yes)$/i.test(process.env.PANGU_REQUIRE_REAL_FL
 async function main() {
   const health = await getJSON('/health');
   assert.equal(health.status, 'ok', 'Gateway /health must return status=ok');
-  await resolveNodeEndpoints();
-  const assignBase = baseUrl;
-  const aggrBase = baseUrl;
+  const { assignBase, aggrBase } = await resolveNodeEndpoints();
 
-  const qcStatusReply = await getJSON('/api/v1/committee/qc/status');
-  assert.equal(qcStatusReply.success, true, 'committee QC status query must succeed');
-  assert.equal(typeof qcStatusReply.status, 'object', 'committee QC status must include status object');
-  assert.equal(qcStatusReply.status.enabled, true, 'committee QC must be enabled by default on the real backend');
-  assert.equal(typeof qcStatusReply.status.threshold, 'number', 'committee QC status must include numeric threshold');
-  assert.ok(qcStatusReply.status.finalityProfile, 'committee QC status must include finalityProfile');
-  const finalizedHeight = Number(qcStatusReply.status.finalizedHeight || 0);
-  if (finalizedHeight > 0) {
-    const proposals = await getJSON(`/api/v1/committee/qc/proposals?height=${finalizedHeight}`);
-    assert.equal(proposals.success, true, 'committee QC proposals query must succeed for finalized height');
-    assert.ok(Array.isArray(proposals.proposals), 'committee QC proposals must be an array');
-    const qcs = await getJSON(`/api/v1/committee/qc/qcs?height=${finalizedHeight}`);
-    assert.equal(qcs.success, true, 'committee QC qcs query must succeed for finalized height');
-    assert.ok(Array.isArray(qcs.qcs), 'committee QC qcs must be an array');
-    const finalizedBlock = await getJSON(`/api/v1/committee/qc/finalized-block/${finalizedHeight}`);
-    assert.equal(finalizedBlock.success, true, 'committee QC finalized block query must succeed');
-    assert.ok(finalizedBlock.block, 'committee QC finalized block response must include block');
-    assert.ok(finalizedBlock.qc, 'committee QC finalized block response must include qc');
+  const gqncStatusReply = await getJSON('/api/v1/committee/gqnc/status');
+  assert.equal(gqncStatusReply.success, true, 'GQNC status query must succeed');
+  assert.equal(typeof gqncStatusReply.status, 'object', 'GQNC status must include status object');
+  assert.equal(gqncStatusReply.status.enabled, true, 'GQNC must be enabled on a four-validator real backend');
+  assert.equal(gqncStatusReply.status.validatorCount, 4, 'GQNC must expose the authoritative validator count');
+  assert.equal(gqncStatusReply.status.quorum, 3, 'GQNC must expose the authoritative 3-of-4 quorum');
+  assert.match(String(gqncStatusReply.status.protocolVersion || ''), /^gqnc-master-v\d+$/, 'GQNC protocol version must be explicit');
+  const certifiedHeight = Number(gqncStatusReply.status.certifiedHeight || 0);
+  if (certifiedHeight > 0) {
+    const proposals = await getJSON(`/api/v1/committee/gqnc/proposals?height=${certifiedHeight}`);
+    assert.equal(proposals.success, true, 'GQNC proposals query must succeed for certified height');
+    assert.ok(Array.isArray(proposals.proposals), 'GQNC proposals must be an array');
+    const qcs = await getJSON(`/api/v1/committee/gqnc/qcs?height=${certifiedHeight}`);
+    assert.equal(qcs.success, true, 'GQNC qcs query must succeed for certified height');
+    assert.ok(Array.isArray(qcs.qcs), 'GQNC qcs must be an array');
+    assert.ok(qcs.qcs.length > 0, 'certified height must expose at least one BlockQC');
+    const certifiedBlock = await getJSON(`/api/v1/committee/gqnc/certified-block/${certifiedHeight}`);
+    assert.equal(certifiedBlock.success, true, 'GQNC certified block query must succeed');
+    assert.ok(certifiedBlock.envelope, 'GQNC certified block response must include its envelope');
+    assert.ok(certifiedBlock.envelope.Proposal || certifiedBlock.envelope.proposal, 'certified envelope must include its proposal');
+    assert.ok(certifiedBlock.envelope.QC || certifiedBlock.envelope.qc, 'certified envelope must include its BlockQC');
   }
 
   const aggrCertifiers = await getJSON(`/api/v1/${groupID}/aggr/certifiers`, aggrBase);
@@ -81,6 +82,12 @@ async function main() {
     assert.ok(issuanceRecords.length > 0, 'real TXCer flow must expose issuance records for a DAG user');
     const withProof = issuanceRecords.find((record) => record.Proof || record.proof);
     assert.ok(withProof, 'real TXCer issuance record must include proof when includeProof=true');
+    const txCer = withProof.TXCer || withProof.txCer || withProof.tXCer;
+    assert.ok(txCer, 'real TXCer issuance record must include the complete TXCer');
+    assert.ok(Array.isArray(txCer.ExposureShares || txCer.exposureShares), 'complete TXCer must include ExposureShares');
+    assert.ok(withProof.FastEvidence || withProof.fastEvidence, 'issuance record must include FastEvidence');
+    assert.ok(withProof.Ack || withProof.ack || withProof.AssignAck || withProof.assignAck, 'issuance record must include AssignAck');
+    assert.ok(withProof.LiabilityReceipt || withProof.liabilityReceipt, 'issuance record must include LiabilityReceipt');
     const certifierID = withProof.CertifierID || withProof.certifierID || withProof.Proof?.CertifierID || withProof.proof?.CertifierID;
     assert.ok(certifierID, 'real TXCer issuance proof must bind a certifier ID');
     const knownCertifiers = new Set(aggrCertifiers.certifiers.map((item) => item.CertifierID || item.certifierID).filter(Boolean));

@@ -1,0 +1,1114 @@
+{
+  "schemaVersion": "protocol-v2-golden/v1",
+  "networkID": "utxo-area-experiment-v1",
+  "amountScale": "100000000",
+  "ratioScale": "100000000",
+  "amounts": [
+    {
+      "input": "0",
+      "valid": true,
+      "units": "0",
+      "canonical": "0"
+    },
+    {
+      "input": "0.00000001",
+      "valid": true,
+      "units": "1",
+      "canonical": "0.00000001"
+    },
+    {
+      "input": "1.00000000",
+      "valid": true,
+      "units": "100000000",
+      "canonical": "1"
+    },
+    {
+      "input": "90071992.54740993",
+      "valid": true,
+      "units": "9007199254740993",
+      "canonical": "90071992.54740993"
+    },
+    {
+      "input": "184467440737.09551615",
+      "valid": true,
+      "units": "18446744073709551615",
+      "canonical": "184467440737.09551615"
+    },
+    {
+      "input": "-1",
+      "valid": false,
+      "error": "amount cannot be negative"
+    },
+    {
+      "input": "0.000000001",
+      "valid": false,
+      "error": "amount has more than 8 decimal places"
+    },
+    {
+      "input": "184467440737.09551616",
+      "valid": false,
+      "error": "amount overflow"
+    }
+  ],
+  "ratios": [
+    {
+      "input": "0",
+      "valid": true,
+      "units": "0",
+      "canonical": "0"
+    },
+    {
+      "input": "0.00000001",
+      "valid": true,
+      "units": "1",
+      "canonical": "0.00000001"
+    },
+    {
+      "input": "0.25",
+      "valid": true,
+      "units": "25000000",
+      "canonical": "0.25"
+    },
+    {
+      "input": "1",
+      "valid": true,
+      "units": "100000000",
+      "canonical": "1"
+    },
+    {
+      "input": "1.00000001",
+      "valid": false,
+      "error": "ratio cannot exceed 1"
+    },
+    {
+      "input": "-0.1",
+      "valid": false,
+      "error": "ratio cannot be negative"
+    },
+    {
+      "input": "0.000000001",
+      "valid": false,
+      "error": "ratio has more than 8 decimal places"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "legacy-output",
+      "output": {
+        "ToAddress": "recipient-v2",
+        "ToValue": "90071992.54740993",
+        "ToGuarGroupID": "group-target",
+        "ToPublicKey": {
+          "CurveName": "P256",
+          "X": 11,
+          "Y": 13
+        },
+        "ToInterest": "0.00000001",
+        "Type": 2,
+        "ToPeerID": "peer-recipient",
+        "IsPayForGas": false,
+        "IsCrossChain": false,
+        "IsGuarMake": false,
+        "SeedAnchor": null,
+        "SeedChainStep": 0,
+        "DefaultSpendAlgorithm": ""
+      },
+      "canonicalJSON": "{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":null,\"SeedChainStep\":0,\"DefaultSpendAlgorithm\":\"\"}",
+      "hashHex": "5cba4ccf6cc6eff3c4971929b0030e4558aa022b2ffacce473e9be8cfdec0015"
+    },
+    {
+      "name": "seed-chain-v2-output",
+      "output": {
+        "ToAddress": "recipient-v2",
+        "ToValue": "90071992.54740993",
+        "ToGuarGroupID": "group-target",
+        "ToPublicKey": {
+          "CurveName": "P256",
+          "X": 11,
+          "Y": 13
+        },
+        "ToInterest": "0.00000001",
+        "Type": 2,
+        "ToPeerID": "peer-recipient",
+        "IsPayForGas": false,
+        "IsCrossChain": false,
+        "IsGuarMake": false,
+        "SeedAnchor": "KSor",
+        "SeedChainStep": 5,
+        "DefaultSpendAlgorithm": "ecdsa_p256"
+      },
+      "canonicalJSON": "{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"KSor\",\"SeedChainStep\":5,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}",
+      "hashHex": "3ff598b024ec0610090888b27acd148b4a9a48114f0226ec0a87d762ad7f6d28"
+    }
+  ],
+  "transactions": [
+    {
+      "name": "normal-utxo",
+      "transaction": {
+        "TXID": "ignored-existing-id",
+        "Size": 999,
+        "Version": 2,
+        "GuarantorGroup": "group-source",
+        "TXType": 0,
+        "Value": "90071992.54740993",
+        "ValueDivision": {
+          "10": "90071992.54740992",
+          "2": "0.00000001"
+        },
+        "NewValue": "1",
+        "NewValueDiv": {
+          "10": "0.5",
+          "2": "0.5"
+        },
+        "InterestAssign": {
+          "Gas": "0.00000001",
+          "Output": "0.00000001",
+          "BackAssign": {
+            "a-address": "0.75",
+            "z-address": "0.25"
+          }
+        },
+        "UserSignature": {
+          "R": 17,
+          "S": 19
+        },
+        "UserSignatureV2": {
+          "Algorithm": "ecdsa_p256",
+          "Signature": "MEUCIGemvsJA3uBlHPJY0ubP6KpgZ8XD1BdaWTp95pSZXS+iAiEA4wQgU+un5SpgufOr3hlFSAnSbKOKbMKAyvDE2Fd6WnI="
+        },
+        "TXInputsNormal": [
+          {
+            "FromTXID": "utxo-source",
+            "FromTxPosition": {
+              "Blocknum": 4,
+              "IndexX": 1,
+              "IndexY": 2,
+              "IndexZ": 3
+            },
+            "FromAddress": "sender-v2",
+            "IsGuarMake": false,
+            "IsCommitteeMake": false,
+            "IsCrossChain": false,
+            "InputSignature": {
+              "R": null,
+              "S": null
+            },
+            "TXOutputHash": "AAEC/w==",
+            "InputSignatureV2": {
+              "Algorithm": "ecdsa_p256",
+              "Signature": "BAUG"
+            },
+            "SeedReveal": "",
+            "SeedPublicKeyV2": {
+              "Algorithm": "ecdsa_p256",
+              "PublicKey": "BwgJ"
+            },
+            "SeedChainStep": 2
+          },
+          {
+            "FromTXID": "filtered-guarantee-input",
+            "FromTxPosition": {
+              "Blocknum": 4,
+              "IndexX": 1,
+              "IndexY": 2,
+              "IndexZ": 3
+            },
+            "FromAddress": "sender-v2",
+            "IsGuarMake": true,
+            "IsCommitteeMake": false,
+            "IsCrossChain": false,
+            "InputSignature": {
+              "R": null,
+              "S": null
+            },
+            "TXOutputHash": "AAEC/w==",
+            "InputSignatureV2": {
+              "Algorithm": "ecdsa_p256",
+              "Signature": "BAUG"
+            },
+            "SeedReveal": "",
+            "SeedPublicKeyV2": {
+              "Algorithm": "ecdsa_p256",
+              "PublicKey": "BwgJ"
+            },
+            "SeedChainStep": 2
+          }
+        ],
+        "TXInputsCertificate": null,
+        "TXOutputs": [
+          {
+            "ToAddress": "recipient-v2",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": false,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          },
+          {
+            "ToAddress": "filtered-guarantee-output",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": true,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          }
+        ],
+        "Data": ""
+      },
+      "userPublicKeyV2": {
+        "Algorithm": "ecdsa_p256",
+        "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+      },
+      "canonicalJSON": "{\"Domain\":\"utxo-area/transaction/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":0,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[{\"FromTXID\":\"utxo-source\",\"FromTxPosition\":{\"Blocknum\":4,\"IndexX\":1,\"IndexY\":2,\"IndexZ\":3},\"FromAddress\":\"sender-v2\",\"IsGuarMake\":false,\"IsCommitteeMake\":false,\"IsCrossChain\":false,\"InputSignature\":{\"R\":null,\"S\":null},\"TXOutputHash\":\"AAEC/w==\",\"InputSignatureV2\":{\"Algorithm\":\"ecdsa_p256\",\"Signature\":\"BAUG\"},\"SeedReveal\":\"\",\"SeedPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BwgJ\"},\"SeedChainStep\":2}],\"TXInputsCertificate\":[],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}",
+      "hashHex": "8619f641f7cb90e4b32798c2425cbbe99616ad73d4bc3f0c7c2b157348445f63",
+      "txID": "8619f641f7cb90e4b32798c2425cbbe99616ad73d4bc3f0c7c2b157348445f63",
+      "settlementTXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "settlementCanonicalJSON": "{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"Transaction\":{\"Domain\":\"utxo-area/settlement-intent/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":0,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[{\"FromTXID\":\"utxo-source\",\"FromTxPosition\":{\"Blocknum\":4,\"IndexX\":1,\"IndexY\":2,\"IndexZ\":3},\"FromAddress\":\"sender-v2\",\"IsGuarMake\":false,\"IsCommitteeMake\":false,\"IsCrossChain\":false,\"InputSignature\":{\"R\":null,\"S\":null},\"TXOutputHash\":\"AAEC/w==\",\"InputSignatureV2\":{\"Algorithm\":\"ecdsa_p256\",\"Signature\":\"BAUG\"},\"SeedReveal\":\"\",\"SeedPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BwgJ\"},\"SeedChainStep\":2}],\"TXInputsCertificate\":[],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}}",
+      "settlementIntentHashHex": "a82c04a17cc08f42a9327c406ce461e2cd7d9422653b707292079507fc710df4"
+    },
+    {
+      "name": "pure-txcer",
+      "transaction": {
+        "TXID": "ignored-existing-id",
+        "Size": 999,
+        "Version": 2,
+        "GuarantorGroup": "group-source",
+        "TXType": 1,
+        "Value": "90071992.54740993",
+        "ValueDivision": {
+          "10": "90071992.54740992",
+          "2": "0.00000001"
+        },
+        "NewValue": "1",
+        "NewValueDiv": {
+          "10": "0.5",
+          "2": "0.5"
+        },
+        "InterestAssign": {
+          "Gas": "0.00000001",
+          "Output": "0.00000001",
+          "BackAssign": {
+            "a-address": "0.75",
+            "z-address": "0.25"
+          }
+        },
+        "UserSignature": {
+          "R": 17,
+          "S": 19
+        },
+        "UserSignatureV2": {
+          "Algorithm": "ecdsa_p256",
+          "Signature": "MEUCIQCYauJQbx/xBNBCMIYdj0tJj0vExtAJsw91RNwSm4LSjQIgUHQBAXRTz6I1o4qG203qpQIln8dFp9ZlKEqIQyYlWIE="
+        },
+        "TXInputsNormal": null,
+        "TXInputsCertificate": [
+          {
+            "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+            "ToAddress": "recipient-v2",
+            "Value": "90071992.54740993",
+            "ToInterest": "0.00000001",
+            "FromGuarGroupID": "group-source",
+            "ToGuarGroupID": "group-target",
+            "SourcePledgeAddress": "pledge-source",
+            "ConstructionTime": 1700000000001,
+            "Size": 3,
+            "ExposureShares": [
+              {
+                "RootID": "root-b",
+                "LeafID": "leaf-b",
+                "GroupID": "group-source",
+                "PledgeAddress": "pledge-source",
+                "Amount": "0.00000001"
+              },
+              {
+                "RootID": "root-a",
+                "LeafID": "leaf-a",
+                "GroupID": "group-source",
+                "PledgeAddress": "pledge-source",
+                "Amount": "90071992.54740992"
+              }
+            ],
+            "TXID": "source-transaction-v2",
+            "TxCerPosition": {
+              "BlockHeight": 9,
+              "Index": 2,
+              "InIndex": 1
+            },
+            "GuarGroupSignature": {
+              "R": null,
+              "S": null
+            },
+            "UserSignature": {
+              "R": null,
+              "S": null
+            },
+            "UserSignatureV2": {
+              "Algorithm": "",
+              "Signature": null
+            },
+            "SettlementAuth": {
+              "Version": 0,
+              "TXCerID": "",
+              "SourceTXID": "",
+              "SourcePosition": {
+                "BlockHeight": 0,
+                "Index": 0,
+                "InIndex": 0
+              },
+              "Value": "0",
+              "FromGuarGroupID": "",
+              "ToGuarGroupID": "",
+              "PledgeAddress": "",
+              "ConsumeIntentHash": null,
+              "AuthTime": 0,
+              "UserSignatureV2": {
+                "Algorithm": "",
+                "Signature": null
+              }
+            }
+          }
+        ],
+        "TXOutputs": [
+          {
+            "ToAddress": "recipient-v2",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": false,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          },
+          {
+            "ToAddress": "filtered-guarantee-output",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": true,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          }
+        ],
+        "Data": ""
+      },
+      "userPublicKeyV2": {
+        "Algorithm": "ecdsa_p256",
+        "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+      },
+      "canonicalJSON": "{\"Domain\":\"utxo-area/transaction/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":1,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[],\"TXInputsCertificate\":[{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"ToAddress\":\"recipient-v2\",\"Value\":\"90071992.54740993\",\"ToInterest\":\"0.00000001\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"SourcePledgeAddress\":\"pledge-source\",\"ConstructionTime\":1700000000001,\"Size\":3,\"ExposureShares\":[{\"RootID\":\"root-b\",\"LeafID\":\"leaf-b\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"0.00000001\"},{\"RootID\":\"root-a\",\"LeafID\":\"leaf-a\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"90071992.54740992\"}],\"TXID\":\"source-transaction-v2\",\"TxCerPosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"GuarGroupSignature\":{\"R\":null,\"S\":null},\"UserSignature\":{\"R\":null,\"S\":null},\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"},\"SettlementAuth\":{\"Version\":0,\"TXCerID\":\"\",\"SourceTXID\":\"\",\"SourcePosition\":{\"BlockHeight\":0,\"Index\":0,\"InIndex\":0},\"Value\":\"0\",\"FromGuarGroupID\":\"\",\"ToGuarGroupID\":\"\",\"PledgeAddress\":\"\",\"ConsumeIntentHash\":\"\",\"AuthTime\":0,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"}}}],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}",
+      "hashHex": "588ffb148034491450a8f0fc072b5ab6cd20a4ee23188ae4fe1abdea4835cbf7",
+      "txID": "588ffb148034491450a8f0fc072b5ab6cd20a4ee23188ae4fe1abdea4835cbf7",
+      "settlementTXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "settlementCanonicalJSON": "{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"Transaction\":{\"Domain\":\"utxo-area/settlement-intent/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":1,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[],\"TXInputsCertificate\":[{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"ToAddress\":\"recipient-v2\",\"Value\":\"90071992.54740993\",\"ToInterest\":\"0.00000001\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"SourcePledgeAddress\":\"pledge-source\",\"ConstructionTime\":1700000000001,\"Size\":3,\"ExposureShares\":[{\"RootID\":\"root-b\",\"LeafID\":\"leaf-b\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"0.00000001\"},{\"RootID\":\"root-a\",\"LeafID\":\"leaf-a\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"90071992.54740992\"}],\"TXID\":\"source-transaction-v2\",\"TxCerPosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"GuarGroupSignature\":{\"R\":null,\"S\":null},\"UserSignature\":{\"R\":null,\"S\":null},\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"},\"SettlementAuth\":{\"Version\":0,\"TXCerID\":\"\",\"SourceTXID\":\"\",\"SourcePosition\":{\"BlockHeight\":0,\"Index\":0,\"InIndex\":0},\"Value\":\"0\",\"FromGuarGroupID\":\"\",\"ToGuarGroupID\":\"\",\"PledgeAddress\":\"\",\"ConsumeIntentHash\":null,\"AuthTime\":0,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":null}}}],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}}",
+      "settlementIntentHashHex": "d701d9aee27043557faa7dfbdbd0e7399ffec579b384fd57e89fe493f8167e93"
+    },
+    {
+      "name": "mixed-utxo-txcer",
+      "transaction": {
+        "TXID": "ignored-existing-id",
+        "Size": 999,
+        "Version": 2,
+        "GuarantorGroup": "group-source",
+        "TXType": 1,
+        "Value": "90071992.54740993",
+        "ValueDivision": {
+          "10": "90071992.54740992",
+          "2": "0.00000001"
+        },
+        "NewValue": "1",
+        "NewValueDiv": {
+          "10": "0.5",
+          "2": "0.5"
+        },
+        "InterestAssign": {
+          "Gas": "0.00000001",
+          "Output": "0.00000001",
+          "BackAssign": {
+            "a-address": "0.75",
+            "z-address": "0.25"
+          }
+        },
+        "UserSignature": {
+          "R": 17,
+          "S": 19
+        },
+        "UserSignatureV2": {
+          "Algorithm": "ecdsa_p256",
+          "Signature": "MEUCIELDFcxIlYcIWVNh6oMHG7zdWzFYPhkGbVHWiSJ7HA18AiEAooz76TB9o5Mwqm6xwkkVek6Z5ZO8iea3scJonAjW7yU="
+        },
+        "TXInputsNormal": [
+          {
+            "FromTXID": "utxo-source",
+            "FromTxPosition": {
+              "Blocknum": 4,
+              "IndexX": 1,
+              "IndexY": 2,
+              "IndexZ": 3
+            },
+            "FromAddress": "sender-v2",
+            "IsGuarMake": false,
+            "IsCommitteeMake": false,
+            "IsCrossChain": false,
+            "InputSignature": {
+              "R": null,
+              "S": null
+            },
+            "TXOutputHash": "AAEC/w==",
+            "InputSignatureV2": {
+              "Algorithm": "ecdsa_p256",
+              "Signature": "BAUG"
+            },
+            "SeedReveal": "",
+            "SeedPublicKeyV2": {
+              "Algorithm": "ecdsa_p256",
+              "PublicKey": "BwgJ"
+            },
+            "SeedChainStep": 2
+          }
+        ],
+        "TXInputsCertificate": [
+          {
+            "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+            "ToAddress": "recipient-v2",
+            "Value": "90071992.54740993",
+            "ToInterest": "0.00000001",
+            "FromGuarGroupID": "group-source",
+            "ToGuarGroupID": "group-target",
+            "SourcePledgeAddress": "pledge-source",
+            "ConstructionTime": 1700000000001,
+            "Size": 3,
+            "ExposureShares": [
+              {
+                "RootID": "root-b",
+                "LeafID": "leaf-b",
+                "GroupID": "group-source",
+                "PledgeAddress": "pledge-source",
+                "Amount": "0.00000001"
+              },
+              {
+                "RootID": "root-a",
+                "LeafID": "leaf-a",
+                "GroupID": "group-source",
+                "PledgeAddress": "pledge-source",
+                "Amount": "90071992.54740992"
+              }
+            ],
+            "TXID": "source-transaction-v2",
+            "TxCerPosition": {
+              "BlockHeight": 9,
+              "Index": 2,
+              "InIndex": 1
+            },
+            "GuarGroupSignature": {
+              "R": null,
+              "S": null
+            },
+            "UserSignature": {
+              "R": null,
+              "S": null
+            },
+            "UserSignatureV2": {
+              "Algorithm": "",
+              "Signature": null
+            },
+            "SettlementAuth": {
+              "Version": 0,
+              "TXCerID": "",
+              "SourceTXID": "",
+              "SourcePosition": {
+                "BlockHeight": 0,
+                "Index": 0,
+                "InIndex": 0
+              },
+              "Value": "0",
+              "FromGuarGroupID": "",
+              "ToGuarGroupID": "",
+              "PledgeAddress": "",
+              "ConsumeIntentHash": null,
+              "AuthTime": 0,
+              "UserSignatureV2": {
+                "Algorithm": "",
+                "Signature": null
+              }
+            }
+          }
+        ],
+        "TXOutputs": [
+          {
+            "ToAddress": "recipient-v2",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": false,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          },
+          {
+            "ToAddress": "filtered-guarantee-output",
+            "ToValue": "90071992.54740993",
+            "ToGuarGroupID": "group-target",
+            "ToPublicKey": {
+              "CurveName": "P256",
+              "X": 11,
+              "Y": 13
+            },
+            "ToInterest": "0.00000001",
+            "Type": 2,
+            "ToPeerID": "peer-recipient",
+            "IsPayForGas": false,
+            "IsCrossChain": false,
+            "IsGuarMake": true,
+            "SeedAnchor": "",
+            "SeedChainStep": 2,
+            "DefaultSpendAlgorithm": "ecdsa_p256"
+          }
+        ],
+        "Data": ""
+      },
+      "userPublicKeyV2": {
+        "Algorithm": "ecdsa_p256",
+        "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+      },
+      "canonicalJSON": "{\"Domain\":\"utxo-area/transaction/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":1,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[{\"FromTXID\":\"utxo-source\",\"FromTxPosition\":{\"Blocknum\":4,\"IndexX\":1,\"IndexY\":2,\"IndexZ\":3},\"FromAddress\":\"sender-v2\",\"IsGuarMake\":false,\"IsCommitteeMake\":false,\"IsCrossChain\":false,\"InputSignature\":{\"R\":null,\"S\":null},\"TXOutputHash\":\"AAEC/w==\",\"InputSignatureV2\":{\"Algorithm\":\"ecdsa_p256\",\"Signature\":\"BAUG\"},\"SeedReveal\":\"\",\"SeedPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BwgJ\"},\"SeedChainStep\":2}],\"TXInputsCertificate\":[{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"ToAddress\":\"recipient-v2\",\"Value\":\"90071992.54740993\",\"ToInterest\":\"0.00000001\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"SourcePledgeAddress\":\"pledge-source\",\"ConstructionTime\":1700000000001,\"Size\":3,\"ExposureShares\":[{\"RootID\":\"root-b\",\"LeafID\":\"leaf-b\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"0.00000001\"},{\"RootID\":\"root-a\",\"LeafID\":\"leaf-a\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"90071992.54740992\"}],\"TXID\":\"source-transaction-v2\",\"TxCerPosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"GuarGroupSignature\":{\"R\":null,\"S\":null},\"UserSignature\":{\"R\":null,\"S\":null},\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"},\"SettlementAuth\":{\"Version\":0,\"TXCerID\":\"\",\"SourceTXID\":\"\",\"SourcePosition\":{\"BlockHeight\":0,\"Index\":0,\"InIndex\":0},\"Value\":\"0\",\"FromGuarGroupID\":\"\",\"ToGuarGroupID\":\"\",\"PledgeAddress\":\"\",\"ConsumeIntentHash\":\"\",\"AuthTime\":0,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"}}}],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}",
+      "hashHex": "048ca755eafa56af7e02a53916392f51b77f61b7a40cd831bd814760a6d9748b",
+      "txID": "048ca755eafa56af7e02a53916392f51b77f61b7a40cd831bd814760a6d9748b",
+      "settlementTXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "settlementCanonicalJSON": "{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"Transaction\":{\"Domain\":\"utxo-area/settlement-intent/v2\",\"NetworkID\":\"utxo-area-experiment-v1\",\"Version\":2,\"GuarantorGroup\":\"group-source\",\"TXType\":1,\"Value\":\"90071992.54740993\",\"ValueDivision\":{\"10\":\"90071992.54740992\",\"2\":\"0.00000001\"},\"InterestAssign\":{\"Gas\":\"0.00000001\",\"Output\":\"0.00000001\",\"BackAssign\":{\"a-address\":\"0.75\",\"z-address\":\"0.25\"}},\"TXInputsNormal\":[{\"FromTXID\":\"utxo-source\",\"FromTxPosition\":{\"Blocknum\":4,\"IndexX\":1,\"IndexY\":2,\"IndexZ\":3},\"FromAddress\":\"sender-v2\",\"IsGuarMake\":false,\"IsCommitteeMake\":false,\"IsCrossChain\":false,\"InputSignature\":{\"R\":null,\"S\":null},\"TXOutputHash\":\"AAEC/w==\",\"InputSignatureV2\":{\"Algorithm\":\"ecdsa_p256\",\"Signature\":\"BAUG\"},\"SeedReveal\":\"\",\"SeedPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BwgJ\"},\"SeedChainStep\":2}],\"TXInputsCertificate\":[{\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"ToAddress\":\"recipient-v2\",\"Value\":\"90071992.54740993\",\"ToInterest\":\"0.00000001\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"SourcePledgeAddress\":\"pledge-source\",\"ConstructionTime\":1700000000001,\"Size\":3,\"ExposureShares\":[{\"RootID\":\"root-b\",\"LeafID\":\"leaf-b\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"0.00000001\"},{\"RootID\":\"root-a\",\"LeafID\":\"leaf-a\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"90071992.54740992\"}],\"TXID\":\"source-transaction-v2\",\"TxCerPosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"GuarGroupSignature\":{\"R\":null,\"S\":null},\"UserSignature\":{\"R\":null,\"S\":null},\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":\"\"},\"SettlementAuth\":{\"Version\":0,\"TXCerID\":\"\",\"SourceTXID\":\"\",\"SourcePosition\":{\"BlockHeight\":0,\"Index\":0,\"InIndex\":0},\"Value\":\"0\",\"FromGuarGroupID\":\"\",\"ToGuarGroupID\":\"\",\"PledgeAddress\":\"\",\"ConsumeIntentHash\":null,\"AuthTime\":0,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":null}}}],\"TXOutputs\":[{\"ToAddress\":\"recipient-v2\",\"ToValue\":\"90071992.54740993\",\"ToGuarGroupID\":\"group-target\",\"ToPublicKey\":{\"CurveName\":\"P256\",\"X\":11,\"Y\":13},\"ToInterest\":\"0.00000001\",\"Type\":2,\"ToPeerID\":\"peer-recipient\",\"IsPayForGas\":false,\"IsCrossChain\":false,\"IsGuarMake\":false,\"SeedAnchor\":\"\",\"SeedChainStep\":2,\"DefaultSpendAlgorithm\":\"ecdsa_p256\"}],\"Data\":\"\"}}",
+      "settlementIntentHashHex": "66b1cfddb9882e0a9c9d1f7021beddbe8b08be4d87434e2d1149e909c24fbf64"
+    }
+  ],
+  "settlementAuth": {
+    "settlementAuth": {
+      "Version": 1,
+      "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "SourceTXID": "source-transaction-v2",
+      "SourcePosition": {
+        "BlockHeight": 9,
+        "Index": 2,
+        "InIndex": 1
+      },
+      "Value": "90071992.54740993",
+      "FromGuarGroupID": "group-source",
+      "ToGuarGroupID": "group-target",
+      "PledgeAddress": "pledge-source",
+      "ConsumeIntentHash": "ZrHP3bmILgqcnR9wIb7dvosIvk2HQ04tEUnpCcJPv2Q=",
+      "AuthTime": 1700000000005,
+      "UserSignatureV2": {
+        "Algorithm": "ecdsa_p256",
+        "Signature": "MEUCIELDFcxIlYcIWVNh6oMHG7zdWzFYPhkGbVHWiSJ7HA18AiEA38z9aLjYawF/lA7wFhnM1UmlLJkerjZD6QLTwDrqwpM="
+      }
+    },
+    "publicKey": {
+      "Algorithm": "ecdsa_p256",
+      "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+    },
+    "canonicalJSON": "{\"Version\":1,\"TXCerID\":\"a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20\",\"SourceTXID\":\"source-transaction-v2\",\"SourcePosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"Value\":\"90071992.54740993\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"PledgeAddress\":\"pledge-source\",\"ConsumeIntentHash\":\"ZrHP3bmILgqcnR9wIb7dvosIvk2HQ04tEUnpCcJPv2Q=\",\"AuthTime\":1700000000005,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":null}}",
+    "hashHex": "434cedcaf3a4f3e4fae710aa798ad908b0a4a63e7ab3a33969593ca5003aab42"
+  },
+  "evidence": {
+    "publicKey": {
+      "curveName": "P256",
+      "x": "64375483017717711348634889601793836329966447963510648681625681211348943876771",
+      "y": "52431391916983504423217627849020916729601969409053901192561322805962577543348"
+    },
+    "txCer": {
+      "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "ToAddress": "recipient-v2",
+      "Value": "90071992.54740993",
+      "ToInterest": "0.00000001",
+      "FromGuarGroupID": "group-source",
+      "ToGuarGroupID": "group-target",
+      "SourcePledgeAddress": "pledge-source",
+      "ConstructionTime": 1700000000001,
+      "Size": 3,
+      "ExposureShares": [
+        {
+          "RootID": "root-b",
+          "LeafID": "leaf-b",
+          "GroupID": "group-source",
+          "PledgeAddress": "pledge-source",
+          "Amount": "0.00000001"
+        },
+        {
+          "RootID": "root-a",
+          "LeafID": "leaf-a",
+          "GroupID": "group-source",
+          "PledgeAddress": "pledge-source",
+          "Amount": "90071992.54740992"
+        }
+      ],
+      "TXID": "source-transaction-v2",
+      "TxCerPosition": {
+        "BlockHeight": 9,
+        "Index": 2,
+        "InIndex": 1
+      },
+      "GuarGroupSignature": {
+        "R": 28412803729898893058558238221310261427084375743576167377786533380249859400145,
+        "S": 23445346474229528860996387126253767659445426484833690772002232179085424075017
+      },
+      "UserSignature": {
+        "R": null,
+        "S": null
+      },
+      "UserSignatureV2": {
+        "Algorithm": "",
+        "Signature": null
+      },
+      "SettlementAuth": {
+        "Version": 0,
+        "TXCerID": "",
+        "SourceTXID": "",
+        "SourcePosition": {
+          "BlockHeight": 0,
+          "Index": 0,
+          "InIndex": 0
+        },
+        "Value": "0",
+        "FromGuarGroupID": "",
+        "ToGuarGroupID": "",
+        "PledgeAddress": "",
+        "ConsumeIntentHash": null,
+        "AuthTime": 0,
+        "UserSignatureV2": {
+          "Algorithm": "",
+          "Signature": null
+        }
+      }
+    },
+    "txCerCanonicalJSON": "{\"TXCerID\":\"\",\"ToAddress\":\"recipient-v2\",\"Value\":\"90071992.54740993\",\"ToInterest\":\"0.00000001\",\"FromGuarGroupID\":\"group-source\",\"ToGuarGroupID\":\"group-target\",\"SourcePledgeAddress\":\"pledge-source\",\"ConstructionTime\":1700000000001,\"Size\":3,\"ExposureShares\":[{\"RootID\":\"root-b\",\"LeafID\":\"leaf-b\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"0.00000001\"},{\"RootID\":\"root-a\",\"LeafID\":\"leaf-a\",\"GroupID\":\"group-source\",\"PledgeAddress\":\"pledge-source\",\"Amount\":\"90071992.54740992\"}],\"TXID\":\"source-transaction-v2\",\"TxCerPosition\":{\"BlockHeight\":9,\"Index\":2,\"InIndex\":1},\"GuarGroupSignature\":{\"R\":null,\"S\":null},\"UserSignature\":{\"R\":null,\"S\":null},\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":null},\"SettlementAuth\":{\"Version\":0,\"TXCerID\":\"\",\"SourceTXID\":\"\",\"SourcePosition\":{\"BlockHeight\":0,\"Index\":0,\"InIndex\":0},\"Value\":\"0\",\"FromGuarGroupID\":\"\",\"ToGuarGroupID\":\"\",\"PledgeAddress\":\"\",\"ConsumeIntentHash\":null,\"AuthTime\":0,\"UserSignatureV2\":{\"Algorithm\":\"\",\"Signature\":null}}}",
+    "txCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+    "exposureSharesHashHex": "f96872b65183d51b636c4ac05a5607b2dc9db5e8cb53ec9ee82694bf5c8f88b1",
+    "fastEvidence": {
+      "Version": "txcer-fast-v2",
+      "RecordID": "2721aa6a12c3f982e6a62fa3d643e607d94d93b3662c6822806a2f17b2c21eca",
+      "IssueKey": "group-source:source-transaction-v2:1:recipient-v2",
+      "TXID": "source-transaction-v2",
+      "OutputIndex": 1,
+      "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "SourceGroupID": "group-source",
+      "DestinationGroupID": "group-target",
+      "SourcePledgeAddress": "pledge-source",
+      "Reservation": {
+        "TXID": "source-transaction-v2",
+        "AssignSeq": 3,
+        "AssignEventID": "assign-event-v2",
+        "GuarID": "guar-v2",
+        "Dependencies": [],
+        "HardKeys": [
+          "utxo:source-v2"
+        ],
+        "SoftKeys": [],
+        "SchemaVersion": 2,
+        "Status": "processing",
+        "Signature": {
+          "R": 92012373279135735805266318559146947556024239901557093159736379435881991499139,
+          "S": 43945071438419886359289174507025167825225269200831759054787108672768652741206
+        }
+      },
+      "Liability": {
+        "CommitmentID": "3eee2b80df53bb34009442c3d463d816ca5cbd16ed8a1e7dc909b2ffe120ead4",
+        "GroupID": "group-source",
+        "PledgeAddress": "pledge-source",
+        "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+        "LiabilityDeltaID": "delta-v2",
+        "Seq": 1,
+        "PrevStateRoot": "",
+        "NextStateRoot": "HyA=",
+        "ExposureSharesHash": "+WhytlGD1RtjbErAWlYHstydtejLU+ye6CaUv1yPiLE=",
+        "DeltaHash": "ISI=",
+        "OutstandingBefore": "0",
+        "OutstandingAfter": "90071992.54740993",
+        "IssuerID": "aggregation-v2",
+        "IssuedAt": 1700000000003,
+        "Signature": {
+          "R": 6589947112124193829845813048643357708501113701986593856139712262332079569046,
+          "S": 58655872336077070249476639419625777498358204775954812818625541724740409973116
+        }
+      },
+      "IssuerID": "aggregation-v2",
+      "IssuedAt": 1700000000003,
+      "Signature": {
+        "R": 97168160640222023765612992004343954269641955894621893919545248556563520048623,
+        "S": 25727046829564234564158755990092208380059201113446731443328028071925308429213
+      }
+    },
+    "fastEvidenceHashHex": "2d1ddd76d653e0c30686e899106173f898626ea1ab7efff7daf7ed856f35bc3b",
+    "liabilityReceipt": {
+      "ReceiptID": "10516538057a604d05af033a2ce1bdd3b7d99e18044fe5c02d9fc1303dcec100",
+      "GroupID": "group-source",
+      "PledgeAddress": "pledge-source",
+      "SignerSetID": "group-source:liability:v2",
+      "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "LiabilityDeltaID": "delta-v2",
+      "LiabilityDeltaType": "OpenRoot",
+      "Seq": 1,
+      "PrevStateRoot": "",
+      "NextStateRoot": "FRY=",
+      "ExposureSharesHash": "+WhytlGD1RtjbErAWlYHstydtejLU+ye6CaUv1yPiLE=",
+      "DeltaHash": "Fxg=",
+      "OutstandingBefore": "0",
+      "OutstandingAfter": "90071992.54740993",
+      "Threshold": 2,
+      "Signers": [
+        "aggregation",
+        "certifier"
+      ],
+      "Timestamp": 1700000000002,
+      "Signatures": {
+        "aggregation": {
+          "R": 10623191994993397449217730442198332685419647040822028787120372345201232391169,
+          "S": 87414902807414767195677857765767623125854463415119518230437881512917310654422
+        },
+        "certifier": {
+          "R": 32325191861646170820727200153045020440226161115493753094312025153945959180094,
+          "S": 7669814321141111736317880555107657624693180628111659042459496395203117975663
+        }
+      }
+    },
+    "liabilityReceiptHashHex": "e19ff8526b98ae1077e9b3f46d59e38c1e47d632a76b9ab05adb2be94e6898a8",
+    "liabilityAuthority": [
+      "aggregation",
+      "certifier"
+    ],
+    "liabilityThreshold": 2,
+    "issuanceRecord": {
+      "RecordID": "2721aa6a12c3f982e6a62fa3d643e607d94d93b3662c6822806a2f17b2c21eca",
+      "IssueKey": "group-source:source-transaction-v2:1:recipient-v2",
+      "TXID": "source-transaction-v2",
+      "OutputIndex": 1,
+      "UserID": "user-target",
+      "ToAddress": "recipient-v2",
+      "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "TXCer": {
+        "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+        "ToAddress": "recipient-v2",
+        "Value": "90071992.54740993",
+        "ToInterest": "0.00000001",
+        "FromGuarGroupID": "group-source",
+        "ToGuarGroupID": "group-target",
+        "SourcePledgeAddress": "pledge-source",
+        "ConstructionTime": 1700000000001,
+        "Size": 3,
+        "ExposureShares": [
+          {
+            "RootID": "root-b",
+            "LeafID": "leaf-b",
+            "GroupID": "group-source",
+            "PledgeAddress": "pledge-source",
+            "Amount": "0.00000001"
+          },
+          {
+            "RootID": "root-a",
+            "LeafID": "leaf-a",
+            "GroupID": "group-source",
+            "PledgeAddress": "pledge-source",
+            "Amount": "90071992.54740992"
+          }
+        ],
+        "TXID": "source-transaction-v2",
+        "TxCerPosition": {
+          "BlockHeight": 9,
+          "Index": 2,
+          "InIndex": 1
+        },
+        "GuarGroupSignature": {
+          "R": 28412803729898893058558238221310261427084375743576167377786533380249859400145,
+          "S": 23445346474229528860996387126253767659445426484833690772002232179085424075017
+        },
+        "UserSignature": {
+          "R": null,
+          "S": null
+        },
+        "UserSignatureV2": {
+          "Algorithm": "",
+          "Signature": null
+        },
+        "SettlementAuth": {
+          "Version": 0,
+          "TXCerID": "",
+          "SourceTXID": "",
+          "SourcePosition": {
+            "BlockHeight": 0,
+            "Index": 0,
+            "InIndex": 0
+          },
+          "Value": "0",
+          "FromGuarGroupID": "",
+          "ToGuarGroupID": "",
+          "PledgeAddress": "",
+          "ConsumeIntentHash": null,
+          "AuthTime": 0,
+          "UserSignatureV2": {
+            "Algorithm": "",
+            "Signature": null
+          }
+        }
+      },
+      "GuarGroupID": "group-source",
+      "TargetBlock": 9,
+      "GuarTXIndex": 2,
+      "CertifierID": "certifier-v2",
+      "BatchID": "f05fd742f032ce6f33144fe9a249533db5e9dd7636444809b1c560abd55e2311",
+      "Proof": {
+        "LeafHash": "e7ZBU1c4L9He0y6F4/P4hgyTahMoCT2nHPlCD/EAqSo=",
+        "MerkleRoot": "e7ZBU1c4L9He0y6F4/P4hgyTahMoCT2nHPlCD/EAqSo=",
+        "Steps": [],
+        "BatchID": "f05fd742f032ce6f33144fe9a249533db5e9dd7636444809b1c560abd55e2311",
+        "BatchSignature": {
+          "R": 21763347934415163587439567952004742270950536790254681934225890868367023430539,
+          "S": 112128999404277633127095711482292584311253987016410701382436696879861108193467
+        },
+        "CertifierID": "certifier-v2"
+      },
+      "Status": "Issued",
+      "CreatedAt": 0,
+      "UpdatedAt": 0,
+      "DeliveredAt": 0,
+      "CommittedAt": 0,
+      "ErrorReason": "",
+      "Ack": {
+        "recordID": "",
+        "txCerID": "",
+        "evidenceHash": null,
+        "groupID": "",
+        "userID": "",
+        "status": "",
+        "assignNodeID": "",
+        "registeredAt": 0,
+        "signature": {
+          "R": null,
+          "S": null
+        }
+      },
+      "ReceiptID": "",
+      "FinalityQCID": "",
+      "ExposureSharesHash": "+WhytlGD1RtjbErAWlYHstydtejLU+ye6CaUv1yPiLE=",
+      "LiabilityReceiptHash": "4Z/4UmuYrhB36bP0bVnjjB5H1jKna5qwWtsr6U5omKg=",
+      "RootExposureIDs": [
+        "root-b",
+        "root-a"
+      ],
+      "LiabilityDeltaID": "delta-v2",
+      "LiabilityReceipt": {
+        "ReceiptID": "10516538057a604d05af033a2ce1bdd3b7d99e18044fe5c02d9fc1303dcec100",
+        "GroupID": "group-source",
+        "PledgeAddress": "pledge-source",
+        "SignerSetID": "group-source:liability:v2",
+        "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+        "LiabilityDeltaID": "delta-v2",
+        "LiabilityDeltaType": "OpenRoot",
+        "Seq": 1,
+        "PrevStateRoot": "",
+        "NextStateRoot": "FRY=",
+        "ExposureSharesHash": "+WhytlGD1RtjbErAWlYHstydtejLU+ye6CaUv1yPiLE=",
+        "DeltaHash": "Fxg=",
+        "OutstandingBefore": "0",
+        "OutstandingAfter": "90071992.54740993",
+        "Threshold": 2,
+        "Signers": [
+          "aggregation",
+          "certifier"
+        ],
+        "Timestamp": 1700000000002,
+        "Signatures": {
+          "aggregation": {
+            "R": 10623191994993397449217730442198332685419647040822028787120372345201232391169,
+            "S": 87414902807414767195677857765767623125854463415119518230437881512917310654422
+          },
+          "certifier": {
+            "R": 32325191861646170820727200153045020440226161115493753094312025153945959180094,
+            "S": 7669814321141111736317880555107657624693180628111659042459496395203117975663
+          }
+        }
+      },
+      "FastEvidence": {
+        "Version": "txcer-fast-v2",
+        "RecordID": "2721aa6a12c3f982e6a62fa3d643e607d94d93b3662c6822806a2f17b2c21eca",
+        "IssueKey": "group-source:source-transaction-v2:1:recipient-v2",
+        "TXID": "source-transaction-v2",
+        "OutputIndex": 1,
+        "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+        "SourceGroupID": "group-source",
+        "DestinationGroupID": "group-target",
+        "SourcePledgeAddress": "pledge-source",
+        "Reservation": {
+          "TXID": "source-transaction-v2",
+          "AssignSeq": 3,
+          "AssignEventID": "assign-event-v2",
+          "GuarID": "guar-v2",
+          "Dependencies": [],
+          "HardKeys": [
+            "utxo:source-v2"
+          ],
+          "SoftKeys": [],
+          "SchemaVersion": 2,
+          "Status": "processing",
+          "Signature": {
+            "R": 92012373279135735805266318559146947556024239901557093159736379435881991499139,
+            "S": 43945071438419886359289174507025167825225269200831759054787108672768652741206
+          }
+        },
+        "Liability": {
+          "CommitmentID": "3eee2b80df53bb34009442c3d463d816ca5cbd16ed8a1e7dc909b2ffe120ead4",
+          "GroupID": "group-source",
+          "PledgeAddress": "pledge-source",
+          "TXCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+          "LiabilityDeltaID": "delta-v2",
+          "Seq": 1,
+          "PrevStateRoot": "",
+          "NextStateRoot": "HyA=",
+          "ExposureSharesHash": "+WhytlGD1RtjbErAWlYHstydtejLU+ye6CaUv1yPiLE=",
+          "DeltaHash": "ISI=",
+          "OutstandingBefore": "0",
+          "OutstandingAfter": "90071992.54740993",
+          "IssuerID": "aggregation-v2",
+          "IssuedAt": 1700000000003,
+          "Signature": {
+            "R": 6589947112124193829845813048643357708501113701986593856139712262332079569046,
+            "S": 58655872336077070249476639419625777498358204775954812818625541724740409973116
+          }
+        },
+        "IssuerID": "aggregation-v2",
+        "IssuedAt": 1700000000003,
+        "Signature": {
+          "R": 97168160640222023765612992004343954269641955894621893919545248556563520048623,
+          "S": 25727046829564234564158755990092208380059201113446731443328028071925308429213
+        }
+      },
+      "AuditStatus": "Pending"
+    },
+    "issuanceLeafHex": "7bb6415357382fd1ded32e85e3f3f8860c936a1328093da71cf9420ff100a92a",
+    "issueProof": {
+      "LeafHash": "e7ZBU1c4L9He0y6F4/P4hgyTahMoCT2nHPlCD/EAqSo=",
+      "MerkleRoot": "e7ZBU1c4L9He0y6F4/P4hgyTahMoCT2nHPlCD/EAqSo=",
+      "Steps": [],
+      "BatchID": "f05fd742f032ce6f33144fe9a249533db5e9dd7636444809b1c560abd55e2311",
+      "BatchSignature": {
+        "R": 21763347934415163587439567952004742270950536790254681934225890868367023430539,
+        "S": 112128999404277633127095711482292584311253987016410701382436696879861108193467
+      },
+      "CertifierID": "certifier-v2"
+    },
+    "assignAck": {
+      "recordID": "2721aa6a12c3f982e6a62fa3d643e607d94d93b3662c6822806a2f17b2c21eca",
+      "txCerID": "a8588f70b27b1809cdc63acbf6efc88d07fcac3f739f35dd27772bf9e757af20",
+      "evidenceHash": "LR3ddtZT4MMGhuiZEGFz+JhibqGrfv/32vfthW81vDs=",
+      "groupID": "group-target",
+      "userID": "user-target",
+      "status": "RegisteredActive",
+      "assignNodeID": "assign-target",
+      "registeredAt": 1700000000004,
+      "signature": {
+        "R": 29673163898564952197143020366884816625212656926840436193811073614507800212296,
+        "S": 92163864938770604752150154376778199389643643717015764802537741315989467096684
+      }
+    },
+    "registrationEvidenceHex": "2d1ddd76d653e0c30686e899106173f898626ea1ab7efff7daf7ed856f35bc3b",
+    "tamperedEvidenceRejected": true
+  },
+  "addressRegistration": {
+    "assignRequest": {
+      "NewAddress": "0123456789abcdef0123456789abcdef01234567",
+      "PublicKeyNew": {
+        "CurveName": "P256",
+        "X": 64375483017717711348634889601793836329966447963510648681625681211348943876771,
+        "Y": 52431391916983504423217627849020916729601969409053901192561322805962577543348
+      },
+      "UserID": "92319817",
+      "Type": 0,
+      "SignPublicKeyV2": {
+        "Algorithm": "ecdsa_p256",
+        "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+      },
+      "SeedAnchor": "CQgH",
+      "SeedChainStep": 1000,
+      "DefaultSpendAlgorithm": "ecdsa_p256",
+      "Sig": {
+        "R": null,
+        "S": null
+      }
+    },
+    "assignSigningJSON": "{\"NewAddress\":\"0123456789abcdef0123456789abcdef01234567\",\"PublicKeyNew\":{\"CurveName\":\"P256\",\"X\":64375483017717711348634889601793836329966447963510648681625681211348943876771,\"Y\":52431391916983504423217627849020916729601969409053901192561322805962577543348},\"UserID\":\"92319817\",\"Type\":0,\"SignPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ=\"},\"SeedAnchor\":\"CQgH\",\"SeedChainStep\":1000,\"DefaultSpendAlgorithm\":\"ecdsa_p256\",\"Sig\":{\"R\":null,\"S\":null}}",
+    "assignHashHex": "44731f01427e0442a46f7450315019bbe1760f0e8cda1eaa1b67db2f16bd3561",
+    "retailRequest": {
+      "Address": "0123456789abcdef0123456789abcdef01234567",
+      "PublicKeyNew": {
+        "CurveName": "P256",
+        "X": 64375483017717711348634889601793836329966447963510648681625681211348943876771,
+        "Y": 52431391916983504423217627849020916729601969409053901192561322805962577543348
+      },
+      "GroupID": "",
+      "TimeStamp": 1700000000,
+      "Type": 0,
+      "SeedAnchor": "CQgH",
+      "SeedChainStep": 1000,
+      "DefaultSpendAlgorithm": "ecdsa_p256",
+      "SignPublicKeyV2": {
+        "Algorithm": "ecdsa_p256",
+        "PublicKey": "BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ="
+      },
+      "AddressOwnershipSig": {
+        "Algorithm": "",
+        "Signature": null
+      },
+      "Sig": {
+        "R": null,
+        "S": null
+      }
+    },
+    "retailOwnershipJSON": "{\"Address\":\"0123456789abcdef0123456789abcdef01234567\",\"PublicKeyNew\":{\"CurveName\":\"P256\",\"X\":64375483017717711348634889601793836329966447963510648681625681211348943876771,\"Y\":52431391916983504423217627849020916729601969409053901192561322805962577543348},\"GroupID\":\"\",\"TimeStamp\":1700000000,\"Type\":0,\"SeedAnchor\":\"CQgH\",\"SeedChainStep\":1000,\"DefaultSpendAlgorithm\":\"ecdsa_p256\",\"SignPublicKeyV2\":{\"Algorithm\":\"ecdsa_p256\",\"PublicKey\":\"BI5TO2+gv3tGJbswZnwB+2B++fi4qA/vWzAGKHAxh7Kjc+sdveAzGDZtBp+DpvWQAFPHNjPLBBshxV4ahsH0ALQ=\"}}",
+    "retailHashHex": "7bb86f22b362a4cd7829576750ee5f12c65a2b0e4cefa72eefb32cfeb88e7b08"
+  }
+}

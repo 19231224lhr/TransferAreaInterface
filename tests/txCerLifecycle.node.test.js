@@ -37,15 +37,24 @@ test('frontend syncs TXCer lifecycle through the new AssignNode endpoints while 
   assertIncludes(polling, 'markTXCerActive', 'newly received TXCer records must be marked Active locally');
 });
 
-test('frontend full send flow treats only authoritative Active TXCers as spendable', () => {
+test('frontend full send flow keeps CFAA asynchronous and quarantines failed fast evidence', () => {
   const txCerStatus = read('js/services/txCerStatus.ts');
   const txBuilder = read('js/services/txBuilder.ts');
   const transfer = read('js/services/transfer.ts');
 
   assertIncludes(
     txCerStatus,
-    "proofStatus !== 'invalid'",
-    'spendable helper must reject TXCers with explicitly invalid CFAA proofs'
+    "metadata?.security?.fastEvidenceStatus === 'Failed'",
+    'spendable helper must quarantine TXCers whose fast evidence failed verification'
+  );
+  assertIncludes(
+    txCerStatus,
+    "!metadata?.security && metadata?.proofStatus === 'invalid'",
+    'legacy caches without the independent security model must remain fail closed'
+  );
+  assert.ok(
+    !/cfaaAuditStatus\s*===\s*['\"]Failed['\"]/.test(txCerStatus),
+    'asynchronous CFAA audit status must not gate fast TXCer spendability'
   );
   assertIncludes(
     txCerStatus,
@@ -54,8 +63,8 @@ test('frontend full send flow treats only authoritative Active TXCers as spendab
   );
   assertIncludes(
     txBuilder,
-    'isTXCerSpendable(user, txCerId)',
-    'transaction builder must filter TXCers through lifecycle availability'
+    'isTXCerSpendable(user, txCerId, txCerLockOwner)',
+    'transaction builder must filter TXCers through lifecycle availability while honoring its own draft lock'
   );
   assertIncludes(
     transfer,
@@ -64,7 +73,7 @@ test('frontend full send flow treats only authoritative Active TXCers as spendab
   );
   assertIncludes(
     transfer,
-    'sumSpendableTXCerValue(txCerStatusUser',
+    'sumSpendableTXCerUnits(user, meta.txCers',
     'automatic source selection must calculate TXCer balance through lifecycle state'
   );
 });
@@ -73,31 +82,82 @@ test('frontend wallet and send balances use lifecycle spendable TXCer value inst
   const wallet = read('js/services/wallet.ts');
   const send = read('js/services/transfer.ts');
 
-  assertIncludes(wallet, 'sumSpendableTXCerValue(u, txCers)', 'wallet balance must calculate available TXCer value from lifecycle cache');
+  assertIncludes(wallet, 'sumSpendableTXCerUnits(u, txCers)', 'wallet balance must calculate exact available TXCer units from lifecycle cache');
   assertIncludes(wallet, 'getTXCerStatus(u, id)', 'wallet TXCer list must expose lifecycle state');
-  assertIncludes(send, 'sumSpendableTXCerValue(txCerStatusUser', 'send source selection must ignore non-Active TXCers');
+  assertIncludes(send, 'sumSpendableTXCerUnits(user, meta.txCers', 'send source selection must ignore non-Active TXCers without losing amount precision');
 });
 
-test('frontend startup cleanup preserves CFAA issuance metadata for audit history', () => {
+test('frontend TXCer details expose exact identity and independent safety states', () => {
+  const wallet = read('js/services/wallet.ts');
+  for (const marker of ['txcer-full-id', 'FastEvidence', 'CFAA', 'ExposureShares']) {
+    assertIncludes(wallet, marker, `wallet TXCer details are missing ${marker}`);
+  }
+});
+
+test('frontend persists a unified TXCer client record with lifecycle and complete evidence', () => {
+  const blockchain = read('js/types/blockchain.ts');
+  const issuance = read('js/services/txCerIssuance.ts');
+  assertIncludes(blockchain, 'export interface TXCerClientRecord', 'client record type is missing');
+  for (const marker of ['txCer?: TxCertificate', 'lifecycleStatus?:', 'authoritySnapshot?: TXCerAuthoritySnapshot']) {
+    assertIncludes(blockchain, marker, `TXCer client record is missing ${marker}`);
+  }
+  assertIncludes(issuance, 'txCer: protocolRecord.TXCer', 'issuance metadata must preserve the complete TXCer');
+  assertIncludes(issuance, 'lifecycleStatus', 'issuance metadata must preserve the Assign lifecycle state');
+});
+
+test('frontend startup preserves complete TXCer evidence and marks cached verification for replay', () => {
   const storage = read('js/utils/storage.ts');
 
-  assertIncludes(storage, 'CFAA issuance metadata is retained', 'storage comment should document retained issuance metadata');
+  assertIncludes(storage, 'markTXCerEvidenceForReverification', 'startup must invalidate cached verification results');
   assert.ok(!/user\.wallet\.txCerIssuanceRecords\s*=\s*\{\s*\}/.test(storage), 'startup cleanup must not delete issuance metadata');
-  assertIncludes(storage, 'user.wallet.totalTXCers = {};', 'startup cleanup should still clear spendable TXCer cache');
-  assertIncludes(storage, 'user.wallet.txCerStatuses = {};', 'startup cleanup should still resync lifecycle status from backend');
+  assert.ok(!/user\.wallet\.totalTXCers\s*=\s*\{\s*\}/.test(storage), 'startup must preserve complete TXCer objects');
+  assert.ok(!/user\.wallet\.txCerStatuses\s*=\s*\{\s*\}/.test(storage), 'startup must preserve lifecycle cache until authoritative refresh');
 });
 
-test('frontend exposes backend protocol diagnostics and certifier node query helpers', () => {
+test('frontend restart verification never promotes cached evidence when authority fetch is blocked', () => {
+  const issuance = read('js/services/txCerIssuance.ts');
+  const refresh = issuance.slice(
+    issuance.indexOf('export async function refreshTXCerIssuanceMetadata'),
+    issuance.indexOf('export async function refreshTXCerIssuanceMetadata') + 3500,
+  );
+  assert.doesNotMatch(refresh, /catch\s*\{\s*detail\s*=\s*current/);
+  assert.match(refresh, /authority replay unavailable/);
+  assert.match(refresh, /fastEvidenceStatus:[^\n]*['"]Failed['"][^\n]*['"]Pending['"]/);
+});
+
+test('frontend cross-org TXCer delivery keeps polling while account SSE is active', () => {
+  const polling = read('js/services/accountPolling.ts');
+  const pollCrossOrg = polling.slice(
+    polling.indexOf('async function pollCrossOrgTXCers'),
+    polling.indexOf('function stopCrossOrgTXCerPolling'),
+  );
+  const startCrossOrg = polling.slice(
+    polling.indexOf('export function startCrossOrgTXCerPolling'),
+    polling.indexOf('export function stopCrossOrgTXCerPolling'),
+  );
+
+  assert.doesNotMatch(
+    pollCrossOrg,
+    /if\s*\(!force\s*&&\s*isSSEActive\(\)\)/,
+    'generic account SSE cannot suppress retries for the independent cross-org TXCer queue',
+  );
+  assert.match(startCrossOrg, /pollCrossOrgTXCers\(true\)/);
+  assert.match(startCrossOrg, /setInterval\(pollCrossOrgTXCers,/);
+});
+
+test('frontend removes obsolete AreaQC endpoints while retaining current issuance helpers', () => {
   const api = read('js/config/api.ts');
   const blockchain = read('js/types/blockchain.ts');
   const issuance = read('js/services/txCerIssuance.ts');
   const diagnostics = read('js/services/protocolDiagnostics.ts');
 
+  for (const marker of ['COMMITTEE_QC_', 'AGGR_TXCER:', 'COM_UTXO_CHANGE']) {
+    assert.ok(!api.includes(marker), `obsolete API constant remains: ${marker}`);
+  }
   for (const marker of [
-    'COMMITTEE_QC_STATUS',
-    'COMMITTEE_QC_PROPOSALS',
-    'COMMITTEE_QC_QCS',
-    'COMMITTEE_QC_FINALIZED_BLOCK',
+    'AGGR_TXCER_ISSUANCE_RECORDS',
+    'AGGR_TXCER_ISSUANCE_RECORD',
+    'AGGR_TXCER_ISSUANCE_BATCH',
     'AGGR_CERTIFIER_STATS',
     'AGGR_CERTIFIER_PENDING_REQUESTS',
     'ASSIGN_AUDIT_EVENTS',
@@ -109,13 +169,14 @@ test('frontend exposes backend protocol diagnostics and certifier node query hel
     assertIncludes(api, marker, `API config is missing ${marker}`);
   }
 
+  for (const marker of ['export interface CommitteeQCStatus', 'export interface CommitteeQC']) {
+    assert.ok(!blockchain.includes(marker), `obsolete AreaQC type remains: ${marker}`);
+  }
   for (const marker of [
     'export interface TxTaskDAGEvent',
     'export interface TxTaskDAGRecord',
     'export interface SchedulerStatsResponse',
-    'export interface CertifierIssueBatchRequest',
-    'export interface CommitteeQCStatus',
-    'export interface CommitteeQC'
+    'export interface CertifierIssueBatchRequest'
   ]) {
     assertIncludes(blockchain, marker, `blockchain types are missing ${marker}`);
   }
@@ -124,12 +185,11 @@ test('frontend exposes backend protocol diagnostics and certifier node query hel
     assertIncludes(issuance, marker, `TXCer issuance service is missing ${marker}`);
   }
 
+  for (const marker of ['fetchCommitteeQCStatus', 'fetchCommitteeQCProposals', 'fetchCommitteeQCs', 'fetchCommitteeQCFinalizedBlock']) {
+    assert.ok(!diagnostics.includes(marker), `obsolete AreaQC diagnostic remains: ${marker}`);
+  }
   for (const marker of [
     'fetchAssignSchedulerStats',
-    'fetchCommitteeQCStatus',
-    'fetchCommitteeQCProposals',
-    'fetchCommitteeQCs',
-    'fetchCommitteeQCFinalizedBlock',
     'fetchAssignSchedulerDAGRecords',
     'fetchAssignSchedulerDAGEvents',
     'fetchAssignAuditEvents',
@@ -166,13 +226,13 @@ test('frontend TXCer spending attaches SettlementAuth before transaction signing
   }
   assertIncludes(
     txHash,
-    "obj.UserSignatureV2 = { Algorithm: '', Signature: null }",
-    'TXID hashing must exclude transaction UserSignatureV2'
+    'computeTransactionHashV2(tx)',
+    'TXID hashing must use the protocol-v2 canonical material'
   );
   assertIncludes(
     txHash,
-    'TXInputsNormal: filteredInputs',
-    'TXID hashing must mirror Go GetTXHash canonical empty-slice behavior'
+    'computeTransactionIDV2(tx)',
+    'TXID must use the full protocol-v2 SHA-256 identifier'
   );
 
   const attachIndex = txBuilder.indexOf('attachSettlementAuths(transaction, accountPrivKey);');

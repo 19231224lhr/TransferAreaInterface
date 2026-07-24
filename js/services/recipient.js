@@ -178,7 +178,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
       <div class="recipient-amount-row">
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.amount')}</span>
-          <input id="${idBase}_val" name="recipient_val" class="input" type="number" min="0.00000001" step="any" placeholder="0.00" aria-label="金额" data-name="val">
+          <input id="${idBase}_val" name="recipient_val" class="input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.00" aria-label="金额" data-name="val">
         </div>
         <div class="recipient-field">
           <span class="recipient-field-label">${t('transfer.currency')}</span>
@@ -222,7 +222,7 @@ export function addRecipientCard(billList, computeCurrentOrgId) {
               </div>
               <div class="recipient-field">
                 <span class="recipient-field-label">${t('transfer.transferGas')}</span>
-                <input id="${idBase}_gas" name="recipient_gas" class="input" type="number" min="0" step="any" placeholder="0" aria-label="转移Gas" data-name="gas">
+                <input id="${idBase}_gas" name="recipient_gas" class="input" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0" aria-label="转移Gas" data-name="gas">
               </div>
             </div>
           </div>

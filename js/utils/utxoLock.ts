@@ -10,6 +10,7 @@
  */
 
 import { loadUser } from './storage';
+import { formatAmount, normalizeStoredAmount, parseAmount, toAmountNumber, type AmountDecimal } from './amount';
 
 // ============================================================================
 // Types
@@ -24,7 +25,7 @@ export interface LockedUTXO {
   /** 所属地址 */
   address: string;
   /** UTXO 金额 */
-  value: number;
+  value: AmountDecimal;
   /** 币种类型: 0=PGC, 1=BTC, 2=ETH */
   type: number;
   /** 锁定时间戳 (毫秒) */
@@ -53,7 +54,7 @@ interface LockedUTXOStorage {
 const STORAGE_KEY_PREFIX = 'utxo_locks_';
 
 /** 当前存储版本 */
-const STORAGE_VERSION = 1;
+const STORAGE_VERSION = 2;
 
 /** 锁定过期时间 (24小时，毫秒) - 作为安全机制，超时自动解锁 */
 const LOCK_EXPIRY_MS = 24 * 60 * 60 * 1000;
@@ -83,15 +84,21 @@ function readLockedStorage(): LockedUTXOStorage | null {
     if (!raw) return null;
     
     const data = JSON.parse(raw) as LockedUTXOStorage;
-    
-    // 版本检查
-    if (data.version !== STORAGE_VERSION) {
+    if (data.version !== 1 && data.version !== STORAGE_VERSION) {
       console.warn('[UTXOLock] Storage version mismatch, clearing');
       localStorage.removeItem(key);
       return null;
     }
-    
-    return data;
+    const normalized: LockedUTXOStorage = {
+      version: STORAGE_VERSION,
+      lockedUtxos: (data.lockedUtxos || []).map(lock => ({
+        ...lock,
+        value: normalizeStoredAmount(lock.value),
+      })),
+      lastUpdate: Number(data.lastUpdate || Date.now()),
+    };
+    if (data.version !== STORAGE_VERSION) writeLockedStorage(normalized);
+    return normalized;
   } catch (e) {
     console.warn('[UTXOLock] Failed to read locked storage:', e);
     return null;
@@ -135,6 +142,7 @@ export function lockUTXOs(utxos: Omit<LockedUTXO, 'lockTime' | 'txId'>[], txId: 
   // 添加新的锁定 UTXO
   const newLocks: LockedUTXO[] = utxos.map(utxo => ({
     ...utxo,
+    value: formatAmount(parseAmount(utxo.value)),
     lockTime: now,
     txId
   }));
@@ -319,9 +327,9 @@ export function getLockedBalanceSummary(): {
   for (const utxo of lockedUtxos) {
     const type = utxo.type;
     if (byType[type] !== undefined) {
-      byType[type] += utxo.value;
+      byType[type] += toAmountNumber(utxo.value);
     }
-    total += utxo.value;
+    total += toAmountNumber(utxo.value);
   }
   
   return {
@@ -338,8 +346,11 @@ export function getLockedBalanceSummary(): {
  * @returns 锁定余额
  */
 export function getLockedBalanceByAddress(address: string): number {
-  const lockedUtxos = getLockedUTXOsByAddress(address);
-  return lockedUtxos.reduce((sum, u) => sum + u.value, 0);
+  return toAmountNumber(formatAmount(getLockedBalanceUnitsByAddress(address)));
+}
+
+export function getLockedBalanceUnitsByAddress(address: string): bigint {
+  return getLockedUTXOsByAddress(address).reduce((sum, u) => sum + parseAmount(u.value), 0n);
 }
 
 /**

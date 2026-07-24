@@ -18,6 +18,7 @@ import {
 } from '../utils/storage';
 import { getDecryptedPrivateKey, getDecryptedPrivateKeyWithPrompt } from '../utils/keyEncryptionUI';
 import { t } from '../i18n/index.js';
+import type { CertifierInfo } from '../types/blockchain';
 
 // 导入新的签名工具库
 import {
@@ -104,6 +105,7 @@ export interface GuarGroupTable {
   GuarTable?: Record<string, string>;
   AssignPublicKeyNew?: PublicKeyNew;
   AggrPublicKeyNew?: PublicKeyNew;
+  Certifiers?: Record<string, CertifierInfo>;
   AssignAPIEndpoint?: string;  // AssignNode HTTP API 端口 (如 ":8081")
   AggrAPIEndpoint?: string;    // AggregationNode HTTP API 端口 (如 ":8082")
   CreateTime?: number;
@@ -118,6 +120,9 @@ export interface GroupInfo {
   assignNode: string;
   assignPeerID: string;
   pledgeAddress: string;
+  assignPublicKey?: PublicKeyNew;
+  aggrPublicKey?: PublicKeyNew;
+  certifiers?: Record<string, CertifierInfo>;
   assignAPIEndpoint?: string;  // AssignNode API 端口 (如 ":8081")
   aggrAPIEndpoint?: string;    // AggrNode API 端口 (如 ":8082")
   guarTable?: Record<string, string>;
@@ -151,6 +156,9 @@ function normalizeGroupInfo(groupId: string, raw: GuarGroupTable): GroupInfo {
     assignNode: raw.AssiID || '',
     assignPeerID: raw.AssiPeerID || '',
     pledgeAddress: raw.PledgeAddress || '',
+    assignPublicKey: raw.AssignPublicKeyNew,
+    aggrPublicKey: raw.AggrPublicKeyNew,
+    certifiers: raw.Certifiers,
     assignAPIEndpoint: raw.AssignAPIEndpoint,
     aggrAPIEndpoint: raw.AggrAPIEndpoint,
     guarTable: raw.GuarTable,
@@ -514,6 +522,10 @@ export function verifyStructLocal(
  * @returns Full URL like "http://localhost:8081"
  */
 export function buildAssignNodeUrl(assignEndpoint: string): string {
+  const raw = String(assignEndpoint || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
+
   const baseUrl = new URL(API_BASE_URL);
   const protocol = baseUrl.protocol;
   const currentHost = baseUrl.hostname; // e.g., 'localhost'
@@ -563,6 +575,10 @@ export function buildAssignNodeUrl(assignEndpoint: string): string {
  * @returns Full URL like "http://localhost:8082"
  */
 export function buildAggrNodeUrl(aggrEndpoint: string): string {
+  const raw = String(aggrEndpoint || '').trim();
+  if (!raw) return '';
+  if (/^https?:\/\//i.test(raw)) return raw.replace(/\/+$/, '');
+
   const baseUrl = new URL(API_BASE_URL);
   const protocol = baseUrl.protocol;
   const currentHost = baseUrl.hostname; // e.g., 'localhost'

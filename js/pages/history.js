@@ -14,6 +14,7 @@ import { scheduleBatchUpdate, rafDebounce } from '../utils/performanceMode.js';
 import { DOM_IDS } from '../config/domIds';
 import { html as viewHtml, renderInto, unsafeHTML } from '../utils/view';
 import { getTxHistory, getTxHistoryEventName } from '../services/txHistory.ts';
+import { formatAmount, parseAmount } from '../utils/amount.ts';
 
 let currentFilter = 'all';
 let selectedTransaction = null;
@@ -244,7 +245,7 @@ function renderTransactionList(transactions) {
       </div>
       <div class="history-item-footer">
         <span class="history-item-amount ${tx.type}">
-          ${tx.type === 'send' ? '-' : '+'} ${String(tx.amount.toLocaleString())} ${tx.currency}
+          ${tx.type === 'send' ? '-' : '+'} ${formatAmount(parseAmount(tx.amount))} ${tx.currency}
         </span>
         <span class="history-item-time">${formatDate(tx.timestamp)}</span>
       </div>
@@ -299,7 +300,7 @@ function renderTransactionDetail(tx) {
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.amount')}</span>
-          <span class="history-detail-value">${escapeHtml(String(tx.amount.toLocaleString()))} ${escapeHtml(tx.currency)}</span>
+          <span class="history-detail-value">${escapeHtml(formatAmount(parseAmount(tx.amount)))} ${escapeHtml(tx.currency)}</span>
         </div>
         <div class="history-detail-row">
           <span class="history-detail-label">${t('history.gas')}</span>

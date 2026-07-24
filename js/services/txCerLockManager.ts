@@ -295,8 +295,17 @@ export function unlockTXCers(
  * @param txCerId TXCer ID
  * @returns 是否被锁定
  */
-export function isTXCerLocked(txCerId: string): boolean {
-    return lockedTXCers.has(txCerId);
+export function isTXCerLocked(txCerId: string, allowedDraftLockOwner?: string): boolean {
+    const lock = lockedTXCers.get(txCerId);
+    if (!lock) return false;
+    if (
+        allowedDraftLockOwner &&
+        lock.mode === 'draft' &&
+        lock.relatedTXID === allowedDraftLockOwner
+    ) {
+        return false;
+    }
+    return true;
 }
 
 /**

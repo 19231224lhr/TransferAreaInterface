@@ -599,7 +599,7 @@ async function handleImport(): Promise<void> {
           type: resolvedAddressType,
           utxos: {},
           txCers: {},
-          value: { totalValue: 0, utxoValue: 0, txCerValue: 0 },
+          value: { totalValue: '0', utxoValue: '0', txCerValue: '0' },
           estInterest: 0,
           origin: 'imported',
           privHex: data.privHex || normalized,

@@ -36,6 +36,8 @@ import {
   recoverDeterministicSeedChainStateFromPrivateKey
 } from './seedChain';
 import { hasEncryptedKey } from './keyEncryption';
+import { formatAmount, normalizeStoredAmount, parseAmount, type AmountDecimal } from './amount';
+import { createSerializedRecordMutator } from './serializedMutation';
 
 // ========================================
 // Type Definitions
@@ -50,17 +52,17 @@ export interface WalletKeys {
 
 /** Address value structure */
 export interface AddressValue {
-  totalValue: number;
-  TotalValue?: number;
-  utxoValue: number;
-  txCerValue: number;
+  totalValue: AmountDecimal;
+  TotalValue?: AmountDecimal;
+  utxoValue: AmountDecimal;
+  txCerValue: AmountDecimal;
 }
 
 /** Address data structure with strict UTXO typing */
 export interface AddressData {
   type: number;
   utxos: Record<string, UTXOData>;  // Strict UTXO type instead of 'any'
-  txCers: Record<string, number>;   // TXCer ID -> value mapping
+  txCers: Record<string, AmountDecimal>;   // TXCer ID -> exact decimal value mapping
   value: AddressValue;
   estInterest: number;
   gas?: number;
@@ -88,6 +90,7 @@ export interface AddressData {
   pendingNextSeedStep?: number;
   pendingSeedTxId?: string;
   pendingSeedAt?: number;
+  amountResyncRequired?: boolean;
 }
 
 export type AddressRegistrationState = 'unknown' | 'pending' | 'registered' | 'failed';
@@ -115,13 +118,13 @@ export interface TxHistoryRecord {
   type: 'send' | 'receive';
   status: 'success' | 'pending' | 'failed';
   transferMode?: 'normal' | 'quick' | 'cross' | 'incoming' | 'unknown';
-  amount: number;
+  amount: AmountDecimal;
   currency: string;
   from: string;
   to: string;
   timestamp: number;
   txHash: string;
-  gas: number;
+  gas: AmountDecimal;
   guarantorOrg?: string;
   blockNumber?: number;
   confirmations?: number;
@@ -134,13 +137,14 @@ export interface Wallet {
   totalTXCers: Record<string, TxCertificate>;  // TXCer ID -> full TXCer object (needed for signing)
   txCerStatuses: Record<string, TXCerStatusView>; // TXCer ID -> authoritative AssignNode lifecycle status
   txCerIssuanceRecords: Record<string, TXCerIssuanceMetadata>; // TXCer ID -> CFAA issuance proof metadata
-  totalValue: number;
-  TotalValue?: number;
-  valueDivision: Record<number, number>;
-  ValueDivision?: Record<number, number>;
+  totalValue: AmountDecimal;
+  TotalValue?: AmountDecimal;
+  valueDivision: Record<number, AmountDecimal>;
+  ValueDivision?: Record<number, AmountDecimal>;
   updateTime: number;
   updateBlock: number;
   history?: HistoryRecord[];
+  amountResyncRequired?: boolean;
 }
 
 /** User account structure */
@@ -208,16 +212,64 @@ function hexToDecimalString(value: string): string {
   return BigInt(`0x${normalized}`).toString(10);
 }
 
-function normalizeAddressValue(value: Partial<AddressValue> | Record<string, unknown> | undefined | null): AddressValue {
-  const totalValue = Number((value as any)?.totalValue ?? (value as any)?.TotalValue ?? 0);
-  const utxoValue = Number((value as any)?.utxoValue ?? (value as any)?.UTXOValue ?? totalValue);
-  const txCerValue = Number((value as any)?.txCerValue ?? (value as any)?.TXCerValue ?? 0);
+function normalizeOptionalAmount(value: unknown): { amount: AmountDecimal; valid: boolean } {
+  if (value == null || value === '') return { amount: '0', valid: true };
+  try {
+    return { amount: normalizeStoredAmount(value), valid: true };
+  } catch {
+    return { amount: '0', valid: false };
+  }
+}
+
+function normalizeAddressValue(
+  value: Partial<AddressValue> | Record<string, unknown> | undefined | null
+): { value: AddressValue; needsResync: boolean } {
+  const raw = (value || {}) as Record<string, unknown>;
+  const rawTotal = raw.totalValue ?? raw.TotalValue;
+  const rawUTXO = raw.utxoValue ?? raw.UTXOValue;
+  const rawTXCer = raw.txCerValue ?? raw.TXCerValue;
+  const total = normalizeOptionalAmount(rawTotal);
+  const utxo = normalizeOptionalAmount(rawUTXO);
+  const txCer = normalizeOptionalAmount(rawTXCer);
+
+  const txCerUnits = parseAmount(txCer.amount);
+  let utxoUnits = parseAmount(utxo.amount);
+  let totalUnits = parseAmount(total.amount);
+  let needsResync = !total.valid || !utxo.valid || !txCer.valid;
+
+  if (rawUTXO == null && rawTotal != null) {
+    utxoUnits = totalUnits >= txCerUnits ? totalUnits - txCerUnits : 0n;
+    if (totalUnits < txCerUnits) needsResync = true;
+  }
+  if (rawTotal == null) totalUnits = utxoUnits + txCerUnits;
+
+  const normalizedTotal = formatAmount(totalUnits);
   return {
-    totalValue,
-    TotalValue: totalValue,
-    utxoValue,
-    txCerValue
+    value: {
+      totalValue: normalizedTotal,
+      TotalValue: normalizedTotal,
+      utxoValue: formatAmount(utxoUnits),
+      txCerValue: formatAmount(txCerUnits)
+    },
+    needsResync
   };
+}
+
+function normalizeTXCerAmountMap(value: unknown): { amounts: Record<string, AmountDecimal>; needsResync: boolean } {
+  const amounts: Record<string, AmountDecimal> = {};
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return { amounts, needsResync: false };
+  let needsResync = false;
+  for (const [txCerID, raw] of Object.entries(value as Record<string, unknown>)) {
+    try {
+      const candidate = raw && typeof raw === 'object'
+        ? ((raw as Record<string, unknown>).Value ?? (raw as Record<string, unknown>).value)
+        : raw;
+      amounts[txCerID] = normalizeStoredAmount(candidate ?? '0');
+    } catch {
+      needsResync = true;
+    }
+  }
+  return { amounts, needsResync };
 }
 
 function isRegistrationState(value: unknown): value is AddressRegistrationState {
@@ -596,12 +648,14 @@ export function normalizeAddressDataForStorage(
   } else if (current.registrationError) {
     registrationState = 'failed';
   }
+  const normalizedTXCers = normalizeTXCerAmountMap(current.txCers ?? current.TXCers);
+  const normalizedValue = normalizeAddressValue((current.value ?? current.Value) as Partial<AddressValue>);
 
   return {
     type: Number(current.type ?? current.Type ?? 0),
     utxos: ((current.utxos ?? current.UTXO) as Record<string, UTXOData>) || {},
-    txCers: ((current.txCers ?? current.TXCers) as Record<string, number>) || {},
-    value: normalizeAddressValue((current.value ?? current.Value) as Partial<AddressValue>),
+    txCers: normalizedTXCers.amounts,
+    value: normalizedValue.value,
     estInterest: Number(current.estInterest ?? current.EstInterest ?? current.Interest ?? current.gas ?? 0),
     gas: Number(current.gas ?? current.estInterest ?? current.EstInterest ?? current.Interest ?? 0),
     origin: current.origin ? String(current.origin) : undefined,
@@ -625,7 +679,8 @@ export function normalizeAddressDataForStorage(
     pendingSeedStep: Number(current.pendingSeedStep || 0) || undefined,
     pendingNextSeedStep: Number(current.pendingNextSeedStep || 0) || undefined,
     pendingSeedTxId: current.pendingSeedTxId ? String(current.pendingSeedTxId) : undefined,
-    pendingSeedAt: Number(current.pendingSeedAt || 0) || undefined
+    pendingSeedAt: Number(current.pendingSeedAt || 0) || undefined,
+    amountResyncRequired: normalizedValue.needsResync || normalizedTXCers.needsResync || Boolean(current.amountResyncRequired)
   };
 }
 
@@ -642,8 +697,8 @@ export function normalizeUserAccount(user: User | null): User | null {
     totalTXCers: {},
     txCerStatuses: {},
     txCerIssuanceRecords: {},
-    totalValue: 0,
-    valueDivision: { 0: 0, 1: 0, 2: 0 },
+    totalValue: '0',
+    valueDivision: { 0: '0', 1: '0', 2: '0' },
     updateTime: Date.now(),
     updateBlock: 0
   };
@@ -651,14 +706,18 @@ export function normalizeUserAccount(user: User | null): User | null {
   normalized.wallet.totalTXCers = normalized.wallet.totalTXCers || {};
   normalized.wallet.txCerStatuses = normalized.wallet.txCerStatuses || {};
   normalized.wallet.txCerIssuanceRecords = normalized.wallet.txCerIssuanceRecords || {};
-  normalized.wallet.valueDivision = {
-    0: 0,
-    1: 0,
-    2: 0,
-    ...(normalized.wallet.ValueDivision || normalized.wallet.valueDivision || {})
-  };
-  normalized.wallet.totalValue = Number(normalized.wallet.totalValue ?? normalized.wallet.TotalValue ?? 0);
+  const rawDivision = normalized.wallet.ValueDivision || normalized.wallet.valueDivision || {};
+  let walletNeedsResync = Boolean(normalized.wallet.amountResyncRequired);
+  normalized.wallet.valueDivision = { 0: '0', 1: '0', 2: '0' };
+  for (const [type, value] of Object.entries(rawDivision)) {
+    const normalizedAmount = normalizeOptionalAmount(value);
+    normalized.wallet.valueDivision[Number(type)] = normalizedAmount.amount;
+    walletNeedsResync ||= !normalizedAmount.valid;
+  }
+  const normalizedTotal = normalizeOptionalAmount(normalized.wallet.totalValue ?? normalized.wallet.TotalValue ?? '0');
+  normalized.wallet.totalValue = normalizedTotal.amount;
   normalized.wallet.TotalValue = normalized.wallet.totalValue;
+  normalized.wallet.amountResyncRequired = walletNeedsResync || !normalizedTotal.valid;
 
   const accountPub = getAccountPublicKeyHex(normalized);
   const normalizedAddressMsg: Record<string, AddressData> = {};
@@ -682,12 +741,32 @@ export function normalizeUserAccount(user: User | null): User | null {
   return normalized;
 }
 
+function markTXCerEvidenceForReverification(user: User | null): User | null {
+  if (!user?.wallet?.txCerIssuanceRecords) return user;
+  for (const metadata of Object.values(user.wallet.txCerIssuanceRecords)) {
+    if (!metadata.security) continue;
+    metadata.security = {
+      ...metadata.security,
+      fastEvidenceStatus: metadata.security.fastEvidenceStatus === 'Failed' ? 'Failed' : 'Pending',
+      cfaaAuditStatus: metadata.security.cfaaAuditStatus === 'Failed' ? 'Failed' : 'Pending',
+      fastEvidenceError: metadata.security.fastEvidenceStatus === 'Failed'
+        ? metadata.security.fastEvidenceError
+        : 'Waiting for restart verification',
+      cfaaAuditError: metadata.security.cfaaAuditStatus === 'Failed'
+        ? metadata.security.cfaaAuditError
+        : 'Waiting for restart verification',
+      checkedAt: 0
+    };
+  }
+  return user;
+}
+
 export function mergeBackendWalletData(
   user: User,
   walletData: {
-    Value?: number;
-    TotalValue?: number;
-    ValueDivision?: Record<number, number>;
+    Value?: unknown;
+    TotalValue?: unknown;
+    ValueDivision?: Record<number, unknown>;
     SubAddressMsg?: Record<string, unknown>;
   } | null | undefined,
   options: { syncTime?: number } = {}
@@ -699,15 +778,18 @@ export function mergeBackendWalletData(
   const isRetailMode = !normalized.isInGroup && !(normalized.orgNumber || normalized.guarGroup?.groupID);
   const deletedAddresses = normalized.deletedAddresses || {};
 
-  normalized.wallet.totalValue = Number(walletData?.Value ?? walletData?.TotalValue ?? normalized.wallet.totalValue ?? 0);
+  const backendTotal = normalizeOptionalAmount(walletData?.Value ?? walletData?.TotalValue ?? normalized.wallet.totalValue ?? '0');
+  normalized.wallet.totalValue = backendTotal.amount;
   normalized.wallet.TotalValue = normalized.wallet.totalValue;
+  normalized.wallet.amountResyncRequired = Boolean(normalized.wallet.amountResyncRequired) || !backendTotal.valid;
   if (walletData?.ValueDivision) {
-    normalized.wallet.valueDivision = {
-      0: 0,
-      1: 0,
-      2: 0,
-      ...walletData.ValueDivision
-    };
+    const division: Record<number, AmountDecimal> = { 0: '0', 1: '0', 2: '0' };
+    for (const [type, value] of Object.entries(walletData.ValueDivision)) {
+      const normalizedAmount = normalizeOptionalAmount(value);
+      division[Number(type)] = normalizedAmount.amount;
+      normalized.wallet.amountResyncRequired ||= !normalizedAmount.valid;
+    }
+    normalized.wallet.valueDivision = division;
   }
 
   for (const [rawAddress, backendAddress] of Object.entries(subAddressMsg)) {
@@ -824,8 +906,8 @@ export function toAccount(basic: Partial<User>, prev: User | null): User {
     totalTXCers: {},
     txCerStatuses: {},
     txCerIssuanceRecords: {},
-    totalValue: 0,
-    valueDivision: { 0: 0, 1: 0, 2: 0 },
+    totalValue: '0',
+    valueDivision: { 0: '0', 1: '0', 2: '0' },
     updateTime: Date.now(),
     updateBlock: 0
   };
@@ -1062,38 +1144,12 @@ function writeUserToStorage(user: User | null): void {
  * Initialize in-memory state from localStorage once at app startup.
  * After this, Store becomes the single source of truth.
  * 
- * IMPORTANT: TXCer data is NOT persisted because it is temporary state.
- * TXCers are received in real-time via SSE and will be converted to UTXOs.
- * The blockchain StoragePoint (UTXO data) is the only source of truth for permanent balances.
- * CFAA issuance metadata is retained for audit/history and proof diagnostics.
+ * Complete TXCer evidence is preserved across restarts. Cached successful
+ * verification is downgraded to Pending and replayed against the saved
+ * authority snapshot; cryptographic failures remain quarantined.
  */
 export function initUserStateFromStorage(): User | null {
-  const user = normalizeUserAccount(readUserFromStorage());
-
-  // Clear stale TXCer data - TXCers should only be received via real-time SSE
-  // This prevents "ghost" TXCers from reappearing after page refresh
-  if (user?.wallet) {
-    // Clear totalTXCers at wallet level
-    user.wallet.totalTXCers = {};
-    user.wallet.txCerStatuses = {};
-
-    // Clear txCers from each address
-    if (user.wallet.addressMsg) {
-      for (const addr of Object.keys(user.wallet.addressMsg)) {
-        const addrData = user.wallet.addressMsg[addr];
-        if (addrData) {
-          addrData.txCers = {};
-          // Also reset txCerValue in value breakdown
-          if (addrData.value) {
-            addrData.value.txCerValue = 0;
-          }
-        }
-      }
-    }
-
-    console.info('[Storage] Cleared stale TXCer data on startup. TXCers will be received via SSE.');
-  }
-
+  const user = markTXCerEvidenceForReverification(normalizeUserAccount(readUserFromStorage()));
   setUser(user);
   return user;
 }
@@ -1135,8 +1191,8 @@ export function saveUser(user: Partial<User>): void {
         totalTXCers: {},
         txCerStatuses: {},
         txCerIssuanceRecords: {},
-        totalValue: 0,
-        valueDivision: { 0: 0, 1: 0, 2: 0 },
+        totalValue: '0',
+        valueDivision: { 0: '0', 1: '0', 2: '0' },
         updateTime: Date.now(),
         updateBlock: 0
       };
@@ -1167,6 +1223,44 @@ export function saveUser(user: Partial<User>): void {
   } catch (e) {
     console.warn('Failed to save user data', e);
   }
+}
+
+function loadUserByAccountId(accountId: string): User | null {
+  const current = loadUser();
+  if (current?.accountId === accountId) return normalizeUserAccount(current);
+  try {
+    const raw = localStorage.getItem(getUserStorageKey(accountId));
+    return raw ? normalizeUserAccount(JSON.parse(raw) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
+const mutateStoredUser = createSerializedRecordMutator<User>({
+  lockName: 'pangupay-web-users',
+  load: async (accountId) => loadUserByAccountId(accountId),
+  save: async (accountId, user) => {
+    const normalized = normalizeUserAccount(user);
+    if (!normalized) throw new Error(`invalid user: ${accountId}`);
+    localStorage.setItem(getUserStorageKey(accountId), JSON.stringify(normalized));
+    if (getActiveAccountId() === accountId) setUser(normalized);
+  },
+  verify: async (accountId) => {
+    try {
+      const raw = localStorage.getItem(getUserStorageKey(accountId));
+      return raw ? normalizeUserAccount(JSON.parse(raw) as User) : null;
+    } catch {
+      return null;
+    }
+  }
+});
+
+/** Atomically reload and patch a specific account without changing the active account. */
+export async function mutateUser(
+  accountId: string,
+  updater: (latest: User) => User | Promise<User>
+): Promise<User> {
+  return mutateStoredUser(accountId, updater);
 }
 
 /**
